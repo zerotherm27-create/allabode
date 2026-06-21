@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard - Allabode Property Solutions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "brand-blue": "#0D518C",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#131b2e",
+                        "surface": "#f8f9ff",
+                        "on-surface-variant": "#45464d",
+                        "background": "#f8f9ff",
+                        "secondary-fixed-dim": "#c3c7cb",
+                        "surface-container-high": "#dce9ff",
+                        "tertiary": "#000000",
+                        "surface-container-highest": "#d3e4fe",
+                        "primary": "#000000",
+                        "inverse-primary": "#bec6e0",
+                        "surface-container-low": "#eff4ff",
+                        "status-available": "#10B981",
+                        "primary-fixed": "#dae2fd",
+                        "surface-gray": "#F8FAFC",
+                        "inverse-surface": "#213145",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary-container": "#261a00",
+                        "outline": "#76777d",
+                        "on-tertiary-fixed-variant": "#59430e",
+                        "tertiary-fixed-dim": "#e3c381",
+                        "status-reserved": "#F59E0B",
+                        "surface-container": "#e5eeff",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-secondary-fixed": "#171c1f",
+                        "on-secondary-fixed-variant": "#43474b",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "gold-muted": "#B4975A",
+                        "on-tertiary-container": "#9b8046",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-primary": "#ffffff",
+                        "slate-soft": "#94A3B8",
+                        "on-surface": "#0b1c30",
+                        "on-primary-container": "#7c839b",
+                        "on-secondary-container": "#5e6367",
+                        "navy-deep": "#0F172A",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#d3e4fe",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdf9e",
+                        "surface-dim": "#cbdbf5",
+                        "surface-tint": "#565e74",
+                        "secondary-container": "#dce0e4",
+                        "surface-bright": "#f8f9ff",
+                        "secondary": "#5a5f62",
+                        "secondary-fixed": "#dfe3e7",
+                        "on-primary-fixed": "#131b2e",
+                        "on-error": "#ffffff",
+                        "on-background": "#0b1c30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "section-gap": "5rem",
+                        "gutter": "1.5rem",
+                        "margin-mobile": "1rem",
+                        "stack-md": "1rem",
+                        "stack-lg": "2rem",
+                        "stack-sm": "0.5rem",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "headline-xl": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "headline-xl-mobile": ["Montserrat"],
+                        "headline-md": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-xl-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f8f9ff;
+            color: #0b1c30;
+        }
+        .card-elevation-1 {
+            box-shadow: 0px 4px 20px rgba(15, 23, 42, 0.04);
+            transition: all 0.2s ease-in-out;
+        }
+        .card-elevation-1:hover {
+            box-shadow: 0px 10px 30px rgba(15, 23, 42, 0.08);
+            border-color: #0D518C;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        .chart-bar {
+            transition: height 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md bg-surface text-on-surface antialiased flex">
+<!-- SideNavBar (from JSON) -->
+<nav class="hidden lg:flex flex-col h-full fixed left-0 top-0 py-6 px-4 bg-primary-container dark:bg-navy-deep shadow-md w-64 z-40">
+<div class="mb-10 px-4">
+<h1 class="font-headline-md text-headline-md text-on-primary">Management</h1>
+<p class="font-body-sm text-body-sm text-on-primary-container">Allabode Solutions</p>
+</div>
+<div class="flex-1 space-y-2">
+<!-- Active Tab: Dashboard -->
+<a class="flex items-center gap-3 bg-brand-blue text-white rounded-xl px-4 py-3 scale-95 transition-transform hover:bg-primary/50 dark:hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-caps text-label-caps">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<!-- Inactive Tabs -->
+<a class="flex items-center gap-3 text-on-primary-container dark:text-on-secondary-fixed-variant px-4 py-3 hover:bg-primary/50 dark:hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-caps text-label-caps">domain</span>
+<span class="font-label-caps text-label-caps">Properties</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container dark:text-on-secondary-fixed-variant px-4 py-3 hover:bg-primary/50 dark:hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-caps text-label-caps">payments</span>
+<span class="font-label-caps text-label-caps">Payments</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container dark:text-on-secondary-fixed-variant px-4 py-3 hover:bg-primary/50 dark:hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-caps text-label-caps">build_circle</span>
+<span class="font-label-caps text-label-caps">Maintenance</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container dark:text-on-secondary-fixed-variant px-4 py-3 hover:bg-primary/50 dark:hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-caps text-label-caps">analytics</span>
+<span class="font-label-caps text-label-caps">Reports</span>
+</a>
+</div>
+<div class="mt-auto space-y-2 pt-6 border-t border-on-primary-container/20">
+<button class="w-full bg-brand-blue text-white font-label-caps text-label-caps py-3 rounded-lg mb-4 hover:bg-brand-blue/90 transition-colors">Request Appraisal</button>
+<a class="flex items-center gap-3 text-on-primary-container dark:text-on-secondary-fixed-variant px-4 py-3 hover:bg-primary/50 dark:hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-caps text-label-caps">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container dark:text-on-secondary-fixed-variant px-4 py-3 hover:bg-primary/50 dark:hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-caps text-label-caps">logout</span>
+<span class="font-label-caps text-label-caps">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<div class="flex-1 lg:ml-64 min-h-screen flex flex-col">
+<!-- TopAppBar (from JSON) -->
+<header class="bg-surface-container-lowest dark:bg-navy-deep shadow-sm flex justify-between items-center w-full px-gutter h-16 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="text-headline-md font-headline-md font-bold text-navy-deep dark:text-brand-blue lg:hidden">Allabode Property Solutions</span>
+</div>
+<div class="flex items-center gap-4 text-navy-deep dark:text-inverse-primary">
+<div class="hidden md:flex items-center bg-surface-gray border border-outline-variant rounded-full px-4 py-1.5 focus-within:border-brand-blue transition-colors">
+<span class="material-symbols-outlined text-outline mr-2 text-sm">search</span>
+<input class="bg-transparent border-none outline-none text-body-sm font-body-sm w-48 text-on-surface focus:ring-0" placeholder="Search properties..." type="text"/>
+</div>
+<button class="hover:text-brand-blue transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:text-brand-blue transition-colors duration-200">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User profile" class="object-cover w-full h-full" data-alt="A professional headshot of a corporate executive in a modern office setting. The lighting is bright and even, highlighting a polished, trustworthy appearance suitable for a high-end property management portal. The background is slightly blurred with muted grays and deep navys." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwnG7MpPuhF2ee97mYMvWZ2unrQWJYJRmoyJor516BYhDPpGwjaigZV3IUQZVuvL9a1z-IdmppzvsCLkD_Wg_OTfszp6uPF_WdZEe0QNEuKcT9mfKa18k0ElWbYts1k8ms0AKELHgdPMXrIYo9cKDGaxIN26yIZPSa8QEegRlji4gg67h74oWrlgISDVJqOx13iXZDI6hNn1QDZZxpBmQrtIBL4oacJBosEhVOgdxLIqkrqqj-8IsP2Q3GFtHZzWNBPlStMdJilvc4"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<main class="flex-1 p-gutter lg:p-section-gap max-w-container-max mx-auto w-full space-y-stack-lg">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-navy-deep mb-2">Portfolio Overview</h2>
+<p class="font-body-md text-body-md text-secondary">Welcome back. Here is the current status of your investments.</p>
+</div>
+<button class="bg-brand-blue text-white font-label-caps text-label-caps px-6 py-3 rounded-lg hover:bg-brand-blue/90 transition-colors">
+                    Download Full Report
+                </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="bento-grid">
+<!-- KPI Cards (Col Span 4 each) -->
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest rounded-xl p-6 card-elevation-1 border border-transparent">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-caps text-label-caps text-secondary">Total Units</span>
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-brand-blue">
+<span class="material-symbols-outlined">real_estate_agent</span>
+</div>
+</div>
+<div class="font-headline-xl text-headline-xl text-navy-deep">12</div>
+<div class="mt-2 text-status-available font-body-sm text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+2 this year</span>
+</div>
+</div>
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest rounded-xl p-6 card-elevation-1 border border-transparent">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-caps text-label-caps text-secondary">Occupancy Rate</span>
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-brand-blue">
+<span class="material-symbols-outlined">pie_chart</span>
+</div>
+</div>
+<div class="font-headline-xl text-headline-xl text-navy-deep">85%</div>
+<div class="mt-2 text-status-reserved font-body-sm text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">trending_flat</span>
+<span>Stable across portfolio</span>
+</div>
+</div>
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest rounded-xl p-6 card-elevation-1 border border-transparent relative overflow-hidden">
+<!-- Subtle decorative gradient for revenue -->
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-brand-blue/10 rounded-full blur-2xl"></div>
+<div class="flex items-center justify-between mb-4 relative z-10">
+<span class="font-label-caps text-label-caps text-secondary">Total Monthly Revenue</span>
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed-dim/20 flex items-center justify-center text-brand-blue">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+</div>
+</div>
+<div class="font-headline-xl text-headline-xl text-navy-deep relative z-10">₱150K</div>
+<div class="mt-2 text-status-available font-body-sm text-body-sm flex items-center gap-1 relative z-10">
+<span class="material-symbols-outlined text-sm">arrow_upward</span>
+<span>+5% vs last month</span>
+</div>
+</div>
+<!-- Financial Performance Chart (Col Span 8) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl p-6 card-elevation-1 border border-transparent flex flex-col h-[400px]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-navy-deep">Rental Income (6 Months)</h3>
+<div class="flex gap-2">
+<span class="bg-surface-gray px-3 py-1 rounded-full font-label-caps text-label-caps text-secondary border border-outline-variant">Monthly</span>
+</div>
+</div>
+<!-- CSS Bar Chart Representation -->
+<div class="flex-1 flex items-end justify-between gap-4 pt-4 relative">
+<!-- Y-Axis Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-0">
+<div class="w-full border-t border-dashed border-outline-variant/30 h-0"></div>
+<div class="w-full border-t border-dashed border-outline-variant/30 h-0"></div>
+<div class="w-full border-t border-dashed border-outline-variant/30 h-0"></div>
+<div class="w-full border-t border-solid border-outline-variant h-0"></div>
+</div>
+<!-- Bars -->
+<div class="w-full flex flex-col items-center justify-end h-full z-10 group">
+<div class="w-full max-w-[40px] bg-brand-blue/80 hover:bg-brand-blue rounded-t-sm h-[60%] chart-bar transition-colors"></div>
+<span class="font-label-caps text-label-caps text-secondary mt-2">Mar</span>
+</div>
+<div class="w-full flex flex-col items-center justify-end h-full z-10 group">
+<div class="w-full max-w-[40px] bg-brand-blue/80 hover:bg-brand-blue rounded-t-sm h-[65%] chart-bar transition-colors"></div>
+<span class="font-label-caps text-label-caps text-secondary mt-2">Apr</span>
+</div>
+<div class="w-full flex flex-col items-center justify-end h-full z-10 group">
+<div class="w-full max-w-[40px] bg-brand-blue/80 hover:bg-brand-blue rounded-t-sm h-[62%] chart-bar transition-colors"></div>
+<span class="font-label-caps text-label-caps text-secondary mt-2">May</span>
+</div>
+<div class="w-full flex flex-col items-center justify-end h-full z-10 group">
+<div class="w-full max-w-[40px] bg-brand-blue/80 hover:bg-brand-blue rounded-t-sm h-[75%] chart-bar transition-colors"></div>
+<span class="font-label-caps text-label-caps text-secondary mt-2">Jun</span>
+</div>
+<div class="w-full flex flex-col items-center justify-end h-full z-10 group">
+<div class="w-full max-w-[40px] bg-brand-blue/80 hover:bg-brand-blue rounded-t-sm h-[80%] chart-bar transition-colors"></div>
+<span class="font-label-caps text-label-caps text-secondary mt-2">Jul</span>
+</div>
+<div class="w-full flex flex-col items-center justify-end h-full z-10 group">
+<div class="w-full max-w-[40px] bg-brand-blue rounded-t-sm h-[90%] chart-bar shadow-[0_0_15px_rgba(13,81,140,0.3)]"></div>
+<span class="font-label-caps text-label-caps text-brand-blue font-bold mt-2">Aug</span>
+</div>
+</div>
+</div>
+<!-- Pending Actions (Col Span 4) -->
+<div class="col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-xl p-6 card-elevation-1 border border-transparent flex flex-col h-[400px]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-navy-deep">Action Required</h3>
+<span class="bg-error-container text-on-error-container w-6 h-6 rounded-full flex items-center justify-center font-label-caps text-label-caps">3</span>
+</div>
+<div class="flex-1 overflow-y-auto pr-2 space-y-4">
+<!-- Action Item 1 -->
+<div class="p-4 border border-outline-variant rounded-lg hover:border-brand-blue transition-colors cursor-pointer bg-surface-gray">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-status-reserved">contract</span>
+<div>
+<h4 class="font-body-md text-body-md font-bold text-navy-deep">Lease Renewal</h4>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Unit 4B, The Astoria. Tenant requesting 12-mo extension.</p>
+<div class="mt-3 flex gap-2">
+<button class="bg-brand-blue text-white font-label-caps text-label-caps px-3 py-1.5 rounded hover:bg-brand-blue/90">Review</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Item 2 -->
+<div class="p-4 border border-outline-variant rounded-lg hover:border-brand-blue transition-colors cursor-pointer bg-surface-gray">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error">plumbing</span>
+<div>
+<h4 class="font-body-md text-body-md font-bold text-navy-deep">Maintenance Approval</h4>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Unit 12A. HVAC repair estimate attached. ₱15,000.</p>
+<div class="mt-3 flex gap-2">
+<button class="bg-brand-blue text-white font-label-caps text-label-caps px-3 py-1.5 rounded hover:bg-brand-blue/90">Approve</button>
+<button class="bg-transparent border border-outline text-secondary font-label-caps text-label-caps px-3 py-1.5 rounded hover:bg-surface-container">Decline</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Item 3 -->
+<div class="p-4 border border-outline-variant rounded-lg hover:border-brand-blue transition-colors cursor-pointer bg-surface-gray">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-status-available">receipt_long</span>
+<div>
+<h4 class="font-body-md text-body-md font-bold text-navy-deep">Payout Ready</h4>
+<p class="font-body-sm text-body-sm text-secondary mt-1">August disbursement report generated for review.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Unit Grid/List (Col Span 12) -->
+<div class="col-span-12 mt-stack-md">
+<div class="flex justify-between items-end mb-6">
+<h3 class="font-headline-md text-headline-md text-navy-deep">Property Portfolio</h3>
+<div class="flex gap-2">
+<button class="p-2 bg-surface-container-lowest border border-outline-variant rounded text-navy-deep hover:bg-surface-gray">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+<button class="p-2 bg-surface-gray border border-outline-variant rounded text-secondary hover:text-navy-deep">
+<span class="material-symbols-outlined">format_list_bulleted</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Property Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl card-elevation-1 border border-transparent overflow-hidden flex flex-col group">
+<div class="h-40 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="High-end architectural photography of a modern luxury condominium exterior in Manila. Clean lines, large glass windows reflecting the bright sky. The aesthetic is corporate and modern, using deep blues and warm sunlight to convey premium real estate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXjv4hpYPfhg6vM3zF0NesiKSjpfkrCSjvIPJXjWMH4DaBj7ltKgagHSSBVXl9ef3OGJO3WJW0PQc8h5b0RRXMo1Q_x-cKg6GUtizCwQQzOkYv3dA22IhnYQJwKk6jtQ695NPlmOuwDe0JaoBsgo6AbbEg7dWpTs_ZhU7jqb5f48L7U5CTsaw_0XropjqVrJdaAJADv3gdWq2xHobPiwHPEC2DXNsL-oKhlH240UeqWm8pzPulAQvPcW45hI2IWrBP0mx7Bv0Eyynn"/>
+<div class="absolute top-4 left-4 bg-status-available/10 text-status-available font-label-caps text-label-caps px-2.5 py-1 rounded-sm border border-status-available/20 backdrop-blur-sm">
+                                    Leased
+                                </div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<h4 class="font-headline-md text-headline-md text-navy-deep mb-1">Unit 4B, The Astoria</h4>
+<p class="font-body-sm text-body-sm text-secondary mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> BGC, Taguig
+                                </p>
+<div class="grid grid-cols-2 gap-y-3 mb-4 flex-1">
+<div>
+<span class="block font-label-caps text-label-caps text-slate-soft">Monthly Rent</span>
+<span class="font-body-md text-body-md font-bold text-navy-deep">₱45,000</span>
+</div>
+<div>
+<span class="block font-label-caps text-label-caps text-slate-soft">Tenant</span>
+<span class="font-body-md text-body-md text-navy-deep">Maria Santos</span>
+</div>
+<div>
+<span class="block font-label-caps text-label-caps text-slate-soft">Lease Ends</span>
+<span class="font-body-md text-body-md text-navy-deep">Dec 2024</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/30 flex justify-end">
+<button class="text-brand-blue font-label-caps text-label-caps hover:text-navy-deep transition-colors flex items-center gap-1">
+                                        View Details <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Property Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl card-elevation-1 border border-transparent overflow-hidden flex flex-col group">
+<div class="h-40 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="Interior photography of an elegant, minimalist apartment living room. Bright white walls, neutral slate furniture, and a touch of deep navy decor. High quality, professional real estate photography style, emphasizing clean space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWKSZz2mTz1wW-d2yx5-61dRmq5LnwQ0-IoD2kVU2C4rFy9xFkmFapXDBKg4U5qo6yN-XSvNfHYrpLNphNY1Ou68CBkRiGNMv8aVcvHZgoww6yKkuSwfXnNFqu62x09GFz9JQlSkCndjgM9OvfnwUOp19g2jhKIFf1i36BYG5oaLhal-YlOciSZGeu0Ga-rrD_-e749_bgAOOg3YIYgoIadwxOZb9dZSnvXk3t0VqRCz5CyXJo1Hs8wbqh6B0ARD9SOIb-bjypDOkR"/>
+<div class="absolute top-4 left-4 bg-error/10 text-error font-label-caps text-label-caps px-2.5 py-1 rounded-sm border border-error/20 backdrop-blur-sm">
+                                    Vacant
+                                </div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<h4 class="font-headline-md text-headline-md text-navy-deep mb-1">Unit 12A, One Serendra</h4>
+<p class="font-body-sm text-body-sm text-secondary mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> BGC, Taguig
+                                </p>
+<div class="grid grid-cols-2 gap-y-3 mb-4 flex-1">
+<div>
+<span class="block font-label-caps text-label-caps text-slate-soft">Target Rent</span>
+<span class="font-body-md text-body-md font-bold text-navy-deep">₱60,000</span>
+</div>
+<div>
+<span class="block font-label-caps text-label-caps text-slate-soft">Status</span>
+<span class="font-body-md text-body-md text-error">Listed - Active</span>
+</div>
+<div class="col-span-2">
+<span class="block font-label-caps text-label-caps text-slate-soft">Inquiries</span>
+<span class="font-body-md text-body-md text-navy-deep">3 Pending Viewings</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/30 flex justify-end">
+<button class="text-brand-blue font-label-caps text-label-caps hover:text-navy-deep transition-colors flex items-center gap-1">
+                                        View Details <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Property Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl card-elevation-1 border border-transparent overflow-hidden flex flex-col group">
+<div class="h-40 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="A focused shot of modern kitchen fixtures in a newly renovated condo. Professional, clean lighting highlighting polished stone countertops and modern dark wood cabinets. The style is premium and well-maintained." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZkt6lP_tyQNOaIBVXpXfCYmU0LXHnKJ3bfsuKa2fQC4w7aCYD7dbdapX66PtxQ0zp8Vkd9ieyN-KSO-kd1iCEjCHW082-xFegg2xo1WcIn_rw29MsiA43z5tSfdsE7vKqQiBLGRwF3Yp9cCsFkfcPWYapLVnLGTq3SbecduPkzc8KVMNlkyB5k7tzSoKLmm6uBQAFiQX5rjUIdybUiKZUBGAeBsScVRP7EB33V6LKe5hCLD8NC2JcUYgwC5euz8kLUJYRWFZDRKQF"/>
+<div class="absolute top-4 left-4 bg-status-reserved/10 text-status-reserved font-label-caps text-label-caps px-2.5 py-1 rounded-sm border border-status-reserved/20 backdrop-blur-sm">
+                                    Maintenance
+                                </div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<h4 class="font-headline-md text-headline-md text-navy-deep mb-1">Townhouse C, Valle Verde</h4>
+<p class="font-body-sm text-body-sm text-secondary mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Pasig City
+                                </p>
+<div class="grid grid-cols-2 gap-y-3 mb-4 flex-1">
+<div>
+<span class="block font-label-caps text-label-caps text-slate-soft">Monthly Rent</span>
+<span class="font-body-md text-body-md font-bold text-navy-deep">₱85,000</span>
+</div>
+<div>
+<span class="block font-label-caps text-label-caps text-slate-soft">Tenant</span>
+<span class="font-body-md text-body-md text-navy-deep">J. Reyes</span>
+</div>
+<div class="col-span-2">
+<span class="block font-label-caps text-label-caps text-slate-soft">Issue</span>
+<span class="font-body-md text-body-md text-status-reserved">Roof Deck Waterproofing</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/30 flex justify-end">
+<button class="text-brand-blue font-label-caps text-label-caps hover:text-navy-deep transition-colors flex items-center gap-1">
+                                        View Details <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Owner Reports List (Col Span 12) -->
+<div class="col-span-12 bg-surface-container-lowest rounded-xl p-6 card-elevation-1 border border-transparent mt-stack-md">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-navy-deep">Monthly Reports</h3>
+<a class="text-brand-blue font-label-caps text-label-caps hover:underline" href="#">View Archive</a>
+</div>
+<div class="divide-y divide-outline-variant/30">
+<div class="py-4 flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-gray rounded flex items-center justify-center text-navy-deep group-hover:bg-brand-blue group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold text-navy-deep">August 2024 Financial Summary</p>
+<p class="font-body-sm text-body-sm text-secondary">Generated Sep 1, 2024 • 1.2 MB</p>
+</div>
+</div>
+<button class="text-secondary hover:text-brand-blue">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+<div class="py-4 flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-gray rounded flex items-center justify-center text-navy-deep group-hover:bg-brand-blue group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold text-navy-deep">July 2024 Financial Summary</p>
+<p class="font-body-sm text-body-sm text-secondary">Generated Aug 1, 2024 • 1.1 MB</p>
+</div>
+</div>
+<button class="text-secondary hover:text-brand-blue">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+<div class="py-4 flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-gray rounded flex items-center justify-center text-navy-deep group-hover:bg-brand-blue group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold text-navy-deep">June 2024 Financial Summary</p>
+<p class="font-body-sm text-body-sm text-secondary">Generated Jul 1, 2024 • 1.3 MB</p>
+</div>
+</div>
+<button class="text-secondary hover:text-brand-blue">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

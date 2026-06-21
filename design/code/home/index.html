@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Allabode Realty | Professional Philippine Real Estate Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "background": "#f9f9fc",
+                "on-secondary-container": "#4e6874",
+                "secondary": "#48626e",
+                "on-tertiary": "#ffffff",
+                "primary-container": "#0d518c",
+                "on-error-container": "#93000a",
+                "tertiary": "#735c00",
+                "surface-container": "#eeeef0",
+                "secondary-container": "#cbe7f5",
+                "on-tertiary-fixed-variant": "#574500",
+                "surface-variant": "#e2e2e5",
+                "on-primary": "#ffffff",
+                "on-primary-fixed": "#001c38",
+                "on-tertiary-container": "#4f3e00",
+                "on-surface": "#1a1c1e",
+                "on-background": "#1a1c1e",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fc",
+                "on-primary-fixed-variant": "#004881",
+                "inverse-surface": "#2f3133",
+                "tertiary-fixed": "#ffe088",
+                "primary-fixed": "#d3e4ff",
+                "surface-container-highest": "#e2e2e5",
+                "on-secondary": "#ffffff",
+                "on-surface-variant": "#424750",
+                "on-secondary-fixed": "#021f29",
+                "secondary-fixed-dim": "#afcbd8",
+                "secondary-fixed": "#cbe7f5",
+                "primary": "#003a69",
+                "surface-dim": "#dadadc",
+                "tertiary-fixed-dim": "#e9c349",
+                "on-tertiary-fixed": "#241a00",
+                "on-error": "#ffffff",
+                "surface-container-high": "#e8e8ea",
+                "outline-variant": "#c2c7d1",
+                "surface-container-low": "#f3f3f6",
+                "surface-bright": "#f9f9fc",
+                "on-secondary-fixed-variant": "#304a55",
+                "surface-container-lowest": "#ffffff",
+                "inverse-primary": "#a2c9ff",
+                "inverse-on-surface": "#f0f0f3",
+                "primary-fixed-dim": "#a2c9ff",
+                "tertiary-container": "#cca730",
+                "outline": "#727781",
+                "error-container": "#ffdad6",
+                "on-primary-container": "#98c4ff",
+                "surface-tint": "#26609c",
+                "status-reserved": "#F59E0B",
+                "status-available": "#10B981",
+                "surface-gray": "#F8FAFC",
+                "slate-soft": "#94A3B8"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "unit": "8px",
+                "margin-desktop": "64px",
+                "container-max": "1280px",
+                "gutter": "24px",
+                "margin-mobile": "20px",
+                "stack-lg": "2rem",
+                "section-gap": "5rem",
+                "stack-sm": "0.5rem",
+                "stack-md": "1rem"
+        },
+        "fontFamily": {
+                "body-lg": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Montserrat"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Montserrat"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Montserrat"
+                ],
+                "title-md": [
+                        "Montserrat"
+                ],
+                "headline-xl-mobile": ["Montserrat"],
+                "headline-xl": ["Montserrat"],
+                "body-sm": ["Inter"],
+                "label-caps": ["Inter"],
+                "headline-md": ["Montserrat"]
+        },
+        "fontSize": {
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "1.3",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "56px",
+                        {
+                                "lineHeight": "64px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "title-md": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-xl-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .card-elevation {
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+            transition: all 0.3s ease;
+        }
+        .card-elevation:hover {
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid #0d518c;
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface selection:bg-primary-container selection:text-white">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 md:px-24 py-4 bg-surface/95 backdrop-blur-md shadow-sm border-b border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="text-headline-md font-headline-md font-bold text-primary">Allabode Property Solutions</span>
+</div>
+<nav class="hidden lg:flex items-center gap-8">
+<a class="text-primary font-bold border-b-2 border-primary-container pb-1 text-body-sm font-body-sm" href="#">Home</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-sm font-body-sm" href="#">Listings</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-sm font-body-sm" href="#">Leasing</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-sm font-body-sm" href="#">Buy/Sell</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-sm font-body-sm" href="#">Property Management</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-sm font-body-sm" href="#">Appraisal</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden md:block px-6 py-2 border border-primary text-primary text-label-caps font-label-caps hover:bg-primary hover:text-white transition-all">List Your Property</button>
+<button class="px-6 py-2 bg-primary-container text-white text-label-caps font-label-caps hover:bg-primary transition-all">Request Appraisal</button>
+<button class="lg:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative min-h-[85vh] flex items-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center brightness-[0.4]" data-alt="A cinematic, wide-angle interior view of a luxury modern Philippine condominium overlooking the Makati skyline during the golden hour. The space features high ceilings, floor-to-ceiling glass windows, and a sophisticated minimalist interior design with navy blue accents and warm lighting. The mood is professional, established, and high-end, aligning with the Allabode Realty brand identity." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBBAakMr3FdOh-Chgyx2n18ZU3a2PeUM53GT28bjNvW2o5d2BvoUHIbeCvw7QLoOxAkzcFw-FtcA6ewWBRGSWdnIDFsQOogBRgm3yAhBIwNJdigfjB1sJJIpFnZJtqFeggd6MZ8bhU-BDaRKRGKtImtKVN1JbpCO4g4FmH6UA0GkoK9S0dUk92EDuX7xFgEayrecGT6Nk4MqQ6QGU0S3IcOIPjnrdO4U0gAR8twqgZmqzO7Wb7hfTM38GXrhxC5JJSYd8cG7-rZ3dZd')"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto px-6 md:px-gutter w-full py-20">
+<div class="max-w-3xl">
+<span class="inline-block px-4 py-1 bg-primary-container text-white text-label-caps font-label-caps mb-6">Established. Professional. Trusted.</span>
+<h1 class="text-headline-xl-mobile md:text-headline-xl font-headline-xl text-white mb-6">Complete Real Estate, Leasing, Property Management, and Appraisal Services</h1>
+<p class="text-body-lg font-body-lg text-surface-bright/90 mb-10 max-w-2xl">Expert guidance across the Philippine archipelago. We are a team of licensed real estate brokers and professional appraisers dedicated to securing your property's true value and potential.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<button class="flex items-center justify-center gap-2 px-6 py-4 bg-primary text-white text-label-caps font-label-caps hover:bg-black transition-all active:scale-95">
+<span class="material-symbols-outlined">search</span>
+                            Find a Property
+                        </button>
+<button class="flex items-center justify-center gap-2 px-6 py-4 bg-primary-container text-white text-label-caps font-label-caps hover:bg-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">sell</span>
+                            List My Property
+                        </button>
+<button class="flex items-center justify-center gap-2 px-6 py-4 bg-white text-primary text-label-caps font-label-caps hover:bg-surface-gray transition-all active:scale-95">
+<span class="material-symbols-outlined">analytics</span>
+                            Request Appraisal
+                        </button>
+<button class="flex items-center justify-center gap-2 px-6 py-4 bg-white/10 backdrop-blur-md border border-white/30 text-white text-label-caps font-label-caps hover:bg-white/20 transition-all active:scale-95">
+<span class="material-symbols-outlined">home_work</span>
+                            Management
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Services Bento Grid -->
+<section class="py-section-gap max-w-container-max mx-auto px-6 md:px-gutter">
+<div class="text-center mb-16">
+<h2 class="text-headline-lg font-headline-lg text-primary mb-4">Our Core Expertise</h2>
+<p class="text-body-md font-body-md text-secondary max-w-2xl mx-auto">Providing a comprehensive ecosystem of real estate solutions managed by licensed industry professionals.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[600px]">
+<!-- Appraisal -->
+<div class="md:col-span-8 group relative overflow-hidden bg-primary rounded-lg card-elevation">
+<div class="absolute inset-0 bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="A professional close-up of a real estate appraiser's workspace featuring detailed blueprints, a digital tablet showing property valuation data, and high-end architectural drawing tools. The lighting is bright and focused, conveying accuracy and expertise. Muted navy and professional gray tones dominate the scene, reflecting a corporate and reliable aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB80jUdCq_iwFSvmtmd4RYdz_AZhH3vDqaNNlclaCadOzW7dXp1leGQptWR-0eVOOjO6y1GIUt9F1CeAbIiRyZffCWV46_8KhIVb6PvKOfXGXWwGR0BqEL0kAVukRbNreX5uRBfAYLes3GZ1vVWxK_e1hMVVM33-vEkFwiAoLef4jpBciecrg3q8fjaFwvEyoHZq6CcWtfxWsq43YPM513zXSnnsPCSvJnZQNnXsU4WVc6-ZkSf6g9gR8CLj9l4Xh7zHSXdqNyTi72L')"></div>
+<div class="relative h-full flex flex-col justify-end p-8 text-white z-10">
+<span class="material-symbols-outlined text-4xl mb-4 text-primary-container">verified</span>
+<h3 class="text-headline-md font-headline-md mb-2">Professional Appraisal</h3>
+<p class="text-body-sm font-body-sm text-surface-bright/80 max-w-md">Certified property valuations for legal, tax, and sales purposes in accordance with Philippine standards.</p>
+</div>
+</div>
+<!-- Brokerage -->
+<div class="md:col-span-4 group relative overflow-hidden bg-primary-container rounded-lg card-elevation">
+<div class="relative h-full flex flex-col justify-center p-8 text-white z-10">
+<span class="material-symbols-outlined text-4xl mb-4 text-primary">real_estate_agent</span>
+<h3 class="text-headline-md font-headline-md mb-2">Licensed Brokerage</h3>
+<p class="text-body-sm font-body-sm text-white/90">Seamless transactions for buying and selling premium residential and commercial assets.</p>
+<a class="mt-6 flex items-center gap-2 text-label-caps font-label-caps border-b border-white w-fit pb-1 hover:gap-4 transition-all" href="#">Explore Listings</a>
+</div>
+</div>
+<!-- Management -->
+<div class="md:col-span-4 group relative overflow-hidden bg-surface-gray border border-outline-variant rounded-lg card-elevation">
+<div class="h-full flex flex-col p-8 z-10">
+<span class="material-symbols-outlined text-4xl mb-4 text-primary">corporate_fare</span>
+<h3 class="text-headline-md font-headline-md text-primary mb-2">Property Management</h3>
+<p class="text-body-sm font-body-sm text-secondary">Asset maintenance, tenant relations, and financial reporting for stress-free ownership.</p>
+</div>
+</div>
+<!-- Leasing -->
+<div class="md:col-span-8 group relative overflow-hidden bg-surface-bright border border-outline-variant rounded-lg card-elevation">
+<div class="absolute inset-0 bg-cover bg-center opacity-10 group-hover:scale-105 transition-transform duration-700" data-alt="An elegant, modern corporate reception area for a high-end property management firm. The setting features polished stone floors, warm wood paneling, and a minimalist service desk. The atmosphere is quiet, professional, and sophisticated with soft natural lighting streaming through large glass panels, utilizing a palette of navy, gold, and white." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5lnmXfHNNPUes4NHeD7Ocg8O85-n7O8uIq1MO-PViqtwdpwuXoLT8AuGMnX5xZbZIGvI0dfzaHCO51-0dqxZb7P5kOVmD9DoNC1VbtuYIzp81iSH56PVT_L65FrRkXTGvBj0oDN-sKXk7L8MTaV3xJKv2hpRTx7DQUBGEIiy4MrvQ6sQyfFXQBwSVj_ThuOjhh-QIWCt_mzV6L1Fb7JU0Emtpi1b4QE-nYgw8J2oCRDP36SASwchylfHEOY_h7WqSdXwdLWkDA6Mb')"></div>
+<div class="relative h-full flex flex-col justify-end p-8 z-10">
+<span class="material-symbols-outlined text-4xl mb-4 text-primary-container">key</span>
+<h3 class="text-headline-md font-headline-md text-primary mb-2">Leasing &amp; Rentals</h3>
+<p class="text-body-sm font-body-sm text-secondary max-w-md">End-to-end leasing solutions for landlords and corporate tenants in prime business districts.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Why Choose Us -->
+<section class="bg-primary py-section-gap overflow-hidden">
+<div class="max-w-container-max mx-auto px-6 md:px-gutter grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="relative">
+<div class="absolute -top-10 -left-10 w-40 h-40 border-t-2 border-l-2 border-primary-container opacity-30"></div>
+<div class="w-full aspect-[4/5] bg-cover bg-center rounded-lg shadow-2xl" data-alt="A portrait of a confident, professional Filipino real estate appraiser in a modern business suit, standing in front of a contemporary glass office building. He is holding a digital device with property data. The overall image has a corporate, trustworthy feel with high-key lighting and a professional color palette of navy blue and neutral whites." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCDa96JMZklNJltvTkNJEX2_A2BnIZQ1Gix7oZBtGbmzxsCVmDLq4rdwCIjwncDYQGZmMB7cokS0BiVp-kTEVzJ-BJNiujcce-JF6dt9QPM5jWSDLybJU78rGtfjyap3VUiMlKmihQ3cb2PwjofRcyCffBMaTHgTI0qqKrQ43aZRiIY-ymzDooUtGR0PeRpKOmW3Yp2xjWg-8JbnGAI7ojcnm3F2bffkp8BI6hinbD0yviGPkok0-_XSEcmSt3z6wFaqR5Z4dEQqbRP')"></div>
+<div class="absolute -bottom-6 -right-6 bg-primary-container p-8 text-white hidden md:block">
+<p class="text-headline-md font-headline-md">15+</p>
+<p class="text-label-caps font-label-caps">Years of Expertise</p>
+</div>
+</div>
+<div class="text-white">
+<h2 class="text-headline-lg font-headline-lg mb-8 leading-tight">Licensed Credibility in a Competitive Market</h2>
+<p class="text-body-md font-body-md text-slate-soft mb-8">At Allabode Property Solutions, we believe property decisions shouldn't be based on guesswork. Our team consists of PRC-Licensed Real Estate Brokers and Appraisers, ensuring that every piece of advice we give is backed by legal compliance and market data.</p>
+<ul class="space-y-6">
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary-container">verified_user</span>
+<div>
+<h4 class="font-bold mb-1">Government Licensed</h4>
+<p class="text-body-sm text-slate-soft">Fully compliant with the Real Estate Service Act of the Philippines (RESA Law).</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary-container">location_city</span>
+<div>
+<h4 class="font-bold mb-1">National Coverage</h4>
+<p class="text-body-sm text-slate-soft">Operating in Metro Manila, Cebu, Davao, and key emerging provincial hubs.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary-container">insights</span>
+<div>
+<h4 class="font-bold mb-1">Data-Driven Valuation</h4>
+<p class="text-body-sm text-slate-soft">We use rigorous analytical methods to determine fair market value, not just estimates.</p>
+</div>
+</li>
+</ul>
+<div class="mt-12">
+<button class="px-8 py-4 border border-primary-container text-primary-container hover:bg-primary-container hover:text-white transition-all text-label-caps font-label-caps">Learn More About Our Team</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Listings -->
+<section class="py-section-gap bg-surface-gray">
+<div class="max-w-container-max mx-auto px-6 md:px-gutter">
+<div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+<div>
+<h2 class="text-headline-lg font-headline-lg text-primary mb-2">Featured Listings</h2>
+<p class="text-body-md font-body-md text-secondary">A curated selection of premium residential and commercial spaces.</p>
+</div>
+<button class="flex items-center gap-2 text-primary font-bold border-b-2 border-primary pb-1 hover:text-primary-container hover:border-primary-container transition-all">
+                        View All Listings
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Property Card 1 -->
+<div class="bg-white rounded-lg overflow-hidden card-elevation group">
+<div class="relative h-64 overflow-hidden">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500" data-alt="A wide-angle exterior photo of a contemporary two-story luxury home in an upscale Quezon City residential enclave. The house features stone facades, large glass balconies, and manicured landscaping. The lighting is crisp afternoon sun, creating high-contrast shadows and highlights. The aesthetic is clean, professional, and aspirational, fitting for Allabode Realty's high-end listings." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBl24JUPy9gVxC8kFaNtEuzw7Gvh1eYKTISxtrnZLEoCVr79HrrSI1jSaO6dp78xGTROmb4pv7MubmeSLfmrnjorh6KacXFa1wvDHPCadpravFTdsTmrXCfyAVkFjpqc7PsHa7qRZSqbfzMTnl3GvMM5hH25aJWTSD9slpddX0v7-tW6D6HvItnO51ngyGPGqk2-ea-V5CeunTF6aRzfPcZJ0C8C5XpbZKzVOUB88aslySphMmVoMPVdYU50LyBM-B53K90bpoosfxI')"></div>
+<span class="absolute top-4 left-4 bg-status-available text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">For Sale</span>
+<span class="absolute top-4 right-4 bg-primary/80 backdrop-blur-md text-white p-2 rounded-full cursor-pointer hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-sm">favorite</span>
+</span>
+</div>
+<div class="p-6">
+<p class="text-primary-container font-bold text-headline-md mb-1">₱ 45,000,000</p>
+<h3 class="text-headline-md font-headline-md text-primary mb-4 leading-tight">Modern Zen Estate, Loyola Grand Villas</h3>
+<div class="flex items-center gap-4 text-secondary mb-6 text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">bed</span>
+<span class="">5 Beds</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">bathtub</span>
+<span class="">4 Baths</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">square_foot</span>
+<span class="">450 sqm</span>
+</div>
+</div>
+<button class="w-full py-3 border border-primary text-primary text-label-caps font-label-caps hover:bg-primary hover:text-white transition-all">View Details</button>
+</div>
+</div>
+<!-- Property Card 2 -->
+<div class="bg-white rounded-lg overflow-hidden card-elevation group">
+<div class="relative h-64 overflow-hidden">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500" data-alt="A sleek, modern high-rise condominium unit interior in Bonifacio Global City. The shot highlights a floor-to-ceiling window overlooking the city skyline, with a minimalist living area featuring designer furniture in neutral tones and navy accents. The atmosphere is urban, luxurious, and sophisticated, under bright morning light." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDFTwFCVJZkT3cs2w-MLA8CUjuR-7lOZURN4gPzTFGrLtyaAPWr_Fmpeh7xEX2G0P5WqUcosa8whHk02I32rl8SsRST-abbuhOrYAaEq9vhf0I8GModfX2ODXsSwh6qDJuTTE_Su32tSJvGyjiLoT8wrdupsfNnN-yiNDOhQb21SZ58vPA6mwxyr3bJMhuOLhFznISc54NtEdpiXibt6vY_2HzmO7ikays1MTJDlTpUxkRvKua4xU5c1lpS8RXbAWYW1WbNwlKQy0fK')"></div>
+<span class="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">For Lease</span>
+<span class="absolute top-4 right-4 bg-primary/80 backdrop-blur-md text-white p-2 rounded-full cursor-pointer hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-sm">favorite</span>
+</span>
+</div>
+<div class="p-6">
+<p class="text-primary-container font-bold text-headline-md mb-1">₱ 120,000/mo</p>
+<h3 class="text-headline-md font-headline-md text-primary mb-4 leading-tight">Executive Suite, The Proscenium</h3>
+<div class="flex items-center gap-4 text-secondary mb-6 text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">bed</span>
+<span class="">2 Beds</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">bathtub</span>
+<span class="">2 Baths</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">square_foot</span>
+<span class="">98 sqm</span>
+</div>
+</div>
+<button class="w-full py-3 border border-primary text-primary text-label-caps font-label-caps hover:bg-primary hover:text-white transition-all">View Details</button>
+</div>
+</div>
+<!-- Property Card 3 -->
+<div class="bg-white rounded-lg overflow-hidden card-elevation group">
+<div class="relative h-64 overflow-hidden">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500" data-alt="A spacious, high-ceilinged industrial-style commercial office space located in a prime district of Makati. The photo showcases open-concept workstations, exposed brick walls, and modern pendant lighting. Large windows provide ample natural light, creating a productive and corporate environment that appeals to business tenants. Navy blue and white color scheme." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCnm2P_1IcyiQW_koH5xJNb9uQMNzC-95FTyd_zYpT3heT9jYYWp3g6V56PIuUjW5oTm5zm2oVEUyN7aYqkjEqTh5Gi0jcJMVY3FJyyiqk7zT-bLtGmJVpEMz83EtLHDGllV7aOLF1OmdHFA66C67tOey16srDpdwbW3GEYOLL_w7dUcL7_zcLAAZocM_NIByByYfxxken8eGuB4y9vU0_mA-n_9lpF-UHM-rpvap0Y5UGRIgaS_NTJ45q-JmN8sgK-UOOSymGtMf3w')"></div>
+<span class="absolute top-4 left-4 bg-status-reserved text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Reserved</span>
+<span class="absolute top-4 right-4 bg-primary/80 backdrop-blur-md text-white p-2 rounded-full cursor-pointer hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-sm">favorite</span>
+</span>
+</div>
+<div class="p-6">
+<p class="text-primary-container font-bold text-headline-md mb-1">₱ 28,500,000</p>
+<h3 class="text-headline-md font-headline-md text-primary mb-4 leading-tight">Commercial Floor, Salcedo Village</h3>
+<div class="flex items-center gap-4 text-secondary mb-6 text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">work</span>
+<span class="">Office</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">local_parking</span>
+<span class="">3 Slots</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">square_foot</span>
+<span class="">210 sqm</span>
+</div>
+</div>
+<button class="w-full py-3 border border-primary text-primary text-label-caps font-label-caps hover:bg-primary hover:text-white transition-all">View Details</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Appraisal CTA Banner -->
+<section class="py-20 bg-surface text-center">
+<div class="max-w-4xl mx-auto px-6">
+<span class="material-symbols-outlined text-6xl text-primary-container mb-6">analytics</span>
+<h2 class="text-headline-lg font-headline-lg text-primary mb-4">What is your property really worth?</h2>
+<p class="text-body-lg text-secondary mb-10">Get a professional, legally-compliant appraisal report from our licensed team of experts. Crucial for inheritance, bank loans, and selling at the right price.</p>
+<div class="flex flex-col sm:flex-row justify-center gap-4">
+<button class="px-10 py-5 bg-primary text-white text-label-caps font-label-caps hover:bg-black shadow-lg">Start Appraisal Request</button>
+<button class="px-10 py-5 border border-primary text-primary text-label-caps font-label-caps hover:bg-primary hover:text-white">View Sample Report</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full pt-section-gap pb-stack-lg px-6 md:px-24 flex flex-col md:flex-row justify-between gap-12 bg-primary text-surface-bright">
+<div class="md:max-w-sm">
+<span class="text-headline-sm font-headline-sm font-bold text-primary-container block mb-6">Allabode Property Solutions</span>
+<p class="text-body-sm font-body-sm text-slate-soft mb-8">Your trusted partner for licensed real estate services in the Philippines. We combine institutional expertise with a personalized approach to property management and appraisal.</p>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full border border-slate-soft flex items-center justify-center text-slate-soft hover:text-primary-container hover:border-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">share</span>
+</a>
+<a class="w-10 h-10 rounded-full border border-slate-soft flex items-center justify-center text-slate-soft hover:text-primary-container hover:border-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">alternate_email</span>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-12">
+<div>
+<p class="text-label-caps font-label-caps text-white mb-6">Services</p>
+<ul class="space-y-4 text-body-sm text-slate-soft">
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Brokerage</a></li>
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Appraisal</a></li>
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Leasing</a></li>
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Property Management</a></li>
+</ul>
+</div>
+<div>
+<p class="text-label-caps font-label-caps text-white mb-6">Quick Links</p>
+<ul class="space-y-4 text-body-sm text-slate-soft">
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Privacy Policy</a></li>
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Terms of Service</a></li>
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Sitemap</a></li>
+<li class=""><a class="hover:text-primary-container transition-colors" href="#">Service Areas</a></li>
+</ul>
+</div>
+<div>
+<p class="text-label-caps font-label-caps text-white mb-6">Contact</p>
+<ul class="space-y-4 text-body-sm text-slate-soft">
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-sm">phone</span>
+                        +63 2 8888 1234
+                    </li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-sm">location_on</span>
+                        Makati City, Philippines
+                    </li>
+</ul>
+</div>
+</div>
+<div class="w-full border-t border-white/10 pt-8 mt-12 flex flex-col md:flex-row justify-between items-center gap-4 text-body-sm text-slate-soft md:absolute md:bottom-8 md:left-0 md:px-24">
+<p class="">© 2024 Allabode Property Solutions. All Rights Reserved.</p>
+</div>
+</footer>
+<!-- Simple Interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hover interactions for buttons
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.addEventListener('mousedown', () => {
+                    btn.classList.add('scale-95');
+                });
+                btn.addEventListener('mouseup', () => {
+                    btn.classList.remove('scale-95');
+                });
+                btn.addEventListener('mouseleave', () => {
+                    btn.classList.remove('scale-95');
+                });
+            });
+
+            // Navbar scroll effect
+            const header = document.querySelector('header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('py-3', 'shadow-md');
+                } else {
+                    header.classList.remove('py-3', 'shadow-md');
+                }
+            });
+        });
+    </script>
+</body></html>

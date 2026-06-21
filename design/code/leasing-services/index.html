@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Leasing Services | Allabode Realty</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Montserrat:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#131b2e",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary": "#000000",
+                        "gold-muted": "#0d518c",
+                        "tertiary-fixed-dim": "#e3c381",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#dae2fd",
+                        "on-background": "#0b1c30",
+                        "inverse-primary": "#bec6e0",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#9b8046",
+                        "on-tertiary-fixed-variant": "#59430e",
+                        "status-reserved": "#F59E0B",
+                        "surface-bright": "#f8f9ff",
+                        "on-error": "#ffffff",
+                        "navy-deep": "#0d518c",
+                        "surface-tint": "#565e74",
+                        "tertiary-container": "#261a00",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary-fixed": "#171c1f",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "secondary-fixed": "#dfe3e7",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#213145",
+                        "outline": "#76777d",
+                        "on-secondary-fixed-variant": "#43474b",
+                        "on-surface-variant": "#45464d",
+                        "primary": "#000000",
+                        "surface-container-highest": "#d3e4fe",
+                        "background": "#f8f9ff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "tertiary-fixed": "#ffdf9e",
+                        "on-surface": "#0b1c30",
+                        "on-primary-container": "#7c839b",
+                        "surface-variant": "#d3e4fe",
+                        "slate-soft": "#94A3B8",
+                        "secondary-container": "#dce0e4",
+                        "inverse-on-surface": "#eaf1ff",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "status-available": "#10B981",
+                        "surface-container": "#e5eeff",
+                        "secondary-fixed-dim": "#c3c7cb",
+                        "surface-gray": "#F8FAFC",
+                        "on-secondary-container": "#5e6367",
+                        "surface-container-low": "#eff4ff",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface": "#f8f9ff",
+                        "secondary": "#5a5f62",
+                        "primary-container": "#131b2e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "stack-lg": "2rem",
+                        "margin-mobile": "1rem",
+                        "section-gap": "5rem",
+                        "gutter": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "stack-md": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-xl-mobile": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-xl": ["Montserrat"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "headline-xl-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-elevation {
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+        }
+        .tonal-elevation:hover {
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border-color: #0d518c;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #f8f9ff 0%, #eff4ff 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-gutter py-4 bg-surface/95 backdrop-blur-md border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-2">
+<span class="text-headline-md font-headline-md font-bold text-navy-deep">Allabode Property Solutions</span>
+</div>
+<nav class="hidden lg:flex items-center gap-8">
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Home</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Listings</a>
+<a class="text-navy-deep font-bold border-b-2 border-gold-muted pb-1 font-body-sm" href="#">Leasing</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Buy/Sell</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Property Management</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Appraisal</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">About</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Contact</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden md:block px-4 py-2 border border-navy-deep text-navy-deep font-body-sm hover:bg-surface-gray transition-all">List Your Property</button>
+<button class="px-4 py-2 bg-gold-muted text-white font-body-sm hover:brightness-90 transition-all">Request Appraisal</button>
+</div>
+</header>
+<main class="pt-24">
+<!-- Hero Section -->
+<section class="relative min-h-[60vh] flex items-center justify-center hero-gradient px-gutter py-section-gap overflow-hidden">
+<div class="absolute inset-0 z-0 opacity-10">
+</div>
+<div class="relative z-10 max-w-container-max w-full text-center">
+<span class="inline-block px-3 py-1 bg-gold-muted/10 text-gold-muted font-label-caps text-label-caps mb-4 uppercase tracking-widest">Premium Leasing Solutions</span>
+<h1 class="font-headline-xl text-headline-xl md:text-headline-xl text-navy-deep mb-6 max-w-4xl mx-auto">
+                    Leasing services for owners, tenants, and investors.
+                </h1>
+<p class="text-body-lg text-secondary max-w-2xl mx-auto mb-10">
+                    Comprehensive property marketing, rigorous tenant screening, and seamless lease administration designed for the Philippine real estate landscape.
+                </p>
+<div class="flex flex-wrap justify-center gap-4">
+<a class="px-8 py-4 bg-navy-deep text-white font-headline-md text-body-md hover:bg-black transition-all flex items-center gap-2" href="#listing-form">
+                        List Your Property <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+<a class="px-8 py-4 border border-outline text-navy-deep font-headline-md text-body-md hover:bg-surface-gray transition-all" href="#options">
+                        View Leasing Options
+                    </a>
+</div>
+</div>
+</section>
+<!-- Leasing Options Bento Grid -->
+<section class="py-section-gap px-gutter max-w-container-max mx-auto" id="options">
+<div class="mb-12 text-center md:text-left">
+<h2 class="font-headline-lg text-headline-lg text-navy-deep mb-2">Tailored for Every Need</h2>
+<p class="text-secondary font-body-md">Specialized leasing durations and formats to maximize asset utility.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Long-Term (Large Anchor) -->
+<div class="md:col-span-8 group relative overflow-hidden bg-white border border-outline-variant p-8 tonal-elevation flex flex-col justify-between min-h-[400px]">
+<div class="absolute top-0 right-0 w-1/2 h-full opacity-5 group-hover:opacity-10 transition-opacity">
+<img class="w-full h-full object-cover" data-alt="A clean, professional wide-angle shot of a high-end modern condominium interior in Manila. The lighting is bright and airy with floor-to-ceiling windows showing a urban skyline. The furniture is minimalist and upscale, reflecting a premium corporate lifestyle aesthetic in a deep navy and white color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCd1rQ_KZF2HktKa9XtBGO5ILG4OheP71i7_q7CCcFgJgaIvejrCm141IUeGkZkR4FtIlYwL5BEvUyxOgu9_8ib58D2bsgSnYXAtrDAcBhC0wyUv18OVMqAPs5Y9QkE8IXXJ9jY1JYyiwGVlrsHM5TNYMKTgdHdy12CxefhNCwySxs04-pZ4-iDSRCkBnO9x-T3N8K3d6qqWqExmtJSIidSbuO39F_aqd4SJeMW2N3l-PBGRyLGlZ9lfw8Vnr3ITZ1fUziuPdeYy72S"/>
+</div>
+<div class="relative z-10">
+<span class="material-symbols-outlined text-gold-muted text-4xl mb-6">home_work</span>
+<h3 class="font-headline-md text-headline-md text-navy-deep mb-4">Long-term Leasing</h3>
+<p class="text-secondary max-w-md mb-6">Sustainable occupancy for 12 months or more. Ideal for residential owners seeking stable, passive income and tenants looking for a permanent home base.</p>
+<ul class="space-y-3 mb-8">
+<li class="flex items-center gap-3 text-body-sm"><span class="material-symbols-outlined text-gold-muted text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> Notarized Lease Contracts</li>
+<li class="flex items-center gap-3 text-body-sm"><span class="material-symbols-outlined text-gold-muted text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> Quarterly Inspections</li>
+<li class="flex items-center gap-3 text-body-sm"><span class="material-symbols-outlined text-gold-muted text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> PDC Management</li>
+</ul>
+</div>
+<button class="relative z-10 self-start text-navy-deep font-bold border-b border-navy-deep hover:text-gold-muted hover:border-gold-muted transition-all">Explore Long-term</button>
+</div>
+<!-- Short-Term (Tall) -->
+<div class="md:col-span-4 bg-navy-deep p-8 text-white flex flex-col justify-between tonal-elevation min-h-[400px]">
+<div>
+<span class="material-symbols-outlined text-white text-4xl mb-6">calendar_month</span>
+<h3 class="font-headline-md text-headline-md mb-4 text-surface-bright">Short-term &amp; Staycation</h3>
+<p class="text-slate-soft mb-6">Higher yield opportunities for furnished units in prime business districts and leisure hubs.</p>
+</div>
+<div>
+<div class="h-32 mb-6 rounded bg-white/5 overflow-hidden">
+<img class="w-full h-full object-cover opacity-60" data-alt="A cozy, high-quality photograph of a stylish loft apartment designed for short-term stays. Warm ambient lighting creates an inviting atmosphere. The design features gold accents, dark wood textures, and plush textures, emphasizing a luxurious and comfortable travel experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYS25W_eoVm_GzgERFBCJ6m61mYgwf15g_IBvjgAWcKarew0jLn04--6lYrCIpfMk0eHZgPX3tbcA88CN9_IVizbt1p2SzLBN5CDInGR7nv39zU90RyrcY-t1mEeG44GLqcC84Jft4SCq-F3mQZsv2_3Hwi-SEiLKEImDUKIFCpPaoj5XHJvyIQ5xcDKFyil2VDTdwgZbNPnVcCu3JjgEXUJSC_YURt_8aF6awBrXBvgweeg-lGH5Xlxp-570cZyTsnxMNUnSxLOfq"/>
+</div>
+<button class="w-full py-3 bg-white text-navy-deep font-body-sm hover:brightness-110 transition-all">Managed Hosting</button>
+</div>
+</div>
+<!-- Bed Space (Small) -->
+<div class="md:col-span-6 bg-surface-gray border border-outline-variant p-8 tonal-elevation flex gap-6 items-start">
+<div class="bg-white p-4 border border-outline-variant rounded">
+<span class="material-symbols-outlined text-navy-deep text-3xl">group</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-navy-deep mb-2">Bed Space Options</h3>
+<p class="text-secondary text-body-sm mb-4">Strategic shared living solutions for corporate staff housing and student accommodations in key university belts.</p>
+<a class="text-gold-muted font-bold flex items-center gap-2 text-sm" href="#">View Portfolio <span class="material-symbols-outlined text-xs">open_in_new</span></a>
+</div>
+</div>
+<!-- Investment Advisory (Small) -->
+<div class="md:col-span-6 bg-white border border-outline-variant p-8 tonal-elevation flex gap-6 items-start">
+<div class="bg-surface-gray p-4 border border-outline-variant rounded">
+<span class="material-symbols-outlined text-navy-deep text-3xl">trending_up</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-navy-deep mb-2">Investor Portfolios</h3>
+<p class="text-secondary text-body-sm mb-4">Yield analysis and multi-unit leasing strategies for institutional investors and multi-property owners.</p>
+<a class="text-gold-muted font-bold flex items-center gap-2 text-sm" href="#">ROI Analysis <span class="material-symbols-outlined text-xs">insert_chart</span></a>
+</div>
+</div>
+</div>
+</section>
+<!-- Services Grid -->
+<section class="bg-navy-deep py-section-gap px-gutter overflow-hidden relative">
+<div class="max-w-container-max mx-auto relative z-10">
+<div class="max-w-2xl mb-16">
+<h2 class="font-headline-lg text-headline-lg text-surface-bright mb-4">End-to-End Leasing Management</h2>
+<p class="text-slate-soft text-body-lg">We handle the complexities of the leasing lifecycle so you can focus on your next investment.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Card 1 -->
+<div class="p-8 bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+<div class="w-12 h-12 bg-white/20 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-white">how_to_reg</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-surface-bright mb-4">Tenant Screening</h4>
+<p class="text-slate-soft text-body-sm mb-6">Rigorous background checks including employment verification, financial capacity, and previous landlord references to ensure quality tenancy.</p>
+<div class="h-1 w-12 bg-white/50"></div>
+</div>
+<!-- Card 2 -->
+<div class="p-8 bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+<div class="w-12 h-12 bg-white/20 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-white">description</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-surface-bright mb-4">Lease Documentation</h4>
+<p class="text-slate-soft text-body-sm mb-6">Preparation of legally binding, comprehensive lease agreements tailored to current Philippine property laws and local regulations.</p>
+<div class="h-1 w-12 bg-white/50"></div>
+</div>
+<!-- Card 3 -->
+<div class="p-8 bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+<div class="w-12 h-12 bg-white/20 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-white">key</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-surface-bright mb-4">Move-in Coordination</h4>
+<p class="text-slate-soft text-body-sm mb-6">Facilitating unit walkthroughs, utility transfers, and inventory audits to ensure a smooth transition for new occupants.</p>
+<div class="h-1 w-12 bg-white/50"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Form Section -->
+<section class="py-section-gap px-gutter bg-surface-gray" id="listing-form">
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-navy-deep mb-6">Maximize Your Property's Potential</h2>
+<p class="text-secondary text-body-lg mb-8">Ready to list with the most trusted realty in the Philippines? Our appraisers and leasing agents are ready to help you find the perfect tenant.</p>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 shrink-0 bg-white tonal-elevation flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-navy-deep">verified</span>
+</div>
+<div>
+<h5 class="font-bold text-navy-deep">PRC Licensed Expertise</h5>
+<p class="text-body-sm text-secondary">Work only with professionals who understand legal and ethical standards.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 shrink-0 bg-white tonal-elevation flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-navy-deep">ads_click</span>
+</div>
+<div>
+<h5 class="font-bold text-navy-deep">Strategic Marketing</h5>
+<p class="text-body-sm text-secondary">Exposure on top real estate portals and our exclusive investor network.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white p-8 md:p-12 tonal-elevation border border-outline-variant">
+<h3 class="font-headline-md text-headline-md text-navy-deep mb-8">List Your Property</h3>
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-1">
+<label class="text-body-sm font-bold text-navy-deep">Full Name</label>
+<input class="w-full px-4 py-3 border border-outline-variant focus:ring-0 focus:border-navy-deep outline-none bg-surface-gray transition-all" placeholder="John Doe" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-body-sm font-bold text-navy-deep">Email Address</label>
+<input class="w-full px-4 py-3 border border-outline-variant focus:ring-0 focus:border-navy-deep outline-none bg-surface-gray transition-all" placeholder="john@example.com" type="email"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-1">
+<label class="text-body-sm font-bold text-navy-deep">Property Type</label>
+<select class="w-full px-4 py-3 border border-outline-variant focus:ring-0 focus:border-navy-deep outline-none bg-surface-gray transition-all">
+<option>Condominium</option>
+<option>House &amp; Lot</option>
+<option>Commercial Space</option>
+<option>Warehousing</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-body-sm font-bold text-navy-deep">Preferred Term</label>
+<select class="w-full px-4 py-3 border border-outline-variant focus:ring-0 focus:border-navy-deep outline-none bg-surface-gray transition-all">
+<option>Long-term</option>
+<option>Short-term</option>
+<option>Bed Space / Staff Housing</option>
+</select>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-body-sm font-bold text-navy-deep">Location</label>
+<input class="w-full px-4 py-3 border border-outline-variant focus:ring-0 focus:border-navy-deep outline-none bg-surface-gray transition-all" placeholder="City / District (e.g. BGC, Makati)" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-body-sm font-bold text-navy-deep">Additional Details</label>
+<textarea class="w-full px-4 py-3 border border-outline-variant focus:ring-0 focus:border-navy-deep outline-none bg-surface-gray transition-all" placeholder="Tell us more about the property..." rows="4"></textarea>
+</div>
+<button class="w-full py-4 bg-navy-deep text-white font-bold hover:bg-black transition-all flex items-center justify-center gap-2" type="submit">
+                            Submit Listing Request <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</form>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full pt-section-gap pb-stack-lg px-gutter flex flex-col md:flex-row justify-between gap-gutter bg-navy-deep">
+<div class="space-y-6 max-w-sm">
+<span class="text-headline-sm font-headline-sm font-bold text-white">Allabode Property Solutions</span>
+<p class="text-slate-soft text-body-sm">Expert brokerage and professional appraisal services since 2018. Your strategic partner in Philippine real estate excellence.</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-2 gap-12">
+<div class="flex flex-col gap-4">
+<span class="text-label-caps font-label-caps text-surface-bright/50 uppercase tracking-widest mb-2">Navigation</span>
+<a class="text-slate-soft hover:text-surface-bright transition-colors text-body-sm" href="#">Home</a>
+<a class="text-slate-soft hover:text-surface-bright transition-colors text-body-sm" href="#">Listings</a>
+<a class="text-white underline text-body-sm" href="#">Leasing</a>
+<a class="text-slate-soft hover:text-surface-bright transition-colors text-body-sm" href="#">Appraisal</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="text-label-caps font-label-caps text-surface-bright/50 uppercase tracking-widest mb-2">Legal</span>
+<a class="text-slate-soft hover:text-surface-bright transition-colors text-body-sm" href="#">Privacy Policy</a>
+<a class="text-slate-soft hover:text-surface-bright transition-colors text-body-sm" href="#">Terms of Service</a>
+<a class="text-slate-soft hover:text-surface-bright transition-colors text-body-sm" href="#">Sitemap</a>
+<a class="text-slate-soft hover:text-surface-bright transition-colors text-body-sm" href="#">Service Areas</a>
+</div>
+</div>
+</footer>
+<div class="w-full bg-black py-6 px-gutter border-t border-white/5">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-slate-soft text-body-sm">© 2024 Allabode Property Solutions. All Rights Reserved.</p>
+<div class="flex gap-4">
+<a class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-soft hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-sm">share</span>
+</a>
+<a class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-soft hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-sm">mail</span>
+</a>
+</div>
+</div>
+</div>
+<script>
+        // Micro-interaction for form inputs
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('focus', () => {
+                el.parentElement.querySelector('label')?.classList.add('text-gold-muted');
+            });
+            el.addEventListener('blur', () => {
+                el.parentElement.querySelector('label')?.classList.remove('text-gold-muted');
+            });
+        });
+
+        // Sticky Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md', 'py-3');
+                header.classList.remove('py-4');
+            } else {
+                header.classList.remove('shadow-md', 'py-3');
+                header.classList.add('py-4');
+            }
+        });
+    </script>
+</body></html>

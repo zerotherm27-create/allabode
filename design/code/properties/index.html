@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Property Listings | Allabode Realty</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Montserrat:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#131b2e",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary": "#000000",
+                        "gold-muted": "#B4975A",
+                        "tertiary-fixed-dim": "#e3c381",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#dae2fd",
+                        "on-background": "#0b1c30",
+                        "inverse-primary": "#bec6e0",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#9b8046",
+                        "on-tertiary-fixed-variant": "#59430e",
+                        "status-reserved": "#F59E0B",
+                        "surface-bright": "#f8f9ff",
+                        "on-error": "#ffffff",
+                        "navy-deep": "#0d518c",
+                        "surface-tint": "#565e74",
+                        "tertiary-container": "#261a00",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary-fixed": "#171c1f",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "secondary-fixed": "#dfe3e7",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#213145",
+                        "outline": "#76777d",
+                        "on-secondary-fixed-variant": "#43474b",
+                        "on-surface-variant": "#45464d",
+                        "primary": "#000000",
+                        "surface-container-highest": "#d3e4fe",
+                        "background": "#f8f9ff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "tertiary-fixed": "#ffdf9e",
+                        "on-surface": "#0b1c30",
+                        "on-primary-container": "#7c839b",
+                        "surface-variant": "#d3e4fe",
+                        "slate-soft": "#94A3B8",
+                        "secondary-container": "#dce0e4",
+                        "inverse-on-surface": "#eaf1ff",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "status-available": "#10B981",
+                        "surface-container": "#e5eeff",
+                        "secondary-fixed-dim": "#c3c7cb",
+                        "surface-gray": "#F8FAFC",
+                        "on-secondary-container": "#5e6367",
+                        "surface-container-low": "#eff4ff",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface": "#f8f9ff",
+                        "secondary": "#5a5f62",
+                        "primary-container": "#131b2e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "stack-lg": "2rem",
+                        "margin-mobile": "1rem",
+                        "section-gap": "5rem",
+                        "gutter": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "stack-md": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-xl-mobile": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-xl": ["Montserrat"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "headline-xl-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .listing-card:hover {
+            box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.08);
+            border-color: #0d518c;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94A3B8;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-navy-deep/30">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-gutter py-4 bg-surface/95 backdrop-blur-md border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-8">
+<span class="text-headline-md font-headline-md font-bold text-navy-deep">Allabode Property Solutions</span>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Home</a>
+<a class="text-navy-deep font-bold border-b-2 border-navy-deep pb-1 font-body-sm" href="#">Listings</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Leasing</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Buy/Sell</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Property Management</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Appraisal</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">About</a>
+<a class="text-secondary hover:text-navy-deep transition-colors font-body-sm" href="#">Contact</a>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<button class="hidden md:block px-4 py-2 border border-navy-deep text-navy-deep font-label-caps text-label-caps hover:bg-surface-gray transition-all">List Your Property</button>
+<button class="px-5 py-2 bg-navy-deep text-white font-label-caps text-label-caps hover:brightness-90 transition-all shadow-md">Request Appraisal</button>
+</div>
+</header>
+<main class="pt-24 min-h-screen max-w-container-max mx-auto px-gutter pb-section-gap">
+<!-- Search & Filter Header -->
+<div class="mb-stack-lg flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+<div>
+<h1 class="text-headline-xl font-headline-xl text-navy-deep">Premium Listings</h1>
+<p class="text-body-md text-secondary mt-2">Explore our curated collection of verified properties across the Philippines.</p>
+</div>
+<div class="flex items-center gap-4 bg-white p-2 rounded shadow-sm border border-outline-variant">
+<div class="flex items-center px-3 border-r border-outline-variant">
+<span class="material-symbols-outlined text-slate-soft mr-2">search</span>
+<input class="border-none focus:ring-0 text-body-sm w-48 lg:w-64" placeholder="Search location or building..." type="text"/>
+</div>
+<button class="flex items-center gap-2 text-navy-deep font-label-caps text-label-caps px-4 py-2 hover:bg-surface-gray transition-colors">
+<span class="material-symbols-outlined">sort</span> Sort By
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Sidebar Filter -->
+<aside class="lg:col-span-3 space-y-stack-lg">
+<div class="bg-white p-6 rounded border border-outline-variant shadow-sm sticky top-28">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-headline-md text-headline-md text-navy-deep flex items-center gap-2">
+<span class="material-symbols-outlined">tune</span> Filters
+                        </h2>
+<button class="text-label-caps font-label-caps text-navy-deep hover:underline">Clear All</button>
+</div>
+<div class="space-y-6">
+<!-- Transaction Type -->
+<div>
+<label class="block text-body-sm font-bold text-navy-deep mb-3 uppercase tracking-wider">Transaction</label>
+<div class="flex gap-2">
+<button class="flex-1 py-2 px-3 text-label-caps font-label-caps bg-navy-deep text-white rounded-sm text-center">For Sale</button>
+<button class="flex-1 py-2 px-3 text-label-caps font-label-caps bg-surface-gray text-secondary border border-outline-variant hover:border-navy-deep rounded-sm text-center">For Rent</button>
+</div>
+</div>
+<!-- Price Range -->
+<div>
+<label class="block text-body-sm font-bold text-navy-deep mb-3 uppercase tracking-wider">Price Range (₱)</label>
+<input class="w-full h-1 bg-outline-variant rounded-lg appearance-none cursor-pointer accent-navy-deep" type="range"/>
+<div class="flex justify-between mt-2 text-label-caps text-slate-soft">
+<span class="">1M</span>
+<span class="">500M+</span>
+</div>
+</div>
+<!-- Property Type -->
+<div>
+<label class="block text-body-sm font-bold text-navy-deep mb-3 uppercase tracking-wider">Property Type</label>
+<div class="space-y-2">
+<label class="flex items-center gap-3 text-body-sm text-secondary hover:text-navy-deep cursor-pointer">
+<input checked="" class="rounded-sm border-outline-variant text-navy-deep focus:ring-navy-deep" type="checkbox"/>
+                                    Condominium
+                                </label>
+<label class="flex items-center gap-3 text-body-sm text-secondary hover:text-navy-deep cursor-pointer">
+<input class="rounded-sm border-outline-variant text-navy-deep focus:ring-navy-deep" type="checkbox"/>
+                                    House &amp; Lot
+                                </label>
+<label class="flex items-center gap-3 text-body-sm text-secondary hover:text-navy-deep cursor-pointer">
+<input class="rounded-sm border-outline-variant text-navy-deep focus:ring-navy-deep" type="checkbox"/>
+                                    Commercial Space
+                                </label>
+<label class="flex items-center gap-3 text-body-sm text-secondary hover:text-navy-deep cursor-pointer">
+<input class="rounded-sm border-outline-variant text-navy-deep focus:ring-navy-deep" type="checkbox"/>
+                                    Residential Lot
+                                </label>
+</div>
+</div>
+<!-- Bedrooms -->
+<div>
+<label class="block text-body-sm font-bold text-navy-deep mb-3 uppercase tracking-wider">Bedrooms</label>
+<div class="grid grid-cols-4 gap-2">
+<button class="py-2 border border-outline-variant text-body-sm hover:bg-navy-deep hover:text-white transition-all">Any</button>
+<button class="py-2 border border-outline-variant text-body-sm hover:bg-navy-deep hover:text-white transition-all">1+</button>
+<button class="py-2 border border-navy-deep bg-navy-deep text-white text-body-sm">2+</button>
+<button class="py-2 border border-outline-variant text-body-sm hover:bg-navy-deep hover:text-white transition-all">3+</button>
+</div>
+</div>
+<button class="w-full py-4 bg-navy-deep text-white font-label-caps text-label-caps hover:bg-black transition-all mt-4">
+                            Apply Filters
+                        </button>
+</div>
+</div>
+</aside>
+<!-- Listing Grid -->
+<section class="lg:col-span-9">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<article class="listing-card bg-white border border-outline-variant transition-all duration-300 group flex flex-col h-full overflow-hidden">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A professional architectural photograph of a sleek, modern luxury condominium building in Bonifacio Global City, Taguig. The scene is shot during the golden hour with warm, cinematic sunlight reflecting off the glass facade. The sky is a clear gradient of orange and deep blue. The image is clean, sharp, and high-end, representing prime Philippine real estate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6KrvW_jhzPzm3gfgl3oCUn9erl9Jq6ZhfFWH7LvAsSnDqJcvSyFp2DbL90g8mLXp0QbvLTWs8mp7foLlGvQ4UPtKAVpSxx1gZOngBYb9szmAe1YbCc3NPX1JWBXNFN2wBFW_skoebHHC3Ua5QGwnmS7ljhRVr4k10YpUVGl0NmZKgSCDYDDehZFwJCQP9BQuvMroAFaQF45BCGXG5WAtk4r1tiCEAvHNrlwrZCLNRl4pmBYCWA80NizJGEbQhRpsZmHK_5R5mnPq8"/>
+<span class="absolute top-4 left-4 bg-status-available text-white text-label-caps font-label-caps px-3 py-1.5 shadow-lg">Available</span>
+<button class="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-navy-deep transition-all">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-navy-deep leading-tight group-hover:text-navy-deep/80 transition-colors">Aurelia Residences</h3>
+<p class="text-headline-md font-headline-md font-bold text-navy-deep">₱185M</p>
+</div>
+<p class="flex items-center gap-1 text-body-sm text-slate-soft mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span> BGC, Taguig City
+                            </p>
+<div class="grid grid-cols-3 gap-2 py-4 border-t border-surface-gray mt-auto">
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bed</span>
+<span class="text-body-sm font-bold">3 BR</span>
+</div>
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bathtub</span>
+<span class="text-body-sm font-bold">3.5 BA</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-slate-soft">square_foot</span>
+<span class="text-body-sm font-bold">240 sqm</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="listing-card bg-white border border-outline-variant transition-all duration-300 group flex flex-col h-full overflow-hidden">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A wide-angle shot of a sprawling contemporary tropical house in Forbes Park, Makati. The design features floor-to-ceiling windows, high-quality dark wood accents, and a pristine swimming pool in the foreground. The lighting is bright and airy, midday sun casting sharp architectural shadows. The surrounding landscape is lush with manicured tropical plants, conveying elite status and privacy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJkSSxAHSrm2X9yhm5cVd_2WdaglGkR_C4Xmdi2p0Rg3MwVc59EN9-wrDTFbJ4fAtH9tCGQOHK00HWY863sZDWhOfe_LCNNsoTcdNKn5UMN-z8_aZshpjh4BNf3gchOXqIT1T25oMGKsdngJcPyA0nMC7qc-Wns8HcOxR9PtRXx6bD-Mzsh2DGqBOa59gxQfLOGx52c05sWSVCa1FMmDtNagbhm-Hbb0JmrKIJ4gPHsR_vjtX-Tj8QmwmA6VWkPbr3V6NOeCKzhs3B"/>
+<span class="absolute top-4 left-4 bg-status-reserved text-white text-label-caps font-label-caps px-3 py-1.5 shadow-lg">Reserved</span>
+<button class="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-navy-deep transition-all">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-navy-deep leading-tight group-hover:text-navy-deep/80 transition-colors">Forbes Modern Estate</h3>
+<p class="text-headline-md font-headline-md font-bold text-navy-deep">₱520M</p>
+</div>
+<p class="flex items-center gap-1 text-body-sm text-slate-soft mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span> Forbes Park, Makati
+                            </p>
+<div class="grid grid-cols-3 gap-2 py-4 border-t border-surface-gray mt-auto">
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bed</span>
+<span class="text-body-sm font-bold">5 BR</span>
+</div>
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bathtub</span>
+<span class="text-body-sm font-bold">6 BA</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-slate-soft">square_foot</span>
+<span class="text-body-sm font-bold">1,200 sqm</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="listing-card bg-white border border-outline-variant transition-all duration-300 group flex flex-col h-full overflow-hidden">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A modern, high-tech office building located in Ortigas Center, Pasig. The image highlights the building's sustainable green facade with vertical gardens and sleek steel structures. The lighting is crisp and cool, suggesting a professional and corporate environment. People in business attire are seen entering the grand lobby, creating a sense of professional activity and economic growth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCL288ZtGmykU_-lnCSfvZIsS2zeiyRvtnjhbSnSqjPJw2yX6ezlgkfEPGpXHPMjcBlxtJiQvlJkCMBX2blqo6bo4whlCrZLsOpCOIGpRTDe9WbZrAoTFvSsZz_11xuoNu01FhgJ0rWYJji5i1nj_Tmszx1CeUTFho_081_I9H0u2dhgLePGFK9-oMbunqEb-8CRfdk2QcVddefIfGMnsrSV2JR_ed2u2aJ1_h9bkr4EoTmHngsgKZH5pnTOJ_eCEstfxNRvSlVb9iQ"/>
+<span class="absolute top-4 left-4 bg-status-available text-white text-label-caps font-label-caps px-3 py-1.5 shadow-lg">Available</span>
+<button class="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-navy-deep transition-all">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-navy-deep leading-tight group-hover:text-navy-deep/80 transition-colors">Ortigas Prime Tower</h3>
+<p class="text-headline-md font-headline-md font-bold text-navy-deep">₱75M</p>
+</div>
+<p class="flex items-center gap-1 text-body-sm text-slate-soft mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span> Ortigas, Pasig City
+                            </p>
+<div class="grid grid-cols-3 gap-2 py-4 border-t border-surface-gray mt-auto">
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">work</span>
+<span class="text-body-sm font-bold">Office</span>
+</div>
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">garage</span>
+<span class="text-body-sm font-bold">4 Pkg</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-slate-soft">square_foot</span>
+<span class="text-body-sm font-bold">350 sqm</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="listing-card bg-white border border-outline-variant transition-all duration-300 group flex flex-col h-full overflow-hidden">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="An elegant residential interior of a high-rise loft in Salcedo Village, Makati. The space is minimalist and sophisticated, featuring a palette of cream, charcoal, and warm oak. Large windows offer a stunning view of the city skyline. The lighting is soft and diffused, creating a serene and luxurious living space. A statement light fixture hangs above a marble dining table, emphasizing modern design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDWApH87TTUQJeZPY5zBzDOoT7pJfxnC7fYdAycpZwv8LQomMx_ekQxiMPEafcHS3CAK5YFMLqo3jAPHofzd4xkyuhz7YtqhzwaInqaAqBvx-BLUx-pi4zuy9NFhfktvxwN3T4HdI93DePmH0zh_T3XGGk8xvzeelcAs0MOPDPgAQDSz4vumua4RNEH0ohJjl5ZRJimNsL9c-BEpuKe5AGGmHp9-Z6DGBhNePd-1-wOtksVkk-Mo0K6YbcDSVHVIWK0IA3a5avEWBZ"/>
+<span class="absolute top-4 left-4 bg-status-available text-white text-label-caps font-label-caps px-3 py-1.5 shadow-lg">Available</span>
+<button class="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-navy-deep transition-all">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-navy-deep leading-tight group-hover:text-navy-deep/80 transition-colors">The Salcedo Loft</h3>
+<p class="text-headline-md font-headline-md font-bold text-navy-deep">₱45M</p>
+</div>
+<p class="flex items-center gap-1 text-body-sm text-slate-soft mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span> Salcedo, Makati
+                            </p>
+<div class="grid grid-cols-3 gap-2 py-4 border-t border-surface-gray mt-auto">
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bed</span>
+<span class="text-body-sm font-bold">2 BR</span>
+</div>
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bathtub</span>
+<span class="text-body-sm font-bold">2 BA</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-slate-soft">square_foot</span>
+<span class="text-body-sm font-bold">115 sqm</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 5 -->
+<article class="listing-card bg-white border border-outline-variant transition-all duration-300 group flex flex-col h-full overflow-hidden">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A scenic photograph of a beachfront property in El Nido, Palawan. The design is eco-luxury, using sustainable bamboo and stone. The crystal clear turquoise water of the bay is visible just steps from the property. The lighting is the vibrant, saturated blue of a perfect tropical day. The atmosphere is peaceful and exclusive, representing a world-class vacation home or resort investment opportunity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAE9eUq4qwHWeCUOuEv5MC3LBZweGcUHH4MeyAvJI3S_DK2qfjiXvoGftxCvshoIDUeLyRafJPmrCr8v2RZUcx-h8AJE-joS-tNOHM1T6YlneFhIWz5VAGWIIxEiFy-W-Td1tndSgjvK5EhWmd7JSTZK5aAVXGYPCFmK2TMlYM0DiTx8fAdQr6EFydxIhbes0vMJ6vemGegeBpYVe_PsK-P49HQAzYkQ3FA0LVwKbhSuQByq5OpYm2sPykgOZJZ_1wYTnLWKZRGNBhF"/>
+<span class="absolute top-4 left-4 bg-status-available text-white text-label-caps font-label-caps px-3 py-1.5 shadow-lg">Available</span>
+<button class="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-navy-deep transition-all">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-navy-deep leading-tight group-hover:text-navy-deep/80 transition-colors">Palawan Eco-Villa</h3>
+<p class="text-headline-md font-headline-md font-bold text-navy-deep">₱120M</p>
+</div>
+<p class="flex items-center gap-1 text-body-sm text-slate-soft mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span> El Nido, Palawan
+                            </p>
+<div class="grid grid-cols-3 gap-2 py-4 border-t border-surface-gray mt-auto">
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">pool</span>
+<span class="text-body-sm font-bold">Private</span>
+</div>
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bed</span>
+<span class="text-body-sm font-bold">4 BR</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-slate-soft">square_foot</span>
+<span class="text-body-sm font-bold">2,500 sqm</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 6 -->
+<article class="listing-card bg-white border border-outline-variant transition-all duration-300 group flex flex-col h-full overflow-hidden">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A modern luxury townhouse row in Quezon City, featuring clean lines, large glass windows, and a warm wooden garage door. The lighting is twilight, with warm interior lights glowing and highlighting the premium textures of the building. The street is quiet and upscale, with mature trees and a sense of community. The architectural style is minimalist yet inviting, perfect for a family home." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoYRTGo9DIiG9mugZJgqspWIA94jXmWwNBxUXH8fel0Z3f9Dsj4ZWIDU0rDxn0XD6SM4b31NEi18cnHhsWuup2iKz4atDx3gQeE0ad4ttZTn7ViqYlfvDJ7qBQQ3b27moM833irnU2dB2CQSnlt6NwrsuqzqBFsFEQ4Mc4j2vCBheSBnnK2Ft7gRKdbHqnlBblVRgyRkfhBgTa5yx2YvSMjZQeVWw-yjkw02b6OxpuncOnIj0zIZ6AH_Ws1r-TNZ3FM-ZoiPMkRdsb"/>
+<span class="absolute top-4 left-4 bg-status-available text-white text-label-caps font-label-caps px-3 py-1.5 shadow-lg">Available</span>
+<button class="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-navy-deep transition-all">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-navy-deep leading-tight group-hover:text-navy-deep/80 transition-colors">QC Modern Townhome</h3>
+<p class="text-headline-md font-headline-md font-bold text-navy-deep">₱32M</p>
+</div>
+<p class="flex items-center gap-1 text-body-sm text-slate-soft mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span> New Manila, QC
+                            </p>
+<div class="grid grid-cols-3 gap-2 py-4 border-t border-surface-gray mt-auto">
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bed</span>
+<span class="text-body-sm font-bold">4 BR</span>
+</div>
+<div class="flex flex-col items-center gap-1 border-r border-surface-gray">
+<span class="material-symbols-outlined text-slate-soft">bathtub</span>
+<span class="text-body-sm font-bold">4 BA</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-slate-soft">square_foot</span>
+<span class="text-body-sm font-bold">280 sqm</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+<!-- Pagination -->
+<div class="mt-section-gap flex justify-center items-center gap-2">
+<button class="p-2 border border-outline-variant hover:border-navy-deep transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center bg-navy-deep text-white font-bold">1</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant hover:bg-surface-gray transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant hover:bg-surface-gray transition-colors">3</button>
+<span class="mx-2 text-slate-soft">...</span>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant hover:bg-surface-gray transition-colors">12</button>
+<button class="p-2 border border-outline-variant hover:border-navy-deep transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full pt-section-gap pb-stack-lg px-gutter flex flex-col md:flex-row justify-between gap-gutter bg-navy-deep text-surface-bright">
+<div class="md:w-1/3">
+<span class="text-headline-sm font-headline-sm font-bold text-white mb-6 block">Allabode Property Solutions</span>
+<p class="text-body-sm text-slate-soft leading-relaxed">
+                A licensed appraisal and real estate brokerage firm specializing in premium residential and commercial properties across the Philippines. Committed to transparency, expertise, and client success.
+            </p>
+<div class="flex gap-4 mt-6">
+<a class="w-10 h-10 rounded-full border border-slate-soft/30 flex items-center justify-center hover:bg-white hover:text-navy-deep transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">public</span>
+</a>
+<a class="w-10 h-10 rounded-full border border-slate-soft/30 flex items-center justify-center hover:bg-white hover:text-navy-deep transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</a>
+<a class="w-10 h-10 rounded-full border border-slate-soft/30 flex items-center justify-center hover:bg-white hover:text-navy-deep transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+<div>
+<h4 class="text-label-caps font-label-caps text-white mb-6">Quick Links</h4>
+<ul class="space-y-3">
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Listings</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Property Management</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Appraisals</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Careers</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-label-caps font-label-caps text-white mb-6">Company</h4>
+<ul class="space-y-3">
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">About Us</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Our Team</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">News &amp; Blog</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Contact</a></li>
+</ul>
+</div>
+<div class="col-span-2 md:col-span-1">
+<h4 class="text-label-caps font-label-caps text-white mb-6">Legal</h4>
+<ul class="space-y-3">
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Privacy Policy</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Terms of Service</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Sitemap</a></li>
+<li class=""><a class="text-slate-soft hover:text-white transition-all text-body-sm" href="#">Service Areas</a></li>
+</ul>
+</div>
+</div>
+<div class="w-full mt-12 pt-8 border-t border-slate-soft/10 flex flex-col md:flex-row justify-between items-center gap-4">
+<span class="text-body-sm text-slate-soft">© 2024 Allabode Property Solutions. All Rights Reserved.</span>
+<div class="flex gap-6">
+<span class="text-label-caps font-label-caps text-slate-soft">PRC License: 12345</span>
+<span class="text-label-caps font-label-caps text-slate-soft">DHSUD: 67890</span>
+</div>
+</div>
+</footer>
+<!-- FAB (Suppressed on Listing Page as per rules if not alignment-perfect, but we'll include a 'Back to Top' or 'Support' as it fits the commercial theme) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-navy-deep text-white rounded-full shadow-2xl flex items-center justify-center transition-all opacity-0 pointer-events-none hover:bg-navy-deep/80 z-[60]" id="backToTop">
+<span class="material-symbols-outlined">arrow_upward</span>
+</button>
+<script>
+        // Scroll interaction for Navbar and BackToTop
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            const backToTop = document.getElementById('backToTop');
+            
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+
+            if (window.scrollY > 500) {
+                backToTop.classList.remove('opacity-0', 'pointer-events-none');
+                backToTop.classList.add('opacity-100');
+            } else {
+                backToTop.classList.add('opacity-0', 'pointer-events-none');
+                backToTop.classList.remove('opacity-100');
+            }
+        });
+
+        document.getElementById('backToTop').addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Hover animation logic for cards
+        const cards = document.querySelectorAll('.listing-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-8px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body></html>

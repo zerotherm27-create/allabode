@@ -1,0 +1,129 @@
+{
+  "name": "assets/1dc80f007002467aaa676c3083d5b4ad",
+  "designSystem": {
+    "displayName": "Prestige Architectural Design",
+    "styleGuidelines": "## Brand & Style\nThe design system embodies a \"Modern Corporate\" aesthetic that leans heavily into luxury real estate and architectural excellence. It evokes a sense of stability, high-end craftsmanship, and trustworthiness. \n\nThe visual language is characterized by precision and structural integrity. By combining a deep, authoritative navy with a refined brass accent, the system targets a discerning audience looking for professional property solutions. The style utilizes significant whitespace, crisp geometric lines, and a deliberate absence of unnecessary decorative elements to maintain a sophisticated and premium feel.\n\n## Layout & Spacing\nThe layout follows a **Fixed Grid** philosophy on desktop to mirror the structured nature of blueprints and architectural planning. \n\n- **Desktop:** A 12-column grid with a 1280px maximum container width. Margins are generous (64px) to emphasize luxury through whitespace.\n- **Tablet:** 8-column grid with 32px margins.\n- **Mobile:** 4-column grid with 16px margins. \n\nSpacing follows a strict 4px base unit. Component internal padding should favor larger increments (16px, 24px, 32px) to prevent the UI from feeling \"cramped\" or \"budget.\"\n\n## Elevation & Depth\nThis design system avoids heavy drop shadows in favor of **Tonal Layers** and **Refined Outlines**. \n\nHierarchy is established through color value shifts. In light mode, elevated elements (like cards) use a pure white background against the Tertiary Cream surface, defined by a subtle 1px border in a muted navy tint. \n\nIn dark mode, depth is created by \"lifting\" surfaces with slightly lighter navy shades (Surface +1, Surface +2). Shadows, when used for high-importance modals, are ultra-diffused navy-tinted shadows with no spread, mimicking ambient light in a physical space.\n\n## Components\n- **Buttons:** Primary buttons are solid Navy with white text. Secondary buttons use the Brass color for the label with a transparent background and a thin Brass border.\n- **Inputs:** High-contrast fields with a 1px Navy border that transitions to a 2px Brass border on focus. Labels always use the `label-caps` typography style.\n- **Cards:** Flat design with a subtle border. No shadows. The card header should often feature a Brass accent line (2px height) to denote premium content.\n- **Chips/Tags:** Used for property status (e.g., \"Exclusive,\" \"Sold\"). These should use the Navy background with Brass text for a high-end, \"badge-like\" appearance.\n- **Dividers:** Use the Brass color at 30% opacity for horizontal rules to subtly tie the branding into the content structure without distracting the eye.",
+    "theme": {
+      "colorMode": "LIGHT",
+      "font": "MONTSERRAT",
+      "roundness": "ROUND_FOUR",
+      "customColor": "#001a3e",
+      "headlineFont": "MONTSERRAT",
+      "bodyFont": "MONTSERRAT",
+      "labelFont": "MONTSERRAT",
+      "namedColors": {
+        "background": "#fcf9f8",
+        "error": "#ba1a1a",
+        "error_container": "#ffdad6",
+        "inverse_on_surface": "#f3f0ef",
+        "inverse_primary": "#b2c7f4",
+        "inverse_surface": "#303030",
+        "on_background": "#1b1c1c",
+        "on_error": "#ffffff",
+        "on_error_container": "#93000a",
+        "on_primary": "#ffffff",
+        "on_primary_container": "#6f84ae",
+        "on_primary_fixed": "#011b3f",
+        "on_primary_fixed_variant": "#32476d",
+        "on_secondary": "#ffffff",
+        "on_secondary_container": "#7a5c2b",
+        "on_secondary_fixed": "#281800",
+        "on_secondary_fixed_variant": "#5d4213",
+        "on_surface": "#1b1c1c",
+        "on_surface_variant": "#44474e",
+        "on_tertiary": "#ffffff",
+        "on_tertiary_container": "#85847e",
+        "on_tertiary_fixed": "#1c1c18",
+        "on_tertiary_fixed_variant": "#474742",
+        "outline": "#74777f",
+        "outline_variant": "#c4c6cf",
+        "primary": "#000000",
+        "primary_container": "#011b3f",
+        "primary_fixed": "#d7e2ff",
+        "primary_fixed_dim": "#b2c7f4",
+        "secondary": "#775928",
+        "secondary_container": "#ffd79b",
+        "secondary_fixed": "#ffdeae",
+        "secondary_fixed_dim": "#e8c086",
+        "surface": "#fcf9f8",
+        "surface_bright": "#fcf9f8",
+        "surface_container": "#f0eded",
+        "surface_container_high": "#eae7e7",
+        "surface_container_highest": "#e5e2e1",
+        "surface_container_low": "#f6f3f2",
+        "surface_container_lowest": "#ffffff",
+        "surface_dim": "#dcd9d9",
+        "surface_tint": "#4a5e86",
+        "surface_variant": "#e5e2e1",
+        "tertiary": "#000000",
+        "tertiary_container": "#1c1c18",
+        "tertiary_fixed": "#e5e2db",
+        "tertiary_fixed_dim": "#c9c6c0"
+      },
+      "designMd": "---\nname: Prestige Architectural Design\ncolors:\n  surface: '#fcf9f8'\n  surface-dim: '#dcd9d9'\n  surface-bright: '#fcf9f8'\n  surface-container-lowest: '#ffffff'\n  surface-container-low: '#f6f3f2'\n  surface-container: '#f0eded'\n  surface-container-high: '#eae7e7'\n  surface-container-highest: '#e5e2e1'\n  on-surface: '#1b1c1c'\n  on-surface-variant: '#44474e'\n  inverse-surface: '#303030'\n  inverse-on-surface: '#f3f0ef'\n  outline: '#74777f'\n  outline-variant: '#c4c6cf'\n  surface-tint: '#4a5e86'\n  primary: '#000000'\n  on-primary: '#ffffff'\n  primary-container: '#011b3f'\n  on-primary-container: '#6f84ae'\n  inverse-primary: '#b2c7f4'\n  secondary: '#775928'\n  on-secondary: '#ffffff'\n  secondary-container: '#ffd79b'\n  on-secondary-container: '#7a5c2b'\n  tertiary: '#000000'\n  on-tertiary: '#ffffff'\n  tertiary-container: '#1c1c18'\n  on-tertiary-container: '#85847e'\n  error: '#ba1a1a'\n  on-error: '#ffffff'\n  error-container: '#ffdad6'\n  on-error-container: '#93000a'\n  primary-fixed: '#d7e2ff'\n  primary-fixed-dim: '#b2c7f4'\n  on-primary-fixed: '#011b3f'\n  on-primary-fixed-variant: '#32476d'\n  secondary-fixed: '#ffdeae'\n  secondary-fixed-dim: '#e8c086'\n  on-secondary-fixed: '#281800'\n  on-secondary-fixed-variant: '#5d4213'\n  tertiary-fixed: '#e5e2db'\n  tertiary-fixed-dim: '#c9c6c0'\n  on-tertiary-fixed: '#1c1c18'\n  on-tertiary-fixed-variant: '#474742'\n  background: '#fcf9f8'\n  on-background: '#1b1c1c'\n  surface-variant: '#e5e2e1'\ntypography:\n  display-lg:\n    fontFamily: Montserrat\n    fontSize: 48px\n    fontWeight: '700'\n    lineHeight: 56px\n    letterSpacing: -0.02em\n  headline-lg:\n    fontFamily: Montserrat\n    fontSize: 32px\n    fontWeight: '600'\n    lineHeight: 40px\n  headline-lg-mobile:\n    fontFamily: Montserrat\n    fontSize: 28px\n    fontWeight: '600'\n    lineHeight: 34px\n  title-md:\n    fontFamily: Montserrat\n    fontSize: 20px\n    fontWeight: '600'\n    lineHeight: 28px\n  body-lg:\n    fontFamily: Montserrat\n    fontSize: 16px\n    fontWeight: '400'\n    lineHeight: 24px\n  body-sm:\n    fontFamily: Montserrat\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: 20px\n  label-caps:\n    fontFamily: Montserrat\n    fontSize: 12px\n    fontWeight: '700'\n    lineHeight: 16px\n    letterSpacing: 0.1em\nrounded:\n  sm: 0.125rem\n  DEFAULT: 0.25rem\n  md: 0.375rem\n  lg: 0.5rem\n  xl: 0.75rem\n  full: 9999px\nspacing:\n  unit: 4px\n  gutter: 24px\n  margin-mobile: 16px\n  margin-desktop: 64px\n  container-max: 1280px\n---\n\n## Brand & Style\nThe design system embodies a \"Modern Corporate\" aesthetic that leans heavily into luxury real estate and architectural excellence. It evokes a sense of stability, high-end craftsmanship, and trustworthiness. \n\nThe visual language is characterized by precision and structural integrity. By combining a deep, authoritative navy with a refined brass accent, the system targets a discerning audience looking for professional property solutions. The style utilizes significant whitespace, crisp geometric lines, and a deliberate absence of unnecessary decorative elements to maintain a sophisticated and premium feel.\n\n## Colors\nThe palette is rooted in a high-contrast relationship between **Midnight Navy** and **Antique Brass**. \n\n- **Primary (Navy):** Used for core branding, primary buttons, and heavy headings to establish authority.\n- **Secondary (Brass):** Used as a strategic accent for calls-to-action, active states, and premium highlights.\n- **Tertiary (Cream/Stone):** Used for soft background containers in light mode to avoid the harshness of pure white.\n- **Surface Strategy:** \n    - **Light Mode:** Uses Cream (#F4F1EA) surfaces with Navy text for maximum readability and a \"paper\" quality.\n    - **Dark Mode:** Reverses the hierarchy, using Navy (#001A3E) as the foundation with Brass accents and high-transparency white overlays for depth.\n\n## Typography\nMontserrat is used exclusively across all levels to maintain a geometric and modern architectural feel. \n\nHeadlines utilize a tighter letter-spacing to feel impactful and structural. The `label-caps` style is essential for the \"Property Solutions\" secondary branding feel, often paired with the Brass accent color. For long-form reading, body text maintains a generous line height (1.5x) to ensure the heavy geometric weights of Montserrat remain legible and professional.\n\n## Layout & Spacing\nThe layout follows a **Fixed Grid** philosophy on desktop to mirror the structured nature of blueprints and architectural planning. \n\n- **Desktop:** A 12-column grid with a 1280px maximum container width. Margins are generous (64px) to emphasize luxury through whitespace.\n- **Tablet:** 8-column grid with 32px margins.\n- **Mobile:** 4-column grid with 16px margins. \n\nSpacing follows a strict 4px base unit. Component internal padding should favor larger increments (16px, 24px, 32px) to prevent the UI from feeling \"cramped\" or \"budget.\"\n\n## Elevation & Depth\nThis design system avoids heavy drop shadows in favor of **Tonal Layers** and **Refined Outlines**. \n\nHierarchy is established through color value shifts. In light mode, elevated elements (like cards) use a pure white background against the Tertiary Cream surface, defined by a subtle 1px border in a muted navy tint. \n\nIn dark mode, depth is created by \"lifting\" surfaces with slightly lighter navy shades (Surface +1, Surface +2). Shadows, when used for high-importance modals, are ultra-diffused navy-tinted shadows with no spread, mimicking ambient light in a physical space.\n\n## Shapes\nThe shape language is \"Soft\" (0.25rem), prioritizing sharp, professional corners that reflect structural beams and modern windows. \n\nWhile the logo has geometric sharpness, a subtle radius on UI components prevents the interface from feeling aggressive or dated. Buttons and input fields should strictly adhere to the `rounded-sm` (4px) standard. Circular shapes are reserved exclusively for avatars or icon containers to provide a singular point of visual contrast against the otherwise rectilinear grid.\n\n## Components\n- **Buttons:** Primary buttons are solid Navy with white text. Secondary buttons use the Brass color for the label with a transparent background and a thin Brass border.\n- **Inputs:** High-contrast fields with a 1px Navy border that transitions to a 2px Brass border on focus. Labels always use the `label-caps` typography style.\n- **Cards:** Flat design with a subtle border. No shadows. The card header should often feature a Brass accent line (2px height) to denote premium content.\n- **Chips/Tags:** Used for property status (e.g., \"Exclusive,\" \"Sold\"). These should use the Navy background with Brass text for a high-end, \"badge-like\" appearance.\n- **Dividers:** Use the Brass color at 30% opacity for horizontal rules to subtly tie the branding into the content structure without distracting the eye.",
+      "colorVariant": "FIDELITY",
+      "overridePrimaryColor": "#001a3e",
+      "overrideSecondaryColor": "#b08d57",
+      "overrideTertiaryColor": "#f4f1ea",
+      "overrideNeutralColor": "#212121",
+      "spacingScale": 2,
+      "typography": {
+        "body-lg": {
+          "fontFamily": "Montserrat",
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24px"
+        },
+        "body-sm": {
+          "fontFamily": "Montserrat",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "20px"
+        },
+        "display-lg": {
+          "fontFamily": "Montserrat",
+          "fontSize": "48px",
+          "fontWeight": "700",
+          "lineHeight": "56px",
+          "letterSpacing": "-0.02em"
+        },
+        "headline-lg": {
+          "fontFamily": "Montserrat",
+          "fontSize": "32px",
+          "fontWeight": "600",
+          "lineHeight": "40px"
+        },
+        "headline-lg-mobile": {
+          "fontFamily": "Montserrat",
+          "fontSize": "28px",
+          "fontWeight": "600",
+          "lineHeight": "34px"
+        },
+        "label-caps": {
+          "fontFamily": "Montserrat",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "16px",
+          "letterSpacing": "0.1em"
+        },
+        "title-md": {
+          "fontFamily": "Montserrat",
+          "fontSize": "20px",
+          "fontWeight": "600",
+          "lineHeight": "28px"
+        }
+      },
+      "spacing": {
+        "container-max": "1280px",
+        "gutter": "24px",
+        "margin-desktop": "64px",
+        "margin-mobile": "16px",
+        "unit": "4px"
+      },
+      "headlineFontFamily": "Montserrat",
+      "bodyFontFamily": "Montserrat",
+      "labelFontFamily": "Montserrat"
+    }
+  },
+  "version": "1"
+}

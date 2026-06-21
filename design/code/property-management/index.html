@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Property Management | Allabode Realty</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+        }
+        .tonal-shadow {
+            shadow-color: rgba(15, 23, 42, 0.04);
+            box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+        }
+    </style>
+<!-- Include the provided theme configuration -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "background": "#f9f9fc",
+                "on-secondary-container": "#4e6874",
+                "secondary": "#48626e",
+                "on-tertiary": "#ffffff",
+                "primary-container": "#0d518c",
+                "on-error-container": "#93000a",
+                "tertiary": "#735c00",
+                "surface-container": "#eeeef0",
+                "secondary-container": "#cbe7f5",
+                "on-tertiary-fixed-variant": "#574500",
+                "surface-variant": "#e2e2e5",
+                "on-primary": "#ffffff",
+                "on-primary-fixed": "#001c38",
+                "on-tertiary-container": "#4f3e00",
+                "on-surface": "#1a1c1e",
+                "on-background": "#1a1c1e",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fc",
+                "on-primary-fixed-variant": "#004881",
+                "inverse-surface": "#2f3133",
+                "tertiary-fixed": "#ffe088",
+                "primary-fixed": "#d3e4ff",
+                "surface-container-highest": "#e2e2e5",
+                "on-secondary": "#ffffff",
+                "on-surface-variant": "#424750",
+                "on-secondary-fixed": "#021f29",
+                "secondary-fixed-dim": "#afcbd8",
+                "secondary-fixed": "#cbe7f5",
+                "primary": "#003a69",
+                "surface-dim": "#dadadc",
+                "tertiary-fixed-dim": "#e9c349",
+                "on-tertiary-fixed": "#241a00",
+                "on-error": "#ffffff",
+                "surface-container-high": "#e8e8ea",
+                "outline-variant": "#c2c7d1",
+                "surface-container-low": "#f3f3f6",
+                "surface-bright": "#f9f9fc",
+                "on-secondary-fixed-variant": "#304a55",
+                "surface-container-lowest": "#ffffff",
+                "inverse-primary": "#a2c9ff",
+                "inverse-on-surface": "#f0f0f3",
+                "primary-fixed-dim": "#a2c9ff",
+                "tertiary-container": "#cca730",
+                "outline": "#727781",
+                "error-container": "#ffdad6",
+                "on-primary-container": "#98c4ff",
+                "surface-tint": "#26609c"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "unit": "8px",
+                "margin-desktop": "64px",
+                "container-max": "1280px",
+                "gutter": "24px",
+                "margin-mobile": "20px"
+        },
+        "fontFamily": {
+                "body-lg": [
+                        "Work Sans"
+                ],
+                "headline-lg": [
+                        "Manrope"
+                ],
+                "body-md": [
+                        "Work Sans"
+                ],
+                "headline-lg-mobile": [
+                        "Manrope"
+                ],
+                "label-md": [
+                        "Work Sans"
+                ],
+                "display-lg": [
+                        "Manrope"
+                ],
+                "title-md": [
+                        "Manrope"
+                ]
+        },
+        "fontSize": {
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "56px",
+                        {
+                                "lineHeight": "64px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "title-md": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "500"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-surface text-on-surface font-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-gutter py-4 bg-surface/95 backdrop-blur-md border-b border-outline-variant shadow-sm">
+<div class="text-title-md font-title-md font-bold text-primary">Allabode Property Solutions</div>
+<nav class="hidden lg:flex items-center gap-8">
+<a class="text-secondary hover:text-primary transition-colors text-body-md font-body-md" href="#">Home</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-md font-body-md" href="#">Listings</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-md font-body-md" href="#">Leasing</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-md font-body-md" href="#">Buy/Sell</a>
+<a class="text-primary font-bold border-b-2 border-primary-container pb-1 text-body-md font-body-md" href="#">Property Management</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-md font-body-md" href="#">Appraisal</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-md font-body-md" href="#">About</a>
+<a class="text-secondary hover:text-primary transition-colors text-body-md font-body-md" href="#">Contact</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden md:block px-6 py-2 border border-primary text-primary font-bold text-body-md hover:bg-primary hover:text-white transition-all">List Your Property</button>
+<button class="px-6 py-2 bg-primary-container text-white font-bold text-body-md hover:bg-opacity-90 transition-all">Request Appraisal</button>
+</div>
+</header>
+<main class="pt-24">
+<!-- Hero Section -->
+<section class="relative w-full min-h-[70vh] flex items-center px-gutter overflow-hidden bg-primary">
+<div class="absolute inset-0 opacity-40">
+<div class="w-full h-full bg-cover bg-center" data-alt="A professional high-angle view of a modern metropolitan business district at dusk. The scene features sleek glass skyscrapers with warm interior lights, clean architectural lines, and a sense of corporate stability. The lighting is sophisticated, utilizing deep navy blues and golden highlights to match a premium real estate brand aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBlMYwA1bcusSL-a93aTWp_b_jDUkFcyQGO-B14lWB3AO27hDzfjkTUPVyFh3duz5AfnyQkApC51ZmLuZw9KS2LpGx36jXIRFkfDJx6yTroSam0W8alvpkbXgYHtNl0nzazxy8idfTpXmfEFTnM4pk8sngsE_UI5wIsSqwMiaSZyKuuq9ipIiar6HD64jN5Qa1oyRS_ypHaaKwGgcsxnGkuHNV9OmhBceuFAGZp5EFc2yhLzTStSjBu6aFSN4nqcqn8ew2fBPbZ2o5m')"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<div class="space-y-6">
+<span class="inline-block py-1 px-3 bg-primary-container text-white text-label-md font-label-md tracking-widest rounded-sm">PROFESSIONAL MANAGEMENT</span>
+<h1 class="text-white text-display-lg font-display-lg leading-tight">Full-service property management with transparent owner access.</h1>
+<p class="text-on-surface-variant text-body-lg max-w-lg">We bridge the gap between institutional property standards and personalized brokerage services for Philippine real estate owners.</p>
+<div class="flex flex-wrap gap-4 pt-4">
+<a class="px-8 py-4 bg-primary-container text-white font-bold text-body-md hover:scale-105 transition-transform" href="#inquiry">Get a Management Quote</a>
+<a class="px-8 py-4 border border-white text-white font-bold text-body-md hover:bg-white hover:text-primary transition-all" href="#services">Explore Services</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Why Owners Need Management - Bento Grid -->
+<section class="py-[5rem] px-gutter max-w-container-max mx-auto">
+<div class="text-center mb-16 space-y-4">
+<h2 class="text-primary text-headline-lg font-headline-lg">Why Owners Need Professional Management</h2>
+<div class="w-24 h-1 bg-primary-container mx-auto"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Bento Item 1 -->
+<div class="md:col-span-2 glass-card p-10 tonal-shadow relative overflow-hidden group">
+<div class="relative z-10 flex flex-col h-full justify-between gap-8">
+<div class="space-y-4">
+<span class="material-symbols-outlined text-primary-container text-4xl">distance</span>
+<h3 class="text-primary text-title-md font-title-md">Distance &amp; Availability</h3>
+<p class="text-secondary text-body-md max-w-md">Managing properties from overseas or a different city? We act as your boots-on-the-ground, ensuring your asset is never neglected regardless of where you are.</p>
+</div>
+<div class="flex items-center text-primary-container font-bold cursor-pointer group-hover:translate-x-2 transition-transform">
+<span class="">Learn more</span>
+<span class="material-symbols-outlined ml-2">arrow_forward</span>
+</div>
+</div>
+<div class="absolute bottom-[-20%] right-[-10%] opacity-10 group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[200px]">public</span>
+</div>
+</div>
+<!-- Bento Item 2 -->
+<div class="bg-primary text-white p-10 tonal-shadow relative group">
+<div class="space-y-4">
+<span class="material-symbols-outlined text-primary-container text-4xl">gavel</span>
+<h3 class="text-title-md font-title-md">Legal Compliance</h3>
+<p class="text-on-surface-variant text-[14px]">From tenant contracts to local property taxes and building ordinances, we navigate the complex legal landscape so you don't have to.</p>
+</div>
+</div>
+<!-- Bento Item 3 -->
+<div class="glass-card p-10 tonal-shadow relative group">
+<div class="space-y-4">
+<span class="material-symbols-outlined text-primary-container text-4xl">engineering</span>
+<h3 class="text-primary text-title-md font-title-md">Preventive Care</h3>
+<p class="text-secondary text-[14px]">Minor issues become major expenses if ignored. Our scheduled maintenance cycles preserve your property's market value over decades.</p>
+</div>
+</div>
+<!-- Bento Item 4 -->
+<div class="md:col-span-2 glass-card p-10 tonal-shadow flex flex-col md:flex-row gap-8 items-center bg-surface-container-low">
+<div class="flex-1 space-y-4">
+<span class="material-symbols-outlined text-primary-container text-4xl">payments</span>
+<h3 class="text-primary text-title-md font-title-md">Optimized Yields</h3>
+<p class="text-secondary text-body-md">We don't just collect rent; we analyze market trends to ensure your pricing is always competitive, maximizing your annual ROI.</p>
+</div>
+<div class="w-full md:w-1/3 aspect-video bg-cover bg-center" data-alt="A macro close-up of high-quality architectural blueprints and a modern calculator resting on a clean, white marble desk. The lighting is soft and professional, emphasizing a meticulous and data-driven approach to real estate investment and property management. Deep navy and gold accents are present in the stationery." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQ6-foskLsAchntsewdh-A-pCmCMLH3I7zdxxbHzjlVSjs3gy2v93vEl5-j5ISUfn-KOyoD5fHeYFRpkKUEnoGY0NLpyiAnn8Q_cm_xjTNn6cAfQVmRmfQURsNOLrdJHWvQal5aKLeqHmE3At-G991yh0qrRRqUo0UMH1rsz2iRQX4wpq1XnaOn78r_YU5VDZSFDK4kQoJC-y01UdSrNm1G2E66-ez_LwbyyGl4opSoENxnvRW8M7z8kabwi7V-0eWAN3ShG3E72wx')"></div>
+</div>
+</div>
+</section>
+<!-- Service List Section -->
+<section class="bg-surface-container-low py-[5rem] px-gutter" id="services">
+<div class="max-w-container-max mx-auto">
+<div class="flex flex-col lg:flex-row gap-16 items-start">
+<div class="lg:w-1/3 sticky top-32">
+<h2 class="text-primary text-headline-lg font-headline-lg mb-6">Our Core Management Services</h2>
+<p class="text-secondary text-body-md mb-8">A comprehensive suite of services designed for the modern property owner who values transparency and professional excellence.</p>
+<div class="space-y-4">
+<div class="flex items-center gap-4 p-4 bg-white border-l-4 border-primary-container shadow-sm">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<span class="font-bold text-primary">24/7 Owner Portal Access</span>
+</div>
+<div class="flex items-center gap-4 p-4 bg-white/50 border-l-4 border-transparent">
+<span class="material-symbols-outlined text-on-surface-variant">check_circle</span>
+<span class="text-secondary">Licensed Broker Oversight</span>
+</div>
+</div>
+</div>
+<div class="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Rent Monitoring -->
+<div class="bg-white p-8 border border-outline-variant hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-primary-container mb-4">monitoring</span>
+<h4 class="text-primary font-bold text-body-lg mb-3">Rent Monitoring &amp; Collection</h4>
+<ul class="space-y-2 text-secondary text-[14px]">
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Automated invoicing &amp; follow-ups</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Direct deposit to owner accounts</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Delinquency management &amp; resolution</li>
+</ul>
+</div>
+<!-- Maintenance -->
+<div class="bg-white p-8 border border-outline-variant hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-primary-container mb-4">home_repair_service</span>
+<h4 class="text-primary font-bold text-body-lg mb-3">Maintenance Coordination</h4>
+<ul class="space-y-2 text-secondary text-[14px]">
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Vetted contractor network</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Emergency 24/7 repair hotline</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Routine property inspections</li>
+</ul>
+</div>
+<!-- Reporting -->
+<div class="bg-white p-8 border border-outline-variant hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-primary-container mb-4">assessment</span>
+<h4 class="text-primary font-bold text-body-lg mb-3">Financial Reporting</h4>
+<ul class="space-y-2 text-secondary text-[14px]">
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Monthly profit &amp; loss statements</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Year-end tax documentation</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Expense tracking and receipts</li>
+</ul>
+</div>
+<!-- Marketing -->
+<div class="bg-white p-8 border border-outline-variant hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-primary-container mb-4">campaign</span>
+<h4 class="text-primary font-bold text-body-lg mb-3">Tenant Placement</h4>
+<ul class="space-y-2 text-secondary text-[14px]">
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Professional property photography</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Rigorous background &amp; credit checks</li>
+<li class="flex items-start gap-2"><span class="text-primary-container mt-1">•</span> Multi-platform listing strategy</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Package Comparison Table -->
+<section class="py-[5rem] px-gutter max-w-container-max mx-auto overflow-x-auto">
+<div class="text-center mb-16">
+<h2 class="text-primary text-headline-lg font-headline-lg">Transparent Service Packages</h2>
+<p class="text-secondary mt-2">No hidden fees, just clear professional management.</p>
+</div>
+<table class="w-full border-collapse min-w-[800px]">
+<thead>
+<tr>
+<th class="p-6 text-left bg-surface-container-low border-b-2 border-outline-variant">Feature</th>
+<th class="p-6 text-center bg-surface-container-low border-b-2 border-outline-variant">
+<div class="text-primary font-bold">Basic</div>
+<div class="text-secondary font-normal text-[14px]">Leasing Only</div>
+</th>
+<th class="p-6 text-center bg-primary text-white border-b-2 border-primary-container">
+<div class="font-bold">Full Management</div>
+<div class="text-on-surface-variant font-normal text-[14px]">Our Most Popular</div>
+</th>
+<th class="p-6 text-center bg-surface-container-low border-b-2 border-outline-variant">
+<div class="text-primary font-bold">Premium</div>
+<div class="text-secondary font-normal text-[14px]">Institutional / Portfolio</div>
+</th>
+</tr>
+</thead>
+<tbody class="text-[14px]">
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-6 font-bold text-primary">Tenant Screening</td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-6 font-bold text-primary">Rent Collection</td>
+<td class="p-6 text-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-6 font-bold text-primary">Maintenance Coordination</td>
+<td class="p-6 text-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-6 font-bold text-primary">Quarterly Inspections</td>
+<td class="p-6 text-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-6 font-bold text-primary">Monthly Financial Reports</td>
+<td class="p-6 text-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-6 font-bold text-primary">Legal Representative Services</td>
+<td class="p-6 text-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></td>
+<td class="p-6 text-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></td>
+<td class="p-6 text-center text-[#10B981]"><span class="material-symbols-outlined">check</span></td>
+</tr>
+<tr>
+<td class="p-6"></td>
+<td class="p-6 text-center"><button class="text-primary font-bold hover:underline">Select</button></td>
+<td class="p-6 text-center"><button class="bg-primary-container text-white px-6 py-2 font-bold hover:bg-opacity-90 transition-all">Select Plan</button></td>
+<td class="p-6 text-center"><button class="text-primary font-bold hover:underline">Select</button></td>
+</tr>
+</tbody>
+</table>
+</section>
+<!-- Inquiry Form -->
+<section class="py-[5rem] bg-primary" id="inquiry">
+<div class="max-w-container-max mx-auto px-gutter grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="space-y-6">
+<h2 class="text-white text-headline-lg font-headline-lg">Ready to experience hassle-free property ownership?</h2>
+<p class="text-on-surface-variant text-body-md">Submit your property details, and our management team will reach out within 24 hours with a customized management proposal.</p>
+<div class="flex flex-col gap-6 pt-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full border border-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container">phone_in_talk</span>
+</div>
+<div>
+<div class="text-on-surface-variant text-label-md">DIRECT LINE</div>
+<div class="text-white font-bold">+63 (02) 8888-ABODE</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full border border-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container">mail</span>
+</div>
+<div>
+<div class="text-on-surface-variant text-label-md">EMAIL</div>
+<div class="text-white font-bold">management@allabode.com.ph</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white p-10 tonal-shadow">
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-[14px] font-bold text-primary block">Full Name</label>
+<input class="w-full p-4 bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-0 outline-none transition-all" placeholder="Juan Dela Cruz" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-[14px] font-bold text-primary block">Email Address</label>
+<input class="w-full p-4 bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-0 outline-none transition-all" placeholder="juan@email.com" type="email"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-[14px] font-bold text-primary block">Property Location</label>
+<input class="w-full p-4 bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-0 outline-none transition-all" placeholder="City, District (e.g. BGC, Taguig)" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-[14px] font-bold text-primary block">Property Type</label>
+<select class="w-full p-4 bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-0 outline-none transition-all">
+<option>Condominium</option>
+<option>House &amp; Lot</option>
+<option>Commercial Space</option>
+<option>Residential Portfolio</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-[14px] font-bold text-primary block">Additional Details</label>
+<textarea class="w-full p-4 bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-0 outline-none transition-all" placeholder="Tell us about your requirements..." rows="4"></textarea>
+</div>
+<button class="w-full py-4 bg-primary text-white font-bold text-body-md hover:bg-tertiary transition-all" type="submit">Request Free Proposal</button>
+</form>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full pt-[5rem] pb-[2rem] px-gutter flex flex-col md:flex-row justify-between gap-gutter bg-primary">
+<div class="space-y-6">
+<div class="text-title-md font-title-md font-bold text-primary-container">Allabode Property Solutions</div>
+<p class="text-on-surface-variant text-[14px] max-w-xs">Connecting Philippine property owners with excellence in management, brokerage, and appraisal services since 2018.</p>
+<div class="flex gap-4">
+<a class="text-on-surface-variant hover:text-primary-container" href="#"><span class="material-symbols-outlined">public</span></a>
+<a class="text-on-surface-variant hover:text-primary-container" href="#"><span class="material-symbols-outlined">share</span></a>
+</div>
+</div>
+<div class="flex flex-wrap gap-12">
+<div class="space-y-4">
+<div class="text-label-md font-label-md text-surface-bright">COMPANY</div>
+<ul class="space-y-2">
+<li class=""><a class="text-on-surface-variant hover:text-surface-bright transition-colors text-[14px]" href="#">About Us</a></li>
+<li class=""><a class="text-on-surface-variant hover:text-surface-bright transition-colors text-[14px]" href="#">Our Team</a></li>
+<li class=""><a class="text-on-surface-variant hover:text-surface-bright transition-colors text-[14px]" href="#">Careers</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<div class="text-label-md font-label-md text-surface-bright">LEGAL</div>
+<ul class="space-y-2">
+<li class=""><a class="text-on-surface-variant hover:text-surface-bright transition-colors text-[14px]" href="#">Privacy Policy</a></li>
+<li class=""><a class="text-on-surface-variant hover:text-surface-bright transition-colors text-[14px]" href="#">Terms of Service</a></li>
+<li class=""><a class="text-on-surface-variant hover:text-surface-bright transition-colors text-[14px]" href="#">Sitemap</a></li>
+</ul>
+</div>
+</div>
+<div class="flex flex-col justify-between items-end">
+<div class="text-primary-container text-[14px] font-bold underline cursor-pointer">Service Areas</div>
+<div class="text-on-surface-variant text-[14px] mt-8">© 2024 Allabode Property Solutions. All Rights Reserved.</div>
+</div>
+</footer>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Sticky Navbar subtle effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('py-2');
+                header.classList.remove('py-4');
+            } else {
+                header.classList.add('py-4');
+                header.classList.remove('py-2');
+            }
+        });
+    </script>
+</body></html>

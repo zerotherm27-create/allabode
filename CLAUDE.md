@@ -17,7 +17,11 @@ appraisal). Domain: `allabodeph.com`.
   schema changes / type-gen are done via the dashboard SQL editor, not the Supabase MCP.
 - **lucide-react** installed but **not used** — icons go through the Material Symbols
   `Icon` component instead (matches the Stitch source design).
-- Deploy target: Vercel.
+- **Deployed:** Vercel project `allabode` (scope `zerotherm27-8336s-projects`), live at
+  https://allabode.vercel.app. GitHub repo (private):
+  `github.com/zerotherm27-create/allabode` — **connected to Vercel, so pushes to `main`
+  auto-deploy**. Supabase env vars (`NEXT_PUBLIC_SUPABASE_URL` / `_ANON_KEY`) are set on
+  Vercel for Production. `.env.local` is gitignored; `.env.example` is committed.
 
 ## Design system (LOCKED — do not improvise)
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/icon";
-import { settingsSchema } from "@/lib/settings";
+import { settingsSchema } from "@/lib/settings-schema";
 import { updateSettingsGroup } from "./actions";
 import { createClient } from "@/lib/supabase/client";
 

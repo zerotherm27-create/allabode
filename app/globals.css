@@ -27,6 +27,18 @@
   --color-surface: #ffffff;         /* cards / elevated */
   --color-surface-gray: #f1f4f8;    /* alt section band */
 
+  /* ---- shadcn/radix compatibility aliases (mapped to brand tokens) ---- */
+  --color-background:        #f8f9fb;  /* = cream */
+  --color-foreground:        #16202c;  /* = ink */
+  --color-accent:            #f1f4f8;  /* = surface-gray */
+  --color-accent-foreground: #0a2540;  /* = navy */
+  --color-popover:           #ffffff;  /* = surface */
+  --color-popover-foreground: #16202c; /* = ink */
+  --color-border:            #e2e6ec;  /* = line */
+  --color-ring:              #0d518c;  /* = navy-700 */
+  --color-muted:             #f1f4f8;  /* = surface-gray */
+  --color-muted-foreground:  #5b6573;  /* = slate */
+
   /* ---- Status ---- */
   --color-available: #10b981;
   --color-reserved: #f59e0b;

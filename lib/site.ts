@@ -30,17 +30,27 @@ export const founder = {
 } as const;
 
 export type NavLink = { label: string; href: string };
-export type NavItem = NavLink;
+export type NavDropdown = { label: string; children: NavLink[] };
+export type NavItem = NavLink | NavDropdown;
 
-/** Full flat navigation per brief §4 — all service pages visible at the top level. */
+export function isDropdown(item: NavItem): item is NavDropdown {
+  return "children" in item;
+}
+
 export const mainNav: readonly NavItem[] = [
-  { label: "Listings", href: "/listings" },
-  { label: "Leasing", href: "/leasing" },
-  { label: "Buy / Sell", href: "/buy-sell" },
-  { label: "Property Management", href: "/property-management" },
-  { label: "Appraisal", href: "/appraisal" },
-  { label: "Resources", href: "/resources" },
+  { label: "Home", href: "/" },
   { label: "About", href: "/about" },
+  {
+    label: "Services",
+    children: [
+      { label: "Leasing", href: "/leasing" },
+      { label: "Buy / Sell", href: "/buy-sell" },
+      { label: "Property Management", href: "/property-management" },
+      { label: "Appraisal", href: "/appraisal" },
+    ],
+  },
+  { label: "Listings", href: "/listings" },
+  { label: "Guides", href: "/resources" },
   { label: "Contact", href: "/contact" },
 ];
 

@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm rounded-lg border border-line bg-surface p-8">
         <div className="flex flex-col items-center gap-2">
           <Image
-            src="/logo/logo-2.png"
+            src="/logo/logo-primary.png"
             alt="All Abode Property Solutions"
             width={160}
             height={80}

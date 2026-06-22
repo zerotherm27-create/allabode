@@ -7,9 +7,9 @@ import { Faq } from "@/components/faq";
 import { getListings } from "@/lib/listings";
 
 export const metadata: Metadata = {
-  title: "Leasing Services",
+  title: "Leasing Services Philippines | Property and Condo Leasing Support",
   description:
-    "End-to-end leasing for owners, tenants, and investors — tenant screening, lease documentation, move-in coordination, and transparent owner reporting across the Philippines.",
+    "Lease your condo, apartment, house, bed space, or commercial property with professional marketing, tenant screening, viewing coordination, and move-in support.",
 };
 
 const leaseTypes = [

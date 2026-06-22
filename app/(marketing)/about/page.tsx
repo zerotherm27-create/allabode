@@ -5,16 +5,17 @@ import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { trustPoints } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "About Us",
+  title: "About All Abode Property Solutions | Licensed Real Estate Support",
   description:
-    "All Abode Property Solutions combines licensed brokerage, leasing, property management, and appraisal expertise to help clients make better property decisions in the Philippines.",
+    "Learn about All Abode Property Solutions, a Philippine property services company for brokerage, leasing, property management, and appraisal.",
 };
 
 const values = [
-  { icon: "verified_user", title: "Licensed & Compliant", body: "Every engagement is led by PRC-licensed professionals operating within the RESA Law." },
-  { icon: "handshake", title: "Transparent", body: "Clear reporting, honest pricing, and no surprises — you always know where your property stands." },
-  { icon: "insights", title: "Data-Driven", body: "Decisions backed by real market data and rigorous valuation, not guesswork." },
-  { icon: "diversity_3", title: "Client-First", body: "A personalized approach that treats your property as if it were our own." },
+  { icon: "verified_user", title: "Professional Integrity", body: "All Abode operates with professional integrity in every client engagement, from inquiry to completion." },
+  { icon: "lightbulb", title: "Client Clarity", body: "Clear communication, honest service scope, and straightforward process at every stage." },
+  { icon: "support_agent", title: "Responsive Support", body: "Inquiries are acknowledged promptly and clients are kept informed throughout the process." },
+  { icon: "insights", title: "Practical Expertise", body: "Licensed expertise applied to real property decisions — not generic advice or guesswork." },
+  { icon: "diversity_3", title: "Long-Term Trust", body: "Built on a commitment to professional service that clients can rely on over time." },
 ];
 
 export default function AboutPage() {
@@ -22,8 +23,8 @@ export default function AboutPage() {
     <>
       <PageHero
         eyebrow="About All Abode"
-        title="Complete property support, all under one roof."
-        subtitle="We were created to provide professional, transparent, and complete property support for clients who need more than a simple listing."
+        title="Professional property support built on licensed expertise."
+        subtitle="All Abode Property Solutions was created for clients who need more than a simple property listing — providing professional support across brokerage, leasing, property management, and appraisal."
       />
 
       {/* Story */}
@@ -36,18 +37,20 @@ export default function AboutPage() {
           />
           <div className="flex flex-col gap-5 text-slate leading-relaxed">
             <p>
-              All Abode Property Solutions was created to provide professional,
-              transparent, and complete property support for clients who need more
-              than a simple listing. We combine brokerage, leasing, property
-              management, and appraisal expertise to help clients make better
-              property decisions.
+              All Abode Property Solutions was created for clients who need more
+              than a simple property listing. The company provides brokerage,
+              leasing, property management, and appraisal support for owners,
+              investors, buyers, sellers, landlords, tenants, and appraisal
+              clients in the Philippines.
             </p>
             <p>
-              Building on the trusted foundation of{" "}
-              <strong className="text-navy">Properties by Chel</strong>, we bring
-              institutional-grade expertise together with a personal, relationship-led
-              approach — serving property owners, tenants, buyers, sellers, and
-              investors across the Philippines.
+              Led by a licensed Real Estate Broker and Real Estate Appraiser,
+              All Abode combines professional guidance, organized coordination,
+              and transparent service to help clients make better property
+              decisions. Building on the trusted foundation of{" "}
+              <strong className="text-navy">Properties by Chel</strong>, the
+              company serves clients who need complete, professional property
+              support in one place.
             </p>
           </div>
         </Container>
@@ -135,7 +138,7 @@ export default function AboutPage() {
             eyebrow="What We Stand For"
             title="Values that guide every engagement"
           />
-          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
             {values.map((v) => (
               <div key={v.title} className="bg-surface p-8">
                 <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
@@ -152,8 +155,8 @@ export default function AboutPage() {
       </section>
 
       <CtaBand
-        title="Let's talk about your property"
-        body="Whether you're leasing, selling, managing, or valuing — our licensed team is ready to help."
+        title="Work with a professional property partner."
+        body="Whether you are leasing, selling, managing, buying, renting, or requesting appraisal, All Abode can guide you to the right next step."
       >
         <Button href="/contact" size="lg">
           Get in Touch

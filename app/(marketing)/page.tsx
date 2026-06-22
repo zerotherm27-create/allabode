@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
+import { Faq } from "@/components/faq";
 
 import { services, trustPoints } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
@@ -88,7 +89,7 @@ export default async function Home() {
                   {service.blurb}
                 </p>
                 <span className="label-caps mt-5 flex items-center gap-1 text-gold transition-all group-hover:gap-2">
-                  Learn more
+                  {service.cta ?? "Learn more"}
                   <Icon name="arrow_forward" size={16} />
                 </span>
               </Link>
@@ -101,23 +102,16 @@ export default async function Home() {
       <section className="bg-navy py-section text-white">
         <Container className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <div>
-            <div className="inline-flex flex-col border-l-2 border-gold pl-5">
-              <span className="font-display text-4xl font-bold text-gold">
-                15+
-              </span>
-              <span className="label-caps text-white/70">
-                Years of Expertise
-              </span>
-            </div>
-            <h2 className="mt-8 font-display text-3xl font-bold leading-tight sm:text-4xl">
-              Licensed Credibility in a Competitive Market
+            <span className="label-caps text-gold">Why All Abode</span>
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight sm:text-4xl">
+              Complete property support, not just listings.
             </h2>
             <p className="mt-6 max-w-xl text-white/70">
-              At All Abode Property Solutions, we believe property decisions
-              shouldn&apos;t be based on guesswork. Our team consists of
-              PRC-Licensed Real Estate Brokers and Appraisers, ensuring that
-              every piece of advice we give is backed by legal compliance and
-              market data.
+              All Abode is designed for clients who need professional support
+              before, during, and after a property transaction. We combine
+              brokerage, leasing, property management, and appraisal expertise
+              so your property needs are handled through one coordinated service
+              partner.
             </p>
             <Button
               href="/about"
@@ -125,7 +119,7 @@ export default async function Home() {
               size="lg"
               className="mt-8"
             >
-              Learn More About Our Team
+              Learn More About All Abode
             </Button>
           </div>
 
@@ -153,13 +147,13 @@ export default async function Home() {
         <Container>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="label-caps text-gold">Curated Selection</p>
+              <p className="label-caps text-gold">Featured Properties</p>
               <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
-                Featured Listings
+                Featured properties
               </h2>
               <p className="mt-3 max-w-xl text-slate">
-                A curated selection of premium residential and commercial
-                spaces.
+                Browse selected properties for lease or sale. Listing details
+                are subject to verification and availability.
               </p>
             </div>
             <Link
@@ -185,19 +179,19 @@ export default async function Home() {
           <div>
             <p className="label-caps text-gold">Property Management</p>
             <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
-              Hands-off ownership, transparent reporting
+              Property support for owners, investors, and OFWs
             </h2>
             <p className="mt-4 text-slate">
-              We place reliable tenants, collect rent, coordinate maintenance,
-              and send you clear monthly reports — so your property earns without
-              the day-to-day work. From a single condo to a full portfolio.
+              If you need help managing tenants, rent updates, maintenance
+              coordination, or multiple properties, All Abode can provide
+              structured property management support based on your needs.
             </p>
             <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { icon: "fact_check", label: "Tenant screening" },
+                { icon: "fact_check", label: "Tenant coordination" },
                 { icon: "account_balance_wallet", label: "Rent monitoring" },
                 { icon: "build", label: "Maintenance coordination" },
-                { icon: "summarize", label: "Monthly owner reports" },
+                { icon: "summarize", label: "Owner reports" },
               ].map((f) => (
                 <li key={f.label} className="flex items-center gap-2 text-sm text-slate">
                   <Icon name={f.icon} size={20} className="text-gold" />
@@ -211,17 +205,17 @@ export default async function Home() {
           </div>
           <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
             {[
-              { icon: "apartment", stat: "Onboarding", label: "to market-ready" },
-              { icon: "trending_up", stat: "Maximized", label: "occupancy & yield" },
-              { icon: "verified_user", stat: "Compliant", label: "with RESA law" },
-              { icon: "schedule", stat: "Time back", label: "in your week" },
+              { icon: "apartment", title: "Property onboarding", label: "to listing-ready" },
+              { icon: "people", title: "Tenant coordination", label: "inquiries handled" },
+              { icon: "build", title: "Maintenance", label: "coordination support" },
+              { icon: "summarize", title: "Owner reporting", label: "regular updates" },
             ].map((c) => (
               <div key={c.label} className="bg-surface p-7">
                 <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
                   <Icon name={c.icon} size={24} />
                 </span>
-                <p className="mt-4 font-display text-xl font-bold text-navy">
-                  {c.stat}
+                <p className="mt-4 font-display text-base font-bold text-navy">
+                  {c.title}
                 </p>
                 <p className="mt-1 text-sm text-slate">{c.label}</p>
               </div>
@@ -230,29 +224,94 @@ export default async function Home() {
         </Container>
       </section>
 
-      {/* ---------- Appraisal CTA ---------- */}
-      <section className="py-section-lg">
+      {/* ---------- Appraisal preview ---------- */}
+      <section className="bg-surface-gray py-section">
+        <Container className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+          <div>
+            <p className="label-caps text-gold">Appraisal Services</p>
+            <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
+              Formal appraisal support for informed decisions
+            </h2>
+            <p className="mt-4 text-slate">
+              A formal appraisal is different from an informal market estimate.
+              All Abode helps clients clarify appraisal purpose, document
+              requirements, inspection needs, and next steps.
+            </p>
+            <Button href="/appraisal" className="mt-8">
+              Request an Appraisal
+            </Button>
+          </div>
+          <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+            {[
+              { icon: "home", label: "Residential" },
+              { icon: "corporate_fare", label: "Commercial" },
+              { icon: "landscape", label: "Land" },
+              { icon: "gavel", label: "Estate & Legal" },
+            ].map((c) => (
+              <div key={c.label} className="flex items-center gap-3 bg-surface p-6">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-navy/5 text-navy-700">
+                  <Icon name={c.icon} size={22} />
+                </span>
+                <span className="font-medium text-navy">{c.label}</span>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* ---------- Final CTA ---------- */}
+      <section className="bg-navy py-section text-white">
         <Container>
           <div className="mx-auto max-w-2xl text-center">
-            <span className="flex justify-center text-navy-700">
-              <Icon name="analytics" size={56} />
-            </span>
-            <h2 className="mt-6 font-display text-3xl font-bold text-navy sm:text-4xl">
-              What is your property really worth?
+            <p className="label-caps text-gold">Get Started</p>
+            <h2 className="mt-4 font-display text-3xl font-bold sm:text-4xl">
+              Tell us what property support you need.
             </h2>
-            <p className="mt-4 text-lg text-slate">
-              Get a professional, legally-compliant appraisal report from our
-              licensed team of experts. Crucial for inheritance, bank loans, and
-              selling at the right price.
+            <p className="mt-5 text-lg text-white/70">
+              Whether you are leasing, selling, managing, buying, renting, or
+              requesting appraisal, All Abode can guide you to the right next
+              step.
             </p>
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-              <Button href="/appraisal" size="lg">
-                Start Appraisal Request
+              <Button href="/contact" size="lg" variant="gold">
+                Contact All Abode
               </Button>
-              <Button href="/appraisal" variant="ghost" size="lg">
-                View Sample Report
+              <Button href="/listings" size="lg" variant="ghost-light">
+                View Listings
               </Button>
             </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* ---------- FAQ ---------- */}
+      <section className="py-section">
+        <Container>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="label-caps text-gold">Questions</p>
+            <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
+              Frequently asked questions
+            </h2>
+          </div>
+          <div className="mt-12 mx-auto max-w-3xl">
+            <Faq items={[
+              {
+                q: "What services does All Abode Property Solutions offer?",
+                a: "All Abode offers brokerage, leasing, property management, and appraisal support in the Philippines.",
+              },
+              {
+                q: "Is All Abode only a listing website?",
+                a: "No. Listings are part of the website, but the company is a full-service property support brand.",
+              },
+              {
+                q: "Can owners list properties for lease or sale?",
+                a: "Yes. Owners can submit property details through the List Your Property form.",
+              },
+              {
+                q: "Can I request a formal appraisal?",
+                a: "Yes. Formal appraisal support is available subject to property details, purpose, documentation, and professional scope confirmation.",
+              },
+            ]} />
           </div>
         </Container>
       </section>

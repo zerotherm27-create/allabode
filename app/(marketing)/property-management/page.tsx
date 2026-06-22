@@ -6,9 +6,9 @@ import { Faq } from "@/components/faq";
 import { PropertyManagementForm } from "@/components/forms/lead-forms";
 
 export const metadata: Metadata = {
-  title: "Property Management",
+  title: "Property Management Philippines | Rental Property Owner Support",
   description:
-    "Full-service property management with transparent owner access — onboarding, tenant screening, rent monitoring, maintenance coordination, and owner reporting across the Philippines.",
+    "Property management support for owners, OFWs, and investors. Get help with tenant coordination, rent monitoring, maintenance coordination, and owner reports.",
 };
 
 const handled = [
@@ -61,8 +61,8 @@ export default function PropertyManagementPage() {
     <>
       <PageHero
         eyebrow="Property Management"
-        title="Full-service property management with transparent owner access."
-        subtitle="Hand your property to a licensed team that protects your asset, places reliable tenants, and reports to you clearly — every month, without the day-to-day stress."
+        title="Property management for owners who need reliable support."
+        subtitle="All Abode helps property owners manage rentals with leasing support, tenant coordination, rent monitoring, maintenance coordination, move-in and move-out documentation, owner reporting, and portfolio support."
       >
         <Button href="#proposal" size="lg" variant="ghost-light">
           Request a Proposal

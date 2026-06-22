@@ -6,9 +6,9 @@ import { Faq } from "@/components/faq";
 import { AppraisalForm } from "@/components/forms/lead-forms";
 
 export const metadata: Metadata = {
-  title: "Real Estate Appraisal",
+  title: "Real Estate Appraisal Philippines | Licensed Appraiser Support",
   description:
-    "Licensed real estate appraisal for informed property decisions — residential, commercial, land, estate, and investment valuations compliant with Philippine standards.",
+    "Request real estate appraisal support for residential, commercial, land, estate, legal, investment, and pre-sale property needs in the Philippines.",
 };
 
 const types = [
@@ -32,8 +32,8 @@ export default function AppraisalPage() {
     <>
       <PageHero
         eyebrow="Licensed Appraisal"
-        title="Licensed real estate appraisal for informed property decisions."
-        subtitle="Our PRC-licensed appraisers deliver defensible, standards-compliant valuations — for lending, inheritance, legal matters, pre-sale pricing, and investment."
+        title="Real estate appraisal for informed property decisions."
+        subtitle="Request formal appraisal support for residential, commercial, land, estate, legal, investment, or pre-sale property purposes."
       >
         <Button href="#request" size="lg" variant="ghost-light">
           Request an Appraisal
@@ -61,6 +61,46 @@ export default function AppraisalPage() {
               </div>
             ))}
           </div>
+        </Container>
+      </section>
+
+      {/* Appraisal vs market estimate */}
+      <section className="bg-surface-gray py-section">
+        <Container>
+          <SectionHeading
+            eyebrow="Important Distinction"
+            title="Formal appraisal vs. market estimate"
+            lead="A formal appraisal is a documented opinion of value prepared for a defined purpose by a licensed Real Estate Appraiser. It is different from an informal market estimate or broker price opinion, which may help with pricing conversations but is not the same as a formal appraisal report."
+          />
+        </Container>
+      </section>
+
+      {/* Appraisal process */}
+      <section className="py-section">
+        <Container>
+          <SectionHeading
+            eyebrow="The Process"
+            title="How an appraisal request works"
+          />
+          <ol className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              { n: "1", title: "Submit details", body: "Share your property details, location, and the purpose of the appraisal." },
+              { n: "2", title: "Request review", body: "All Abode reviews the request and the information needed to proceed." },
+              { n: "3", title: "Scope confirmed", body: "The scope, required documents, and inspection needs are confirmed with you." },
+              { n: "4", title: "Schedule set", body: "Appraisal schedule and next steps are coordinated based on availability." },
+              { n: "5", title: "Report process", body: "The formal report process proceeds based on the agreed scope." },
+            ].map((step) => (
+              <li key={step.n} className="bg-surface p-7">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-navy text-sm font-bold text-white">
+                  {step.n}
+                </span>
+                <h3 className="mt-4 font-display text-base font-semibold text-navy">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate">{step.body}</p>
+              </li>
+            ))}
+          </ol>
         </Container>
       </section>
 

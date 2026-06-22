@@ -35,6 +35,11 @@ function FormShell({
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
+    if (!data.get("consent")) {
+      setErrors({});
+      setFormError("Please accept the terms to continue.");
+      return;
+    }
     const { payload, errors: fieldErrors } = build(data);
     if (fieldErrors && Object.keys(fieldErrors).length > 0) {
       setErrors(fieldErrors);
@@ -84,6 +89,21 @@ function FormShell({
           {formError}
         </p>
       )}
+      <label className="flex cursor-pointer items-start gap-3 text-sm text-slate">
+        <input
+          type="checkbox"
+          name="consent"
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded-sm border-line accent-navy"
+        />
+        <span>
+          By submitting this form, you agree that All Abode Property Solutions may collect
+          and use your submitted information to respond to your inquiry, coordinate property
+          services, and manage related communication.{" "}
+          <a href="/privacy-policy" className="text-navy-700 underline underline-offset-2 hover:text-gold">
+            Your information will not be sold.
+          </a>
+        </span>
+      </label>
       <Button type="submit" size="lg" disabled={state === "submitting"} className="mt-1 w-full sm:w-auto">
         {state === "submitting" ? (
           <>

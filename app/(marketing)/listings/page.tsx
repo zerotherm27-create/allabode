@@ -5,9 +5,9 @@ import { ListingsBrowser } from "@/components/listings-browser";
 import { getListings } from "@/lib/listings";
 
 export const metadata: Metadata = {
-  title: "Property Listings",
+  title: "Property Listings Philippines | All Abode Property Solutions",
   description:
-    "Browse curated residential and commercial properties for sale and for lease across Metro Manila, Cebu, and Davao — represented by a licensed brokerage team.",
+    "Browse properties for lease or sale in the Philippines. Search by location, price, property type, bedrooms, furnishing, and availability.",
 };
 
 export default async function ListingsPage() {
@@ -15,9 +15,9 @@ export default async function ListingsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Premium Listings"
-        title="Find your next address"
-        lead="A curated portfolio of premium residential and commercial spaces, each verified by our licensed brokerage team."
+        eyebrow="Listings"
+        title="Property listings for lease and sale"
+        lead="Browse available properties for lease, sale, short-term rental, long-term rental, and bed space arrangements. Use filters to find options based on location, price, property type, furnishing, and availability."
         crumbs={[{ label: "Home", href: "/" }, { label: "Listings" }]}
       />
       <section className="py-section">

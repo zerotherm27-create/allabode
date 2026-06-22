@@ -15,7 +15,7 @@ export function SiteFooter() {
     <footer className="bg-navy text-white">
       <div className="container-site grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:py-20">
         {/* Brand */}
-        <div className="md:col-span-4">
+        <div className="md:col-span-3">
           <Image
             src="/logo/logo-white-icon.png"
             alt="All Abode Property Solutions"
@@ -50,7 +50,7 @@ export function SiteFooter() {
           <p className="label-caps text-white">Services</p>
           <ul className="mt-6 space-y-3 text-sm text-white/60">
             {footerNav.services.map((item) => (
-              <li key={item.href}>
+              <li key={item.label}>
                 <Link href={item.href} className="transition-colors hover:text-gold">
                   {item.label}
                 </Link>
@@ -60,11 +60,25 @@ export function SiteFooter() {
         </div>
 
         {/* Client Actions */}
-        <div className="md:col-span-3">
+        <div className="md:col-span-2">
           <p className="label-caps text-white">Client Actions</p>
           <ul className="mt-6 space-y-3 text-sm text-white/60">
             {footerNav.clientActions.map((item) => (
-              <li key={item.href}>
+              <li key={item.label}>
+                <Link href={item.href} className="transition-colors hover:text-gold">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Resources */}
+        <div className="md:col-span-2">
+          <p className="label-caps text-white">Resources</p>
+          <ul className="mt-6 space-y-3 text-sm text-white/60">
+            {footerNav.resources.map((item) => (
+              <li key={item.label}>
                 <Link href={item.href} className="transition-colors hover:text-gold">
                   {item.label}
                 </Link>
@@ -105,9 +119,12 @@ export function SiteFooter() {
 
       <div className="border-t border-white/10">
         <div className="container-site flex flex-col gap-3 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {new Date().getFullYear()} {site.name}. All rights reserved.
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
+            <Link href="/privacy-policy" className="hover:text-white/60 transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
           <p className="text-white/30">
             Property details, pricing, availability, and terms are subject to verification.
             Formal appraisal services require professional review, documentation, and scope confirmation.

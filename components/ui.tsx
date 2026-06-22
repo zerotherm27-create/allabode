@@ -17,23 +17,23 @@ export function Container({
 }
 
 /* ---- Button: brand variants, renders <Link> when href is set ---- */
-type Variant = "primary" | "secondary" | "ghost" | "ghost-light";
+type Variant = "primary" | "secondary" | "ghost" | "ghost-light" | "gold";
 type Size = "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 label-caps text-center cursor-pointer transition-all duration-[var(--dur-mid)] ease-[var(--ease-out)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 label-caps text-center cursor-pointer rounded-lg transition-all duration-[var(--dur-mid)] ease-[var(--ease-out)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed";
 
 const variants: Record<Variant, string> = {
   // Solid navy, white label — the workhorse CTA
   primary: "bg-navy text-white hover:bg-navy-800",
-  // Transparent with brass label + border — premium secondary
-  secondary:
-    "border border-gold text-gold hover:bg-gold hover:text-navy",
+  // Transparent with gold label + border — premium secondary
+  secondary: "border border-gold text-gold hover:bg-gold hover:text-navy",
   // Navy outline on light surfaces
   ghost: "border border-navy text-navy hover:bg-navy hover:text-white",
   // Glassy outline for dark/photographic backgrounds
-  "ghost-light":
-    "border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20",
+  "ghost-light": "border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20",
+  // Warm gold fill — for highest-priority CTAs (List Your Property)
+  gold: "bg-gold text-navy hover:bg-gold-bright",
 };
 
 const sizes: Record<Size, string> = {

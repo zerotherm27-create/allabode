@@ -30,20 +30,16 @@ export const founder = {
 } as const;
 
 export type NavLink = { label: string; href: string };
-export type NavGroup = { label: string; children: readonly NavLink[] };
-export type NavItem = NavLink | NavGroup;
+export type NavItem = NavLink;
 
-/** Services grouped under a dropdown to keep the bar uncluttered. */
-export const serviceLinks: readonly NavLink[] = [
+/** Full flat navigation per brief §4 — all service pages visible at the top level. */
+export const mainNav: readonly NavItem[] = [
+  { label: "Listings", href: "/listings" },
   { label: "Leasing", href: "/leasing" },
   { label: "Buy / Sell", href: "/buy-sell" },
   { label: "Property Management", href: "/property-management" },
   { label: "Appraisal", href: "/appraisal" },
-];
-
-export const mainNav: readonly NavItem[] = [
-  { label: "Listings", href: "/listings" },
-  { label: "Services", children: serviceLinks },
+  { label: "Resources", href: "/resources" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
@@ -62,5 +58,12 @@ export const footerNav = {
     { label: "Request an Appraisal", href: "/appraisal" },
     { label: "Ask About Management", href: "/property-management" },
     { label: "Contact Us", href: "/contact" },
+  ],
+  resources: [
+    { label: "Property Guides", href: "/resources" },
+    { label: "Leasing Tips", href: "/resources" },
+    { label: "Appraisal Education", href: "/resources" },
+    { label: "Property Management Advice", href: "/resources" },
+    { label: "Buying and Selling Guidance", href: "/resources" },
   ],
 } as const;

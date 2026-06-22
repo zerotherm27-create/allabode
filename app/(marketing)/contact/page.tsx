@@ -6,9 +6,9 @@ import { ContactForm } from "@/components/forms/lead-forms";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Contact All Abode Property Solutions Philippines",
   description:
-    "Get in touch with All Abode Property Solutions for leasing, selling, buying, property management, appraisal, or a consultation. Serving Metro Manila, Cebu, and Davao.",
+    "Contact All Abode for brokerage, leasing, property management, appraisal, property listings, or general real estate consultation.",
 };
 
 const channels = [
@@ -25,8 +25,8 @@ export default function ContactPage() {
     <>
       <PageHero
         eyebrow="Contact"
-        title="Let's talk about your property."
-        subtitle="Tell us what you need — leasing, selling, buying, management, or a valuation — and a licensed member of our team will respond within one business day."
+        title="Contact All Abode Property Solutions."
+        subtitle="Tell us what property support you need. Whether you want to lease, sell, manage, buy, rent, or appraise property, All Abode will review your inquiry and guide you to the right next step."
       />
 
       <section className="py-section">

@@ -7,9 +7,9 @@ import { Faq } from "@/components/faq";
 import { getListings } from "@/lib/listings";
 
 export const metadata: Metadata = {
-  title: "Buy & Sell Property",
+  title: "Buy and Sell Property Philippines | Real Estate Brokerage Support",
   description:
-    "Professional brokerage guidance for buying and selling property in the Philippines — pricing, listing preparation, marketing, buyer qualification, negotiation, and documentation.",
+    "Professional brokerage guidance for buying and selling property in the Philippines, including pricing, marketing, viewing coordination, and documentation support.",
 };
 
 const sellers = [
@@ -44,7 +44,7 @@ export default async function BuySellPage() {
       <PageHero
         eyebrow="Licensed Brokerage"
         title="Buy and sell property with professional brokerage guidance."
-        subtitle="Whether you're selling at the right price or buying with confidence, our licensed brokers represent your interests from first viewing to final signature."
+        subtitle="Buying or selling property is easier when the process is clear. All Abode helps sellers prepare and market their property while helping buyers understand listings, schedule viewings, and move through next steps professionally."
       >
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button href="/list-your-property" size="lg" variant="ghost-light">

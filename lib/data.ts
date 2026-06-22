@@ -6,40 +6,45 @@ export type Service = {
   title: string;
   blurb: string;
   href: string;
+  cta?: string;
 };
 
 export const services: Service[] = [
   {
-    slug: "appraisal",
-    icon: "verified",
-    title: "Professional Appraisal",
+    slug: "leasing",
+    icon: "key",
+    title: "Lease My Property",
     blurb:
-      "Certified property valuations for legal, tax, and sales purposes in accordance with Philippine standards.",
-    href: "/appraisal",
+      "Get support with rental pricing guidance, listing preparation, tenant inquiries, viewing coordination, screening, and move-in support.",
+    href: "/leasing",
+    cta: "List for Leasing",
   },
   {
     slug: "brokerage",
     icon: "real_estate_agent",
-    title: "Licensed Brokerage",
+    title: "Sell My Property",
     blurb:
-      "Seamless transactions for buying and selling premium residential and commercial assets.",
+      "Prepare your property for sale with pricing guidance, marketing support, buyer inquiry handling, viewing coordination, and transaction support.",
     href: "/buy-sell",
+    cta: "Sell My Property",
   },
   {
     slug: "management",
     icon: "corporate_fare",
-    title: "Property Management",
+    title: "Manage My Property",
     blurb:
-      "Asset maintenance, tenant relations, and financial reporting for stress-free ownership.",
+      "For busy owners, investors, and OFWs who need help with tenants, rent monitoring, maintenance coordination, and owner updates.",
     href: "/property-management",
+    cta: "Get Management Support",
   },
   {
-    slug: "leasing",
-    icon: "key",
-    title: "Leasing & Rentals",
+    slug: "appraisal",
+    icon: "verified",
+    title: "Request an Appraisal",
     blurb:
-      "End-to-end leasing solutions for landlords and corporate tenants in prime business districts.",
-    href: "/leasing",
+      "Request formal appraisal support for residential, commercial, land, estate, legal, investment, or pre-sale purposes.",
+    href: "/appraisal",
+    cta: "Request an Appraisal",
   },
 ];
 
@@ -199,17 +204,27 @@ export const statusStyles: Record<ListingStatus, string> = {
 export const trustPoints = [
   {
     icon: "verified_user",
-    title: "Government Licensed",
-    body: "Fully compliant with the Real Estate Service Act of the Philippines (RESA Law).",
+    title: "Licensed Expertise",
+    body: "Licensed real estate professional support for brokerage, leasing, property management, and appraisal.",
   },
   {
-    icon: "location_city",
-    title: "National Coverage",
-    body: "Operating in Metro Manila, Cebu, Davao, and key emerging provincial hubs.",
+    icon: "hub",
+    title: "One Service Brand",
+    body: "Brokerage, leasing, management, and appraisal in one coordinated service partner.",
   },
   {
-    icon: "insights",
-    title: "Data-Driven Valuation",
-    body: "We use rigorous analytical methods to determine fair market value, not just estimates.",
+    icon: "chat",
+    title: "Clear Communication",
+    body: "Defined service scope, professional documentation, and responsive communication at every step.",
+  },
+  {
+    icon: "lightbulb",
+    title: "Practical Guidance",
+    body: "Straightforward advice for owners, tenants, buyers, sellers, and investors — no unnecessary complexity.",
+  },
+  {
+    icon: "devices",
+    title: "Client-Ready Systems",
+    body: "Purpose-built systems for inquiry management, lead tracking, and future client portal access.",
   },
 ];

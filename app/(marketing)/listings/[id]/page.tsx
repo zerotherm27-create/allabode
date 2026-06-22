@@ -207,6 +207,17 @@ export default async function ListingDetailPage({ params }: Params) {
         </Container>
       </section>
 
+      {/* Listing disclaimer */}
+      <div className="border-t border-line bg-surface-gray">
+        <Container className="py-5">
+          <p className="text-sm text-slate">
+            <strong className="text-navy">Listing disclaimer:</strong> Property information,
+            pricing, availability, and terms are subject to verification and may change
+            without prior notice. Please confirm details with All Abode before making decisions.
+          </p>
+        </Container>
+      </div>
+
       {/* Related */}
       <section className="bg-surface-gray py-section">
         <Container>

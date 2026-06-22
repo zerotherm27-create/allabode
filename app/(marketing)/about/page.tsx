@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
-import { PageHero, SectionHeading, CtaBand, FounderSection } from "@/components/sections";
+import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { trustPoints } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -53,8 +53,46 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      {/* Founder credentials */}
-      <FounderSection eyebrow="Founder & Licensed Professional" band />
+      {/* Properties by Chel — founder's personal brand */}
+      <section className="bg-surface-gray py-section">
+        <Container className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-16">
+          <div className="shrink-0">
+            <div className="flex w-56 flex-col items-center gap-4 rounded-lg border border-line bg-surface p-6 text-center shadow-sm">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-navy/5 text-navy-700">
+                <Icon name="home_work" size={28} />
+              </span>
+              <div>
+                <p className="font-display text-base font-bold text-navy">
+                  Properties by Chel
+                </p>
+                <p className="mt-1 text-xs text-slate">
+                  Personal real estate advisory &amp; education
+                </p>
+              </div>
+              <div className="h-px w-full bg-line" />
+              <p className="label-caps text-gold">Founded by Chel</p>
+            </div>
+          </div>
+          <div className="max-w-xl">
+            <p className="label-caps text-gold">About the Founder</p>
+            <h2 className="mt-3 font-display text-2xl font-bold text-navy sm:text-3xl">
+              Properties by Chel
+            </h2>
+            <p className="mt-4 leading-relaxed text-slate">
+              Properties by Chel is the personal real estate advisory and
+              educational brand of Chel, founder of All Abode Property
+              Solutions. It shares educational content and professional insights
+              to help clients understand real estate topics — from leasing and
+              buying, to property management and appraisal.
+            </p>
+            <p className="mt-3 leading-relaxed text-slate">
+              All Abode Property Solutions serves as the main operating company
+              for full-service property support: brokerage, leasing, property
+              management, and appraisal.
+            </p>
+          </div>
+        </Container>
+      </section>
 
       {/* Mission + credibility */}
       <section className="bg-navy py-section text-white">

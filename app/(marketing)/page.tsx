@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
-import { FounderSection } from "@/components/sections";
+
 import { services, trustPoints } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
 
@@ -229,9 +229,6 @@ export default async function Home() {
           </div>
         </Container>
       </section>
-
-      {/* ---------- Founder credibility ---------- */}
-      <FounderSection band />
 
       {/* ---------- Appraisal CTA ---------- */}
       <section className="py-section-lg">

@@ -20,11 +20,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://allabodeph.com"),
   title: {
     default:
-      "All Abode Property Solutions | Licensed Real Estate, Leasing & Appraisal Philippines",
+      "All Abode Property Solutions | Real Estate Services Philippines",
     template: "%s | All Abode Property Solutions",
   },
   description:
-    "Work with PRC-licensed real estate brokers and appraisers for professional property leasing, selling, management, and valuation across the Philippines.",
+    "Brokerage, leasing, property management, and appraisal support in the Philippines. Work with All Abode for professional property guidance.",
   keywords: [
     "real estate broker Philippines",
     "real estate appraisal Philippines",

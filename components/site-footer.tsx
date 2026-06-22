@@ -14,14 +14,18 @@ export function SiteFooter() {
     <footer className="bg-navy text-white">
       <div className="container-site grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:py-20">
         {/* Brand */}
-        <div className="md:col-span-5">
-          <span className="font-display text-xl font-bold text-gold">
-            {site.name}
+        <div className="md:col-span-4">
+          <span className="font-display text-xl font-bold">
+            {site.shortName}
+            <span className="text-gold">.</span>
           </span>
-          <p className="mt-5 max-w-md text-sm leading-relaxed text-slate-soft">
-            Your trusted partner for licensed real estate services in the
-            Philippines. We combine institutional expertise with a personalized
-            approach to property management and appraisal.
+          <p className="mt-1 text-xs tracking-wider text-gold/80">
+            {site.descriptor}
+          </p>
+          <p className="mt-5 max-w-md text-sm leading-relaxed text-white/60">
+            {site.name} provides brokerage, leasing, property management, and
+            appraisal support for clients who need professional property
+            guidance in the Philippines.
           </p>
           <div className="mt-7 flex gap-3">
             {socials.map((s) => (
@@ -29,7 +33,7 @@ export function SiteFooter() {
                 key={s.name}
                 href={s.href}
                 aria-label={s.name}
-                className="flex h-10 w-10 items-center justify-center border border-white/15 text-slate-soft transition-colors hover:border-gold hover:text-gold"
+                className="flex h-10 w-10 items-center justify-center border border-white/15 text-white/60 transition-colors hover:border-gold hover:text-gold"
               >
                 <Icon name={s.icon} size={20} />
               </a>
@@ -40,13 +44,10 @@ export function SiteFooter() {
         {/* Services */}
         <div className="md:col-span-2">
           <p className="label-caps text-white">Services</p>
-          <ul className="mt-6 space-y-3 text-sm text-slate-soft">
+          <ul className="mt-6 space-y-3 text-sm text-white/60">
             {footerNav.services.map((item) => (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="transition-colors hover:text-gold"
-                >
+                <Link href={item.href} className="transition-colors hover:text-gold">
                   {item.label}
                 </Link>
               </li>
@@ -54,16 +55,13 @@ export function SiteFooter() {
           </ul>
         </div>
 
-        {/* Quick Links */}
-        <div className="md:col-span-2">
-          <p className="label-caps text-white">Quick Links</p>
-          <ul className="mt-6 space-y-3 text-sm text-slate-soft">
-            {footerNav.quickLinks.map((item) => (
+        {/* Client Actions */}
+        <div className="md:col-span-3">
+          <p className="label-caps text-white">Client Actions</p>
+          <ul className="mt-6 space-y-3 text-sm text-white/60">
+            {footerNav.clientActions.map((item) => (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="transition-colors hover:text-gold"
-                >
+                <Link href={item.href} className="transition-colors hover:text-gold">
                   {item.label}
                 </Link>
               </li>
@@ -73,34 +71,43 @@ export function SiteFooter() {
 
         {/* Contact */}
         <div className="md:col-span-3">
-          <p className="label-caps text-white">Get in Touch</p>
-          <ul className="mt-6 space-y-4 text-sm text-slate-soft">
+          <p className="label-caps text-white">Contact</p>
+          <ul className="mt-6 space-y-4 text-sm text-white/60">
             <li className="flex items-start gap-3">
-              <Icon name="location_on" size={20} className="text-gold" />
-              <span>{site.location}</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <Icon name="call" size={20} className="text-gold" />
-              <a href={site.phoneHref} className="hover:text-gold">
-                {site.phone}
-              </a>
-            </li>
-            <li className="flex items-start gap-3">
-              <Icon name="mail" size={20} className="text-gold" />
+              <Icon name="mail" size={18} className="mt-0.5 shrink-0 text-gold" />
               <a href={site.emailHref} className="hover:text-gold">
                 {site.email}
               </a>
+            </li>
+            <li className="flex items-start gap-3">
+              <Icon name="call" size={18} className="mt-0.5 shrink-0 text-gold" />
+              <a href={site.phoneHref} className="hover:text-gold">
+                Mobile / Viber / WhatsApp: {site.phone}
+              </a>
+            </li>
+            <li className="flex items-start gap-3">
+              <Icon name="forum" size={18} className="mt-0.5 shrink-0 text-gold" />
+              <a href={site.messenger} className="hover:text-gold">
+                Facebook / Messenger
+              </a>
+            </li>
+            <li className="flex items-start gap-3">
+              <Icon name="location_on" size={18} className="mt-0.5 shrink-0 text-gold" />
+              <span>Service Area: {site.serviceArea}</span>
             </li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="container-site flex flex-col items-center justify-between gap-3 py-6 text-xs text-slate-soft sm:flex-row">
+        <div className="container-site flex flex-col gap-3 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} {site.name}. All rights reserved.
           </p>
-          <p>{site.serviceArea}</p>
+          <p className="text-white/30">
+            Property details, pricing, availability, and terms are subject to verification.
+            Formal appraisal services require professional review, documentation, and scope confirmation.
+          </p>
         </div>
       </div>
     </footer>

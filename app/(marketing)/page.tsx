@@ -7,10 +7,9 @@ import { services, trustPoints } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
 
 const heroCtas = [
-  { icon: "search", label: "Find a Property", href: "/listings", variant: "primary" as const },
-  { icon: "sell", label: "List My Property", href: "/list-your-property", variant: "primary" as const },
-  { icon: "analytics", label: "Request Appraisal", href: "/appraisal", variant: "ghost-light" as const },
-  { icon: "home_work", label: "Get Property Management", href: "/property-management", variant: "ghost-light" as const },
+  { icon: "list_alt", label: "List Your Property", href: "/list-your-property", variant: "primary" as const },
+  { icon: "analytics", label: "Request an Appraisal", href: "/appraisal", variant: "secondary" as const },
+  { icon: "search", label: "View Listings", href: "/listings", variant: "ghost-light" as const },
 ];
 
 export default async function Home() {
@@ -26,18 +25,22 @@ export default async function Home() {
         <Container className="flex min-h-[78vh] flex-col justify-center py-20">
           <div className="max-w-3xl">
             <span className="label-caps inline-block bg-gold/15 px-4 py-1.5 text-gold-soft ring-1 ring-gold/30">
-              Established · Professional · Trusted
+              Complete property services in the Philippines
             </span>
             <h1 className="mt-6 font-display text-[2.5rem] font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
-              Complete Real Estate, Leasing, Property Management, and Appraisal
-              Services
+              Your property, professionally taken care of.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/80">
-              Work with a licensed Real Estate Broker and Appraiser for
-              professional property leasing, selling, management, and valuation
-              support in the Philippines.
+            <p className="mt-4 font-display text-xl text-gold/90">
+              Brokerage, leasing, property management, and appraisal support
+              through one trusted partner.
             </p>
-            <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/75">
+              All Abode Property Solutions helps owners, investors, buyers,
+              sellers, tenants, and appraisal clients move through property
+              decisions with clear guidance, organized coordination, and
+              licensed professional expertise.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
               {heroCtas.map((cta) => (
                 <Button
                   key={cta.label}
@@ -54,17 +57,17 @@ export default async function Home() {
         </Container>
       </section>
 
-      {/* ---------- Services ---------- */}
+      {/* ---------- Services routing ---------- */}
       <section className="py-section">
         <Container>
           <div className="mx-auto max-w-2xl text-center">
-            <p className="label-caps text-gold">Our Core Expertise</p>
+            <p className="label-caps text-gold">What we do</p>
             <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
-              A complete ecosystem of property solutions
+              What do you need help with?
             </h2>
             <p className="mt-4 text-slate">
-              Providing a comprehensive ecosystem of real estate solutions
-              managed by licensed industry professionals.
+              Complete property support, not just listings. One coordinated
+              service partner for brokerage, leasing, management, and appraisal.
             </p>
           </div>
 

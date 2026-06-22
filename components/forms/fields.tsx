@@ -9,8 +9,8 @@ import {
   useId,
 } from "react";
 
-const FieldCtx = createContext<{ id: string; errorId: string; invalid: boolean }>(
-  { id: "", errorId: "", invalid: false }
+const FieldCtx = createContext<{ id: string; errorId: string; hintId: string; hasHint: boolean; invalid: boolean }>(
+  { id: "", errorId: "", hintId: "", hasHint: false, invalid: false }
 );
 
 const fieldBase =
@@ -37,7 +37,7 @@ export function Field({
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   return (
-    <FieldCtx.Provider value={{ id, errorId, invalid: !!error }}>
+    <FieldCtx.Provider value={{ id, errorId, hintId, hasHint: !!hint, invalid: !!error }}>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={id} className="text-sm font-medium text-navy">
           {label}
@@ -72,12 +72,13 @@ export function Input({
   className = "",
   ...props
 }: ComponentProps<"input">) {
-  const { id, errorId, invalid } = useContext(FieldCtx);
+  const { id, errorId, hintId, hasHint, invalid } = useContext(FieldCtx);
+  const describedBy = [hasHint ? hintId : "", invalid ? errorId : ""].filter(Boolean).join(" ") || undefined;
   return (
     <input
       id={id}
       aria-invalid={invalid || undefined}
-      aria-describedby={invalid ? errorId : undefined}
+      aria-describedby={describedBy}
       className={`${fieldBase} h-12 ${className}`}
       {...props}
     />
@@ -89,13 +90,14 @@ export function Textarea({
   rows = 5,
   ...props
 }: ComponentProps<"textarea">) {
-  const { id, errorId, invalid } = useContext(FieldCtx);
+  const { id, errorId, hintId, hasHint, invalid } = useContext(FieldCtx);
+  const describedBy = [hasHint ? hintId : "", invalid ? errorId : ""].filter(Boolean).join(" ") || undefined;
   return (
     <textarea
       id={id}
       rows={rows}
       aria-invalid={invalid || undefined}
-      aria-describedby={invalid ? errorId : undefined}
+      aria-describedby={describedBy}
       className={`${fieldBase} resize-y py-3 ${className}`}
       {...props}
     />
@@ -107,13 +109,14 @@ export function Select({
   children,
   ...props
 }: ComponentProps<"select">) {
-  const { id, errorId, invalid } = useContext(FieldCtx);
+  const { id, errorId, hintId, hasHint, invalid } = useContext(FieldCtx);
+  const describedBy = [hasHint ? hintId : "", invalid ? errorId : ""].filter(Boolean).join(" ") || undefined;
   return (
     <div className="relative">
       <select
         id={id}
         aria-invalid={invalid || undefined}
-        aria-describedby={invalid ? errorId : undefined}
+        aria-describedby={describedBy}
         className={`${fieldBase} h-12 appearance-none pr-10 ${className}`}
         {...props}
       >

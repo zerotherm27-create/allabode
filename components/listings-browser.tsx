@@ -89,13 +89,13 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[280px_1fr]">
       {/* Filter sidebar */}
-      <aside className="h-fit rounded-lg border border-line bg-surface p-6 lg:sticky lg:top-24">
+      <aside aria-label="Listing filters" className="h-fit rounded-lg border border-line bg-surface p-6 lg:sticky lg:top-24">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-navy">Filters</h2>
           <button
             type="button"
             onClick={reset}
-            className="text-sm text-gold hover:underline"
+            className="min-h-[44px] px-2 text-sm text-gold hover:underline"
           >
             Clear
           </button>
@@ -103,6 +103,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
 
         <label className="mt-5 flex items-center gap-2 rounded-md border border-line-strong px-3 focus-within:border-gold">
           <Icon name="search" size={20} className="text-slate" />
+          <span className="sr-only">Search properties</span>
           <input
             type="search"
             value={query}
@@ -113,32 +114,32 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
         </label>
 
         <div className="mt-6 flex flex-col gap-5">
-          <Filter label="Listing type">
-            <select value={listingType} onChange={(e) => setListingType(e.target.value)} className={selectCls}>
+          <Filter label="Listing type" htmlFor="filter-listing-type">
+            <select id="filter-listing-type" value={listingType} onChange={(e) => setListingType(e.target.value)} className={selectCls}>
               {listingTypes.map((o) => (
                 <option key={o}>{o}</option>
               ))}
             </select>
           </Filter>
 
-          <Filter label="Property type">
-            <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className={selectCls}>
+          <Filter label="Property type" htmlFor="filter-property-type">
+            <select id="filter-property-type" value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className={selectCls}>
               {propertyTypes.map((o) => (
                 <option key={o}>{o}</option>
               ))}
             </select>
           </Filter>
 
-          <Filter label="Availability">
-            <select value={availability} onChange={(e) => setAvailability(e.target.value)} className={selectCls}>
+          <Filter label="Availability" htmlFor="filter-availability">
+            <select id="filter-availability" value={availability} onChange={(e) => setAvailability(e.target.value)} className={selectCls}>
               {["All", "Available", "Reserved", "Sold"].map((o) => (
                 <option key={o}>{o}</option>
               ))}
             </select>
           </Filter>
 
-          <Filter label="Furnishing">
-            <select value={furnishing} onChange={(e) => setFurnishing(e.target.value)} className={selectCls}>
+          <Filter label="Furnishing" htmlFor="filter-furnishing">
+            <select id="filter-furnishing" value={furnishing} onChange={(e) => setFurnishing(e.target.value)} className={selectCls}>
               {["All", ...FURNISHING].map((o) => (
                 <option key={o}>{o}</option>
               ))}
@@ -146,15 +147,15 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
           </Filter>
 
           <div className="grid grid-cols-2 gap-3">
-            <Filter label="Beds (min)">
-              <select value={minBeds} onChange={(e) => setMinBeds(Number(e.target.value))} className={selectCls}>
+            <Filter label="Beds (min)" htmlFor="filter-min-beds">
+              <select id="filter-min-beds" value={minBeds} onChange={(e) => setMinBeds(Number(e.target.value))} className={selectCls}>
                 {[0, 1, 2, 3, 4].map((n) => (
                   <option key={n} value={n}>{n === 0 ? "Any" : `${n}+`}</option>
                 ))}
               </select>
             </Filter>
-            <Filter label="Baths (min)">
-              <select value={minBaths} onChange={(e) => setMinBaths(Number(e.target.value))} className={selectCls}>
+            <Filter label="Baths (min)" htmlFor="filter-min-baths">
+              <select id="filter-min-baths" value={minBaths} onChange={(e) => setMinBaths(Number(e.target.value))} className={selectCls}>
                 {[0, 1, 2, 3, 4].map((n) => (
                   <option key={n} value={n}>{n === 0 ? "Any" : `${n}+`}</option>
                 ))}
@@ -165,14 +166,16 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
           <Filter label="Price range (₱)">
             <div className="flex items-center gap-2">
               <input
+                aria-label="Minimum price in Philippine Peso"
                 inputMode="numeric"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value.replace(/[^\d]/g, ""))}
                 placeholder="Min"
                 className={selectCls}
               />
-              <span className="text-slate-soft">—</span>
+              <span className="text-slate-soft" aria-hidden="true">—</span>
               <input
+                aria-label="Maximum price in Philippine Peso"
                 inputMode="numeric"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value.replace(/[^\d]/g, ""))}
@@ -223,7 +226,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
             <button
               type="button"
               onClick={reset}
-              className="label-caps mt-5 border-b-2 border-navy pb-0.5 text-navy hover:border-gold hover:text-gold"
+              className="label-caps mt-5 min-h-[44px] border-b-2 border-navy px-2 pb-0.5 text-navy hover:border-gold hover:text-gold"
             >
               Clear all filters
             </button>
@@ -234,10 +237,14 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
   );
 }
 
-function Filter({ label, children }: { label: string; children: React.ReactNode }) {
+function Filter({ label, htmlFor, children }: { label: string; htmlFor?: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="label-caps mb-2 text-navy">{label}</p>
+      {htmlFor ? (
+        <label htmlFor={htmlFor} className="label-caps mb-2 block text-navy">{label}</label>
+      ) : (
+        <p className="label-caps mb-2 text-navy">{label}</p>
+      )}
       {children}
     </div>
   );

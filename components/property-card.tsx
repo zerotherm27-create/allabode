@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { type Listing, statusStyles } from "@/lib/data";
 
@@ -29,7 +30,7 @@ export function PropertyCard({ listing }: { listing: Listing }) {
         <button
           type="button"
           aria-label="Save listing"
-          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-navy/70 text-white backdrop-blur-md transition-colors hover:bg-navy-700"
+          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-navy/70 text-white backdrop-blur-md transition-colors hover:bg-navy-700"
         >
           <Icon name="favorite" size={18} />
         </button>
@@ -41,7 +42,9 @@ export function PropertyCard({ listing }: { listing: Listing }) {
           {listing.price}
         </p>
         <h3 className="mt-1 font-display text-lg font-semibold leading-tight text-navy">
-          {listing.title}
+          <Link href={`/listings/${listing.id}`} className="hover:text-navy-700 focus-visible:underline">
+            {listing.title}
+          </Link>
         </h3>
         <p className="mt-1 flex items-center gap-1 text-sm text-slate">
           <Icon name="location_on" size={16} className="text-gold" />
@@ -64,12 +67,14 @@ export function PropertyCard({ listing }: { listing: Listing }) {
           ))}
         </div>
 
-        <a
+        <Link
           href={`/listings/${listing.id}`}
-          className="label-caps mt-6 flex w-full items-center justify-center border border-navy py-3 text-navy transition-all hover:bg-navy hover:text-white"
+          aria-hidden="true"
+          tabIndex={-1}
+          className="label-caps mt-6 flex min-h-[44px] w-full items-center justify-center border border-navy py-3 text-navy transition-all hover:bg-navy hover:text-white"
         >
           View Details
-        </a>
+        </Link>
       </div>
     </article>
   );

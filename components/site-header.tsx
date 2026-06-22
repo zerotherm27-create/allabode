@@ -15,6 +15,7 @@ function isGroup(item: NavItem): item is { label: string; children: readonly { l
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const close = () => setOpen(false);
 
   useEffect(() => {
@@ -38,10 +39,22 @@ export function SiteHeader() {
         <nav aria-label="Primary" className="hidden items-center gap-7 lg:flex">
           {mainNav.map((item) =>
             isGroup(item) ? (
-              <div key={item.label} className="group relative">
+              <div
+                key={item.label}
+                className="group relative"
+                onMouseEnter={() => setServicesOpen(true)}
+                onMouseLeave={() => setServicesOpen(false)}
+                onFocusCapture={() => setServicesOpen(true)}
+                onBlurCapture={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                    setServicesOpen(false);
+                  }
+                }}
+              >
                 <button
                   type="button"
-                  aria-haspopup="true"
+                  aria-haspopup="menu"
+                  aria-expanded={servicesOpen}
                   className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-navy ${
                     groupActive(item.children) ? "text-navy" : "text-slate"
                   }`}

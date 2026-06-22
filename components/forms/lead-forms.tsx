@@ -84,7 +84,7 @@ function FormShell({
           {formError}
         </p>
       )}
-      <Button type="submit" size="lg" className="mt-1 w-full sm:w-auto">
+      <Button type="submit" size="lg" disabled={state === "submitting"} className="mt-1 w-full sm:w-auto">
         {state === "submitting" ? (
           <>
             <Icon name="progress_activity" size={20} className="animate-spin" />
@@ -388,7 +388,7 @@ export function ContactForm() {
           <Field label="Property location">
             <Input name="propertyLocation" placeholder="City / district (optional)" />
           </Field>
-          <Field label="Message" required error={e.message}>
+          <Field label="Message">
             <Textarea name="message" placeholder="How can we help?" />
           </Field>
         </>

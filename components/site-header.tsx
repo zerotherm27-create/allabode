@@ -2,34 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { mainNav, isDropdown } from "@/lib/site";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui";
 import { Logo } from "@/components/logo";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const servicesRef = useRef<HTMLDivElement>(null);
   const close = () => setOpen(false);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
-
-  useEffect(() => {
-    if (!servicesOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (servicesRef.current && !servicesRef.current.contains(e.target as Node)) {
-        setServicesOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [servicesOpen]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -44,62 +40,69 @@ export function SiteHeader() {
       <div className="container-site flex h-16 items-center justify-between gap-4 md:h-20">
         <Logo />
 
-        {/* Desktop nav */}
-        <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
-          {mainNav.map((item) => {
-            if (isDropdown(item)) {
-              return (
-                <div key={item.label} className="relative" ref={servicesRef}>
-                  <button
-                    type="button"
-                    onClick={() => setServicesOpen((v) => !v)}
-                    aria-expanded={servicesOpen}
-                    className={`flex items-center gap-1 rounded px-3 py-2 text-sm font-medium transition-colors hover:text-navy ${
-                      isServicesActive() ? "text-navy" : "text-slate"
-                    }`}
-                  >
-                    {item.label}
-                    <Icon
-                      name="keyboard_arrow_down"
-                      size={18}
-                      className={`transition-transform duration-150 ${servicesOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {servicesOpen && (
-                    <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-md border border-line bg-surface shadow-[var(--shadow-lift)]">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setServicesOpen(false)}
-                          className={`block px-4 py-2.5 text-sm transition-colors hover:bg-surface-gray hover:text-navy ${
-                            isActive(child.href) ? "font-medium text-navy" : "text-slate"
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive(item.href) ? "page" : undefined}
-                className={`relative whitespace-nowrap rounded px-3 py-2 text-sm font-medium transition-colors hover:text-navy ${
-                  isActive(item.href) ? "text-navy" : "text-slate"
-                }`}
-              >
-                {item.label}
-                {isActive(item.href) && (
-                  <span className="absolute -bottom-[26px] left-0 h-0.5 w-full bg-gold" />
-                )}
-              </Link>
-            );
-          })}
+        {/* Desktop nav — Radix NavigationMenu */}
+        <nav aria-label="Primary" className="hidden lg:flex">
+          <NavigationMenu>
+            <NavigationMenuList className="gap-0">
+              {mainNav.map((item) => {
+                if (isDropdown(item)) {
+                  return (
+                    <NavigationMenuItem key={item.label}>
+                      <NavigationMenuTrigger
+                        className={cn(
+                          "bg-transparent text-sm font-medium hover:bg-surface-gray hover:text-navy data-[state=open]:bg-surface-gray",
+                          isServicesActive() ? "text-navy" : "text-slate"
+                        )}
+                      >
+                        {item.label}
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <ul className="w-52 p-1">
+                          {item.children.map((child) => (
+                            <li key={child.href}>
+                              <NavigationMenuLink asChild>
+                                <Link
+                                  href={child.href}
+                                  className={cn(
+                                    "flex items-center rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-surface-gray hover:text-navy",
+                                    isActive(child.href)
+                                      ? "font-semibold text-navy"
+                                      : "text-slate"
+                                  )}
+                                >
+                                  {child.label}
+                                </Link>
+                              </NavigationMenuLink>
+                            </li>
+                          ))}
+                        </ul>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  );
+                }
+
+                return (
+                  <NavigationMenuItem key={item.href}>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={item.href}
+                        aria-current={isActive(item.href) ? "page" : undefined}
+                        className={cn(
+                          "relative inline-flex h-9 items-center rounded-md px-3 text-sm font-medium transition-colors hover:bg-surface-gray hover:text-navy",
+                          isActive(item.href) ? "text-navy" : "text-slate"
+                        )}
+                      >
+                        {item.label}
+                        {isActive(item.href) && (
+                          <span className="absolute -bottom-[29px] left-0 h-0.5 w-full bg-gold" />
+                        )}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                );
+              })}
+            </NavigationMenuList>
+          </NavigationMenu>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -146,11 +149,12 @@ export function SiteHeader() {
                           href={child.href}
                           onClick={close}
                           aria-current={isActive(child.href) ? "page" : undefined}
-                          className={`block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                          className={cn(
+                            "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
                             isActive(child.href)
                               ? "bg-surface-gray text-navy"
                               : "text-slate hover:bg-surface-gray hover:text-navy"
-                          }`}
+                          )}
                         >
                           {child.label}
                         </Link>
@@ -164,11 +168,12 @@ export function SiteHeader() {
                     href={item.href}
                     onClick={close}
                     aria-current={isActive(item.href) ? "page" : undefined}
-                    className={`rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                    className={cn(
+                      "rounded-lg px-4 py-3 text-base font-medium transition-colors",
                       isActive(item.href)
                         ? "bg-surface-gray text-navy"
                         : "text-slate hover:bg-surface-gray hover:text-navy"
-                    }`}
+                    )}
                   >
                     {item.label}
                   </Link>

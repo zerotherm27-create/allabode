@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
+import { FounderSection } from "@/components/sections";
 import { services, trustPoints } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
 
@@ -9,7 +10,7 @@ const heroCtas = [
   { icon: "search", label: "Find a Property", href: "/listings", variant: "primary" as const },
   { icon: "sell", label: "List My Property", href: "/list-your-property", variant: "primary" as const },
   { icon: "analytics", label: "Request Appraisal", href: "/appraisal", variant: "ghost-light" as const },
-  { icon: "home_work", label: "Management", href: "/property-management", variant: "ghost-light" as const },
+  { icon: "home_work", label: "Get Property Management", href: "/property-management", variant: "ghost-light" as const },
 ];
 
 export default async function Home() {
@@ -32,10 +33,9 @@ export default async function Home() {
               Services
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/80">
-              Expert guidance across the Philippine archipelago. We are a team
-              of licensed real estate brokers and professional appraisers
-              dedicated to securing your property&apos;s true value and
-              potential.
+              Work with a licensed Real Estate Broker and Appraiser for
+              professional property leasing, selling, management, and valuation
+              support in the Philippines.
             </p>
             <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {heroCtas.map((cta) => (
@@ -175,6 +175,60 @@ export default async function Home() {
           </div>
         </Container>
       </section>
+
+      {/* ---------- Property Management preview ---------- */}
+      <section className="py-section">
+        <Container className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+          <div>
+            <p className="label-caps text-gold">Property Management</p>
+            <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
+              Hands-off ownership, transparent reporting
+            </h2>
+            <p className="mt-4 text-slate">
+              We place reliable tenants, collect rent, coordinate maintenance,
+              and send you clear monthly reports — so your property earns without
+              the day-to-day work. From a single condo to a full portfolio.
+            </p>
+            <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                { icon: "fact_check", label: "Tenant screening" },
+                { icon: "account_balance_wallet", label: "Rent monitoring" },
+                { icon: "build", label: "Maintenance coordination" },
+                { icon: "summarize", label: "Monthly owner reports" },
+              ].map((f) => (
+                <li key={f.label} className="flex items-center gap-2 text-sm text-slate">
+                  <Icon name={f.icon} size={20} className="text-gold" />
+                  {f.label}
+                </li>
+              ))}
+            </ul>
+            <Button href="/property-management" className="mt-8">
+              Explore Property Management
+            </Button>
+          </div>
+          <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+            {[
+              { icon: "apartment", stat: "Onboarding", label: "to market-ready" },
+              { icon: "trending_up", stat: "Maximized", label: "occupancy & yield" },
+              { icon: "verified_user", stat: "Compliant", label: "with RESA law" },
+              { icon: "schedule", stat: "Time back", label: "in your week" },
+            ].map((c) => (
+              <div key={c.label} className="bg-surface p-7">
+                <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
+                  <Icon name={c.icon} size={24} />
+                </span>
+                <p className="mt-4 font-display text-xl font-bold text-navy">
+                  {c.stat}
+                </p>
+                <p className="mt-1 text-sm text-slate">{c.label}</p>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* ---------- Founder credibility ---------- */}
+      <FounderSection band />
 
       {/* ---------- Appraisal CTA ---------- */}
       <section className="py-section-lg">

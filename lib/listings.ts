@@ -17,7 +17,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const db = url && key ? createClient(url, key) : null;
 
 const COLS =
-  "slug,title,location,price,price_label,listing_category,property_type,status,bedrooms,bathrooms,floor_area,is_featured,created_at";
+  "slug,title,location,price,price_label,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at";
 
 type Row = {
   slug: string;
@@ -26,11 +26,18 @@ type Row = {
   price: number | null;
   price_label: string | null;
   listing_category: "For Sale" | "For Lease";
+  lease_type: string | null;
   property_type: string;
   status: string;
   bedrooms: number | null;
   bathrooms: number | null;
   floor_area: number | null;
+  lot_area: number | null;
+  parking: number | null;
+  furnishing: string | null;
+  lease_terms: string | null;
+  sale_terms: string | null;
+  availability_date: string | null;
   is_featured: boolean;
 };
 
@@ -75,6 +82,14 @@ function mapRow(row: Row): Listing {
     baths: row.bathrooms ?? undefined,
     area: row.floor_area != null ? `${Math.round(Number(row.floor_area))} sqm` : "",
     gradient: gradientFor(row.slug),
+    propertyType: row.property_type,
+    listingType: row.lease_type ?? row.listing_category,
+    furnishing: row.furnishing ?? undefined,
+    parking: row.parking ?? undefined,
+    lotArea: row.lot_area != null ? `${Math.round(Number(row.lot_area))} sqm` : undefined,
+    leaseTerms: row.lease_terms ?? undefined,
+    saleTerms: row.sale_terms ?? undefined,
+    availabilityDate: row.availability_date ?? undefined,
   };
 }
 

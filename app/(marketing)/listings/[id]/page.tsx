@@ -111,6 +111,35 @@ export default async function ListingDetailPage({ params }: Params) {
               </p>
             </div>
 
+            {/* Property details (brief: listing/property type, furnishing, parking,
+                lot area, lease/sale terms, availability) */}
+            <div className="mt-8">
+              <h2 className="font-display text-xl font-semibold text-navy">
+                Property details
+              </h2>
+              <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-line pt-4 sm:grid-cols-2">
+                {[
+                  ["Listing type", listing.listingType],
+                  ["Property type", listing.propertyType],
+                  ["Floor area", listing.area],
+                  ["Lot area", listing.lotArea],
+                  ["Bedrooms", listing.beds != null ? String(listing.beds) : undefined],
+                  ["Bathrooms", listing.baths != null ? String(listing.baths) : undefined],
+                  ["Parking", listing.parking != null ? `${listing.parking} slot${listing.parking === 1 ? "" : "s"}` : undefined],
+                  ["Furnishing", listing.furnishing],
+                  [listing.leaseTerms ? "Lease terms" : "Sale terms", listing.leaseTerms ?? listing.saleTerms],
+                  ["Availability", listing.availabilityDate ?? listing.status],
+                ]
+                  .filter(([, v]) => v)
+                  .map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-4 border-b border-line/60 pb-2">
+                      <dt className="text-sm text-slate">{k}</dt>
+                      <dd className="text-sm font-medium text-navy text-right">{v}</dd>
+                    </div>
+                  ))}
+              </dl>
+            </div>
+
             <div className="mt-8">
               <h2 className="font-display text-xl font-semibold text-navy">
                 Highlights

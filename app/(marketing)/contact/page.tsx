@@ -14,7 +14,9 @@ export const metadata: Metadata = {
 const channels = [
   { icon: "call", label: "Phone", value: site.phone, href: site.phoneHref },
   { icon: "mail", label: "Email", value: site.email, href: site.emailHref },
-  { icon: "chat", label: "Viber / WhatsApp", value: site.phone, href: site.phoneHref },
+  { icon: "forum", label: "Facebook / Messenger", value: "Message us on Messenger", href: site.messenger },
+  { icon: "chat", label: "WhatsApp", value: site.phone, href: site.whatsapp },
+  { icon: "sms", label: "Viber", value: site.phone, href: site.viber },
   { icon: "location_on", label: "Office", value: site.location, href: undefined },
 ];
 

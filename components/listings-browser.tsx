@@ -3,36 +3,71 @@
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
-import { type Listing, type ListingStatus } from "@/lib/data";
+import { type Listing } from "@/lib/data";
 
-type StatusFilter = "All" | ListingStatus;
-type TypeFilter = "All" | "Residential" | "Commercial";
 type Sort = "featured" | "price-asc" | "price-desc";
-
-const statusOptions: StatusFilter[] = [
-  "All",
-  "For Sale",
-  "For Lease",
-  "Reserved",
-  "Sold",
-];
-const typeOptions: TypeFilter[] = ["All", "Residential", "Commercial"];
 
 function priceValue(p: string) {
   const n = Number(p.replace(/[^\d]/g, ""));
   return Number.isFinite(n) ? n : 0;
 }
 
+function availabilityOf(l: Listing): "Available" | "Reserved" | "Sold" {
+  if (l.status === "Reserved") return "Reserved";
+  if (l.status === "Sold") return "Sold";
+  return "Available";
+}
+
+const FURNISHING = ["Fully furnished", "Semi-furnished", "Unfurnished"];
+
 export function ListingsBrowser({ listings }: { listings: Listing[] }) {
-  const [status, setStatus] = useState<StatusFilter>("All");
-  const [type, setType] = useState<TypeFilter>("All");
   const [query, setQuery] = useState("");
+  const [listingType, setListingType] = useState("All");
+  const [propertyType, setPropertyType] = useState("All");
+  const [minBeds, setMinBeds] = useState(0);
+  const [minBaths, setMinBaths] = useState(0);
+  const [furnishing, setFurnishing] = useState("All");
+  const [availability, setAvailability] = useState("All");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState<Sort>("featured");
 
+  // Option lists derived from the data so they stay in sync with the catalogue.
+  const listingTypes = useMemo(
+    () => ["All", ...Array.from(new Set(listings.map((l) => l.listingType).filter(Boolean) as string[]))],
+    [listings]
+  );
+  const propertyTypes = useMemo(
+    () => ["All", ...Array.from(new Set(listings.map((l) => l.propertyType).filter(Boolean) as string[]))],
+    [listings]
+  );
+
+  const reset = () => {
+    setQuery("");
+    setListingType("All");
+    setPropertyType("All");
+    setMinBeds(0);
+    setMinBaths(0);
+    setFurnishing("All");
+    setAvailability("All");
+    setMinPrice("");
+    setMaxPrice("");
+  };
+
   const results = useMemo(() => {
+    const min = minPrice ? Number(minPrice) : null;
+    const max = maxPrice ? Number(maxPrice) : null;
     let r = listings.filter((l) => {
-      if (status !== "All" && l.status !== status) return false;
-      if (type !== "All" && l.type !== type) return false;
+      if (listingType !== "All" && l.listingType !== listingType) return false;
+      if (propertyType !== "All" && l.propertyType !== propertyType) return false;
+      if (availability !== "All" && availabilityOf(l) !== availability) return false;
+      if (minBeds > 0 && (l.beds ?? 0) < minBeds) return false;
+      if (minBaths > 0 && (l.baths ?? 0) < minBaths) return false;
+      if (furnishing !== "All" && !(l.furnishing ?? "").startsWith(furnishing.split(" ")[0]))
+        return false;
+      const pv = priceValue(l.price);
+      if (min != null && pv < min) return false;
+      if (max != null && pv > max) return false;
       if (query.trim()) {
         const q = query.toLowerCase();
         if (
@@ -43,38 +78,125 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
       }
       return true;
     });
-    if (sort === "price-asc")
-      r = [...r].sort((a, b) => priceValue(a.price) - priceValue(b.price));
-    if (sort === "price-desc")
-      r = [...r].sort((a, b) => priceValue(b.price) - priceValue(a.price));
+    if (sort === "price-asc") r = [...r].sort((a, b) => priceValue(a.price) - priceValue(b.price));
+    if (sort === "price-desc") r = [...r].sort((a, b) => priceValue(b.price) - priceValue(a.price));
     return r;
-  }, [listings, status, type, query, sort]);
+  }, [listings, query, listingType, propertyType, minBeds, minBaths, furnishing, availability, minPrice, maxPrice, sort]);
+
+  const selectCls =
+    "h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15";
 
   return (
-    <div>
-      {/* Controls */}
-      <div className="flex flex-col gap-5 rounded-lg border border-line bg-surface p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <label className="relative flex-1 md:max-w-sm">
-            <span className="sr-only">Search listings</span>
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate">
-              <Icon name="search" size={20} />
-            </span>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title or location…"
-              className="h-12 w-full rounded-md border border-line bg-surface pl-10 pr-4 text-base text-ink placeholder:text-slate-soft focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
-            />
-          </label>
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[280px_1fr]">
+      {/* Filter sidebar */}
+      <aside className="h-fit rounded-lg border border-line bg-surface p-6 lg:sticky lg:top-24">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-navy">Filters</h2>
+          <button
+            type="button"
+            onClick={reset}
+            className="text-sm text-gold hover:underline"
+          >
+            Clear
+          </button>
+        </div>
 
+        <label className="mt-5 flex items-center gap-2 rounded-md border border-line-strong px-3 focus-within:border-gold">
+          <Icon name="search" size={20} className="text-slate" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Location or keyword"
+            className="h-10 w-full bg-transparent text-sm outline-none placeholder:text-slate-soft"
+          />
+        </label>
+
+        <div className="mt-6 flex flex-col gap-5">
+          <Filter label="Listing type">
+            <select value={listingType} onChange={(e) => setListingType(e.target.value)} className={selectCls}>
+              {listingTypes.map((o) => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+          </Filter>
+
+          <Filter label="Property type">
+            <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className={selectCls}>
+              {propertyTypes.map((o) => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+          </Filter>
+
+          <Filter label="Availability">
+            <select value={availability} onChange={(e) => setAvailability(e.target.value)} className={selectCls}>
+              {["All", "Available", "Reserved", "Sold"].map((o) => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+          </Filter>
+
+          <Filter label="Furnishing">
+            <select value={furnishing} onChange={(e) => setFurnishing(e.target.value)} className={selectCls}>
+              {["All", ...FURNISHING].map((o) => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+          </Filter>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Filter label="Beds (min)">
+              <select value={minBeds} onChange={(e) => setMinBeds(Number(e.target.value))} className={selectCls}>
+                {[0, 1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>{n === 0 ? "Any" : `${n}+`}</option>
+                ))}
+              </select>
+            </Filter>
+            <Filter label="Baths (min)">
+              <select value={minBaths} onChange={(e) => setMinBaths(Number(e.target.value))} className={selectCls}>
+                {[0, 1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>{n === 0 ? "Any" : `${n}+`}</option>
+                ))}
+              </select>
+            </Filter>
+          </div>
+
+          <Filter label="Price range (₱)">
+            <div className="flex items-center gap-2">
+              <input
+                inputMode="numeric"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value.replace(/[^\d]/g, ""))}
+                placeholder="Min"
+                className={selectCls}
+              />
+              <span className="text-slate-soft">—</span>
+              <input
+                inputMode="numeric"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value.replace(/[^\d]/g, ""))}
+                placeholder="Max"
+                className={selectCls}
+              />
+            </div>
+          </Filter>
+        </div>
+      </aside>
+
+      {/* Results */}
+      <div>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate" aria-live="polite">
+            <span className="font-semibold text-navy">{results.length}</span>{" "}
+            {results.length === 1 ? "property" : "properties"} found
+          </p>
           <label className="flex items-center gap-2 text-sm text-slate">
             Sort
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}
-              className="h-11 rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+              className="h-10 rounded-md border border-line bg-surface px-3 text-sm font-medium text-navy focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
             >
               <option value="featured">Featured</option>
               <option value="price-asc">Price: Low to High</option>
@@ -83,94 +205,40 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
           </label>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-line pt-4 sm:flex-row sm:items-center sm:gap-8">
-          <FilterRow
-            label="Status"
-            options={statusOptions}
-            value={status}
-            onChange={(v) => setStatus(v as StatusFilter)}
-          />
-          <FilterRow
-            label="Type"
-            options={typeOptions}
-            value={type}
-            onChange={(v) => setType(v as TypeFilter)}
-          />
-        </div>
+        {results.length > 0 ? (
+          <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3">
+            {results.map((listing) => (
+              <PropertyCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center rounded-lg border border-dashed border-line-strong bg-surface p-12 text-center">
+            <span className="text-slate-soft">
+              <Icon name="search_off" size={40} />
+            </span>
+            <h3 className="mt-4 font-display text-lg font-semibold text-navy">
+              No properties match your filters
+            </h3>
+            <p className="mt-1 text-sm text-slate">Try clearing a filter or adjusting your search.</p>
+            <button
+              type="button"
+              onClick={reset}
+              className="label-caps mt-5 border-b-2 border-navy pb-0.5 text-navy hover:border-gold hover:text-gold"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* Result count */}
-      <p className="mt-6 text-sm text-slate" aria-live="polite">
-        {results.length} {results.length === 1 ? "property" : "properties"} found
-      </p>
-
-      {/* Grid */}
-      {results.length > 0 ? (
-        <div className="mt-6 grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3">
-          {results.map((listing) => (
-            <PropertyCard key={listing.id} listing={listing} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-6 flex flex-col items-center rounded-lg border border-dashed border-line-strong bg-surface p-12 text-center">
-          <span className="text-slate-soft">
-            <Icon name="search_off" size={40} />
-          </span>
-          <h3 className="mt-4 font-display text-lg font-semibold text-navy">
-            No properties match your filters
-          </h3>
-          <p className="mt-1 text-sm text-slate">
-            Try clearing a filter or adjusting your search.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus("All");
-              setType("All");
-              setQuery("");
-            }}
-            className="label-caps mt-5 border-b-2 border-navy pb-0.5 text-navy hover:border-gold hover:text-gold"
-          >
-            Clear all filters
-          </button>
-        </div>
-      )}
     </div>
   );
 }
 
-function FilterRow({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function Filter({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="label-caps mr-1 text-slate">{label}</span>
-      {options.map((o) => {
-        const active = o === value;
-        return (
-          <button
-            key={o}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onChange(o)}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-              active
-                ? "bg-navy text-white"
-                : "bg-surface-gray text-slate hover:bg-line"
-            }`}
-          >
-            {o}
-          </button>
-        );
-      })}
+    <div>
+      <p className="label-caps mb-2 text-navy">{label}</p>
+      {children}
     </div>
   );
 }

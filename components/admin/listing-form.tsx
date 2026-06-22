@@ -1,0 +1,186 @@
+"use client";
+
+import Link from "next/link";
+import { useFormStatus } from "react-dom";
+import { Icon } from "@/components/icon";
+
+export type ListingValues = {
+  id?: string;
+  title?: string;
+  slug?: string;
+  description?: string;
+  location?: string;
+  city?: string;
+  province?: string;
+  private_address?: string;
+  price?: number | null;
+  price_label?: string;
+  listing_category?: string;
+  lease_type?: string;
+  property_type?: string;
+  status?: string;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  floor_area?: number | null;
+  lot_area?: number | null;
+  parking?: number | null;
+  furnishing?: string;
+  amenities?: string[];
+  lease_terms?: string;
+  sale_terms?: string;
+  availability_date?: string;
+  is_featured?: boolean;
+  owner_name?: string;
+  owner_contact?: string;
+  internal_notes?: string;
+};
+
+const CATEGORIES = ["For Sale", "For Lease"];
+const LEASE_TYPES = ["", "Short-term", "Long-term", "Bed space"];
+const PROPERTY_TYPES = [
+  "Condo", "House and Lot", "Apartment", "Townhouse", "Dorm / Bed Space",
+  "Commercial", "Office", "Lot", "Warehouse", "Other",
+];
+const STATUSES = ["Draft", "Published", "Available", "Reserved", "Leased", "Sold", "Archived"];
+
+const inputCls =
+  "h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15";
+
+function F({ label, hint, children, span }: { label: string; hint?: string; children: React.ReactNode; span?: boolean }) {
+  return (
+    <label className={`flex flex-col gap-1.5 ${span ? "sm:col-span-2" : ""}`}>
+      <span className="text-sm font-medium text-navy">{label}</span>
+      {children}
+      {hint && <span className="text-xs text-slate">{hint}</span>}
+    </label>
+  );
+}
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <fieldset className="rounded-lg border border-line bg-surface p-6">
+      <legend className="px-2 font-display text-sm font-semibold text-navy">{title}</legend>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">{children}</div>
+    </fieldset>
+  );
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="inline-flex items-center gap-2 rounded-md bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50"
+    >
+      {pending ? (
+        <>
+          <Icon name="progress_activity" size={18} className="animate-spin" />
+          Saving…
+        </>
+      ) : (
+        "Save listing"
+      )}
+    </button>
+  );
+}
+
+export function ListingForm({
+  action,
+  initial = {},
+}: {
+  action: (fd: FormData) => void | Promise<void>;
+  initial?: ListingValues;
+}) {
+  const v = initial;
+  return (
+    <form action={action} className="flex flex-col gap-6">
+      <Group title="Basics">
+        <F label="Title"><input name="title" defaultValue={v.title} required className={inputCls} /></F>
+        <F label="Slug" hint="Auto-generated from title if left blank">
+          <input name="slug" defaultValue={v.slug} className={inputCls} />
+        </F>
+        <F label="Description" span>
+          <textarea name="description" defaultValue={v.description} rows={4} className={`${inputCls} h-auto py-2`} />
+        </F>
+      </Group>
+
+      <Group title="Classification">
+        <F label="Listing category">
+          <select name="listing_category" defaultValue={v.listing_category ?? "For Sale"} className={inputCls}>
+            {CATEGORIES.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        </F>
+        <F label="Lease type" hint="For rentals only">
+          <select name="lease_type" defaultValue={v.lease_type ?? ""} className={inputCls}>
+            {LEASE_TYPES.map((o) => <option key={o} value={o}>{o || "—"}</option>)}
+          </select>
+        </F>
+        <F label="Property type">
+          <select name="property_type" defaultValue={v.property_type ?? "Condo"} className={inputCls}>
+            {PROPERTY_TYPES.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        </F>
+        <F label="Status">
+          <select name="status" defaultValue={v.status ?? "Draft"} className={inputCls}>
+            {STATUSES.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        </F>
+        <label className="flex items-center gap-2 sm:col-span-2">
+          <input type="checkbox" name="is_featured" defaultChecked={v.is_featured} className="h-4 w-4 accent-navy" />
+          <span className="text-sm text-navy">Featured (show on homepage)</span>
+        </label>
+      </Group>
+
+      <Group title="Location">
+        <F label="Location (public)"><input name="location" defaultValue={v.location} className={inputCls} /></F>
+        <F label="City"><input name="city" defaultValue={v.city} className={inputCls} /></F>
+        <F label="Province"><input name="province" defaultValue={v.province} className={inputCls} /></F>
+        <F label="Exact address" hint="Private — admin only">
+          <input name="private_address" defaultValue={v.private_address} className={inputCls} />
+        </F>
+      </Group>
+
+      <Group title="Pricing & specs">
+        <F label="Price (₱)"><input name="price" type="number" step="0.01" defaultValue={v.price ?? undefined} className={inputCls} /></F>
+        <F label="Price label" hint="e.g. per month, total contract price">
+          <input name="price_label" defaultValue={v.price_label} className={inputCls} />
+        </F>
+        <F label="Bedrooms"><input name="bedrooms" type="number" defaultValue={v.bedrooms ?? undefined} className={inputCls} /></F>
+        <F label="Bathrooms"><input name="bathrooms" type="number" defaultValue={v.bathrooms ?? undefined} className={inputCls} /></F>
+        <F label="Floor area (sqm)"><input name="floor_area" type="number" step="0.01" defaultValue={v.floor_area ?? undefined} className={inputCls} /></F>
+        <F label="Lot area (sqm)"><input name="lot_area" type="number" step="0.01" defaultValue={v.lot_area ?? undefined} className={inputCls} /></F>
+        <F label="Parking slots"><input name="parking" type="number" defaultValue={v.parking ?? undefined} className={inputCls} /></F>
+        <F label="Furnishing">
+          <select name="furnishing" defaultValue={v.furnishing ?? ""} className={inputCls}>
+            {["", "Fully furnished", "Semi-furnished", "Unfurnished"].map((o) => <option key={o} value={o}>{o || "—"}</option>)}
+          </select>
+        </F>
+        <F label="Availability date / note"><input name="availability_date" defaultValue={v.availability_date} className={inputCls} /></F>
+      </Group>
+
+      <Group title="Terms & amenities">
+        <F label="Lease terms" span><input name="lease_terms" defaultValue={v.lease_terms} className={inputCls} /></F>
+        <F label="Sale terms" span><input name="sale_terms" defaultValue={v.sale_terms} className={inputCls} /></F>
+        <F label="Amenities" hint="Comma-separated" span>
+          <input name="amenities" defaultValue={v.amenities?.join(", ")} className={inputCls} />
+        </F>
+      </Group>
+
+      <Group title="Private (admin only)">
+        <F label="Owner name"><input name="owner_name" defaultValue={v.owner_name} className={inputCls} /></F>
+        <F label="Owner contact"><input name="owner_contact" defaultValue={v.owner_contact} className={inputCls} /></F>
+        <F label="Internal notes" span>
+          <textarea name="internal_notes" defaultValue={v.internal_notes} rows={3} className={`${inputCls} h-auto py-2`} />
+        </F>
+      </Group>
+
+      <div className="flex items-center gap-3">
+        <SubmitButton />
+        <Link href="/admin/listings" className="text-sm font-medium text-slate hover:text-navy">
+          Cancel
+        </Link>
+      </div>
+    </form>
+  );
+}

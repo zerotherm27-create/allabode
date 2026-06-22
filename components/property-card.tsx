@@ -47,6 +47,13 @@ export function PropertyCard({ listing }: { listing: Listing }) {
           <Icon name="location_on" size={16} className="text-gold" />
           {listing.location}
         </p>
+        {(listing.listingType || listing.propertyType) && (
+          <p className="label-caps mt-2 text-slate">
+            {[listing.listingType, listing.propertyType]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        )}
 
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-4 text-sm text-slate">
           {specs.map((s) => (

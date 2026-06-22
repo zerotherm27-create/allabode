@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
-import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
+import { PageHero, SectionHeading, CtaBand, FounderSection } from "@/components/sections";
 import { trustPoints } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -52,6 +52,9 @@ export default function AboutPage() {
           </div>
         </Container>
       </section>
+
+      {/* Founder credentials */}
+      <FounderSection eyebrow="Founder & Licensed Professional" band />
 
       {/* Mission + credibility */}
       <section className="bg-navy py-section text-white">

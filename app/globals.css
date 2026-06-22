@@ -4,7 +4,8 @@
  * All colour + font declarations reference named tokens below — no inline hex/oklch in components.
  */
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap");
+/* Material Symbols font is loaded via <link> in app/layout.tsx — a CSS @import is
+   dropped by the Tailwind v4 production build, which broke every icon. */
 
 @theme {
   /* ---- Brand colour (navy + brass, light architectural surfaces) ---- */
@@ -154,4 +155,20 @@ h3 {
     font-weight: 600;
     text-transform: uppercase;
   }
+}
+
+/* Material Symbols base — defensive (the stylesheet <link> also defines this).
+   Guarantees the icon font resolves so ligature names never render as text. */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
 }

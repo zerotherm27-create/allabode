@@ -3,9 +3,10 @@ import { footerNav, site } from "@/lib/site";
 import { Icon } from "@/components/icon";
 
 const socials = [
-  { name: "facebook", href: "https://facebook.com", icon: "share" },
-  { name: "email", href: site.emailHref, icon: "alternate_email" },
-  { name: "phone", href: site.phoneHref, icon: "call" },
+  { name: "Facebook", href: site.facebook, icon: "public" },
+  { name: "Messenger", href: site.messenger, icon: "forum" },
+  { name: "WhatsApp / Viber", href: site.whatsapp, icon: "chat" },
+  { name: "Email", href: site.emailHref, icon: "mail" },
 ];
 
 export function SiteFooter() {

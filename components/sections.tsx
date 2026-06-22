@@ -1,9 +1,64 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
+import { founder } from "@/lib/site";
 import type { ReactNode } from "react";
 
 type Crumb = { label: string; href?: string };
+
+/** Founder / licensed-professional credibility (brief: Home + About). */
+export function FounderSection({
+  eyebrow = "Meet the Founder",
+  band = false,
+}: {
+  eyebrow?: string;
+  band?: boolean;
+}) {
+  return (
+    <section className={band ? "bg-surface-gray py-section" : "py-section"}>
+      <Container className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.8fr_1fr]">
+        {/* Portrait (real photo if provided, else a branded placeholder) */}
+        <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-lg border border-line">
+          <div className="relative aspect-[4/5] bg-gradient-to-br from-navy via-navy-800 to-navy-700">
+            {founder.photo ? (
+              <Image
+                src={founder.photo}
+                alt={founder.name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-gold">
+                <Icon name="person" size={64} />
+                <span className="label-caps text-white/70">Founder portrait</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <p className="label-caps text-gold">{eyebrow}</p>
+          <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
+            {founder.name}
+          </h2>
+          <p className="mt-2 font-display text-lg text-navy-700">{founder.title}</p>
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate">
+            <span className="flex items-center gap-1.5">
+              <Icon name="verified" size={18} className="text-gold" />
+              {founder.license}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Icon name="business_center" size={18} className="text-gold" />
+              {founder.relationship}
+            </span>
+          </div>
+          <p className="mt-6 max-w-xl leading-relaxed text-slate">{founder.bio}</p>
+        </div>
+      </Container>
+    </section>
+  );
+}
 
 /** Inner-page hero: navy band with eyebrow, title, optional subtitle/lead,
  *  optional breadcrumbs, and an optional action slot. */

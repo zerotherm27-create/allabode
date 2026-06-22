@@ -158,6 +158,72 @@ export default function PropertyManagementPage() {
         </Container>
       </section>
 
+      {/* Owner portal preview */}
+      <section className="bg-navy py-section text-white">
+        <Container className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+          <div>
+            <span className="label-caps text-gold">Owner Portal Preview</span>
+            <h2 className="mt-3 font-display text-3xl font-bold leading-tight sm:text-4xl">
+              Your portfolio, transparent at a glance
+            </h2>
+            <p className="mt-6 max-w-xl text-white/70">
+              Managed owners get a live view of every property — rent collected,
+              occupancy, upcoming lease renewals, maintenance status, and
+              downloadable monthly reports. No more chasing updates.
+            </p>
+            <ul className="mt-6 flex flex-col gap-3 text-sm text-white/80">
+              {[
+                "Real-time rental income & occupancy",
+                "Maintenance requests & status",
+                "Monthly financial statements",
+                "Lease renewal reminders",
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-2">
+                  <Icon name="check_circle" size={18} className="text-gold" fill={1} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-6 text-sm text-white/50">
+              Owner portal access is included with Standard plans and above.
+            </p>
+          </div>
+          {/* Dashboard teaser */}
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-6">
+            <div className="flex items-center justify-between">
+              <p className="font-display text-sm font-semibold text-white">
+                Portfolio Overview
+              </p>
+              <span className="label-caps text-gold">This month</span>
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              {[
+                { k: "Units", v: "12" },
+                { k: "Occupancy", v: "92%" },
+                { k: "Collected", v: "₱1.4M" },
+              ].map((s) => (
+                <div key={s.k} className="rounded-md bg-white/[0.04] p-4">
+                  <p className="font-display text-xl font-bold text-white">{s.v}</p>
+                  <p className="mt-1 text-xs text-white/60">{s.k}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex items-end gap-2">
+              {[40, 62, 55, 78, 70, 92].map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold"
+                  style={{ height: `${h}px` }}
+                />
+              ))}
+            </div>
+            <p className="mt-3 text-center text-xs text-white/40">
+              Rental income — last 6 months (illustrative)
+            </p>
+          </div>
+        </Container>
+      </section>
+
       {/* FAQ */}
       <section className="bg-surface-gray py-section">
         <Container>

@@ -8,24 +8,24 @@
    dropped by the Tailwind v4 production build, which broke every icon. */
 
 @theme {
-  /* ---- Brand colour (brief: Deep Navy + Warm Gold, white base) ---- */
-  --color-navy: #0F2F5F;            /* deep navy primary */
-  --color-navy-800: #0d3870;
-  --color-navy-700: #1a5ba0;        /* links, icon accents */
-  --color-navy-600: #2266a8;
-  --color-gold: #C8A24D;            /* warm gold accent */
-  --color-gold-bright: #d4ae4a;
-  --color-gold-soft: #e8d090;
+  /* ---- Brand colour (navy + brass, light architectural surfaces) ---- */
+  --color-navy: #0a2540;            /* primary brand — deep authoritative navy */
+  --color-navy-800: #0c2f52;
+  --color-navy-700: #0d518c;        /* brand blue — links, secondary navy */
+  --color-navy-600: #1a4d7c;
+  --color-gold: #b4975a;            /* brass accent — premium, dividers, secondary CTA */
+  --color-gold-bright: #c9a227;     /* brighter gold highlight */
+  --color-gold-soft: #e3c381;
 
-  --color-ink: #071B36;             /* near-black navy — headings, primary text */
-  --color-slate: #5E6670;           /* charcoal gray — body, secondary text */
-  --color-slate-soft: #8a9099;
-  --color-line: #d0d5dd;            /* hairline borders */
-  --color-line-strong: #b8bec9;
+  --color-ink: #16202c;             /* primary text on light */
+  --color-slate: #5b6573;           /* muted text / captions */
+  --color-slate-soft: #94a3b8;
+  --color-line: #e2e6ec;            /* hairline borders */
+  --color-line-strong: #cbd2dc;
 
-  --color-cream: #FFFFFF;           /* page background — white per brief */
-  --color-surface: #FFFFFF;         /* cards / elevated */
-  --color-surface-gray: #D9DDE2;    /* alt section band — soft gray per brief */
+  --color-cream: #f8f9fb;           /* page surface */
+  --color-surface: #ffffff;         /* cards / elevated */
+  --color-surface-gray: #f1f4f8;    /* alt section band */
 
   /* ---- Status ---- */
   --color-available: #10b981;

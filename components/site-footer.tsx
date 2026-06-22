@@ -19,9 +19,9 @@ export function SiteFooter() {
           <Image
             src="/logo/logo-2-white.png"
             alt="All Abode Property Solutions"
-            width={320}
-            height={100}
-            className="h-16 w-auto"
+            width={240}
+            height={75}
+            className="h-10 w-auto"
           />
           <p className="mt-3 text-xs tracking-wider text-gold/80">
             {site.descriptor}

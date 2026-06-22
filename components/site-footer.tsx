@@ -17,11 +17,11 @@ export function SiteFooter() {
         {/* Brand */}
         <div className="md:col-span-3">
           <Image
-            src="/logo/logo-white-icon.png"
+            src="/logo/logo-2-white.png"
             alt="All Abode Property Solutions"
-            width={160}
-            height={50}
-            className="h-10 w-auto"
+            width={320}
+            height={100}
+            className="h-16 w-auto"
           />
           <p className="mt-3 text-xs tracking-wider text-gold/80">
             {site.descriptor}

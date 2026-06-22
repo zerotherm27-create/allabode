@@ -2,15 +2,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { footerNav, site } from "@/lib/site";
 import { Icon } from "@/components/icon";
+import { getSettings, s } from "@/lib/settings";
 
-const socials = [
-  { name: "Facebook", href: site.facebook, icon: "public" },
-  { name: "Messenger", href: site.messenger, icon: "forum" },
-  { name: "WhatsApp / Viber", href: site.whatsapp, icon: "chat" },
-  { name: "Email", href: site.emailHref, icon: "mail" },
-];
+export async function SiteFooter() {
+  const settings = await getSettings();
 
-export function SiteFooter() {
+  const email       = s(settings, "contact_email")       || site.email;
+  const phone       = s(settings, "contact_phone")       || site.phone;
+  const serviceArea = s(settings, "contact_service_area") || site.serviceArea;
+  const facebook    = s(settings, "social_facebook")     || site.facebook;
+  const messenger   = s(settings, "social_messenger")    || site.messenger;
+  const whatsapp    = s(settings, "social_whatsapp")     || site.whatsapp;
+  const descriptor  = s(settings, "brand_descriptor")    || site.descriptor;
+
+  const socials = [
+    { name: "Facebook",          href: facebook,  icon: "public" },
+    { name: "Messenger",         href: messenger, icon: "forum" },
+    { name: "WhatsApp / Viber",  href: whatsapp,  icon: "chat" },
+    { name: "Email",             href: `mailto:${email}`, icon: "mail" },
+  ];
+
   return (
     <footer className="bg-navy text-white">
       <div className="container-site grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:py-20">
@@ -23,9 +34,7 @@ export function SiteFooter() {
             height={75}
             className="h-10 w-auto"
           />
-          <p className="mt-3 text-xs tracking-wider text-gold/80">
-            {site.descriptor}
-          </p>
+          <p className="mt-3 text-xs tracking-wider text-gold/80">{descriptor}</p>
           <p className="mt-5 max-w-md text-sm leading-relaxed text-white/60">
             {site.name} provides brokerage, leasing, property management, and
             appraisal support for clients who need professional property
@@ -75,7 +84,7 @@ export function SiteFooter() {
 
         {/* Resources */}
         <div className="md:col-span-2">
-          <p className="label-caps text-white">Resources</p>
+          <p className="label-caps text-white">Guides</p>
           <ul className="mt-6 space-y-3 text-sm text-white/60">
             {footerNav.resources.map((item) => (
               <li key={item.label}>
@@ -93,25 +102,21 @@ export function SiteFooter() {
           <ul className="mt-6 space-y-4 text-sm text-white/60">
             <li className="flex items-start gap-3">
               <Icon name="mail" size={18} className="mt-0.5 shrink-0 text-gold" />
-              <a href={site.emailHref} className="hover:text-gold">
-                {site.email}
-              </a>
+              <a href={`mailto:${email}`} className="hover:text-gold">{email}</a>
             </li>
             <li className="flex items-start gap-3">
               <Icon name="call" size={18} className="mt-0.5 shrink-0 text-gold" />
-              <a href={site.phoneHref} className="hover:text-gold">
-                Mobile / Viber / WhatsApp: {site.phone}
+              <a href={`tel:${phone.replace(/\s/g, "")}`} className="hover:text-gold">
+                Mobile / Viber / WhatsApp: {phone}
               </a>
             </li>
             <li className="flex items-start gap-3">
               <Icon name="forum" size={18} className="mt-0.5 shrink-0 text-gold" />
-              <a href={site.messenger} className="hover:text-gold">
-                Facebook / Messenger
-              </a>
+              <a href={messenger} className="hover:text-gold">Facebook / Messenger</a>
             </li>
             <li className="flex items-start gap-3">
               <Icon name="location_on" size={18} className="mt-0.5 shrink-0 text-gold" />
-              <span>Service Area: {site.serviceArea}</span>
+              <span>Service Area: {serviceArea}</span>
             </li>
           </ul>
         </div>
@@ -121,7 +126,7 @@ export function SiteFooter() {
         <div className="container-site flex flex-col gap-3 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
-            <Link href="/privacy-policy" className="hover:text-white/60 transition-colors">
+            <Link href="/privacy-policy" className="transition-colors hover:text-white/60">
               Privacy Policy
             </Link>
           </div>

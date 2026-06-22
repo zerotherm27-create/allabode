@@ -13,6 +13,7 @@ const nav = [
   { label: "Inquiries", icon: "forum", href: "/admin/inquiries" },
   { label: "Appraisals", icon: "analytics", href: "/admin/appraisals" },
   { label: "PM Leads", icon: "corporate_fare", href: "/admin/leads" },
+  { label: "Site Settings", icon: "tune", href: "/admin/settings" },
 ];
 
 export function AdminShell({

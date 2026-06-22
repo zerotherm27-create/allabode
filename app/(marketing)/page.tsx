@@ -6,6 +6,7 @@ import { Faq } from "@/components/faq";
 
 import { services, trustPoints } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
+import { getSettings, s } from "@/lib/settings";
 
 const heroCtas = [
   { icon: "list_alt", label: "List Your Property", href: "/list-your-property", variant: "primary" as const },
@@ -14,12 +15,22 @@ const heroCtas = [
 ];
 
 export default async function Home() {
-  const featured = await getFeaturedListings(3);
+  const [featured, settings] = await Promise.all([
+    getFeaturedListings(3),
+    getSettings(),
+  ]);
+  const heroImage = s(settings, "hero_image");
   return (
     <>
       {/* ---------- Hero ---------- */}
       <section className="relative isolate overflow-hidden bg-navy">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
+        {heroImage && (
+          <div
+            className="absolute inset-0 -z-10 bg-cover bg-center opacity-30"
+            style={{ backgroundImage: `url(${heroImage})` }}
+          />
+        )}
         <div className="absolute inset-0 -z-10 opacity-60 [background:radial-gradient(80%_60%_at_85%_15%,rgba(180,151,90,0.28),transparent_60%)]" />
         <div className="absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:64px_64px]" />
 
@@ -29,17 +40,13 @@ export default async function Home() {
               Complete property services in the Philippines
             </span>
             <h1 className="mt-6 font-display text-[2.5rem] font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
-              Your property, professionally taken care of.
+              {s(settings, "hero_heading")}
             </h1>
             <p className="mt-4 font-display text-xl text-gold/90">
-              Brokerage, leasing, property management, and appraisal support
-              through one trusted partner.
+              {s(settings, "hero_subheading")}
             </p>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/75">
-              All Abode Property Solutions helps owners, investors, buyers,
-              sellers, tenants, and appraisal clients move through property
-              decisions with clear guidance, organized coordination, and
-              licensed professional expertise.
+              {s(settings, "hero_body")}
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               {heroCtas.map((cta) => (

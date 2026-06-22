@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { mainNav, site, type NavItem } from "@/lib/site";
+import { mainNav, type NavItem } from "@/lib/site";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui";
+import { Logo } from "@/components/logo";
 
 function isGroup(item: NavItem): item is { label: string; children: readonly { label: string; href: string }[] } {
   return "children" in item;
@@ -31,13 +32,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-cream/95 backdrop-blur-md">
       <div className="container-site flex h-16 items-center justify-between gap-4 md:h-20">
-        <Link
-          href="/"
-          className="font-display text-lg font-bold tracking-tight text-navy md:text-xl"
-        >
-          {site.shortName}
-          <span className="text-gold">.</span>
-        </Link>
+        <Logo />
 
         {/* Desktop nav */}
         <nav aria-label="Primary" className="hidden items-center gap-7 lg:flex">
@@ -128,10 +123,7 @@ export function SiteHeader() {
           />
           <div className="absolute right-0 top-0 flex h-full w-[82%] max-w-sm flex-col bg-cream shadow-[var(--shadow-lift)]">
             <div className="flex h-16 items-center justify-between border-b border-line px-5">
-              <span className="font-display text-lg font-bold text-navy">
-                {site.shortName}
-                <span className="text-gold">.</span>
-              </span>
+              <Logo />
               <button
                 type="button"
                 aria-label="Close menu"

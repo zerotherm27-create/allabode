@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { footerNav, site } from "@/lib/site";
 import { Icon } from "@/components/icon";
 
@@ -15,11 +16,14 @@ export function SiteFooter() {
       <div className="container-site grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:py-20">
         {/* Brand */}
         <div className="md:col-span-4">
-          <span className="font-display text-xl font-bold">
-            {site.shortName}
-            <span className="text-gold">.</span>
-          </span>
-          <p className="mt-1 text-xs tracking-wider text-gold/80">
+          <Image
+            src="/logo/logo-white-icon.png"
+            alt="All Abode Property Solutions"
+            width={160}
+            height={50}
+            className="h-10 w-auto"
+          />
+          <p className="mt-3 text-xs tracking-wider text-gold/80">
             {site.descriptor}
           </p>
           <p className="mt-5 max-w-md text-sm leading-relaxed text-white/60">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
@@ -35,12 +36,15 @@ export default function AdminLoginPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-navy px-5">
       <div className="w-full max-w-sm rounded-lg border border-line bg-surface p-8">
-        <div className="text-center">
-          <span className="font-display text-xl font-bold text-navy">
-            All Abode
-            <span className="text-gold">.</span>
-          </span>
-          <p className="label-caps mt-1 text-gold">Admin</p>
+        <div className="flex flex-col items-center gap-2">
+          <Image
+            src="/logo/logo-2.png"
+            alt="All Abode Property Solutions"
+            width={160}
+            height={80}
+            className="h-16 w-auto"
+          />
+          <p className="label-caps text-gold">Admin Portal</p>
         </div>
         <h1 className="mt-6 text-center font-display text-2xl font-bold text-navy">
           Sign in

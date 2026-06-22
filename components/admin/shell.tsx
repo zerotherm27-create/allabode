@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Icon } from "@/components/icon";
@@ -42,11 +43,14 @@ export function AdminShell({
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center gap-2 border-b border-white/10 px-6">
-          <span className="font-display text-lg font-bold">
-            All Abode
-            <span className="text-gold">.</span>
-          </span>
+        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
+          <Image
+            src="/logo/logo-white-icon.png"
+            alt="All Abode Property Solutions"
+            width={120}
+            height={38}
+            className="h-8 w-auto"
+          />
           <span className="label-caps ml-auto text-gold">Admin</span>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">

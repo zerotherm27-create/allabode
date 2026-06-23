@@ -23,6 +23,8 @@ const navGroups = [
       { label: "Tenants",    icon: "groups",        href: "/admin/tenants"    },
       { label: "Leases",     icon: "description",   href: "/admin/leases"     },
       { label: "Vendors",    icon: "handyman",      href: "/admin/vendors"    },
+      { label: "Maintenance",icon: "build",         href: "/admin/maintenance"},
+      { label: "Work Orders",icon: "handyman",      href: "/admin/work-orders"},
     ],
   },
   {

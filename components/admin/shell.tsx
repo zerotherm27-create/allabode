@@ -26,6 +26,12 @@ const navGroups = [
     ],
   },
   {
+    group: "Tickets",
+    items: [
+      { label: "Tickets",  icon: "confirmation_number", href: "/admin/tickets" },
+    ],
+  },
+  {
     group: "Finance",
     items: [
       { label: "Invoices",   icon: "request_quote", href: "/admin/invoices"   },

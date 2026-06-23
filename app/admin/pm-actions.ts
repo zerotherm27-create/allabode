@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 // ---- field coercion helpers ----
 function s(fd: FormData, k: string): string | null {
@@ -22,21 +22,21 @@ function b(fd: FormData, k: string): boolean {
 
 // ---- generic CRUD over a table ----
 async function insertRow(table: string, row: Record<string, unknown>, listPath: string) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase.from(table).insert(row);
   if (error) throw new Error(error.message);
   revalidatePath(listPath);
   redirect(listPath);
 }
 async function updateRow(table: string, id: string, row: Record<string, unknown>, listPath: string) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase.from(table).update(row).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(listPath);
   redirect(listPath);
 }
 async function deleteRow(table: string, id: string, listPath: string) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase.from(table).delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(listPath);

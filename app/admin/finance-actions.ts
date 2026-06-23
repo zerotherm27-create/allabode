@@ -4,7 +4,6 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { isAiConfigured } from "@/lib/ai/client";
 import { extractReceipt, isImageMime } from "@/lib/ai/receipts";
 import { runValidations } from "@/lib/finance/validation";
@@ -89,7 +88,7 @@ export async function uploadReceipt(
 // AI extraction + deterministic validation (re-runnable)
 // ============================================================
 export async function runExtraction(id: string) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data: r } = await supabase.from("receipt_uploads").select("*").eq("id", id).maybeSingle();
   if (!r) return;
 
@@ -169,8 +168,8 @@ export async function runExtraction(id: string) {
 // Reviewer approves the extraction → creates a draft expense
 // ============================================================
 export async function approveExtraction(id: string, formData: FormData) {
-  const { data: { user } } = await (await createClient()).auth.getUser();
-  const supabase = createAdminClient();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const total = n(formData, "total_amount") ?? 0;
   const { data: expense, error } = await supabase
@@ -210,8 +209,8 @@ export async function approveExtraction(id: string, formData: FormData) {
 // Checker posts an approved expense → ledger (maker-checker)
 // ============================================================
 export async function postExpense(expenseId: string) {
-  const { data: { user } } = await (await createClient()).auth.getUser();
-  const supabase = createAdminClient();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: e } = await supabase.from("expenses").select("*").eq("id", expenseId).maybeSingle();
   if (!e) throw new Error("Expense not found");
@@ -245,8 +244,8 @@ export async function postExpense(expenseId: string) {
 // Reject / void a receipt
 // ============================================================
 export async function rejectReceipt(id: string, formData: FormData) {
-  const { data: { user } } = await (await createClient()).auth.getUser();
-  const supabase = createAdminClient();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const reason = s(formData, "reason") ?? "Rejected";
   await supabase.from("receipt_uploads").update({ status: "rejected", notes: reason }).eq("id", id);
   await logAudit(supabase, { action: "receipt.rejected", entityType: "receipt_upload", entityId: id, actorId: user?.id, metadata: { reason } });

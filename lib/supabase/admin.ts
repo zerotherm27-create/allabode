@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set — add it to .env.local");
+  if (!url || !key) throw new Error(`SUPABASE_SERVICE_ROLE_KEY is not configured (url=${!!url} key=${!!key}) — add it to Vercel env vars for Production`);
   try {
     const payload = JSON.parse(Buffer.from(key.split(".")[1], "base64url").toString());
     if (payload.role !== "service_role") {

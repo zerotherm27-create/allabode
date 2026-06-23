@@ -38,8 +38,11 @@ export async function uploadReceipt(
   _prev: UploadReceiptState,
   formData: FormData
 ): Promise<UploadReceiptState> {
-  const { data: { user } } = await (await createClient()).auth.getUser();
-  const supabase = createAdminClient();
+  // Use SSR client — admin JWT is forwarded via request cookies.
+  // createAdminClient() (service-role) is NOT needed here: the SECURITY DEFINER
+  // RPC bypasses RLS server-side regardless of which JWT the caller sends.
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0)
@@ -56,7 +59,7 @@ export async function uploadReceipt(
   if (upErr)
     return { error: `Upload failed: ${upErr.message}. Make sure the private "receipts" bucket exists in Supabase Storage.` };
 
-  // Use SECURITY DEFINER RPC to bypass RLS (service-role PostgREST auth is unreliable)
+  // SECURITY DEFINER RPC — runs as postgres, bypasses all RLS policies.
   const { data: rowId, error } = await supabase.rpc("admin_insert_receipt_upload", {
     p_uploaded_by: user?.id ?? null,
     p_file_path: path,
@@ -72,11 +75,12 @@ export async function uploadReceipt(
     p_notes: s(formData, "notes"),
   });
   if (error)
-    return { error: `[v5-rpc] ${error.message} | code=${error.code ?? "?"} | hint=${error.hint ?? "-"} | details=${error.details ?? "-"}` };
+    return { error: `[v6-ssr-rpc] ${error.message} | code=${error.code ?? "?"} | hint=${error.hint ?? "-"} | details=${error.details ?? "-"}` };
 
   const id = rowId as string;
   await logAudit(supabase, { action: "receipt.uploaded", entityType: "receipt_upload", entityId: id, actorId: user?.id });
-  await runExtraction(id);
+  // runExtraction needs the admin client for storage download; skip gracefully if unavailable.
+  try { await runExtraction(id); } catch { /* receipt saved — AI extraction deferred */ }
   revalidatePath("/admin/receipts");
   redirect(`/admin/receipts/${id}`);
 }

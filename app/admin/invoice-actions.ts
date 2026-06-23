@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 
 function s(fd: FormData, k: string): string | null {
@@ -29,8 +30,8 @@ type LeaseRow = {
 // Create a draft invoice from a lease
 // ============================================================
 export async function createInvoice(fd: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const leaseId = s(fd, "lease_id");
   if (!leaseId) throw new Error("Lease is required");
@@ -99,8 +100,8 @@ export async function createInvoice(fd: FormData) {
 // Issue a draft invoice (makes it visible to the tenant)
 // ============================================================
 export async function issueInvoice(invoiceId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("invoices")
@@ -120,8 +121,8 @@ export async function issueInvoice(invoiceId: string) {
 // Void an invoice
 // ============================================================
 export async function voidInvoice(invoiceId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("invoices")
@@ -141,8 +142,8 @@ export async function voidInvoice(invoiceId: string) {
 // Record a payment against an invoice
 // ============================================================
 export async function recordPaymentOnInvoice(invoiceId: string, fd: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const amount = n(fd, "amount") ?? 0;
   const method = s(fd, "method") ?? "cash";
@@ -191,8 +192,8 @@ export async function recordPaymentOnInvoice(invoiceId: string, fd: FormData) {
 // (runs against the current month; skips if already exists)
 // ============================================================
 export async function generateMonthlyInvoices() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const now = new Date();
   const billingStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);

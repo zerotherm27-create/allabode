@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { computeSoa, precheckSoa, recalcTotals, type SoaType } from "@/lib/finance/soa";
 import { generateSoaSummary } from "@/lib/ai/soa-summary";
 import { renderSoaPdf } from "@/lib/pdf/soa";
@@ -17,8 +18,8 @@ function str(fd: FormData, k: string): string | null {
 
 // ---- Generate a draft statement (deterministic totals from the DB) ----
 export async function generateStatement(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const type = (str(formData, "statement_type") as SoaType) ?? "owner";
   const partyId = str(formData, "party_id");
@@ -55,8 +56,8 @@ export async function generateStatement(formData: FormData) {
 }
 
 export async function submitForReview(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
   await supabase.from("statements_of_account").update({ status: "checker_review" }).eq("id", id);
   await logAudit(supabase, { action: "soa.submitted_for_review", entityType: "statement", entityId: id, actorId: user?.id });
   revalidatePath(`/admin/statements/${id}`);
@@ -64,8 +65,8 @@ export async function submitForReview(id: string) {
 
 // ---- Checker approves: deterministic recalc gate + maker-checker (when configured) ----
 export async function approveStatement(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const { data: stored } = await supabase.from("statements_of_account").select("*").eq("id", id).maybeSingle();
   if (!stored) throw new Error("Statement not found");
@@ -91,8 +92,8 @@ export async function approveStatement(id: string) {
 
 // ---- Publish: render PDF, store privately, lock period expenses, expose to portal ----
 export async function publishStatement(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const { data: stored } = await supabase.from("statements_of_account").select("*").eq("id", id).maybeSingle();
   if (!stored) throw new Error("Statement not found");
@@ -146,8 +147,8 @@ export async function publishStatement(id: string) {
 }
 
 export async function voidStatement(id: string, formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
   const reason = str(formData, "reason") ?? "Voided";
   await supabase.from("statements_of_account").update({ status: "voided" }).eq("id", id);
   await logAudit(supabase, { action: "soa.voided", entityType: "statement", entityId: id, actorId: user?.id, metadata: { reason } });

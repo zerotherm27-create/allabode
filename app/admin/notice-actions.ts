@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 
 function s(fd: FormData, k: string): string | null {
@@ -12,8 +13,8 @@ function s(fd: FormData, k: string): string | null {
 }
 
 export async function createNotice(fd: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const title       = s(fd, "title");
   const body        = s(fd, "body");
@@ -42,7 +43,7 @@ export async function createNotice(fd: FormData) {
 }
 
 export async function publishNotice(noticeId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("notices")
     .update({ published_at: new Date().toISOString() })
     .eq("id", noticeId)
@@ -53,7 +54,7 @@ export async function publishNotice(noticeId: string) {
 }
 
 export async function expireNotice(noticeId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("notices")
     .update({ expires_at: new Date().toISOString() })
     .eq("id", noticeId);

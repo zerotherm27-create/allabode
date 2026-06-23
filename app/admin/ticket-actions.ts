@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { computeSlaDeadline } from "@/lib/tickets";
 
@@ -13,8 +14,8 @@ function s(fd: FormData, k: string): string | null {
 }
 
 export async function createTicketFromAdmin(fd: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const property_id = s(fd, "property_id");
   const category    = s(fd, "category");
@@ -54,7 +55,7 @@ export async function createTicketFromAdmin(fd: FormData) {
 }
 
 export async function updateTicketStatus(ticketId: string, fd: FormData) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const status = s(fd, "status");
   if (!status) throw new Error("Status required");
 
@@ -71,7 +72,7 @@ export async function updateTicketStatus(ticketId: string, fd: FormData) {
 }
 
 export async function assignTicket(ticketId: string, fd: FormData) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const assigned_to = s(fd, "assigned_to");
   const vendor_id   = s(fd, "vendor_id");
 
@@ -87,8 +88,8 @@ export async function assignTicket(ticketId: string, fd: FormData) {
 }
 
 export async function addComment(ticketId: string, fd: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const supabase = createAdminClient();
 
   const body = s(fd, "body");
   if (!body) throw new Error("Comment body required");

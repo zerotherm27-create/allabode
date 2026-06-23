@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { DOCUMENTS_BUCKET } from "@/lib/storage";
 
@@ -22,7 +22,7 @@ export async function uploadDocument(
   const visibility  = (fd.get("visibility") as string | null) ?? "staff";
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const ext      = file.name.split(".").pop() ?? "bin";
     const path     = `${entityType}/${entityId}/${Date.now()}.${ext}`;
 
@@ -53,7 +53,7 @@ export async function uploadDocument(
 }
 
 export async function markSigned(documentId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("documents").update({
     is_signed: true,
     signed_at: new Date().toISOString(),
@@ -65,7 +65,7 @@ export async function markSigned(documentId: string) {
 }
 
 export async function deleteDocument(documentId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data } = await supabase.from("documents")
     .select("file_path,is_immutable").eq("id", documentId).maybeSingle();
   if (!data) throw new Error("Document not found");

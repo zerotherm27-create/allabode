@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -60,7 +60,7 @@ function listingRow(fd: FormData) {
 }
 
 export async function createListing(fd: FormData) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("listings").insert(listingRow(fd));
   if (error) throw new Error(error.message);
   revalidatePath("/admin/listings");
@@ -68,7 +68,7 @@ export async function createListing(fd: FormData) {
 }
 
 export async function updateListing(id: string, fd: FormData) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("listings").update(listingRow(fd)).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/listings");
@@ -76,19 +76,19 @@ export async function updateListing(id: string, fd: FormData) {
 }
 
 export async function deleteListing(id: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase.from("listings").delete().eq("id", id);
   revalidatePath("/admin/listings");
 }
 
 export async function setListingStatus(id: string, status: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase.from("listings").update({ status }).eq("id", id);
   revalidatePath("/admin/listings");
 }
 
 export async function toggleFeatured(id: string, value: boolean) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase.from("listings").update({ is_featured: value }).eq("id", id);
   revalidatePath("/admin/listings");
 }
@@ -100,7 +100,7 @@ async function updateLead(
   patch: Record<string, unknown>,
   path: string
 ) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase.from(table).update(patch).eq("id", id);
   revalidatePath(path);
 }

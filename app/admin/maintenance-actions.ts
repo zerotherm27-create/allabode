@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 
 function s(fd: FormData, k: string): string | null {
@@ -30,7 +30,7 @@ function nextDueDate(frequencyType: string, frequencyDays: number | null, lastDo
 // ---- Maintenance Plans ----
 
 export async function createMaintenancePlan(fd: FormData) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const frequency_type = s(fd, "frequency_type") ?? "monthly";
   const frequency_days = n(fd, "frequency_days");
   const last_done_at   = s(fd, "last_done_at");
@@ -54,7 +54,7 @@ export async function createMaintenancePlan(fd: FormData) {
 }
 
 export async function markPlanDone(planId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data } = await supabase.from("maintenance_plans")
     .select("frequency_type,frequency_days").eq("id", planId).maybeSingle();
   if (!data) throw new Error("Plan not found");
@@ -76,7 +76,7 @@ export async function markPlanDone(planId: string) {
 // ---- Work Orders ----
 
 export async function createWorkOrder(fd: FormData) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: num } = await supabase.rpc("generate_work_order_number");
   if (!num) throw new Error("Could not generate work order number");
 
@@ -101,7 +101,7 @@ export async function createWorkOrder(fd: FormData) {
 }
 
 export async function updateWorkOrderStatus(workOrderId: string, fd: FormData) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const status       = s(fd, "status");
   const actual_cost  = n(fd, "actual_cost");
   const notes        = s(fd, "notes");

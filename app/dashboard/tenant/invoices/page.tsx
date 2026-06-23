@@ -120,10 +120,14 @@ export default async function TenantInvoicesPage() {
                     </div>
                   </div>
                   {(inv.status === "issued" || inv.status === "overdue" || inv.status === "partially_paid") && (
-                    <div className="mt-4 border-t border-line pt-4">
-                      <p className="text-sm text-slate">
-                        To pay, please contact your property manager or use the payment method provided.
-                      </p>
+                    <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
+                      <p className="text-sm text-slate">Payment due</p>
+                      <Link
+                        href={`/dashboard/tenant/invoices/${inv.id}/pay`}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800"
+                      >
+                        <Icon name="payments" size={16} /> Pay now
+                      </Link>
                     </div>
                   )}
                 </div>

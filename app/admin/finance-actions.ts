@@ -56,27 +56,25 @@ export async function uploadReceipt(
   if (upErr)
     return { error: `Upload failed: ${upErr.message}. Make sure the private "receipts" bucket exists in Supabase Storage.` };
 
-  const { data: row, error } = await supabase
-    .from("receipt_uploads")
-    .insert({
-      uploaded_by: user?.id ?? null,
-      file_path: path,
-      file_name: file.name,
-      file_mime_type: file.type || null,
-      file_size: file.size,
-      file_hash_sha256: hash,
-      source: "upload",
-      status: "uploaded",
-      related_property_id: s(formData, "related_property_id"),
-      related_owner_id: s(formData, "related_owner_id"),
-      related_vendor_id: s(formData, "related_vendor_id"),
-      notes: s(formData, "notes"),
-    })
-    .select("id")
-    .single();
-  if (error) return { error: error.message };
+  // Use SECURITY DEFINER RPC to bypass RLS (service-role PostgREST auth is unreliable)
+  const { data: rowId, error } = await supabase.rpc("admin_insert_receipt_upload", {
+    p_uploaded_by: user?.id ?? null,
+    p_file_path: path,
+    p_file_name: file.name,
+    p_file_mime_type: file.type || null,
+    p_file_size: file.size,
+    p_file_hash_sha256: hash,
+    p_source: "upload",
+    p_status: "uploaded",
+    p_related_property_id: s(formData, "related_property_id"),
+    p_related_owner_id: s(formData, "related_owner_id"),
+    p_related_vendor_id: s(formData, "related_vendor_id"),
+    p_notes: s(formData, "notes"),
+  });
+  if (error)
+    return { error: `[v5-rpc] ${error.message} | code=${error.code ?? "?"} | hint=${error.hint ?? "-"} | details=${error.details ?? "-"}` };
 
-  const id = row.id as string;
+  const id = rowId as string;
   await logAudit(supabase, { action: "receipt.uploaded", entityType: "receipt_upload", entityId: id, actorId: user?.id });
   await runExtraction(id);
   revalidatePath("/admin/receipts");

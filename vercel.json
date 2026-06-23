@@ -1,9 +1,6 @@
 {
   "crons": [
-    { "path": "/api/cron/generate-invoices",    "schedule": "0 1 * * *" },
-    { "path": "/api/cron/check-lease-expiry",   "schedule": "0 8 * * *" },
-    { "path": "/api/cron/check-ticket-slas",    "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/check-maintenance-due","schedule": "30 7 * * *" },
-    { "path": "/api/cron/generate-owner-soa",   "schedule": "0 2 1 * *" }
+    { "path": "/api/cron/generate-invoices",  "schedule": "0 1 * * *" },
+    { "path": "/api/cron/check-lease-expiry", "schedule": "0 8 * * *" }
   ]
 }

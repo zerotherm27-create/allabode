@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Montserrat, Inter } from "next/font/google";
 import "./globals.css";
+import { PWARegister } from "@/components/pwa-register";
+import { InstallPrompt } from "@/components/install-prompt";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -42,6 +44,19 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_PH",
   },
+  applicationName: "All Abode",
+  appleWebApp: {
+    capable: true,
+    title: "All Abode",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a2540",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -64,7 +79,11 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
         />
       </head>
-      <body className="min-h-full bg-cream text-ink">{children}</body>
+      <body className="min-h-full bg-cream text-ink">
+        {children}
+        <PWARegister />
+        <InstallPrompt />
+      </body>
     </html>
   );
 }

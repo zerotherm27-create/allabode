@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
+import { DataTable, type Column } from "@/components/admin/data-table";
 import { generateStatement } from "@/app/admin/soa-actions";
 
 type Named = { name?: string };
@@ -19,9 +20,16 @@ const STATUS_TONE: Record<string, string> = {
   generated: "bg-surface-gray text-slate",
   voided: "bg-error-bg text-error",
 };
-
 const inputCls =
   "h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15";
+
+const columns: Column<Row>[] = [
+  { header: "Party", primary: true, cell: (r) => <Link href={`/admin/statements/${r.id}`} className="font-medium text-navy hover:text-navy-700">{pick(r.statement_type === "owner" ? r.owners : r.tenants)?.name ?? "—"}</Link> },
+  { header: "Type", cell: (r) => <span className="text-slate capitalize">{r.statement_type}</span> },
+  { header: "Period", cell: (r) => <span className="text-slate">{r.period_start} → {r.period_end}</span> },
+  { header: "Amount", cell: (r) => <span className="font-semibold text-navy">{peso(Number(r.statement_type === "owner" ? r.net_remittance : r.closing_balance))}</span> },
+  { header: "Status", cell: (r) => <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[r.status] ?? "bg-surface-gray text-slate"}`}>{r.status.replace(/_/g, " ")}</span> },
+];
 
 export default async function AdminStatementsPage() {
   const supabase = await createClient();
@@ -45,7 +53,6 @@ export default async function AdminStatementsPage() {
       <h1 className="font-display text-2xl font-bold text-navy">Statements of Account</h1>
       <p className="mt-1 text-sm text-slate">Generate, review, approve, and publish. Totals are computed from the ledger — never edited by hand.</p>
 
-      {/* Generators */}
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
         {[
           { type: "owner", title: "Owner statement", opts: ownerOpts, icon: "real_estate_agent" },
@@ -71,37 +78,8 @@ export default async function AdminStatementsPage() {
         ))}
       </div>
 
-      {/* List */}
-      <div className="mt-8 overflow-x-auto rounded-lg border border-line bg-surface">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="border-b border-line bg-surface-gray text-slate">
-            <tr>
-              <th className="px-4 py-3 font-medium">Party</th>
-              <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Period</th>
-              <th className="px-4 py-3 font-medium">Amount</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {rows.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-slate">No statements yet. Generate one above.</td></tr>
-            )}
-            {rows.map((r) => {
-              const party = pick(r.statement_type === "owner" ? r.owners : r.tenants)?.name ?? "—";
-              const amount = r.statement_type === "owner" ? r.net_remittance : r.closing_balance;
-              return (
-                <tr key={r.id}>
-                  <td className="px-4 py-3"><Link href={`/admin/statements/${r.id}`} className="font-medium text-navy hover:text-navy-700">{party}</Link></td>
-                  <td className="px-4 py-3 text-slate capitalize">{r.statement_type}</td>
-                  <td className="px-4 py-3 text-slate">{r.period_start} → {r.period_end}</td>
-                  <td className="px-4 py-3 font-semibold text-navy">{peso(Number(amount))}</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[r.status] ?? "bg-surface-gray text-slate"}`}>{r.status.replace(/_/g, " ")}</span></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="mt-8">
+        <DataTable rows={rows} columns={columns} getKey={(r) => r.id} empty="No statements yet. Generate one above." />
       </div>
     </div>
   );

@@ -89,6 +89,19 @@ not diversify. All design assets and the token reference live in `design/`:
 
 ## Build status (updated — resume here)
 
+**DONE — PWA + mobile parity:**
+- Installable PWA via native `app/manifest.ts` (navy theme, standalone) + icons generated
+  from `public/logo/favicon.png` with `sips` (`public/icon-{192,512}.png` + `-maskable`,
+  `app/apple-icon.png`). `app/layout.tsx` has `viewport` (theme-color, viewportFit cover) +
+  `appleWebApp`; mounts `components/{pwa-register,install-prompt}.tsx`.
+- **Hand-rolled** service worker `public/sw.js` (Serwist needs webpack; project is Turbopack):
+  network-only for `/api`,`/admin`,`/dashboard`,Supabase (never caches private data);
+  cache-first static; network-first public nav → `app/offline/page.tsx`. SW is production-only.
+- `next.config.ts` adds `/sw.js` headers (no-store, `Service-Worker-Allowed`) + security headers.
+- `components/admin/data-table.tsx` — responsive list (real `<table>` at `md`+, stacked cards
+  below). All admin tables use it (PM lists + `listings`); inquiries/appraisals/leads were
+  already card-based.
+
 **DONE — Property Management platform (Foundation + AI Finance), single-tenant:**
 - Migration `supabase/migrations/0003_property_management.sql` (18 tables: owners,
   tenants, properties, units, leases, payments, vendors, the receipt→expense→ledger→

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
+import { DataTable, type Column } from "@/components/admin/data-table";
 
 type Ext = { normalized_json: Record<string, unknown> | null };
 type Row = {
@@ -25,6 +26,19 @@ const RISK_TONE: Record<string, string> = {
   critical: "bg-error-bg text-error",
 };
 const peso = (n: number) => `₱${Math.round(n).toLocaleString("en-PH")}`;
+const norm = (r: Row) => {
+  const ext = Array.isArray(r.receipt_extractions) ? r.receipt_extractions[0] : r.receipt_extractions;
+  return (ext?.normalized_json ?? {}) as { vendor_name?: string; total_amount?: number | null };
+};
+
+const columns: Column<Row>[] = [
+  { header: "Vendor / file", primary: true, cell: (r) => <Link href={`/admin/receipts/${r.id}`} className="font-medium text-navy hover:text-navy-700">{norm(r).vendor_name || r.file_name || "Receipt"}</Link> },
+  { header: "Total", cell: (r) => <span className="text-slate">{norm(r).total_amount != null ? peso(Number(norm(r).total_amount)) : "—"}</span> },
+  { header: "Status", cell: (r) => <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[r.status] ?? "bg-surface-gray text-slate"}`}>{r.status.replace(/_/g, " ")}</span> },
+  { header: "Risk", cell: (r) => r.risk_level ? <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${RISK_TONE[r.risk_level] ?? "bg-surface-gray text-slate"}`}>{r.risk_level}</span> : <span className="text-slate">—</span> },
+  { header: "Confidence", cell: (r) => <span className="text-slate">{r.overall_confidence != null ? `${Math.round(r.overall_confidence * 100)}%` : "—"}</span> },
+  { header: "Uploaded", cell: (r) => <span className="text-slate">{r.created_at.slice(0, 10)}</span> },
+];
 
 export default async function AdminReceiptsPage() {
   const supabase = await createClient();
@@ -45,43 +59,8 @@ export default async function AdminReceiptsPage() {
           <Icon name="upload" size={20} /> Upload receipt
         </Link>
       </div>
-
-      <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
-        <table className="w-full min-w-[820px] text-left text-sm">
-          <thead className="border-b border-line bg-surface-gray text-slate">
-            <tr>
-              <th className="px-4 py-3 font-medium">Vendor / file</th>
-              <th className="px-4 py-3 font-medium">Total</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Risk</th>
-              <th className="px-4 py-3 font-medium">Confidence</th>
-              <th className="px-4 py-3 font-medium">Uploaded</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {rows.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-slate">No receipts yet. <Link href="/admin/receipts/new" className="text-navy-700 underline">Upload the first one</Link>.</td></tr>
-            )}
-            {rows.map((r) => {
-              const ext = Array.isArray(r.receipt_extractions) ? r.receipt_extractions[0] : r.receipt_extractions;
-              const norm = (ext?.normalized_json ?? {}) as { vendor_name?: string; total_amount?: number | null };
-              return (
-                <tr key={r.id}>
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/receipts/${r.id}`} className="font-medium text-navy hover:text-navy-700">
-                      {norm.vendor_name || r.file_name || "Receipt"}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-slate">{norm.total_amount != null ? peso(Number(norm.total_amount)) : "—"}</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[r.status] ?? "bg-surface-gray text-slate"}`}>{r.status.replace(/_/g, " ")}</span></td>
-                  <td className="px-4 py-3">{r.risk_level ? <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${RISK_TONE[r.risk_level] ?? "bg-surface-gray text-slate"}`}>{r.risk_level}</span> : "—"}</td>
-                  <td className="px-4 py-3 text-slate">{r.overall_confidence != null ? `${Math.round(r.overall_confidence * 100)}%` : "—"}</td>
-                  <td className="px-4 py-3 text-slate">{r.created_at.slice(0, 10)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="mt-6">
+        <DataTable rows={rows} columns={columns} getKey={(r) => r.id} empty={<>No receipts yet. <Link href="/admin/receipts/new" className="text-navy-700 underline">Upload the first one</Link>.</>} />
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
+import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
 
@@ -37,12 +38,9 @@ export function DashboardShell({
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center gap-2 border-b border-white/10 px-5">
-          <span className="font-display text-base font-bold">
-            All Abode
-            <span className="text-gold">.</span>
-          </span>
-          <span className="label-caps ml-1 rounded bg-gold/15 px-2 py-0.5 text-[10px] text-gold-soft">
+        <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
+          <Logo variant="white" />
+          <span className="label-caps rounded bg-gold/15 px-2 py-0.5 text-[10px] text-gold-soft">
             {role}
           </span>
         </div>

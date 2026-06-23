@@ -71,6 +71,9 @@ not diversify. All design assets and the token reference live in `design/`:
 - **Dashboards:** `@/components/dashboard/shell` exports `DashboardShell` (sidebar +
   topbar), `StatCard`, `Panel`. Dashboard pages live in `app/dashboard/*` (NOT in the
   marketing group) so they get portal chrome, not the site header/footer.
+- **Admin shell:** `components/admin/shell.tsx` — sidebar nav is grouped into 5 sections
+  (Overview · Property Management · Finance · Marketing · System) via a `navGroups` array;
+  section labels render as small `text-white/40` uppercase caps between items.
 
 ## Route groups
 
@@ -110,7 +113,12 @@ not diversify. All design assets and the token reference live in `design/`:
   `link_portal_account()` + `users.finance_role`. **User must run it in the SQL editor.**
 - Portal auth: `/portal/{login,signup}` + `/portal` (role redirect / "pending"),
   `lib/auth/role.ts`, self-signup links by email via the RPC (no service_role key),
-  middleware guards `/dashboard/*`.
+  middleware guards `/dashboard/*` + `/portal/*`.
+  - `app/auth/callback/route.ts` — PKCE code exchange + `link_portal_account` RPC;
+    required for email-confirmation flow to work.
+  - Portal index calls `linkPortalAccount()` on every load (idempotent) so users
+    who arrive via email-confirmation link without hitting the login form are linked.
+  - Login page wraps in `<Suspense>` (required for `useSearchParams` in App Router).
 - Admin CRUD (`app/admin/(panel)/{owners,tenants,properties,units,leases,vendors}`)
   via `app/admin/pm-actions.ts` + `components/admin/pm-forms.tsx` + `form-kit.tsx`.
 - Owner & tenant dashboards (`app/dashboard/*`) now read live data scoped by RLS.
@@ -121,14 +129,18 @@ not diversify. All design assets and the token reference live in `design/`:
   post→ledger, maker-checker) + `app/admin/soa-actions.ts` (generate→review→approve
   w/ recalc gate→publish PDF→portal). Admin UI: `/admin/{receipts,expenses,statements,audit}`.
   Portal PDF download: `app/api/portal/soa/[id]/route.ts` (signed URL, ownership-checked).
-- **Manual setup to activate:** run `0003`; create Storage buckets in Supabase:
-  **private** `receipts` + `finance-docs`, **public** `site-assets` (used by the
-  Settings page hero-image upload); set `OPENAI_API_KEY` (server-only) in `.env.local` +
-  Vercel; create Supabase Auth users matching seeded `owner@allabode.test` /
-  `tenant@allabode.test` to test portals.
-- **Auth callback:** `app/auth/callback/route.ts` handles email confirmation links.
-  Add `{siteUrl}/auth/callback` to Supabase → Auth → URL Configuration → Redirect URLs
-  (both production and `http://localhost:3000/auth/callback` for local dev).
+  `uploadReceipt` uses `useActionState` pattern — returns `{ error }` instead of throwing,
+  so upload failures render inline in `app/admin/(panel)/receipts/new/upload-form.tsx`.
+- **Manual setup to activate:**
+  1. Run migration `0003` in the SQL editor.
+  2. Run `supabase/setup-storage.sql` in the SQL editor — creates 3 buckets
+     (**private** `receipts` + `finance-docs`, **public** `site-assets`) + all RLS
+     policies in one shot (idempotent; safe to re-run).
+  3. Set `OPENAI_API_KEY` (server-only) in `.env.local` + Vercel.
+  4. Create Supabase Auth users matching seeded `owner@allabode.test` /
+     `tenant@allabode.test` with **confirmed** emails to test portals.
+  5. Add `{siteUrl}/auth/callback` + `http://localhost:3000/auth/callback` to
+     Supabase → Auth → URL Configuration → Redirect URLs.
 - **Deferred (next phases):** tickets/work orders, preventive-maintenance reminders,
   payment gateway (Maya/Xendit) + webhooks, email/SMS/WhatsApp notifications, vendor
   portal, accounting export, PDF receipt rasterization for AI (PDFs → manual entry now).
@@ -162,13 +174,14 @@ not diversify. All design assets and the token reference live in `design/`:
    `supabase/seed.sql` in the SQL editor to load the 6 sample listings + widen the
    public-read RLS policy (live listings = everything except Draft/Archived). Until then
    the site shows the identical mock data.
-3. **`/admin` dashboard + auth.** Login-gated. Listing manager (CRUD, publish, feature,
-   archive, photo upload/reorder), inquiry manager, appraisal-request manager,
-   property-management-lead manager, overview summary cards. Use a `(admin)` route group
-   or `app/admin/` with its own auth-guarded layout. Add Supabase auth middleware.
-4. **Real owner/tenant portals.** The dashboards are UI shells only — wire auth + data.
-5. **Logo:** `components/logo.tsx` (Image-based) exists but the header/footer currently
-   use a wordmark. Swap to the real logo (`public/logo/logo-primary.png`) if desired.
+3. ~~**`/admin` dashboard + auth.**~~ ✅ done. `app/admin/` with Supabase auth middleware,
+   login page, and full CRUD for listings, inquiries, appraisals, PM leads, owners,
+   tenants, properties, units, leases, vendors, receipts, expenses, statements, audit log,
+   and site settings. Sidebar nav grouped into 5 sections.
+4. ~~**Real owner/tenant portals.**~~ ✅ done. Auth fully wired (PKCE callback, middleware,
+   `linkPortalAccount` RPC); owner + tenant dashboards read live data scoped by RLS.
+5. ~~**Logo:**~~ ✅ done. Site footer uses `<Logo variant="white" />`. Site header uses
+   `<Logo />` (primary). `components/logo.tsx` is the canonical Image-based component.
 
 ## Verification
 

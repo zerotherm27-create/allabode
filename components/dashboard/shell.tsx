@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/client";
+import { NotificationBell } from "@/components/dashboard/notification-bell";
 
 export type NavItem = { label: string; icon: string; href: string };
 
@@ -120,14 +121,7 @@ export function DashboardShell({
           </label>
 
           <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="relative inline-flex size-10 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy"
-            >
-              <Icon name="notifications" size={22} />
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-reserved" />
-            </button>
+            <NotificationBell role={role.toLowerCase() as "owner" | "tenant"} />
             <div className="flex items-center gap-2 rounded-md px-2 py-1">
               <span className="flex size-9 items-center justify-center rounded-full bg-navy text-sm font-semibold text-white">
                 {userName.charAt(0)}

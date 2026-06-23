@@ -7,23 +7,48 @@ import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/client";
 
-const nav = [
-  { label: "Overview", icon: "dashboard", href: "/admin" },
-  { label: "Properties", icon: "apartment", href: "/admin/properties" },
-  { label: "Units", icon: "door_front", href: "/admin/units" },
-  { label: "Owners", icon: "person", href: "/admin/owners" },
-  { label: "Tenants", icon: "groups", href: "/admin/tenants" },
-  { label: "Leases", icon: "description", href: "/admin/leases" },
-  { label: "Vendors", icon: "handyman", href: "/admin/vendors" },
-  { label: "Receipts", icon: "receipt", href: "/admin/receipts" },
-  { label: "Expenses", icon: "payments", href: "/admin/expenses" },
-  { label: "Statements", icon: "receipt_long", href: "/admin/statements" },
-  { label: "Audit Log", icon: "history", href: "/admin/audit" },
-  { label: "Listings", icon: "home_work", href: "/admin/listings" },
-  { label: "Inquiries", icon: "forum", href: "/admin/inquiries" },
-  { label: "Appraisals", icon: "analytics", href: "/admin/appraisals" },
-  { label: "PM Leads", icon: "corporate_fare", href: "/admin/leads" },
-  { label: "Site Settings", icon: "tune", href: "/admin/settings" },
+const navGroups = [
+  {
+    group: null,
+    items: [
+      { label: "Overview", icon: "dashboard", href: "/admin" },
+    ],
+  },
+  {
+    group: "Property Management",
+    items: [
+      { label: "Properties", icon: "apartment",     href: "/admin/properties" },
+      { label: "Units",      icon: "door_front",    href: "/admin/units"      },
+      { label: "Owners",     icon: "person",        href: "/admin/owners"     },
+      { label: "Tenants",    icon: "groups",        href: "/admin/tenants"    },
+      { label: "Leases",     icon: "description",   href: "/admin/leases"     },
+      { label: "Vendors",    icon: "handyman",      href: "/admin/vendors"    },
+    ],
+  },
+  {
+    group: "Finance",
+    items: [
+      { label: "Receipts",   icon: "receipt",       href: "/admin/receipts"   },
+      { label: "Expenses",   icon: "payments",      href: "/admin/expenses"   },
+      { label: "Statements", icon: "receipt_long",  href: "/admin/statements" },
+      { label: "Audit Log",  icon: "history",       href: "/admin/audit"      },
+    ],
+  },
+  {
+    group: "Marketing",
+    items: [
+      { label: "Listings",   icon: "home_work",     href: "/admin/listings"   },
+      { label: "Inquiries",  icon: "forum",         href: "/admin/inquiries"  },
+      { label: "Appraisals", icon: "analytics",     href: "/admin/appraisals" },
+      { label: "PM Leads",   icon: "corporate_fare",href: "/admin/leads"      },
+    ],
+  },
+  {
+    group: "System",
+    items: [
+      { label: "Site Settings", icon: "tune",       href: "/admin/settings"   },
+    ],
+  },
 ];
 
 export function AdminShell({
@@ -65,21 +90,30 @@ export function AdminShell({
           <span className="label-caps ml-auto text-gold">Admin</span>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              aria-current={isActive(item.href) ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition-colors ${
-                isActive(item.href)
-                  ? "bg-white/10 text-white"
-                  : "text-white/70 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <Icon name={item.icon} size={20} />
-              {item.label}
-            </Link>
+          {navGroups.map(({ group, items }) => (
+            <div key={group ?? "__top"}>
+              {group && (
+                <p className="px-4 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+                  {group}
+                </p>
+              )}
+              {items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? "bg-white/10 text-white"
+                      : "text-white/70 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <Icon name={item.icon} size={20} />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="border-t border-white/10 p-3">

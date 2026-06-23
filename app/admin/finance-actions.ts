@@ -30,12 +30,19 @@ function n(fd: FormData, k: string): number | null {
 // ============================================================
 // Upload → triggers AI extraction + validation
 // ============================================================
-export async function uploadReceipt(formData: FormData) {
+
+export type UploadReceiptState = { error?: string };
+
+export async function uploadReceipt(
+  _prev: UploadReceiptState,
+  formData: FormData
+): Promise<UploadReceiptState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) throw new Error("Please choose a file.");
+  if (!(file instanceof File) || file.size === 0)
+    return { error: "Please choose a file." };
 
   const buf = Buffer.from(await file.arrayBuffer());
   const hash = crypto.createHash("sha256").update(buf).digest("hex");
@@ -45,7 +52,8 @@ export async function uploadReceipt(formData: FormData) {
   const { error: upErr } = await supabase.storage
     .from(RECEIPTS_BUCKET)
     .upload(path, buf, { contentType: file.type || "application/octet-stream", upsert: false });
-  if (upErr) throw new Error(`Upload failed: ${upErr.message}. Make sure the private "receipts" bucket exists.`);
+  if (upErr)
+    return { error: `Upload failed: ${upErr.message}. Make sure the private "receipts" bucket exists in Supabase Storage.` };
 
   const { data: row, error } = await supabase
     .from("receipt_uploads")
@@ -65,7 +73,7 @@ export async function uploadReceipt(formData: FormData) {
     })
     .select("id")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
 
   const id = row.id as string;
   await logAudit(supabase, { action: "receipt.uploaded", entityType: "receipt_upload", entityId: id, actorId: user?.id });

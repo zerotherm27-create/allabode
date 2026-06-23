@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { footerNav, site } from "@/lib/site";
 import { Icon } from "@/components/icon";
+import { Logo } from "@/components/logo";
 import { getSettings, s } from "@/lib/settings";
 
 export async function SiteFooter() {
@@ -27,13 +27,7 @@ export async function SiteFooter() {
       <div className="container-site grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:py-20">
         {/* Brand */}
         <div className="md:col-span-3">
-          <Image
-            src="/logo/logo-2-white.png"
-            alt="All Abode Property Solutions"
-            width={240}
-            height={75}
-            className="h-10 w-auto"
-          />
+          <Logo variant="white" />
           <p className="mt-3 text-xs tracking-wider text-gold/80">{descriptor}</p>
           <p className="mt-5 max-w-md text-sm leading-relaxed text-white/60">
             {site.name} provides brokerage, leasing, property management, and

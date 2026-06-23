@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { Field, Input } from "@/components/forms/fields";
 import { createClient } from "@/lib/supabase/client";
 import { linkPortalAccount } from "@/app/portal/actions";
 
-export default function PortalLoginPage() {
+function LoginForm() {
   const router = useRouter();
-  const [error, setError] = useState("");
+  const params = useSearchParams();
+  const initError =
+    params.get("error") === "link_expired"
+      ? "Confirmation link has expired. Please sign in to continue."
+      : "";
+  const [error, setError] = useState(initError);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -84,5 +89,13 @@ export default function PortalLoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function PortalLoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

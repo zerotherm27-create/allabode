@@ -121,10 +121,14 @@ not diversify. All design assets and the token reference live in `design/`:
   post→ledger, maker-checker) + `app/admin/soa-actions.ts` (generate→review→approve
   w/ recalc gate→publish PDF→portal). Admin UI: `/admin/{receipts,expenses,statements,audit}`.
   Portal PDF download: `app/api/portal/soa/[id]/route.ts` (signed URL, ownership-checked).
-- **Manual setup to activate:** run `0003`; create **private** Storage buckets
-  `receipts` + `finance-docs`; set `OPENAI_API_KEY` (server-only) in `.env.local` +
+- **Manual setup to activate:** run `0003`; create Storage buckets in Supabase:
+  **private** `receipts` + `finance-docs`, **public** `site-assets` (used by the
+  Settings page hero-image upload); set `OPENAI_API_KEY` (server-only) in `.env.local` +
   Vercel; create Supabase Auth users matching seeded `owner@allabode.test` /
   `tenant@allabode.test` to test portals.
+- **Auth callback:** `app/auth/callback/route.ts` handles email confirmation links.
+  Add `{siteUrl}/auth/callback` to Supabase → Auth → URL Configuration → Redirect URLs
+  (both production and `http://localhost:3000/auth/callback` for local dev).
 - **Deferred (next phases):** tickets/work orders, preventive-maintenance reminders,
   payment gateway (Maya/Xendit) + webhooks, email/SMS/WhatsApp notifications, vendor
   portal, accounting export, PDF receipt rasterization for AI (PDFs → manual entry now).

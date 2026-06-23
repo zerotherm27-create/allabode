@@ -141,9 +141,7 @@ not diversify. All design assets and the token reference live in `design/`:
      `tenant@allabode.test` with **confirmed** emails to test portals.
   5. Add `{siteUrl}/auth/callback` + `http://localhost:3000/auth/callback` to
      Supabase → Auth → URL Configuration → Redirect URLs.
-- **Deferred (next phases):** tickets/work orders, preventive-maintenance reminders,
-  payment gateway (Maya/Xendit) + webhooks, email/SMS/WhatsApp notifications, vendor
-  portal, accounting export, PDF receipt rasterization for AI (PDFs → manual entry now).
+- **All 7 operational phases now built — see below.**
 
 **DONE — public marketing site (brief "first-version scope"), all on the locked tokens:**
 - `/` home · `/about` · `/leasing` · `/buy-sell` · `/property-management` · `/appraisal`
@@ -162,26 +160,61 @@ not diversify. All design assets and the token reference live in `design/`:
   else → `inquiries` with extras in a `details` jsonb). Falls back to log-only +
   `{ok:true,persisted:false}` when env vars are absent.
 
-**NOT DONE — next phase (start here when continuing):**
-1. ~~Connect Supabase~~ ✅ done (env + migration applied + verified). Still optional:
-   run `supabase gen types typescript` and thread the `Database` generic through the
-   clients (inserts/reads are currently untyped).
-2. ~~Listings from DB~~ ✅ done. `lib/listings.ts` (`getListings`/`getFeaturedListings`/
-   `getListing`) fetches via a public anon client and maps DB rows → the UI `Listing`
-   shape, with **automatic fallback to the `lib/data.ts` mock** when Supabase is
-   unconfigured/empty/errors. Home, listings, listings/[id], leasing, buy-sell are now
-   async server components reading from it. **Remaining manual step:** run
-   `supabase/seed.sql` in the SQL editor to load the 6 sample listings + widen the
-   public-read RLS policy (live listings = everything except Draft/Archived). Until then
-   the site shows the identical mock data.
-3. ~~**`/admin` dashboard + auth.**~~ ✅ done. `app/admin/` with Supabase auth middleware,
-   login page, and full CRUD for listings, inquiries, appraisals, PM leads, owners,
-   tenants, properties, units, leases, vendors, receipts, expenses, statements, audit log,
-   and site settings. Sidebar nav grouped into 5 sections.
-4. ~~**Real owner/tenant portals.**~~ ✅ done. Auth fully wired (PKCE callback, middleware,
-   `linkPortalAccount` RPC); owner + tenant dashboards read live data scoped by RLS.
-5. ~~**Logo:**~~ ✅ done. Site footer uses `<Logo variant="white" />`. Site header uses
-   `<Logo />` (primary). `components/logo.tsx` is the canonical Image-based component.
+**DONE — Full Blueprint (7 Operational Phases):**
+
+1. ~~Connect Supabase~~ ✅ done.
+2. ~~Listings from DB~~ ✅ done. Fallback to `lib/data.ts` mock when Supabase empty.
+3. ~~Admin dashboard + auth~~ ✅ done.
+4. ~~Real owner/tenant portals~~ ✅ done.
+5. ~~Logo~~ ✅ done.
+6. ~~Phase 1 — Invoices & Billing~~ ✅ done (`0004_invoices.sql`).
+   - `invoice_seq` + `generate_invoice_number()` RPC, invoices + invoice_lines tables
+   - `app/admin/invoice-actions.ts` + `/admin/invoices` CRUD + tenant portal `/invoices`
+7. ~~Phase 2 — Ticketing~~ ✅ done (`0005_tickets.sql`).
+   - `ticket_seq`, tickets + ticket_comments + ticket_attachments, SLA machine
+   - `lib/tickets.ts`, `app/admin/ticket-actions.ts`, admin queue + detail + assign
+   - Tenant: submit / view / reply. Owner: read-only list.
+8. ~~Phase 3 — Documents~~ ✅ done (`0006_documents.sql`).
+   - documents table (entity-attached, visibility levels, signed/immutable)
+   - `components/admin/document-list.tsx` (upload widget, mark-signed, delete)
+   - `/api/portal/documents/[id]` signed-URL delivery; tenant + owner portal pages
+9. ~~Phase 4 — Notices & Notifications~~ ✅ done (`0007_notifications.sql`).
+   - notices board + notifications inbox tables
+   - `lib/email.ts` (Resend), `lib/notify.ts` (createNotification)
+   - `components/dashboard/notification-bell.tsx` — real-time unread badge + dropdown
+   - `/admin/notices` CRUD, tenant/owner notice board pages
+10. ~~Phase 5 — Preventive Maintenance & Work Orders~~ ✅ done (`0008_maintenance.sql`).
+    - maintenance_plans (frequency, next_due_at auto-calc) + work_orders (status machine)
+    - `/admin/maintenance` + `/admin/work-orders` queue + detail
+11. ~~Phase 6 — Automation Rules & Cron~~ ✅ done (`0009_automation.sql`).
+    - automation_rules + automation_run_log; 5 seeded default rules
+    - `lib/cron.ts`, Vercel cron routes: `/api/cron/{generate-invoices,check-lease-expiry,
+      check-ticket-slas,check-maintenance-due,generate-owner-soa}`
+    - `vercel.json` cron schedules; `/admin/automation` dashboard + run log
+12. ~~Phase 7 — Payment Gateway~~ ✅ done (`0010_payments_gateway.sql`).
+    - payment_intents table; Maya + Xendit adapters (`lib/payments/`)
+    - `/api/payments/create` + `/api/payments/webhook/{maya,xendit}`
+    - Tenant: "Pay now" → `/dashboard/tenant/invoices/[id]/pay` → provider checkout → return page
+
+**Manual steps to activate new phases:**
+- Run `0004` through `0010` in Supabase SQL Editor (in order).
+- Create private `documents` bucket in Supabase Storage.
+- Set env vars:
+  - `RESEND_API_KEY` — email notifications
+  - `PAYMENT_PROVIDER` = `maya` or `xendit`
+  - `MAYA_SECRET_KEY` or `XENDIT_SECRET_KEY` + `XENDIT_WEBHOOK_TOKEN`
+  - `NEXT_PUBLIC_PAYMENT_PROVIDER` — shown on pay page
+  - `CRON_SECRET` — secures Vercel Cron endpoints
+- Add webhook URLs in Maya/Xendit dashboard:
+  - Maya: `{siteUrl}/api/payments/webhook/maya`
+  - Xendit: `{siteUrl}/api/payments/webhook/xendit`
+
+**Remaining deferred items (not built):**
+- Vendor portal (vendors as authenticated portal users)
+- Accounting export (CSV/XLSX ledger export)
+- PDF receipt rasterization for AI (PDFs → manual entry now)
+- SMS/WhatsApp notifications (Resend does email only)
+- Tenant-uploaded ticket attachments (schema ready; S3 upload UI not built)
 
 ## Verification
 

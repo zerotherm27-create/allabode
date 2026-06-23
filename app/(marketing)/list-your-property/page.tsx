@@ -3,6 +3,7 @@ import { Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading } from "@/components/sections";
 import { ListPropertyForm } from "@/components/forms/lead-forms";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "List Your Property",
@@ -16,13 +17,15 @@ const steps = [
   { icon: "rocket_launch", title: "Go to market", body: "We prepare, market, and manage your property through to a successful outcome." },
 ];
 
-export default function ListYourPropertyPage() {
+export default async function ListYourPropertyPage() {
+  const settings = await getSettings();
   return (
     <>
       <PageHero
         eyebrow="List Your Property"
         title="Put your property in licensed hands."
         subtitle="Whether you want to lease, sell, have it managed, or appraised — submit your property below and our team will take it from there."
+        image={s(settings, "page_listyour_image") || undefined}
       />
 
       {/* How it works */}

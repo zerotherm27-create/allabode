@@ -3,6 +3,7 @@ import { Container } from "@/components/ui";
 import { PageHero } from "@/components/sections";
 import { ListingsBrowser } from "@/components/listings-browser";
 import { getListings } from "@/lib/listings";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Property Listings Philippines | All Abode Property Solutions",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ListingsPage() {
-  const listings = await getListings();
+  const [listings, settings] = await Promise.all([getListings(), getSettings()]);
   return (
     <>
       <PageHero
@@ -19,6 +20,7 @@ export default async function ListingsPage() {
         title="Property listings for lease and sale"
         lead="Browse available properties for lease, sale, short-term rental, long-term rental, and bed space arrangements. Use filters to find options based on location, price, property type, furnishing, and availability."
         crumbs={[{ label: "Home", href: "/" }, { label: "Listings" }]}
+        image={s(settings, "page_listings_image") || undefined}
       />
       <section className="py-section">
         <Container>

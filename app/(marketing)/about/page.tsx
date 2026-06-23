@@ -3,6 +3,7 @@ import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { trustPoints } from "@/lib/data";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "About All Abode Property Solutions | Licensed Real Estate Support",
@@ -18,13 +19,15 @@ const values = [
   { icon: "diversity_3", title: "Long-Term Trust", body: "Built on a commitment to professional service that clients can rely on over time." },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const settings = await getSettings();
   return (
     <>
       <PageHero
         eyebrow="About All Abode"
         title="Professional property support built on licensed expertise."
         subtitle="All Abode Property Solutions was created for clients who need more than a simple property listing — providing professional support across brokerage, leasing, property management, and appraisal."
+        image={s(settings, "page_about_image") || undefined}
       />
 
       {/* Story */}

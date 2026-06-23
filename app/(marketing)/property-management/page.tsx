@@ -4,6 +4,7 @@ import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, FeatureItem } from "@/components/sections";
 import { Faq } from "@/components/faq";
 import { PropertyManagementForm } from "@/components/forms/lead-forms";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Property Management Philippines | Rental Property Owner Support",
@@ -56,13 +57,15 @@ const faqs = [
   { q: "Do you handle maintenance coordination?", a: "We dispatch and supervise vetted contractors for repairs and upkeep, with your approval on significant expenses." },
 ];
 
-export default function PropertyManagementPage() {
+export default async function PropertyManagementPage() {
+  const settings = await getSettings();
   return (
     <>
       <PageHero
         eyebrow="Property Management"
         title="Property management for owners who need reliable support."
         subtitle="All Abode helps property owners manage rentals with leasing support, tenant coordination, rent monitoring, maintenance coordination, move-in and move-out documentation, owner reporting, and portfolio support."
+        image={s(settings, "page_pm_image") || undefined}
       >
         <Button href="#proposal" size="lg" variant="ghost-light">
           Request a Proposal

@@ -5,6 +5,7 @@ import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { PropertyCard } from "@/components/property-card";
 import { Faq } from "@/components/faq";
 import { getListings } from "@/lib/listings";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Buy and Sell Property Philippines | Real Estate Brokerage Support",
@@ -36,7 +37,7 @@ const faqs = [
 ];
 
 export default async function BuySellPage() {
-  const all = await getListings();
+  const [all, settings] = await Promise.all([getListings(), getSettings()]);
   const forSale = all.filter((l) => l.status === "For Sale");
 
   return (
@@ -45,6 +46,7 @@ export default async function BuySellPage() {
         eyebrow="Licensed Brokerage"
         title="Buy and sell property with professional brokerage guidance."
         subtitle="Buying or selling property is easier when the process is clear. All Abode helps sellers prepare and market their property while helping buyers understand listings, schedule viewings, and move through next steps professionally."
+        image={s(settings, "page_buysell_image") || undefined}
       >
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button href="/list-your-property" size="lg" variant="ghost-light">

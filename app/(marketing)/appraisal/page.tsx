@@ -4,6 +4,7 @@ import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading } from "@/components/sections";
 import { Faq } from "@/components/faq";
 import { AppraisalForm } from "@/components/forms/lead-forms";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Real Estate Appraisal Philippines | Licensed Appraiser Support",
@@ -27,13 +28,15 @@ const faqs = [
   { q: "Is a market estimate the same as a formal appraisal?", a: "No. A general market opinion is an informal indication of value. A formal appraisal is a signed, documented report by a licensed appraiser — required for legal, tax, and lending purposes." },
 ];
 
-export default function AppraisalPage() {
+export default async function AppraisalPage() {
+  const settings = await getSettings();
   return (
     <>
       <PageHero
         eyebrow="Licensed Appraisal"
         title="Real estate appraisal for informed property decisions."
         subtitle="Request formal appraisal support for residential, commercial, land, estate, legal, investment, or pre-sale property purposes."
+        image={s(settings, "page_appraisal_image") || undefined}
       >
         <Button href="#request" size="lg" variant="ghost-light">
           Request an Appraisal

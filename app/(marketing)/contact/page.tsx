@@ -4,6 +4,7 @@ import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading } from "@/components/sections";
 import { ContactForm } from "@/components/forms/lead-forms";
 import { site } from "@/lib/site";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Contact All Abode Property Solutions Philippines",
@@ -20,13 +21,15 @@ const channels = [
   { icon: "location_on", label: "Office", value: site.location, href: undefined },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getSettings();
   return (
     <>
       <PageHero
         eyebrow="Contact"
         title="Contact All Abode Property Solutions."
         subtitle="Tell us what property support you need. Whether you want to lease, sell, manage, buy, rent, or appraise property, All Abode will review your inquiry and guide you to the right next step."
+        image={s(settings, "page_contact_image") || undefined}
       />
 
       <section className="py-section">

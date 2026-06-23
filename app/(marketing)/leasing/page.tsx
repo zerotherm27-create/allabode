@@ -5,6 +5,7 @@ import { PageHero, SectionHeading, FeatureItem, CtaBand } from "@/components/sec
 import { PropertyCard } from "@/components/property-card";
 import { Faq } from "@/components/faq";
 import { getListings } from "@/lib/listings";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Leasing Services Philippines | Property and Condo Leasing Support",
@@ -73,7 +74,7 @@ const faqs = [
 ];
 
 export default async function LeasingPage() {
-  const all = await getListings();
+  const [all, settings] = await Promise.all([getListings(), getSettings()]);
   const rentals = all.filter((l) => l.status === "For Lease");
 
   return (
@@ -82,6 +83,7 @@ export default async function LeasingPage() {
         eyebrow="Leasing & Rentals"
         title="Leasing services for owners, tenants, and investors."
         subtitle="From tenant screening to move-in coordination and monthly owner reports, we run a complete leasing operation so your property stays occupied, compliant, and profitable."
+        image={s(settings, "page_leasing_image") || undefined}
       >
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button href="/list-your-property" size="lg" variant="ghost-light">

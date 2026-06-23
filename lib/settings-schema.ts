@@ -17,6 +17,15 @@ export const settingsFallback: Settings = {
   hero_subheading:      "Brokerage, leasing, property management, and appraisal support through one trusted partner.",
   hero_body:            "All Abode Property Solutions helps owners, investors, buyers, sellers, tenants, and appraisal clients move through property decisions with clear guidance, organized coordination, and licensed professional expertise.",
   hero_image:           "",
+  page_about_image:     "",
+  page_leasing_image:   "",
+  page_buysell_image:   "",
+  page_pm_image:        "",
+  page_appraisal_image: "",
+  page_contact_image:   "",
+  page_listings_image:  "",
+  page_listyour_image:  "",
+  page_resources_image: "",
 };
 
 export function s(settings: Settings, key: string): string {
@@ -64,6 +73,22 @@ export const settingsSchema = [
       { key: "hero_subheading", label: "Subheading",       type: "text" },
       { key: "hero_body",       label: "Body Text",        type: "textarea" },
       { key: "hero_image",      label: "Background Image", type: "image" },
+    ],
+  },
+  {
+    group: "page_heroes",
+    title: "Page Hero Backgrounds",
+    icon: "photo_library",
+    fields: [
+      { key: "page_about_image",     label: "About — Background Image",               type: "image" },
+      { key: "page_leasing_image",   label: "Leasing — Background Image",             type: "image" },
+      { key: "page_buysell_image",   label: "Buy & Sell — Background Image",          type: "image" },
+      { key: "page_pm_image",        label: "Property Management — Background Image", type: "image" },
+      { key: "page_appraisal_image", label: "Appraisal — Background Image",          type: "image" },
+      { key: "page_contact_image",   label: "Contact — Background Image",             type: "image" },
+      { key: "page_listings_image",  label: "Listings — Background Image",            type: "image" },
+      { key: "page_listyour_image",  label: "List Your Property — Background Image",  type: "image" },
+      { key: "page_resources_image", label: "Resources — Background Image",           type: "image" },
     ],
   },
 ] as const;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Property Guides Philippines | All Abode Resources",
@@ -68,13 +69,15 @@ const articles = [
   },
 ];
 
-export default function ResourcesPage() {
+export default async function ResourcesPage() {
+  const settings = await getSettings();
   return (
     <>
       <PageHero
         eyebrow="Resources"
         title="Property guides and practical real estate advice."
         subtitle="Explore guides from All Abode Property Solutions to help you understand leasing, brokerage, property management, appraisal, and property ownership decisions."
+        image={s(settings, "page_resources_image") || undefined}
       />
 
       {/* Categories */}

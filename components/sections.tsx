@@ -68,6 +68,7 @@ export function PageHero({
   subtitle,
   lead,
   crumbs,
+  image,
   children,
 }: {
   eyebrow: string;
@@ -76,12 +77,19 @@ export function PageHero({
   /** Alias for subtitle (kept for call-site compatibility). */
   lead?: string;
   crumbs?: Crumb[];
+  image?: string;
   children?: ReactNode;
 }) {
   const body = subtitle ?? lead;
   return (
     <section className="relative isolate overflow-hidden bg-navy text-white">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
+      {image && (
+        <div
+          className="absolute inset-0 -z-10 bg-cover bg-center opacity-25"
+          style={{ backgroundImage: `url(${image})` }}
+        />
+      )}
       <div className="absolute inset-0 -z-10 opacity-50 [background:radial-gradient(70%_60%_at_88%_10%,rgba(180,151,90,0.25),transparent_60%)]" />
       <Container className="py-20 md:py-28">
         <div className="max-w-3xl">

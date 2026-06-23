@@ -28,6 +28,7 @@ const navGroups = [
   {
     group: "Finance",
     items: [
+      { label: "Invoices",   icon: "request_quote", href: "/admin/invoices"   },
       { label: "Receipts",   icon: "receipt",       href: "/admin/receipts"   },
       { label: "Expenses",   icon: "payments",      href: "/admin/expenses"   },
       { label: "Statements", icon: "receipt_long",  href: "/admin/statements" },

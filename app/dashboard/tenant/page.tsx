@@ -8,10 +8,11 @@ import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 export const metadata: Metadata = { title: "Tenant Dashboard", robots: { index: false } };
 
 const nav: NavItem[] = [
-  { label: "Dashboard", icon: "dashboard", href: "/dashboard/tenant" },
-  { label: "My Lease", icon: "description", href: "/dashboard/tenant#lease" },
-  { label: "Payments", icon: "payments", href: "/dashboard/tenant#payments" },
-  { label: "Statements", icon: "receipt_long", href: "/dashboard/tenant#statements" },
+  { label: "Dashboard",  icon: "dashboard",     href: "/dashboard/tenant" },
+  { label: "My Lease",   icon: "description",   href: "/dashboard/tenant#lease" },
+  { label: "Invoices",   icon: "request_quote", href: "/dashboard/tenant/invoices" },
+  { label: "Payments",   icon: "payments",      href: "/dashboard/tenant#payments" },
+  { label: "Statements", icon: "receipt_long",  href: "/dashboard/tenant#statements" },
 ];
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString("en-PH")}`;

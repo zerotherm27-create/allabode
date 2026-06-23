@@ -35,17 +35,25 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isLogin = path.startsWith("/admin/login");
+  const isAdminLogin = path.startsWith("/admin/login");
 
-  if (path.startsWith("/admin") && !isLogin && !user) {
+  // Admin area: staff only. Unauthenticated → admin login.
+  if (path.startsWith("/admin") && !isAdminLogin && !user) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/admin/login";
     return NextResponse.redirect(redirect);
   }
-  // Already signed in but on the login page → send to the dashboard.
-  if (isLogin && user) {
+  if (isAdminLogin && user) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/admin";
+    return NextResponse.redirect(redirect);
+  }
+
+  // Portal dashboards: any signed-in user. Unauthenticated → portal login.
+  // Per-page guards (getCurrentRole) enforce the specific owner/tenant role.
+  if (path.startsWith("/dashboard") && !user) {
+    const redirect = request.nextUrl.clone();
+    redirect.pathname = "/portal/login";
     return NextResponse.redirect(redirect);
   }
 

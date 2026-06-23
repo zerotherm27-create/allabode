@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   return updateSession(request);
 }
 
-// Only run on admin routes — the public site is unaffected.
+// Run on admin + portal dashboard routes — the public site is unaffected.
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*"],
 };

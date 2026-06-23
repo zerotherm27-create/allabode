@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
+import { createClient } from "@/lib/supabase/client";
 
 export type NavItem = { label: string; icon: string; href: string };
 
@@ -18,6 +20,13 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  async function logout() {
+    await createClient().auth.signOut();
+    router.replace("/portal/login");
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen bg-surface-gray lg:grid lg:grid-cols-[260px_1fr]">
@@ -64,13 +73,14 @@ export function DashboardShell({
             <Icon name="analytics" size={18} />
             Request Appraisal
           </Link>
-          <Link
-            href="/"
-            className="mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-2 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
           >
             <Icon name="logout" size={20} />
             Sign out
-          </Link>
+          </button>
         </div>
       </aside>
 

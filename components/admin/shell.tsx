@@ -9,6 +9,16 @@ import { createClient } from "@/lib/supabase/client";
 
 const nav = [
   { label: "Overview", icon: "dashboard", href: "/admin" },
+  { label: "Properties", icon: "apartment", href: "/admin/properties" },
+  { label: "Units", icon: "door_front", href: "/admin/units" },
+  { label: "Owners", icon: "person", href: "/admin/owners" },
+  { label: "Tenants", icon: "groups", href: "/admin/tenants" },
+  { label: "Leases", icon: "description", href: "/admin/leases" },
+  { label: "Vendors", icon: "handyman", href: "/admin/vendors" },
+  { label: "Receipts", icon: "receipt", href: "/admin/receipts" },
+  { label: "Expenses", icon: "payments", href: "/admin/expenses" },
+  { label: "Statements", icon: "receipt_long", href: "/admin/statements" },
+  { label: "Audit Log", icon: "history", href: "/admin/audit" },
   { label: "Listings", icon: "home_work", href: "/admin/listings" },
   { label: "Inquiries", icon: "forum", href: "/admin/inquiries" },
   { label: "Appraisals", icon: "analytics", href: "/admin/appraisals" },

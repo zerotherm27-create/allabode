@@ -89,6 +89,33 @@ not diversify. All design assets and the token reference live in `design/`:
 
 ## Build status (updated — resume here)
 
+**DONE — Property Management platform (Foundation + AI Finance), single-tenant:**
+- Migration `supabase/migrations/0003_property_management.sql` (18 tables: owners,
+  tenants, properties, units, leases, payments, vendors, the receipt→expense→ledger→
+  SOA finance chain, audit_log) + RLS (staff full; owner/tenant scoped read-only;
+  unpublished SOAs hidden) + helpers `current_owner_id()` / `current_tenant_id()` /
+  `link_portal_account()` + `users.finance_role`. **User must run it in the SQL editor.**
+- Portal auth: `/portal/{login,signup}` + `/portal` (role redirect / "pending"),
+  `lib/auth/role.ts`, self-signup links by email via the RPC (no service_role key),
+  middleware guards `/dashboard/*`.
+- Admin CRUD (`app/admin/(panel)/{owners,tenants,properties,units,leases,vendors}`)
+  via `app/admin/pm-actions.ts` + `components/admin/pm-forms.tsx` + `form-kit.tsx`.
+- Owner & tenant dashboards (`app/dashboard/*`) now read live data scoped by RLS.
+- AI finance: `lib/ai/{client,receipts,soa-summary}.ts` (OpenAI `gpt-4.1-mini`,
+  Structured Outputs), `lib/finance/{validation,ledger,soa}.ts` (deterministic),
+  `lib/pdf/soa.tsx` (@react-pdf/renderer), `lib/audit.ts`, `lib/storage.ts`.
+  Workflow: `app/admin/finance-actions.ts` (upload→extract→validate→review→approve→
+  post→ledger, maker-checker) + `app/admin/soa-actions.ts` (generate→review→approve
+  w/ recalc gate→publish PDF→portal). Admin UI: `/admin/{receipts,expenses,statements,audit}`.
+  Portal PDF download: `app/api/portal/soa/[id]/route.ts` (signed URL, ownership-checked).
+- **Manual setup to activate:** run `0003`; create **private** Storage buckets
+  `receipts` + `finance-docs`; set `OPENAI_API_KEY` (server-only) in `.env.local` +
+  Vercel; create Supabase Auth users matching seeded `owner@allabode.test` /
+  `tenant@allabode.test` to test portals.
+- **Deferred (next phases):** tickets/work orders, preventive-maintenance reminders,
+  payment gateway (Maya/Xendit) + webhooks, email/SMS/WhatsApp notifications, vendor
+  portal, accounting export, PDF receipt rasterization for AI (PDFs → manual entry now).
+
 **DONE — public marketing site (brief "first-version scope"), all on the locked tokens:**
 - `/` home · `/about` · `/leasing` · `/buy-sell` · `/property-management` · `/appraisal`
   · `/contact` · `/list-your-property`

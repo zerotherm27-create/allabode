@@ -11,6 +11,7 @@ const nav: NavItem[] = [
   { label: "Dashboard",  icon: "dashboard",           href: "/dashboard/owner" },
   { label: "Properties", icon: "apartment",           href: "/dashboard/owner#properties" },
   { label: "Tickets",    icon: "confirmation_number", href: "/dashboard/owner/tickets" },
+  { label: "Documents",  icon: "folder",              href: "/dashboard/owner/documents" },
   { label: "Statements", icon: "receipt_long",        href: "/dashboard/owner#statements" },
   { label: "Expenses",   icon: "payments",            href: "/dashboard/owner#expenses" },
 ];

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const RECEIPTS_BUCKET = "receipts";
 export const FINANCE_DOCS_BUCKET = "finance-docs";
+export const DOCUMENTS_BUCKET = "documents";
 
 /** Short-lived signed URL for a private storage object (spec §17.2). */
 export async function signedUrl(

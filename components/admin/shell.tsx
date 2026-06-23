@@ -28,7 +28,8 @@ const navGroups = [
   {
     group: "Tickets",
     items: [
-      { label: "Tickets",  icon: "confirmation_number", href: "/admin/tickets" },
+      { label: "Tickets",   icon: "confirmation_number", href: "/admin/tickets" },
+      { label: "Documents", icon: "folder",              href: "/admin/documents" },
     ],
   },
   {

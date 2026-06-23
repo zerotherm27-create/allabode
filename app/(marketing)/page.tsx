@@ -32,7 +32,6 @@ export default async function Home() {
           />
         )}
         <div className="absolute inset-0 -z-10 opacity-60 [background:radial-gradient(80%_60%_at_85%_15%,rgba(180,151,90,0.28),transparent_60%)]" />
-        <div className="absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container className="flex min-h-[78vh] flex-col justify-center py-20">
           <div className="max-w-3xl">

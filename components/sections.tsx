@@ -83,7 +83,6 @@ export function PageHero({
     <section className="relative isolate overflow-hidden bg-navy text-white">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
       <div className="absolute inset-0 -z-10 opacity-50 [background:radial-gradient(70%_60%_at_88%_10%,rgba(180,151,90,0.25),transparent_60%)]" />
-      <div className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:64px_64px]" />
       <Container className="py-20 md:py-28">
         <div className="max-w-3xl">
           {crumbs && crumbs.length > 0 && (

@@ -23,10 +23,15 @@ type Ticket = {
   priority: string; status: string; created_at: string; updated_at: string;
 };
 
-export default async function TenantTicketsPage() {
+export default async function TenantTicketsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { role, tenantId } = await getCurrentRole();
   if (role !== "tenant") redirect(homeForRole(role));
 
+  const { error: errorParam } = await searchParams;
   const supabase = await createClient();
   const [{ data: ticketData }, { data: tenantRow }] = await Promise.all([
     supabase.from("tickets")
@@ -56,6 +61,12 @@ export default async function TenantTicketsPage() {
             <Icon name="add" size={18} /> Submit request
           </Link>
         </div>
+
+        {errorParam === "no_lease" && (
+          <div className="mt-4 rounded-md border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
+            You don&apos;t have an active lease on file yet. Please contact your property manager to get set up before submitting a request.
+          </div>
+        )}
 
         <div className="mt-6 flex flex-col gap-3">
           {tickets.length === 0 ? (

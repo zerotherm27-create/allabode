@@ -162,7 +162,7 @@ export async function createTicketFromPortal(fd: FormData) {
   const lease = leaseRow as { id: string; unit_id: string; units: { property_id: string }[] | { property_id: string } | null } | null;
   const unitRow = Array.isArray(lease?.units) ? lease?.units[0] : lease?.units;
   const property_id = (unitRow as { property_id?: string } | null)?.property_id;
-  if (!property_id) throw new Error("No active lease with a property found");
+  if (!property_id) redirect("/dashboard/tenant/tickets?error=no_lease");
 
   const { data: num } = await supabase.rpc("generate_ticket_number");
   if (!num) throw new Error("Could not generate ticket number");

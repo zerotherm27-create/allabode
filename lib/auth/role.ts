@@ -59,12 +59,12 @@ export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { role: null, redirect: "/portal/login" };
 
-  // Call the RPC purely for its side-effect: it sets auth_user_id on the
-  // matching owner/tenant row via email lookup. We ignore the return value
-  // because it checks public.users (staff) first, which causes the routing bug.
+  // Call the RPC for its side-effect: sets auth_user_id via email match.
+  // If the user's UUID is in public.users the RPC returns 'staff' early and
+  // skips the UPDATE, so auth_user_id may still be null after this call.
   await supabase.rpc("link_portal_account");
 
-  // Check owner/tenant first — portal is for owners and tenants.
+  // --- Pass 1: look up by auth_user_id (works after a successful RPC link) ---
   const { data: owner } = await supabase
     .from("owners")
     .select("id")
@@ -78,6 +78,27 @@ export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null;
     .eq("auth_user_id", user.id)
     .maybeSingle();
   if (tenant) return { role: "tenant", redirect: "/dashboard/tenant" };
+
+  // --- Pass 2: email fallback for the "dual-role" edge case ---
+  // If the auth UUID is also in public.users, the RPC bails before setting
+  // auth_user_id. Staff-level RLS allows reading all rows, so we can still
+  // match by email. This covers owners/tenants whose UUID accidentally ended
+  // up in public.users.
+  if (user.email) {
+    const { data: ownerByEmail } = await supabase
+      .from("owners")
+      .select("id")
+      .eq("email", user.email)
+      .maybeSingle();
+    if (ownerByEmail) return { role: "owner", redirect: "/dashboard/owner" };
+
+    const { data: tenantByEmail } = await supabase
+      .from("tenants")
+      .select("id")
+      .eq("email", user.email)
+      .maybeSingle();
+    if (tenantByEmail) return { role: "tenant", redirect: "/dashboard/tenant" };
+  }
 
   // Fall back to staff — they should use /admin directly, not the portal.
   const { data: isStaff } = await supabase.rpc("is_staff");

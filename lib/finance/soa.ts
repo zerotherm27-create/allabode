@@ -137,6 +137,205 @@ export function computeSoa(
     : computeTenantSoa(supabase, partyId, periodStart, periodEnd);
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Lease-based owner SOA (replaces the per-owner aggregate for new SOAs)
+// ─────────────────────────────────────────────────────────────────
+
+export type OwnerSoaLineExtended = SoaLine & {
+  expense_id?: string | null;
+  receipt_path?: string | null;
+  billing_note?: string | null;
+};
+
+export type OwnerSoaByLeaseMeta = {
+  ownerId: string;
+  propertyId: string;
+  unitId: string;
+  leaseType: string;
+  mgmtFeePct: number;
+  vatPct: number;
+  mgmtFeeAmt: number;
+  vatAmt: number;
+};
+
+export type OwnerSoaByLeaseResult = {
+  totals: SoaTotals;
+  lines: OwnerSoaLineExtended[];
+  meta: OwnerSoaByLeaseMeta;
+};
+
+export async function computeOwnerSoaByLease(
+  supabase: SupabaseClient,
+  leaseId: string,
+  periodStart: string,
+  periodEnd: string
+): Promise<OwnerSoaByLeaseResult> {
+  // 1. Fetch lease
+  const { data: leaseRow } = await supabase
+    .from("leases")
+    .select("id,rent_amount,lease_type,mgmt_fee_pct,vat_pct,unit_id,tenant_id,advance,deposit")
+    .eq("id", leaseId)
+    .maybeSingle();
+  if (!leaseRow) throw new Error("Lease not found");
+
+  type LeaseRow = { rent_amount: number; lease_type: string; mgmt_fee_pct: number; vat_pct: number; unit_id: string; tenant_id: string | null; advance: number | null; deposit: number | null };
+  const lease = leaseRow as LeaseRow;
+
+  // 2. Unit → property → owner
+  const { data: unitRow } = await supabase.from("units").select("property_id").eq("id", lease.unit_id).maybeSingle();
+  const propertyId = (unitRow as { property_id: string } | null)?.property_id ?? "";
+  const { data: propRow } = await supabase.from("properties").select("owner_id").eq("id", propertyId).maybeSingle();
+  const ownerId = (propRow as { owner_id: string } | null)?.owner_id ?? "";
+
+  // 3. Payments for this lease in the period (rental income)
+  const { data: payData } = await supabase
+    .from("payments")
+    .select("id,amount,received_at,notes,method")
+    .eq("lease_id", leaseId)
+    .in("status", PAID)
+    .gte("received_at", periodStart)
+    .lte("received_at", periodEnd);
+  const payments = (payData ?? []) as { id: string; amount: number; received_at: string; notes: string | null; method: string }[];
+
+  // 4. Expenses for this property in the period (charge_to = owner/split), with receipt path
+  const { data: expData } = await supabase
+    .from("expenses")
+    .select("id,total_amount,description,expense_date,receipt_uploads(file_path)")
+    .eq("property_id", propertyId)
+    .in("charge_to", ["owner", "split"])
+    .in("status", POSTED)
+    .gte("expense_date", periodStart)
+    .lte("expense_date", periodEnd);
+  type ExpRow = { id: string; total_amount: number; description: string | null; expense_date: string; receipt_uploads: { file_path: string } | { file_path: string }[] | null };
+  const expenses = (expData ?? []) as ExpRow[];
+
+  // 5. Active charge templates for this unit
+  const leaseType = (lease.lease_type as string) ?? "long_term";
+  const { data: tplData } = await supabase
+    .from("charge_templates")
+    .select("id,name,amount,billing_note,template_type,sort_order")
+    .eq("unit_id", lease.unit_id)
+    .eq("is_active", true)
+    .in("applies_to", [leaseType, "both"])
+    .order("sort_order");
+  type TplRow = { id: string; name: string; amount: number; billing_note: string | null; template_type: string; sort_order: number };
+  const templates = (tplData ?? []) as TplRow[];
+
+  // 6. Previous published SOA recurring line amounts (for pre-fill)
+  const { data: prevSoa } = await supabase
+    .from("statements_of_account")
+    .select("id")
+    .eq("lease_id", leaseId)
+    .eq("status", "published")
+    .order("period_end", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const prevAmounts: Record<string, number> = {};
+  if (prevSoa) {
+    const { data: prevLines } = await supabase
+      .from("soa_lines")
+      .select("description,amount")
+      .eq("statement_id", (prevSoa as { id: string }).id)
+      .eq("line_type", "deduction_expense_recurring");
+    ((prevLines ?? []) as { description: string; amount: number }[]).forEach((l) => {
+      prevAmounts[l.description.toLowerCase()] = Math.abs(Number(l.amount));
+    });
+  }
+
+  // 7. Income lines
+  const incomeType = leaseType === "long_term" ? "income_longterm" : "income_shortterm";
+  const incomeLines: OwnerSoaLineExtended[] = payments.map((p, i) => ({
+    line_type: incomeType,
+    description: p.notes?.trim() || (leaseType === "long_term" ? "Monthly Rent" : "Booking"),
+    amount: Number(p.amount),
+    sort_order: i,
+  }));
+  const totalIncome = sum(incomeLines.map((l) => l.amount));
+
+  // 8. De-duplicate templates against expense records (by name)
+  const expNames = new Set(expenses.map((e) => (e.description ?? "").toLowerCase().trim()));
+  const filteredTpls = templates.filter((t) => !expNames.has(t.name.toLowerCase().trim()));
+
+  // 9. Fees
+  const mgmtFeePct = Number(lease.mgmt_fee_pct ?? 5);
+  const vatPct = Number(lease.vat_pct ?? 12);
+  const mgmtFeeAmt = Math.round(totalIncome * mgmtFeePct) / 100;
+  const vatAmt = Math.round(mgmtFeeAmt * vatPct) / 100;
+
+  // 10. Deduction lines
+  const getReceiptPath = (e: ExpRow): string | null => {
+    const ru = Array.isArray(e.receipt_uploads) ? e.receipt_uploads[0] : e.receipt_uploads;
+    return (ru as { file_path?: string } | null)?.file_path ?? null;
+  };
+
+  const deductionLines: OwnerSoaLineExtended[] = [
+    { line_type: "deduction_mgmt_fee", description: `Management Fee (${mgmtFeePct}%)`, amount: -mgmtFeeAmt, sort_order: 100 },
+    { line_type: "deduction_vat",      description: `VAT (${vatPct}%)`,                amount: -vatAmt,    sort_order: 101 },
+    ...expenses.map((e, i) => ({
+      line_type:    "deduction_expense",
+      description:  e.description ?? "Expense",
+      amount:       -Number(e.total_amount),
+      sort_order:   200 + i,
+      expense_id:   e.id,
+      receipt_path: getReceiptPath(e),
+    })),
+    ...filteredTpls
+      .filter((t) => t.template_type === "utility")
+      .map((t) => ({
+        line_type:    "deduction_utility",
+        description:  t.name,
+        amount:       -t.amount,
+        sort_order:   300 + t.sort_order,
+        billing_note: t.billing_note,
+      })),
+    ...filteredTpls
+      .filter((t) => t.template_type === "expense_recurring")
+      .map((t) => ({
+        line_type:    "deduction_expense_recurring",
+        description:  t.name,
+        amount:       -(prevAmounts[t.name.toLowerCase()] ?? t.amount),
+        sort_order:   400 + t.sort_order,
+        billing_note: t.billing_note,
+      })),
+  ];
+
+  const totalDeductions = sum(deductionLines.map((l) => Math.abs(l.amount)));
+  const payout = totalIncome - totalDeductions;
+  const allLines = [...incomeLines, ...deductionLines];
+
+  return {
+    totals: {
+      opening_balance: 0,
+      total_charges: 0,
+      total_payments: totalIncome,
+      total_expenses: totalDeductions,
+      total_adjustments: 0,
+      closing_balance: payout,
+      net_remittance: payout,
+    },
+    lines: allLines,
+    meta: { ownerId, propertyId, unitId: lease.unit_id, leaseType, mgmtFeePct, vatPct, mgmtFeeAmt, vatAmt },
+  };
+}
+
+/** For lease-based SOAs: recompute totals from current soa_lines rows. */
+export async function recomputeTotalsFromLines(
+  supabase: SupabaseClient,
+  statementId: string
+): Promise<{ totalIncome: number; totalDeductions: number; payout: number }> {
+  const { data: stored } = await supabase
+    .from("statements_of_account").select("adjustments").eq("id", statementId).maybeSingle();
+  const adjustments = Number((stored as { adjustments?: number } | null)?.adjustments ?? 0);
+
+  const { data: lines } = await supabase.from("soa_lines").select("amount,line_type").eq("statement_id", statementId);
+  const all = (lines ?? []) as { amount: number; line_type: string }[];
+  const totalIncome = sum(all.filter((l) => l.line_type.startsWith("income_")).map((l) => Number(l.amount)));
+  const totalDeductions = sum(all.filter((l) => l.line_type.startsWith("deduction_")).map((l) => Math.abs(Number(l.amount))));
+  const payout = totalIncome - totalDeductions + adjustments;
+  return { totalIncome, totalDeductions, payout };
+}
+
 /** Pre-generation gate (spec §10.8 step 3): no unresolved/unposted items in the period. */
 export async function precheckSoa(
   supabase: SupabaseClient,

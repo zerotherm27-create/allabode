@@ -180,6 +180,7 @@ export type LeaseValues = {
   unit_id?: string; tenant_id?: string; start_date?: string; end_date?: string;
   rent_amount?: number | null; billing_cycle?: string; deposit?: number | null;
   advance?: number | null; notice_period_days?: number | null; status?: string; terms?: string;
+  lease_type?: string; mgmt_fee_pct?: number | null; vat_pct?: number | null;
 };
 export function LeaseForm({
   action, initial = {}, units, tenants,
@@ -200,6 +201,12 @@ export function LeaseForm({
             {tenants.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
           </select>
         </F>
+        <F label="Lease type">
+          <select name="lease_type" defaultValue={v.lease_type ?? "long_term"} className={inputCls}>
+            <option value="long_term">Long term</option>
+            <option value="short_term">Short term</option>
+          </select>
+        </F>
         <F label="Start date"><input name="start_date" type="date" defaultValue={v.start_date} required className={inputCls} /></F>
         <F label="End date"><input name="end_date" type="date" defaultValue={v.end_date} className={inputCls} /></F>
         <F label="Rent amount (₱)"><input name="rent_amount" type="number" step="0.01" defaultValue={v.rent_amount ?? undefined} required className={inputCls} /></F>
@@ -217,6 +224,14 @@ export function LeaseForm({
           </select>
         </F>
         <F label="Terms" span><textarea name="terms" defaultValue={v.terms} rows={3} className={`${inputCls} h-auto py-2`} /></F>
+      </Group>
+      <Group title="Management Fees">
+        <F label="Management fee %" hint="5% long term · 20% short term">
+          <input name="mgmt_fee_pct" type="number" step="0.01" min="0" max="100" defaultValue={v.mgmt_fee_pct ?? 5} required className={inputCls} />
+        </F>
+        <F label="VAT %" hint="Applied on management fee">
+          <input name="vat_pct" type="number" step="0.01" min="0" max="100" defaultValue={v.vat_pct ?? 12} required className={inputCls} />
+        </F>
       </Group>
       <Footer cancelHref="/admin/leases" label="Save lease" />
     </form>

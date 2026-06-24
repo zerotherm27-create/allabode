@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
-import { generateStatement } from "@/app/admin/soa-actions";
+import { generateStatement, generateOwnerSoaByLease } from "@/app/admin/soa-actions";
 
 type Named = { name?: string };
 type Row = {
@@ -31,51 +31,88 @@ const columns: Column<Row>[] = [
   { header: "Status", cell: (r) => <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[r.status] ?? "bg-surface-gray text-slate"}`}>{r.status.replace(/_/g, " ")}</span> },
 ];
 
+type LeaseOpt = { id: string; label: string };
+
 export default async function AdminStatementsPage() {
   const supabase = await createClient();
-  const [{ data: rowsData }, { data: owners }, { data: tenants }] = await Promise.all([
+  const [{ data: rowsData }, { data: tenants }, { data: leasesData }] = await Promise.all([
     supabase.from("statements_of_account")
       .select("id,statement_type,period_start,period_end,net_remittance,closing_balance,status,owners(name),tenants(name)")
       .order("created_at", { ascending: false }),
-    supabase.from("owners").select("id,name").order("name"),
     supabase.from("tenants").select("id,name").order("name"),
+    supabase.from("leases")
+      .select("id,lease_type,rent_amount,units(unit_label,properties(name,owners(name)))")
+      .in("status", ["active", "renewal_pending", "expiring"])
+      .order("created_at", { ascending: false }),
   ]);
+
   const rows = (rowsData ?? []) as Row[];
-  const ownerOpts = (owners ?? []) as { id: string; name: string }[];
   const tenantOpts = (tenants ?? []) as { id: string; name: string }[];
+
+  type RawLease = {
+    id: string; lease_type: string; rent_amount: number;
+    units: { unit_label: string; properties: { name: string; owners: { name: string } | { name: string }[] | null } | null } | null;
+  };
+  const leaseOpts: LeaseOpt[] = ((leasesData ?? []) as unknown as RawLease[]).map((l) => {
+    const prop = l.units?.properties;
+    const owner = prop ? (Array.isArray((prop as { owners?: unknown }).owners) ? (prop as { owners: { name: string }[] }).owners[0] : (prop as { owners: { name: string } | null }).owners) : null;
+    return {
+      id:    l.id,
+      label: `${(owner as { name?: string } | null)?.name ?? "?"} · ${(prop as { name?: string } | null)?.name ?? "?"} ${l.units?.unit_label ?? ""} (${l.lease_type === "long_term" ? "Long term" : "Short term"} · ₱${Number(l.rent_amount).toLocaleString("en-PH")})`,
+    };
+  });
 
   const today = new Date();
   const first = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
-  const last = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);
+  const last  = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);
 
   return (
     <div className="mx-auto max-w-6xl">
       <h1 className="font-display text-2xl font-bold text-navy">Statements of Account</h1>
-      <p className="mt-1 text-sm text-slate">Generate, review, approve, and publish. Totals are computed from the ledger — never edited by hand.</p>
+      <p className="mt-1 text-sm text-slate">Generate, review, approve, and publish.</p>
 
-      <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-        {[
-          { type: "owner", title: "Owner statement", opts: ownerOpts, icon: "real_estate_agent" },
-          { type: "tenant", title: "Tenant statement", opts: tenantOpts, icon: "person" },
-        ].map((g) => (
-          <form key={g.type} action={generateStatement} className="rounded-lg border border-line bg-surface p-5">
-            <input type="hidden" name="statement_type" value={g.type} />
-            <div className="flex items-center gap-2"><Icon name={g.icon} size={20} className="text-navy-700" /><h2 className="font-display text-base font-semibold text-navy">{g.title}</h2></div>
-            <div className="mt-4 flex flex-col gap-3">
-              <select name="party_id" required defaultValue="" className={inputCls}>
-                <option value="" disabled>Select {g.type}…</option>
-                {g.opts.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-              </select>
-              <div className="grid grid-cols-2 gap-3">
-                <input name="period_start" type="date" defaultValue={first} required className={inputCls} />
-                <input name="period_end" type="date" defaultValue={last} required className={inputCls} />
-              </div>
-              <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-                <Icon name="note_add" size={18} /> Generate draft
-              </button>
+      <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* Owner SOA by lease (new) */}
+        <form action={generateOwnerSoaByLease} className="col-span-1 rounded-lg border border-navy/20 bg-surface p-5 lg:col-span-2">
+          <div className="flex items-center gap-2">
+            <Icon name="real_estate_agent" size={20} className="text-navy-700" />
+            <h2 className="font-display text-base font-semibold text-navy">Owner SOA — by lease</h2>
+            <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-navy">Recommended</span>
+          </div>
+          <p className="mt-1 text-xs text-slate">Auto-populates from charge templates + expense records. Templates and mgmt fee pulled from the lease.</p>
+          <div className="mt-4 flex flex-col gap-3">
+            <select name="lease_id" required defaultValue="" className={inputCls}>
+              <option value="" disabled>Select active lease…</option>
+              {leaseOpts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+            <div className="grid grid-cols-2 gap-3">
+              <input name="period_start" type="date" defaultValue={first} required className={inputCls} />
+              <input name="period_end"   type="date" defaultValue={last}  required className={inputCls} />
             </div>
-          </form>
-        ))}
+            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+              <Icon name="note_add" size={18} /> Generate draft
+            </button>
+          </div>
+        </form>
+
+        {/* Tenant SOA (legacy) */}
+        <form action={generateStatement} className="rounded-lg border border-line bg-surface p-5">
+          <input type="hidden" name="statement_type" value="tenant" />
+          <div className="flex items-center gap-2"><Icon name="person" size={20} className="text-navy-700" /><h2 className="font-display text-base font-semibold text-navy">Tenant statement</h2></div>
+          <div className="mt-4 flex flex-col gap-3">
+            <select name="party_id" required defaultValue="" className={inputCls}>
+              <option value="" disabled>Select tenant…</option>
+              {tenantOpts.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
+            <div className="grid grid-cols-2 gap-3">
+              <input name="period_start" type="date" defaultValue={first} required className={inputCls} />
+              <input name="period_end"   type="date" defaultValue={last}  required className={inputCls} />
+            </div>
+            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+              <Icon name="note_add" size={18} /> Generate
+            </button>
+          </div>
+        </form>
       </div>
 
       <div className="mt-8">

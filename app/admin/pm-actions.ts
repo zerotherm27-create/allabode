@@ -112,6 +112,9 @@ function leaseRow(fd: FormData) {
     notice_period_days: n(fd, "notice_period_days"),
     status: s(fd, "status") ?? "draft",
     terms: s(fd, "terms"),
+    lease_type:   s(fd, "lease_type")   ?? "long_term",
+    mgmt_fee_pct: n(fd, "mgmt_fee_pct") ?? 5,
+    vat_pct:      n(fd, "vat_pct")      ?? 12,
   };
 }
 
@@ -144,3 +147,48 @@ export async function deleteUnit(id: string) { await deleteRow("units", id, "/ad
 export async function createLease(fd: FormData) { await insertRow("leases", leaseRow(fd), "/admin/leases"); }
 export async function updateLease(id: string, fd: FormData) { await updateRow("leases", id, leaseRow(fd), "/admin/leases"); }
 export async function deleteLease(id: string) { await deleteRow("leases", id, "/admin/leases"); }
+
+// ---- charge templates ----
+export async function createChargeTemplate(unitId: string, fd: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("charge_templates").insert({
+    unit_id:       unitId,
+    name:          s(fd, "name") ?? "Item",
+    amount:        n(fd, "amount") ?? 0,
+    billing_note:  s(fd, "billing_note"),
+    template_type: s(fd, "template_type") ?? "utility",
+    applies_to:    s(fd, "applies_to") ?? "both",
+    sort_order:    n(fd, "sort_order") ?? 0,
+    is_active:     true,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/units/${unitId}/edit`);
+  redirect(`/admin/units/${unitId}/edit`);
+}
+
+export async function updateChargeTemplate(id: string, unitId: string, fd: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("charge_templates").update({
+    name:          s(fd, "name") ?? "Item",
+    amount:        n(fd, "amount") ?? 0,
+    billing_note:  s(fd, "billing_note"),
+    template_type: s(fd, "template_type") ?? "utility",
+    applies_to:    s(fd, "applies_to") ?? "both",
+    sort_order:    n(fd, "sort_order") ?? 0,
+  }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/units/${unitId}/edit`);
+  redirect(`/admin/units/${unitId}/edit`);
+}
+
+export async function deleteChargeTemplate(id: string, unitId: string) {
+  const supabase = await createClient();
+  await supabase.from("charge_templates").delete().eq("id", id);
+  revalidatePath(`/admin/units/${unitId}/edit`);
+}
+
+export async function toggleChargeTemplate(id: string, unitId: string, active: boolean) {
+  const supabase = await createClient();
+  await supabase.from("charge_templates").update({ is_active: active }).eq("id", id);
+  revalidatePath(`/admin/units/${unitId}/edit`);
+}

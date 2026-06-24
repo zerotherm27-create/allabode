@@ -26,10 +26,7 @@ const columns: Column<Row>[] = [
 
 export default async function AdminUnitsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  console.log("[units] uid:", user?.id ?? "NO SESSION");
-  const { data, error } = await supabase.from("units").select("id,unit_label,status,base_rent,properties(name)").order("created_at", { ascending: false });
-  console.log("[units] rows:", data?.length ?? 0, "error:", error?.message ?? "none");
+  const { data } = await supabase.from("units").select("id,unit_label,status,base_rent,properties(name)").order("created_at", { ascending: false });
   const rows = (data ?? []) as Row[];
 
   return (

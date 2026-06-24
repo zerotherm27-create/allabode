@@ -93,6 +93,12 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
               </button>
             </form>
           )}
+          <a
+            href={`/api/admin/invoices/${id}/pdf`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-line px-4 py-2 text-sm font-medium text-navy hover:bg-surface-gray"
+          >
+            <Icon name="download" size={16} /> PDF
+          </a>
           {canVoid && !canIssue && (
             <form action={voidInvoice.bind(null, id)}>
               <button type="submit" className="inline-flex items-center gap-1.5 rounded-md border border-error px-4 py-2 text-sm font-medium text-error hover:bg-error-bg">

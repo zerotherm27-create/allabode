@@ -1,5 +1,17 @@
-import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import fs from "fs";
+import path from "path";
 import type { SoaLine, SoaTotals, SoaType, OwnerSoaLineExtended } from "@/lib/finance/soa";
+
+let _logoBase64: string | null = null;
+function getLogo(): string | null {
+  if (_logoBase64 !== null) return _logoBase64;
+  try {
+    const buf = fs.readFileSync(path.join(process.cwd(), "public/logo/logo-primary.png"));
+    _logoBase64 = `data:image/png;base64,${buf.toString("base64")}`;
+  } catch { _logoBase64 = ""; }
+  return _logoBase64 || null;
+}
 
 const peso = (n: number) => `PHP ${Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -121,9 +133,13 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
   const doc = (
     <Document>
       <Page size="A4" style={ownerStyles.page}>
-        {/* Contact */}
-        <View style={ownerStyles.contactRow}>
-          <Text>E: info@allabodeph.com   W: www.allabodeph.com</Text>
+        {/* Letterhead */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12, borderBottomWidth: 1, borderBottomColor: GOLD, paddingBottom: 8 }}>
+          {getLogo()
+            ? <Image src={getLogo()!} style={{ width: 120, height: 34, objectFit: "contain" }} />
+            : <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: NAVY }}>All Abode</Text>
+          }
+          <Text style={{ fontSize: 8, color: SLATE }}>E: info@allabodeph.com   W: allabodeph.com</Text>
         </View>
 
         <Text style={ownerStyles.docTitle}>STATEMENT OF ACCOUNT</Text>
@@ -258,7 +274,10 @@ export async function renderSoaPdf(input: SoaPdfInput): Promise<Buffer> {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.brand}>All Abode<Text style={styles.brandDot}>.</Text></Text>
+          {getLogo()
+            ? <Image src={getLogo()!} style={{ width: 120, height: 34, objectFit: "contain", marginBottom: 4 }} />
+            : <Text style={styles.brand}>All Abode<Text style={styles.brandDot}>.</Text></Text>
+          }
           <Text style={styles.docTitle}>{isOwner ? "Owner Statement of Account" : "Tenant Statement of Account"}</Text>
           <Text style={styles.meta}>{input.party}{input.property ? ` — ${input.property}` : ""}</Text>
           <Text style={styles.meta}>Period: {input.periodStart} to {input.periodEnd}</Text>

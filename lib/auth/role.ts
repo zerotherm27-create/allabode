@@ -47,6 +47,45 @@ export async function getCurrentRole(): Promise<RoleContext> {
   return { role: null, ownerId: null, tenantId: null, ...base };
 }
 
+/**
+ * Portal-specific: links the auth account by email (via RPC side-effect), then
+ * resolves the role with owner/tenant checked BEFORE staff. This prevents an
+ * admin whose UUID is in `public.users` from being routed to /admin when they
+ * also have an owner or tenant record, and ensures pure tenant/owner accounts
+ * that were accidentally inserted into `public.users` still reach the portal.
+ */
+export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null; redirect: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { role: null, redirect: "/portal/login" };
+
+  // Call the RPC purely for its side-effect: it sets auth_user_id on the
+  // matching owner/tenant row via email lookup. We ignore the return value
+  // because it checks public.users (staff) first, which causes the routing bug.
+  await supabase.rpc("link_portal_account");
+
+  // Check owner/tenant first — portal is for owners and tenants.
+  const { data: owner } = await supabase
+    .from("owners")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  if (owner) return { role: "owner", redirect: "/dashboard/owner" };
+
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  if (tenant) return { role: "tenant", redirect: "/dashboard/tenant" };
+
+  // Fall back to staff — they should use /admin directly, not the portal.
+  const { data: isStaff } = await supabase.rpc("is_staff");
+  if (isStaff) return { role: "staff", redirect: "/admin" };
+
+  return { role: null, redirect: "/portal" };
+}
+
 /** Landing route for a role (used by post-login redirects + guards). */
 export function homeForRole(role: PortalRole | null): string {
   switch (role) {

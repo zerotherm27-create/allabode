@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { getCurrentRole, homeForRole } from "@/lib/auth/role";
-import { linkPortalAccount } from "@/app/portal/actions";
+import { getCurrentRole, linkAndGetPortalRole } from "@/lib/auth/role";
 
 export const metadata = { title: "Portal", robots: { index: false } };
 
@@ -10,11 +9,11 @@ export default async function PortalIndexPage() {
   const { email } = await getCurrentRole();
   if (!email) redirect("/portal/login");
 
-  // Link auth account to owner/tenant record on every visit (idempotent).
-  // Catches users who arrive here after email confirmation without going
-  // through the login form.
-  const { role } = await linkPortalAccount();
-  if (role) redirect(homeForRole(role));
+  // Link auth account to owner/tenant record on every visit (idempotent),
+  // then route to the correct dashboard. Checks owner/tenant BEFORE staff so
+  // that a user in both public.users and owners/tenants reaches the portal.
+  const { role, redirect: dest } = await linkAndGetPortalRole();
+  if (role) redirect(dest);
 
   // Signed in but no matching owner/tenant record yet → pending.
   return (

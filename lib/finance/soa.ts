@@ -243,14 +243,21 @@ export async function computeOwnerSoaByLease(
     });
   }
 
-  // 7. Income lines
+  // 7. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
   const incomeType = leaseType === "long_term" ? "income_longterm" : "income_shortterm";
-  const incomeLines: OwnerSoaLineExtended[] = payments.map((p, i) => ({
-    line_type: incomeType,
-    description: p.notes?.trim() || (leaseType === "long_term" ? "Monthly Rent" : "Booking"),
-    amount: Number(p.amount),
-    sort_order: i,
-  }));
+  const incomeLines: OwnerSoaLineExtended[] = payments.length > 0
+    ? payments.map((p, i) => ({
+        line_type: incomeType,
+        description: p.notes?.trim() || (leaseType === "long_term" ? "Monthly Rent" : "Booking"),
+        amount: Number(p.amount),
+        sort_order: i,
+      }))
+    : [{
+        line_type: incomeType,
+        description: leaseType === "long_term" ? "Monthly Rent" : "Short-term Rental",
+        amount: Number(lease.rent_amount),
+        sort_order: 0,
+      }];
   const totalIncome = sum(incomeLines.map((l) => l.amount));
 
   // 8. De-duplicate templates against expense records (by name)

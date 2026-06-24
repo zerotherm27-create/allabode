@@ -187,6 +187,62 @@ export async function recordPaymentOnInvoice(invoiceId: string, fd: FormData) {
 }
 
 // ============================================================
+// Record a payment directly against a lease (no invoice required)
+// ============================================================
+export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const amount     = n(fd, "amount") ?? 0;
+  const method     = s(fd, "method") ?? "cash";
+  const reference  = s(fd, "reference");
+  const notes      = s(fd, "notes");
+  const receivedAt = s(fd, "received_at") ?? new Date().toISOString().slice(0, 10);
+
+  const { data: lease } = await supabase
+    .from("leases").select("tenant_id").eq("id", leaseId).maybeSingle();
+  if (!lease) throw new Error("Lease not found");
+
+  const { error } = await supabase.from("payments").insert({
+    lease_id:    leaseId,
+    tenant_id:   (lease as { tenant_id: string }).tenant_id,
+    amount,
+    method,
+    reference,
+    status:      "verified",
+    received_at: receivedAt,
+    recorded_by: user?.id ?? null,
+    notes,
+  });
+  if (error) throw new Error(error.message);
+
+  await logAudit(supabase, {
+    action: "payment.recorded", entityType: "lease", entityId: leaseId,
+    actorId: user?.id, metadata: { amount, method },
+  });
+
+  revalidatePath(`/admin/leases/${leaseId}/edit`);
+  revalidatePath("/admin/leases");
+}
+
+// ============================================================
+// Delete a payment record
+// ============================================================
+export async function deletePayment(paymentId: string, leaseId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("payments").delete().eq("id", paymentId);
+  if (error) throw new Error(error.message);
+
+  await logAudit(supabase, {
+    action: "payment.deleted", entityType: "payment", entityId: paymentId, actorId: user?.id,
+  });
+
+  revalidatePath(`/admin/leases/${leaseId}/edit`);
+}
+
+// ============================================================
 // Bulk-generate monthly invoices for all active leases
 // (runs against the current month; skips if already exists)
 // ============================================================

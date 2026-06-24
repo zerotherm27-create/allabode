@@ -11,7 +11,8 @@ type LeaseRow = {
   tenants: { name: string } | null;
 };
 
-export default async function NewInvoicePage() {
+export default async function NewInvoicePage({ searchParams }: { searchParams: Promise<{ lease_id?: string }> }) {
+  const { lease_id } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from("leases")
@@ -49,7 +50,7 @@ export default async function NewInvoicePage() {
         Select an active lease — a draft invoice is created from the monthly rent amount.
       </p>
       <div className="mt-6">
-        <InvoiceForm action={createInvoice} leases={leases} />
+        <InvoiceForm action={createInvoice} leases={leases} defaultLeaseId={lease_id} />
       </div>
     </div>
   );

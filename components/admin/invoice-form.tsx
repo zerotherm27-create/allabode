@@ -29,12 +29,16 @@ function defaultDates() {
 export function InvoiceForm({
   action,
   leases,
+  defaultLeaseId,
 }: {
   action: (fd: FormData) => void;
   leases: LeaseOption[];
+  defaultLeaseId?: string;
 }) {
   const d = defaultDates();
-  const [selected, setSelected] = useState<LeaseOption | null>(null);
+  const [selected, setSelected] = useState<LeaseOption | null>(
+    defaultLeaseId ? (leases.find((l) => l.id === defaultLeaseId) ?? null) : null
+  );
   const [start, setStart] = useState(d.start);
   const [end, setEnd]     = useState(d.end);
   const [due, setDue]     = useState(d.due);
@@ -47,6 +51,7 @@ export function InvoiceForm({
             name="lease_id"
             required
             className={inputCls}
+            defaultValue={defaultLeaseId ?? ""}
             onChange={(e) =>
               setSelected(leases.find((l) => l.id === e.target.value) ?? null)
             }

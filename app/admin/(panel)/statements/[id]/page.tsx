@@ -5,7 +5,7 @@ import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import {
-  submitForReview, approveStatement, publishStatement, voidStatement,
+  submitForReview, approveStatement, publishStatement, voidStatement, deleteStatement,
   saveOwnerSoaReview, markSoaProcessing, markSoaPaid,
 } from "@/app/admin/soa-actions";
 
@@ -476,12 +476,19 @@ export default async function StatementDetailPage({ params }: { params: Promise<
             <Icon name="drive_folder_upload" size={18} /> Owner Folder
           </a>
         )}
-        {s.status !== "voided" && s.status !== "published" && (
+        {s.status !== "voided" && (
           <form action={voidStatement.bind(null, id)} className="flex items-center gap-2 border-l border-line pl-3 ml-auto">
             <input name="reason" placeholder="Void reason" required
               className="h-9 rounded-md border border-line bg-surface px-3 text-sm focus:border-error focus:outline-none" />
             <button className={`${btn} border border-error text-error hover:bg-error-bg`}>
               <Icon name="block" size={18} /> Void
+            </button>
+          </form>
+        )}
+        {(s.status === "generated" || s.status === "voided") && (
+          <form action={deleteStatement.bind(null, id)} onSubmit={(e) => { if (!confirm("Permanently delete this statement? This cannot be undone.")) e.preventDefault(); }}>
+            <button className={`${btn} border border-error/50 text-error hover:bg-error-bg`}>
+              <Icon name="delete" size={18} /> Delete
             </button>
           </form>
         )}

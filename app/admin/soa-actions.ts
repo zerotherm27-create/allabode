@@ -233,6 +233,24 @@ export async function voidStatement(id: string, formData: FormData) {
   revalidatePath("/admin/statements");
 }
 
+export async function deleteStatement(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Only allow deleting draft/generated or voided SOAs — published ones have an audit trail.
+  const { data: s } = await supabase.from("statements_of_account").select("status").eq("id", id).maybeSingle();
+  if (!s) throw new Error("Statement not found.");
+  if (s.status === "published" || s.status === "approved" || s.status === "checker_review") {
+    throw new Error("Only generated or voided statements can be deleted. Void it first.");
+  }
+
+  await supabase.from("soa_lines").delete().eq("statement_id", id);
+  await supabase.from("statements_of_account").delete().eq("id", id);
+  await logAudit(supabase, { action: "soa.deleted", entityType: "statement", entityId: id, actorId: user?.id });
+  revalidatePath("/admin/statements");
+  redirect("/admin/statements");
+}
+
 // ─────────────────────────────────────────────────────────────────
 // Lease-based owner SOA generation
 // ─────────────────────────────────────────────────────────────────

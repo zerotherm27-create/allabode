@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/server";
@@ -119,10 +120,14 @@ export default async function StatementDetailPage({ params }: { params: Promise<
 
       {/* ── Header card ── */}
       <div className="rounded-xl border border-line bg-surface p-6">
+        <div className="mb-4 flex items-center justify-between border-b border-line pb-4">
+          <Image src="/logo/logo-primary.png" alt="All Abode Property Solutions" width={140} height={40} className="object-contain" />
+          <span className="label-caps text-slate">{type === "owner" ? "Owner" : "Tenant"} Statement of Account</span>
+        </div>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="label-caps text-gold">
-              {type === "owner" ? "Owner" : "Tenant"} Statement of Account
+              {type === "owner" ? "Owner" : "Tenant"}
             </p>
             <h1 className="mt-1 font-display text-3xl font-bold text-navy">{partyName}</h1>
             {(partyEmail || partyPhone) && (

@@ -233,6 +233,30 @@ export async function voidStatement(id: string, formData: FormData) {
   revalidatePath("/admin/statements");
 }
 
+export async function reopenStatement(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: s } = await supabase.from("statements_of_account").select("status").eq("id", id).maybeSingle();
+  if (!s) throw new Error("Statement not found.");
+  if (s.status !== "approved" && s.status !== "published") {
+    throw new Error("Only approved or published statements can be re-opened.");
+  }
+
+  await supabase.from("statements_of_account").update({
+    status:       "generated",
+    approved_by:  null,
+    approved_at:  null,
+    published_at: null,
+    pdf_path:     null,
+    payout_status: null,
+    ai_summary:   null,
+  }).eq("id", id);
+
+  await logAudit(supabase, { action: "soa.reopened", entityType: "statement", entityId: id, actorId: user?.id, metadata: { from_status: s.status } });
+  revalidatePath(`/admin/statements/${id}`);
+}
+
 export async function deleteStatement(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -5,7 +5,7 @@ import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import {
-  submitForReview, approveStatement, publishStatement, voidStatement, deleteStatement,
+  submitForReview, approveStatement, publishStatement, voidStatement, deleteStatement, reopenStatement,
   saveOwnerSoaReview, markSoaProcessing, markSoaPaid,
 } from "@/app/admin/soa-actions";
 
@@ -475,6 +475,18 @@ export default async function StatementDetailPage({ params }: { params: Promise<
           <a href={s.gdrive_folder_url} target="_blank" rel="noopener noreferrer" className={`${btn} border border-line text-slate hover:bg-surface-gray`}>
             <Icon name="drive_folder_upload" size={18} /> Owner Folder
           </a>
+        )}
+        {(s.status === "approved" || s.status === "published") && (
+          <form
+            action={reopenStatement.bind(null, id)}
+            onSubmit={(e) => {
+              if (s.status === "published" && !confirm("Re-opening will unpublish this SOA and clear the PDF. The owner will lose portal access to it until you re-publish. Continue?")) e.preventDefault();
+            }}
+          >
+            <button className={`${btn} border border-gold text-gold-bright hover:bg-gold/5`}>
+              <Icon name="edit" size={18} /> Re-open for Editing
+            </button>
+          </form>
         )}
         {s.status !== "voided" && (
           <form action={voidStatement.bind(null, id)} className="flex items-center gap-2 border-l border-line pl-3 ml-auto">

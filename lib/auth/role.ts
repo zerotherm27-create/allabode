@@ -88,14 +88,14 @@ export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null;
     const { data: ownerByEmail } = await supabase
       .from("owners")
       .select("id")
-      .eq("email", user.email)
+      .ilike("email", user.email)
       .maybeSingle();
     if (ownerByEmail) return { role: "owner", redirect: "/dashboard/owner" };
 
     const { data: tenantByEmail } = await supabase
       .from("tenants")
       .select("id")
-      .eq("email", user.email)
+      .ilike("email", user.email)
       .maybeSingle();
     if (tenantByEmail) return { role: "tenant", redirect: "/dashboard/tenant" };
   }

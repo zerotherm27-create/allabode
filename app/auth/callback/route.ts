@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { homeForRole, type PortalRole } from "@/lib/auth/role";
+import { linkAndGetPortalRole } from "@/lib/auth/role";
 
 /**
  * Handles Supabase auth callbacks (email confirmation, OAuth, magic links).
@@ -35,8 +35,11 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const { data: role } = await supabase.rpc("link_portal_account");
-      const destination = next ?? homeForRole((role as PortalRole | null) ?? null);
+      // Use linkAndGetPortalRole so owner/tenant are checked before staff —
+      // the link_portal_account RPC checks public.users first and would send
+      // owners/tenants with a staff UUID straight to /admin.
+      const { redirect: dest } = await linkAndGetPortalRole();
+      const destination = next ?? dest;
       return NextResponse.redirect(`${origin}${destination}`);
     }
   }

@@ -121,7 +121,7 @@ export async function addTenantComment(ticketId: string, fd: FormData) {
   if (!body) throw new Error("Comment body required");
 
   const { data: tenantRow } = await supabase.from("tenants").select("name")
-    .eq("portal_user_id", user?.id ?? "").maybeSingle();
+    .eq("auth_user_id", user?.id ?? "").maybeSingle();
   const author_name = (tenantRow as { name?: string } | null)?.name ?? "Tenant";
 
   const { error } = await supabase.from("ticket_comments").insert({
@@ -142,7 +142,7 @@ export async function createTicketFromPortal(fd: FormData) {
   if (!user) throw new Error("Not authenticated");
 
   const { data: tenantRow } = await supabase.from("tenants").select("id,name")
-    .eq("portal_user_id", user.id).maybeSingle();
+    .eq("auth_user_id", user.id).maybeSingle();
   if (!tenantRow) throw new Error("No tenant record found");
 
   const { data: leaseRow } = await supabase.from("leases")

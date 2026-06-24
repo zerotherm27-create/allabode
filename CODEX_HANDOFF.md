@@ -71,6 +71,7 @@ components/
     pm-forms.tsx        OwnerForm, TenantForm, PropertyForm, UnitForm, LeaseForm, VendorForm
     form-kit.tsx        Form primitives for admin
     document-list.tsx   Upload widget + signed-URL delivery
+    invoice-form.tsx    InvoiceForm client component (supports defaultLeaseId prop)
   dashboard/
     shell.tsx           Portal DashboardShell
     notification-bell.tsx Real-time unread badge
@@ -170,6 +171,57 @@ Run 0012 then 0013 in the SQL editor in that order.
 
 ---
 
+## SOA (Statement of Account) — How Income Gets In
+
+The owner SOA (`computeOwnerSoaByLease` in `lib/finance/soa.ts`) derives income from the `payments` table:
+
+```
+payments WHERE lease_id = ? AND status IN ('recorded','verified') AND received_at BETWEEN period_start AND period_end
+```
+
+**If no payments exist for the period**, income is pre-filled from `lease.rent_amount` as a single "Monthly Rent" line so the SOA is never blank. Admin can adjust in the review step.
+
+### How to record a payment (the right flow)
+
+Go to **Admin → Leases → [lease] → Edit**. The page has three sections:
+
+1. **Lease form** — edit lease details
+2. **Invoices** — list all invoices for this lease with status; link to invoice detail; void button
+3. **Payments received** — record a payment directly (no invoice needed):
+   - Amount defaults to `rent_amount`
+   - Method: cash / bank transfer / GCash / Maya / check / other
+   - Date received, reference, notes
+   - Submit → inserts into `payments` with `status: verified`
+   - Delete button removes a payment row
+
+Payment recorded here → shows as income on next SOA generation for that period.
+
+Alternatively: create an invoice (`/admin/invoices/new?lease_id=<id>` pre-selects the lease) → mark it paid → payment row is created automatically.
+
+### Server actions for payments (`app/admin/invoice-actions.ts`)
+
+| Action | What it does |
+|---|---|
+| `recordPaymentOnLease(leaseId, fd)` | Insert verified payment directly against a lease |
+| `deletePayment(paymentId, leaseId)` | Hard-delete a payment row |
+| `recordPaymentOnInvoice(invoiceId, fd)` | Record payment via invoice (updates invoice status too) |
+| `voidInvoice(invoiceId)` | Mark invoice voided |
+| `createInvoice(fd)` | Create draft invoice from a lease |
+
+---
+
+## SOA Detail Page (`app/admin/(panel)/statements/[id]/page.tsx`)
+
+- **Header card**: All Abode logo (letterhead strip) + eyebrow label + H1 = owner/tenant name + contact info + property/unit context + formatted period + lease type badge + status badge
+- **Review form** (status = generated, lease-based): editable deduction amounts, add one-time expenses, payout meta (due date, adjustments, prev SOA ref)
+- **Read-only view** (approved/published/voided): income lines, deduction lines, summary card
+- **Payout panel**: payout status lifecycle (pending → processing → paid), bank slip upload
+- **Workflow buttons**: Submit for review → Approve → Publish → Void; Download PDF; View in Drive / Owner folder
+
+**SOA generation errors** (e.g. duplicate) redirect to `/admin/statements?genError=…` and render an inline alert — they never crash the page.
+
+---
+
 ## Environment Variables
 
 ```bash
@@ -248,7 +300,7 @@ Visual system = **"Prestige Architectural Design"** exported from Stitch. Do not
 - Server actions: `"use server"` at top of `*-actions.ts` files. All admin actions use `await createClient()` (SSR, not service role).
 - Admin CRUD pattern: `insertRow(table, row, listPath)` / `updateRow(...)` / `deleteRow(...)` in `app/admin/pm-actions.ts`.
 - After insert/update/delete: `revalidatePath(path)` then `redirect(path)`.
-- Error handling: server actions throw on Supabase error; the error propagates to Next.js error boundary ("A server error occurred").
+- Error handling: server actions throw on Supabase error; the error propagates to Next.js error boundary. For user-visible non-fatal errors (e.g. duplicate SOA), use `redirect("/path?genError=message")` + inline alert on the page — do NOT throw.
 - Supabase SELECT errors are returned as `{ data: null, error }` — always destructure both and handle the error case. Ignoring `error` causes silent empty lists.
 - Forms: `noValidate` + validate on blur, errors below field with `role="alert"`. All 8 interactive states required.
 - TypeScript: strict mode. Run `npx tsc --noEmit` and `npx eslint .` before committing — both must pass clean.

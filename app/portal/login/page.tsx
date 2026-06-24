@@ -8,7 +8,6 @@ import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { Field, Input } from "@/components/forms/fields";
 import { createClient } from "@/lib/supabase/client";
-import { linkPortalAccount } from "@/app/portal/actions";
 
 function LoginForm() {
   const router = useRouter();
@@ -33,9 +32,11 @@ function LoginForm() {
       setError(error.message);
       return;
     }
-    const { redirect } = await linkPortalAccount();
-    router.replace(redirect);
-    router.refresh();
+    // Navigate to /portal — the server component there runs link_portal_account
+    // with a properly refreshed session (via middleware) and redirects to the
+    // correct dashboard. Calling a server action here is unreliable because the
+    // fresh auth cookie may not be visible to the action in the same request cycle.
+    router.replace("/portal");
   }
 
   return (

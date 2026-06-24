@@ -252,7 +252,7 @@ export async function generateOwnerSoaByLease(formData: FormData) {
     .eq("lease_id", leaseId)
     .eq("period_start", periodStart)
     .neq("status", "voided");
-  if (count && count > 0) throw new Error("An SOA for this lease and period already exists.");
+  if (count && count > 0) redirect("/admin/statements?genError=An+SOA+for+this+lease+and+period+already+exists.");
 
   const { totals, lines, meta } = await computeOwnerSoaByLease(supabase, leaseId, periodStart, periodEnd);
 

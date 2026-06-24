@@ -33,7 +33,8 @@ const columns: Column<Row>[] = [
 
 type LeaseOpt = { id: string; label: string };
 
-export default async function AdminStatementsPage() {
+export default async function AdminStatementsPage({ searchParams }: { searchParams: Promise<{ genError?: string }> }) {
+  const { genError } = await searchParams;
   const supabase = await createClient();
   const [{ data: rowsData }, { data: tenants }, { data: leasesData }] = await Promise.all([
     supabase.from("statements_of_account")
@@ -70,6 +71,13 @@ export default async function AdminStatementsPage() {
     <div className="mx-auto max-w-6xl">
       <h1 className="font-display text-2xl font-bold text-navy">Statements of Account</h1>
       <p className="mt-1 text-sm text-slate">Generate, review, approve, and publish.</p>
+
+      {genError && (
+        <div role="alert" className="mt-4 flex items-center gap-2 rounded-md border border-error/30 bg-error-bg px-4 py-3 text-sm text-error">
+          <Icon name="error" size={18} />
+          {decodeURIComponent(genError)}
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Owner SOA by lease (new) */}

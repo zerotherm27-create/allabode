@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { XenditProvider } from "@/lib/payments/xendit";
-import { handleWebhook } from "@/app/api/payments/webhook/maya/route";
+import { handleWebhook } from "@/app/api/payments/webhook/handle-webhook";
 
 export const runtime = "nodejs";
 

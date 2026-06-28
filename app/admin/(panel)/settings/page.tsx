@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/icon";
 import { settingsSchema } from "@/lib/settings-schema";
@@ -181,7 +182,7 @@ function ImageField({ name, defaultValue }: { name: string; defaultValue: string
       if (error) throw error;
       const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
       setUrl(data.publicUrl);
-    } catch (err) {
+    } catch {
       setUploadError("Upload failed. Make sure the 'site-assets' bucket exists in Supabase Storage.");
     } finally {
       setUploading(false);
@@ -199,9 +200,12 @@ function ImageField({ name, defaultValue }: { name: string; defaultValue: string
         className="w-full rounded-md border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/20"
       />
       {url && (
-        <img
+        <Image
           src={url}
           alt="Preview"
+          width={640}
+          height={128}
+          unoptimized
           className="h-32 w-full rounded-md border border-line object-cover"
           onError={() => {}}
         />

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardShell, Panel, type NavItem } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";

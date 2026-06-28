@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { unitIdsToResyncForLeaseChange } from "@/lib/pm/lease-occupancy";
 
 // ---- field coercion helpers ----
 function s(fd: FormData, k: string): string | null {
@@ -40,6 +41,30 @@ async function deleteRow(table: string, id: string, listPath: string) {
   const { error } = await supabase.from(table).delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(listPath);
+}
+
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+async function syncUnitOccupancy(supabase: SupabaseClient, unitIds: string[]) {
+  await Promise.all(unitIds.map(async (unitId) => {
+    const { count, error: countError } = await supabase
+      .from("leases")
+      .select("id", { count: "exact", head: true })
+      .eq("unit_id", unitId)
+      .eq("status", "active");
+    if (countError) throw new Error(countError.message);
+
+    const nextStatus = (count ?? 0) > 0 ? "Occupied" : "Vacant";
+    const query = supabase.from("units").update({ status: nextStatus }).eq("id", unitId);
+    const { error } = nextStatus === "Vacant"
+      ? await query.eq("status", "Occupied")
+      : await query;
+    if (error) throw new Error(error.message);
+  }));
+}
+
+function allowTestLeaseDelete() {
+  return process.env.ALLOW_TEST_LEASE_DELETE === "true";
 }
 
 // ---- row builders ----
@@ -109,6 +134,7 @@ function leaseRow(fd: FormData) {
     billing_cycle: s(fd, "billing_cycle") ?? "monthly",
     deposit: n(fd, "deposit"),
     advance: n(fd, "advance"),
+    remittance_due_date: s(fd, "remittance_due_date"),
     notice_period_days: n(fd, "notice_period_days"),
     status: s(fd, "status") ?? "draft",
     terms: s(fd, "terms"),
@@ -144,9 +170,91 @@ export async function updateUnit(id: string, fd: FormData) { await updateRow("un
 export async function deleteUnit(id: string) { await deleteRow("units", id, "/admin/units"); }
 
 // ---- leases ----
-export async function createLease(fd: FormData) { await insertRow("leases", leaseRow(fd), "/admin/leases"); }
-export async function updateLease(id: string, fd: FormData) { await updateRow("leases", id, leaseRow(fd), "/admin/leases"); }
-export async function deleteLease(id: string) { await deleteRow("leases", id, "/admin/leases"); }
+export async function createLease(fd: FormData) {
+  const supabase = await createClient();
+  const row = leaseRow(fd);
+  const { error } = await supabase.from("leases").insert(row);
+  if (error) throw new Error(error.message);
+
+  await syncUnitOccupancy(supabase, unitIdsToResyncForLeaseChange({
+    previousUnitId: null,
+    nextUnitId: row.unit_id,
+  }));
+  revalidatePath("/admin/leases");
+  revalidatePath("/admin/units");
+  redirect("/admin/leases");
+}
+
+export async function updateLease(id: string, fd: FormData) {
+  const supabase = await createClient();
+  const { data: previous, error: readError } = await supabase
+    .from("leases")
+    .select("unit_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+
+  const row = leaseRow(fd);
+  const { error } = await supabase.from("leases").update(row).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  await syncUnitOccupancy(supabase, unitIdsToResyncForLeaseChange({
+    previousUnitId: (previous as { unit_id?: string | null } | null)?.unit_id,
+    nextUnitId: row.unit_id,
+  }));
+  revalidatePath("/admin/leases");
+  revalidatePath("/admin/units");
+  redirect("/admin/leases");
+}
+
+export async function deleteLease(id: string) {
+  const supabase = await createClient();
+  const { data: previous, error: readError } = await supabase
+    .from("leases")
+    .select("unit_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+
+  if (allowTestLeaseDelete()) {
+    const { error: paymentIntentError } = await supabase
+      .from("payment_intents")
+      .delete()
+      .eq("lease_id", id);
+    if (paymentIntentError) throw new Error(paymentIntentError.message);
+
+    const { error: ticketError } = await supabase
+      .from("tickets")
+      .delete()
+      .eq("lease_id", id);
+    if (ticketError) throw new Error(ticketError.message);
+
+    const { error: invoiceError } = await supabase
+      .from("invoices")
+      .delete()
+      .eq("lease_id", id);
+    if (invoiceError) throw new Error(invoiceError.message);
+  }
+
+  const { error } = await supabase.from("leases").delete().eq("id", id);
+  if (error) {
+    if (error.code === "23503") {
+      const message = allowTestLeaseDelete()
+        ? "This lease still has related records and could not be deleted. Delete or detach the related test records, then try again."
+        : "This lease has invoices, payments, or tickets attached, so it cannot be deleted. Change its status to ended, terminated, or archived instead.";
+      redirect(`/admin/leases?error=${encodeURIComponent(message)}`);
+    }
+    throw new Error(error.message);
+  }
+
+  await syncUnitOccupancy(supabase, unitIdsToResyncForLeaseChange({
+    previousUnitId: (previous as { unit_id?: string | null } | null)?.unit_id,
+    nextUnitId: null,
+  }));
+  revalidatePath("/admin/leases");
+  revalidatePath("/admin/units");
+  redirect("/admin/leases");
+}
 
 // ---- charge templates ----
 export async function createChargeTemplate(unitId: string, fd: FormData) {

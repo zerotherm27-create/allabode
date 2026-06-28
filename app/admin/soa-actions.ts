@@ -9,11 +9,62 @@ import { renderSoaPdf, renderOwnerSoaPdf } from "@/lib/pdf/soa";
 import { FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import { logAudit } from "@/lib/audit";
 import { archiveOwnerSoaToDrive, archiveTenantSoaToDrive } from "@/lib/archive";
+import { createNotification } from "@/lib/notify";
+import { sendEmail } from "@/lib/email";
 
 function str(fd: FormData, k: string): string | null {
   const v = fd.get(k);
   const t = typeof v === "string" ? v.trim() : "";
   return t === "" ? null : t;
+}
+
+function siteUrl() {
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabode.vercel.app").replace(/\/$/, "");
+}
+
+async function notifyOwnerStatementAvailable(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ownerId: string | null,
+  statementId: string,
+  periodStart: string,
+  periodEnd: string
+) {
+  if (!ownerId) return;
+
+  const { data: owner } = await supabase
+    .from("owners")
+    .select("name,email,auth_user_id")
+    .eq("id", ownerId)
+    .maybeSingle();
+  const row = owner as { name?: string | null; email?: string | null; auth_user_id?: string | null } | null;
+  if (!row?.email && !row?.auth_user_id) return;
+
+  const period = `${periodStart} to ${periodEnd}`;
+  const title = "Statement of Account available";
+  const body = `Your Statement of Account for ${period} is now available. Please check your owner dashboard.`;
+  const link = "/dashboard/owner#statements";
+
+  if (row.auth_user_id) {
+    await createNotification(supabase, {
+      recipientUserId: row.auth_user_id,
+      type: "statement_published",
+      title,
+      body,
+      link,
+      entityType: "statement",
+      entityId: statementId,
+      recipientEmail: row.email ?? undefined,
+    });
+    return;
+  }
+
+  if (row.email) {
+    await sendEmail({
+      to: row.email,
+      subject: title,
+      html: `<p>Hi ${row.name ?? "Owner"},</p><p>${body}</p><p><a href="${siteUrl()}${link}">View in dashboard</a></p>`,
+    });
+  }
 }
 
 // ---- Generate a draft statement (deterministic totals from the DB) ----
@@ -219,6 +270,15 @@ export async function publishStatement(id: string) {
   }
 
   await logAudit(supabase, { action: "soa.published", entityType: "statement", entityId: id, actorId: user?.id });
+  if (stored.statement_type === "owner") {
+    await notifyOwnerStatementAvailable(
+      supabase,
+      (stored.owner_id as string | null) ?? null,
+      id,
+      stored.period_start,
+      stored.period_end
+    );
+  }
   revalidatePath(`/admin/statements/${id}`);
   revalidatePath("/admin/statements");
 }
@@ -297,6 +357,11 @@ export async function generateOwnerSoaByLease(formData: FormData) {
   if (count && count > 0) redirect("/admin/statements?genError=An+SOA+for+this+lease+and+period+already+exists.");
 
   const { totals, lines, meta } = await computeOwnerSoaByLease(supabase, leaseId, periodStart, periodEnd);
+  const { data: leaseDefaults } = await supabase
+    .from("leases")
+    .select("remittance_due_date")
+    .eq("id", leaseId)
+    .maybeSingle();
 
   const { data: stmt, error } = await supabase
     .from("statements_of_account")
@@ -311,6 +376,7 @@ export async function generateOwnerSoaByLease(formData: FormData) {
       vat_amt:        meta.vatAmt,
       period_start:   periodStart,
       period_end:     periodEnd,
+      payout_due_at:   (leaseDefaults as { remittance_due_date?: string | null } | null)?.remittance_due_date ?? null,
       ...totals,
       status:         "generated",
       created_by:     user?.id ?? null,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
+import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import {
@@ -20,6 +21,11 @@ const fmtPeriod = (start: string, end: string) => {
     ? mo(s)
     : `${s.toLocaleString("en-PH", { month: "short", day: "numeric" })} – ${e.toLocaleString("en-PH", { month: "short", day: "numeric", year: "numeric" })}`;
 };
+
+function leaseTypeLabel(value: string | null | undefined) {
+  if (value === "bnb") return "BNB / daily platform";
+  return value === "short_term" ? "Short-term rental" : "Long-term rental";
+}
 
 type Line = {
   id: string; description: string; amount: number;
@@ -155,7 +161,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
           {isLeaseBased && (
             <div className="flex items-center gap-1.5 text-gold">
               <Icon name="verified" size={16} />
-              {s.lease_type === "long_term" ? "Long-term lease" : "Short-term lease"}
+              {leaseTypeLabel(s.lease_type)}
             </div>
           )}
         </div>
@@ -317,7 +323,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
               <span className={payout < 0 ? "text-error" : "text-available"}>{peso(payout)}</span>
             </div>
             {payout < 0 && (
-              <p className="mt-1.5 text-xs text-error">Negative — owner owes PM. A "Pay Balance" button will appear on their portal.</p>
+              <p className="mt-1.5 text-xs text-error">Negative — owner owes PM. A &quot;Pay Balance&quot; button will appear on their portal.</p>
             )}
           </div>
 
@@ -477,16 +483,17 @@ export default async function StatementDetailPage({ params }: { params: Promise<
           </a>
         )}
         {(s.status === "approved" || s.status === "published") && (
-          <form
+          <ConfirmActionForm
             action={reopenStatement.bind(null, id)}
-            onSubmit={(e) => {
-              if (s.status === "published" && !confirm("Re-opening will unpublish this SOA and clear the PDF. The owner will lose portal access to it until you re-publish. Continue?")) e.preventDefault();
-            }}
+            message={s.status === "published"
+              ? "Re-opening will unpublish this SOA and clear the PDF. The owner will lose portal access to it until you re-publish. Continue?"
+              : "Re-open this SOA for editing?"
+            }
           >
             <button className={`${btn} border border-gold text-gold-bright hover:bg-gold/5`}>
               <Icon name="edit" size={18} /> Re-open for Editing
             </button>
-          </form>
+          </ConfirmActionForm>
         )}
         {s.status !== "voided" && (
           <form action={voidStatement.bind(null, id)} className="flex items-center gap-2 border-l border-line pl-3 ml-auto">
@@ -498,11 +505,14 @@ export default async function StatementDetailPage({ params }: { params: Promise<
           </form>
         )}
         {(s.status === "generated" || s.status === "voided") && (
-          <form action={deleteStatement.bind(null, id)} onSubmit={(e) => { if (!confirm("Permanently delete this statement? This cannot be undone.")) e.preventDefault(); }}>
+          <ConfirmActionForm
+            action={deleteStatement.bind(null, id)}
+            message="Permanently delete this statement? This cannot be undone."
+          >
             <button className={`${btn} border border-error/50 text-error hover:bg-error-bg`}>
               <Icon name="delete" size={18} /> Delete
             </button>
-          </form>
+          </ConfirmActionForm>
         )}
       </div>
     </div>

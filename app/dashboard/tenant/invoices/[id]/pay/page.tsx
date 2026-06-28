@@ -1,16 +1,12 @@
 "use client";
 
-import type { Metadata } from "next";
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString("en-PH")}`;
-
 export default function PayInvoicePage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
 

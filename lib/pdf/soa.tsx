@@ -104,8 +104,9 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
 
   const incLT  = lines.filter((l) => l.line_type === "income_longterm");
   const incST  = lines.filter((l) => l.line_type === "income_shortterm");
+  const incBnb = lines.filter((l) => l.line_type === "income_bnb");
   const incOth = lines.filter((l) => l.line_type === "income_other");
-  const totalIncome = [...incLT, ...incST, ...incOth].reduce((s, l) => s + Number(l.amount), 0);
+  const totalIncome = [...incLT, ...incST, ...incBnb, ...incOth].reduce((s, l) => s + Number(l.amount), 0);
 
   const dedLines = lines.filter((l) => l.line_type.startsWith("deduction_"));
   const totalDed = dedLines.reduce((s, l) => s + Math.abs(Number(l.amount)), 0);
@@ -136,6 +137,7 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
         {/* Letterhead */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12, borderBottomWidth: 1, borderBottomColor: GOLD, paddingBottom: 8 }}>
           {getLogo()
+            // eslint-disable-next-line jsx-a11y/alt-text
             ? <Image src={getLogo()!} style={{ width: 120, height: 34, objectFit: "contain" }} />
             : <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: NAVY }}>All Abode</Text>
           }
@@ -189,12 +191,18 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
         )}
         {incST.length > 0 && (
           <>
-            <Text style={ownerStyles.subHdr}>Short term</Text>
+            <Text style={ownerStyles.subHdr}>Short-term rental</Text>
             {incST.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
           </>
         )}
-        {incLT.length === 0 && incST.length === 0 && (
-          <LineRow desc={input.leaseType === "long_term" ? "Long term — no payments recorded" : "Short term — no bookings recorded"} amt={0} />
+        {incBnb.length > 0 && (
+          <>
+            <Text style={ownerStyles.subHdr}>BNB / daily platform</Text>
+            {incBnb.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
+          </>
+        )}
+        {incLT.length === 0 && incST.length === 0 && incBnb.length === 0 && (
+          <LineRow desc={input.leaseType === "long_term" ? "Long term — no payments recorded" : input.leaseType === "bnb" ? "BNB / daily platform — no payouts recorded" : "Short-term rental — no payments recorded"} amt={0} />
         )}
         {incOth.length > 0 && (
           <>
@@ -275,6 +283,7 @@ export async function renderSoaPdf(input: SoaPdfInput): Promise<Buffer> {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           {getLogo()
+            // eslint-disable-next-line jsx-a11y/alt-text
             ? <Image src={getLogo()!} style={{ width: 120, height: 34, objectFit: "contain", marginBottom: 4 }} />
             : <Text style={styles.brand}>All Abode<Text style={styles.brandDot}>.</Text></Text>
           }

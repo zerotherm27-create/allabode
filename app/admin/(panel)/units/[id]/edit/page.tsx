@@ -28,8 +28,9 @@ export default async function EditUnitPage({ params }: { params: Promise<{ id: s
   const recurring = templates.filter((t) => t.template_type === "expense_recurring");
 
   const APPLIES_LABELS: Record<string, string> = {
-    long_term: "Long term only",
-    short_term: "Short term only",
+    long_term: "Long-term only",
+    short_term: "Short-term only",
+    bnb: "BNB only",
     both: "Both",
   };
 
@@ -97,8 +98,9 @@ export default async function EditUnitPage({ params }: { params: Promise<{ id: s
                                 <div><label className="block text-xs font-medium text-slate mb-1">Applies to</label>
                                   <select name="applies_to" defaultValue={t.applies_to} className={inputCls}>
                                     <option value="both">Both</option>
-                                    <option value="long_term">Long term only</option>
-                                    <option value="short_term">Short term only</option>
+                                    <option value="long_term">Long-term only</option>
+                                    <option value="short_term">Short-term only</option>
+                                    <option value="bnb">BNB only</option>
                                   </select>
                                 </div>
                                 <div><label className="block text-xs font-medium text-slate mb-1">Sort order</label><input name="sort_order" type="number" defaultValue={t.sort_order} className={inputCls} /></div>
@@ -133,8 +135,9 @@ export default async function EditUnitPage({ params }: { params: Promise<{ id: s
                 <div><label className="block text-xs font-medium text-slate mb-1">Applies to</label>
                   <select name="applies_to" defaultValue="both" className={inputCls}>
                     <option value="both">Both</option>
-                    <option value="long_term">Long term only</option>
-                    <option value="short_term">Short term only</option>
+                    <option value="long_term">Long-term only</option>
+                    <option value="short_term">Short-term only</option>
+                    <option value="bnb">BNB only</option>
                   </select>
                 </div>
                 <div><label className="block text-xs font-medium text-slate mb-1">Sort order</label><input name="sort_order" type="number" defaultValue={utilities.length} className={inputCls} /></div>
@@ -188,8 +191,9 @@ export default async function EditUnitPage({ params }: { params: Promise<{ id: s
                                 <div><label className="block text-xs font-medium text-slate mb-1">Applies to</label>
                                   <select name="applies_to" defaultValue={t.applies_to} className={inputCls}>
                                     <option value="both">Both</option>
-                                    <option value="long_term">Long term only</option>
-                                    <option value="short_term">Short term only</option>
+                                    <option value="long_term">Long-term only</option>
+                                    <option value="short_term">Short-term only</option>
+                                    <option value="bnb">BNB only</option>
                                   </select>
                                 </div>
                                 <div><label className="block text-xs font-medium text-slate mb-1">Sort order</label><input name="sort_order" type="number" defaultValue={t.sort_order} className={inputCls} /></div>
@@ -223,8 +227,9 @@ export default async function EditUnitPage({ params }: { params: Promise<{ id: s
                 <div><label className="block text-xs font-medium text-slate mb-1">Applies to</label>
                   <select name="applies_to" defaultValue="both" className={inputCls}>
                     <option value="both">Both</option>
-                    <option value="long_term">Long term only</option>
-                    <option value="short_term">Short term only</option>
+                    <option value="long_term">Long-term only</option>
+                    <option value="short_term">Short-term only</option>
+                    <option value="bnb">BNB only</option>
                   </select>
                 </div>
                 <div><label className="block text-xs font-medium text-slate mb-1">Sort order</label><input name="sort_order" type="number" defaultValue={recurring.length} className={inputCls} /></div>

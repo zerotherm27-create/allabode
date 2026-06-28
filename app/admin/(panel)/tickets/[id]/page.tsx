@@ -9,7 +9,7 @@ import {
 import {
   TICKET_STATUS_LABEL, TICKET_STATUS_COLOR,
   TICKET_PRIORITY_COLOR, TICKET_PRIORITY_ICON,
-  TICKET_CATEGORIES, OPEN_STATUSES, isSlaBreach,
+  OPEN_STATUSES, isSlaBreach,
 } from "@/lib/tickets";
 
 type Comment = {

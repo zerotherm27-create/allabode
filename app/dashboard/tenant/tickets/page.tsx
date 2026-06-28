@@ -72,7 +72,7 @@ export default async function TenantTicketsPage({
           {tickets.length === 0 ? (
             <Panel title="No tickets yet">
               <p className="py-4 text-center text-sm text-slate">
-                Have a maintenance issue or question? Submit a request and we'll get back to you.
+                Have a maintenance issue or question? Submit a request and we&apos;ll get back to you.
               </p>
               <div className="mt-2 flex justify-center">
                 <Link

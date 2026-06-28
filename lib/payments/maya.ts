@@ -31,7 +31,7 @@ export class MayaProvider implements PaymentProvider {
     return { checkoutId: data.checkoutId, checkoutUrl: data.redirectUrl };
   }
 
-  verifyWebhookSignature(_rawBody: string, _headers: Record<string, string | null>): boolean {
+  verifyWebhookSignature(): boolean {
     // Maya uses basic-auth on the webhook endpoint — caller must verify the Authorization header
     return true;
   }

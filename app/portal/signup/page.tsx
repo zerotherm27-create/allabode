@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { Field, Input } from "@/components/forms/fields";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthCallbackUrl } from "@/lib/url";
 import { linkPortalAccount } from "@/app/portal/actions";
 
 export default function PortalSignupPage() {
@@ -23,7 +25,13 @@ export default function PortalSignupPage() {
     const email = String(data.get("email") ?? "");
     const password = String(data.get("password") ?? "");
     setLoading(true);
-    const { data: result, error } = await createClient().auth.signUp({ email, password });
+    const { data: result, error } = await createClient().auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: getAuthCallbackUrl(),
+      },
+    });
     if (error) {
       setLoading(false);
       setError(error.message);
@@ -75,7 +83,17 @@ export default function PortalSignupPage() {
           Use the email address All Abode has on file for you.
         </p>
 
-        <form onSubmit={onSubmit} noValidate className="mt-7 flex flex-col gap-5">
+        <div className="mt-7">
+          <GoogleAuthButton next="/portal" label="Create account with Google" />
+        </div>
+
+        <div className="my-6 flex items-center gap-3">
+          <span className="h-px flex-1 bg-line" />
+          <span className="text-xs font-medium uppercase tracking-wider text-slate">or</span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
+
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
           <Field label="Email" required>
             <Input name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
           </Field>

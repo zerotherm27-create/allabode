@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { Field, Input } from "@/components/forms/fields";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
@@ -55,7 +56,22 @@ export default function AdminLoginPage() {
           Staff access only.
         </p>
 
-        <form onSubmit={onSubmit} noValidate className="mt-7 flex flex-col gap-5">
+        <div className="mt-7">
+          <GoogleAuthButton
+            next="/admin"
+            label="Continue with Google"
+            signOutBefore
+            queryParams={{ prompt: "select_account" }}
+          />
+        </div>
+
+        <div className="my-6 flex items-center gap-3">
+          <span className="h-px flex-1 bg-line" />
+          <span className="text-xs font-medium uppercase tracking-wider text-slate">or</span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
+
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
           <Field label="Email" required>
             <Input name="email" type="email" autoComplete="email" placeholder="you@allabodeph.com" required />
           </Field>

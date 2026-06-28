@@ -23,6 +23,11 @@ const STATUS_TONE: Record<string, string> = {
 const inputCls =
   "h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15";
 
+function leaseTypeLabel(value: string) {
+  if (value === "bnb") return "BNB / daily platform";
+  return value === "short_term" ? "Short-term rental" : "Long-term rental";
+}
+
 const columns: Column<Row>[] = [
   { header: "Party", primary: true, cell: (r) => <Link href={`/admin/statements/${r.id}`} className="font-medium text-navy hover:text-navy-700">{pick(r.statement_type === "owner" ? r.owners : r.tenants)?.name ?? "—"}</Link> },
   { header: "Type", cell: (r) => <span className="text-slate capitalize">{r.statement_type}</span> },
@@ -42,7 +47,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
       .order("created_at", { ascending: false }),
     supabase.from("tenants").select("id,name").order("name"),
     supabase.from("leases")
-      .select("id,lease_type,rent_amount,units(unit_label,properties(name,owners(name)))")
+      .select("id,lease_type,mgmt_fee_pct,rent_amount,units(unit_label,properties(name,owners(name)))")
       .in("status", ["active", "renewal_pending", "expiring"])
       .order("created_at", { ascending: false }),
   ]);
@@ -51,7 +56,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
   const tenantOpts = (tenants ?? []) as { id: string; name: string }[];
 
   type RawLease = {
-    id: string; lease_type: string; rent_amount: number;
+    id: string; lease_type: string; mgmt_fee_pct: number; rent_amount: number;
     units: { unit_label: string; properties: { name: string; owners: { name: string } | { name: string }[] | null } | null } | null;
   };
   const leaseOpts: LeaseOpt[] = ((leasesData ?? []) as unknown as RawLease[]).map((l) => {
@@ -59,7 +64,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
     const owner = prop ? (Array.isArray((prop as { owners?: unknown }).owners) ? (prop as { owners: { name: string }[] }).owners[0] : (prop as { owners: { name: string } | null }).owners) : null;
     return {
       id:    l.id,
-      label: `${(owner as { name?: string } | null)?.name ?? "?"} · ${(prop as { name?: string } | null)?.name ?? "?"} ${l.units?.unit_label ?? ""} (${l.lease_type === "long_term" ? "Long term" : "Short term"} · ₱${Number(l.rent_amount).toLocaleString("en-PH")})`,
+      label: `${(owner as { name?: string } | null)?.name ?? "?"} · ${(prop as { name?: string } | null)?.name ?? "?"} ${l.units?.unit_label ?? ""} (${leaseTypeLabel(l.lease_type)} · ${Number(l.mgmt_fee_pct ?? 0)}% fee · ₱${Number(l.rent_amount).toLocaleString("en-PH")})`,
     };
   });
 

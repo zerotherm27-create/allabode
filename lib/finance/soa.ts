@@ -31,6 +31,18 @@ const sum = (xs: number[]) => xs.reduce((s, x) => s + x, 0);
 const POSTED = ["posted", "locked", "included_in_statement"];
 const PAID = ["recorded", "verified"];
 
+function incomeTypeForLeaseType(leaseType: string) {
+  if (leaseType === "bnb") return "income_bnb";
+  return leaseType === "long_term" ? "income_longterm" : "income_shortterm";
+}
+
+function incomeDescriptionForLeaseType(leaseType: string, hasPayment: boolean) {
+  if (leaseType === "bnb") return hasPayment ? "BNB / Platform Payout" : "BNB / Daily Rental";
+  return leaseType === "long_term"
+    ? "Monthly Rent"
+    : hasPayment ? "Short-term Rental Payment" : "Short-term Rental";
+}
+
 export async function computeOwnerSoa(
   supabase: SupabaseClient,
   ownerId: string,
@@ -244,17 +256,17 @@ export async function computeOwnerSoaByLease(
   }
 
   // 7. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
-  const incomeType = leaseType === "long_term" ? "income_longterm" : "income_shortterm";
+  const incomeType = incomeTypeForLeaseType(leaseType);
   const incomeLines: OwnerSoaLineExtended[] = payments.length > 0
     ? payments.map((p, i) => ({
         line_type: incomeType,
-        description: p.notes?.trim() || (leaseType === "long_term" ? "Monthly Rent" : "Booking"),
+        description: p.notes?.trim() || incomeDescriptionForLeaseType(leaseType, true),
         amount: Number(p.amount),
         sort_order: i,
       }))
     : [{
         line_type: incomeType,
-        description: leaseType === "long_term" ? "Monthly Rent" : "Short-term Rental",
+        description: incomeDescriptionForLeaseType(leaseType, false),
         amount: Number(lease.rent_amount),
         sort_order: 0,
       }];

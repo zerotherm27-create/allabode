@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
@@ -22,13 +22,20 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   const router = useRouter();
+  const isActive = (href: string) => {
+    const path = href.split("#")[0];
+    return path === pathname;
+  };
 
   async function logout() {
     await createClient().auth.signOut();
     router.replace("/portal/login");
     router.refresh();
   }
+
+  const accountHref = role === "Owner" ? "/dashboard/owner/account" : "/dashboard/tenant/account";
 
   return (
     <div className="min-h-screen bg-surface-gray lg:grid lg:grid-cols-[260px_1fr]">
@@ -46,14 +53,14 @@ export function DashboardShell({
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3" aria-label="Dashboard">
-          {nav.map((item, i) => (
+          {nav.map((item) => (
             <Link
               key={item.label}
               href={item.href}
               onClick={() => setOpen(false)}
-              aria-current={i === 0 ? "page" : undefined}
+              aria-current={isActive(item.href) ? "page" : undefined}
               className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                i === 0
+                isActive(item.href)
                   ? "bg-white/10 text-white"
                   : "text-white/70 hover:bg-white/5 hover:text-white"
               }`}
@@ -71,6 +78,14 @@ export function DashboardShell({
           >
             <Icon name="analytics" size={18} />
             Request Appraisal
+          </Link>
+          <Link
+            href={accountHref}
+            onClick={() => setOpen(false)}
+            className="mt-2 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+          >
+            <Icon name="manage_accounts" size={20} />
+            Account
           </Link>
           <button
             type="button"

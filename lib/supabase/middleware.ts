@@ -37,12 +37,23 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAdminLogin = path.startsWith("/admin/login");
 
-  // Admin area: staff only. Unauthenticated → admin login.
+  // Admin area: staff only. Unauthenticated/non-staff → admin login.
   if (path.startsWith("/admin") && !isAdminLogin && !user) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/admin/login";
     return NextResponse.redirect(redirect);
   }
+
+  if (path.startsWith("/admin") && user) {
+    const { data: isStaff } = await supabase.rpc("is_staff");
+    if (!isStaff && !isAdminLogin) {
+      const redirect = request.nextUrl.clone();
+      redirect.pathname = "/admin/login";
+      return NextResponse.redirect(redirect);
+    }
+    if (!isStaff) return response;
+  }
+
   if (isAdminLogin && user) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/admin";

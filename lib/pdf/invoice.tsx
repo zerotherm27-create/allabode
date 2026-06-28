@@ -6,7 +6,6 @@ const peso = (n: number | string) =>
   `PHP ${Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const NAVY  = "#0a2540";
-const GOLD  = "#b4975a";
 const SLATE = "#5b6573";
 const LINE  = "#e2e6ec";
 const GREEN = "#0e9f6e";
@@ -101,6 +100,7 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Buffer> 
         <View style={s.header}>
           <View>
             {logo
+              // eslint-disable-next-line jsx-a11y/alt-text
               ? <Image src={logo} style={s.logo} />
               : <Text style={s.brandText}>All Abode</Text>
             }

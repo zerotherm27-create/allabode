@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 import { AdminShell } from "@/components/admin/shell";
 
 export const metadata = { title: "Admin", robots: { index: false } };
@@ -25,6 +26,9 @@ export default async function AdminPanelLayout({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
+
+  const { role } = await getCurrentRole();
+  if (role !== "staff") redirect(homeForRole(role));
 
   return <AdminShell email={user.email ?? "Staff"}>{children}</AdminShell>;
 }

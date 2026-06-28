@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { F, Group, inputCls, SubmitButton } from "@/components/admin/form-kit";
 
 type Action = (fd: FormData) => void | Promise<void>;
@@ -17,6 +18,20 @@ const LEASE_STATUSES = [
   "expiring", "ended", "terminated", "archived",
 ];
 const BILLING_CYCLES = ["monthly", "quarterly", "semi_annual", "annual"];
+const LEASE_TYPE_DEFAULT_MGMT_FEE: Record<string, number> = {
+  long_term: 5,
+  short_term: 10,
+  bnb: 20,
+};
+
+function leaseTypeLabel(value: string) {
+  if (value === "bnb") return "BNB / daily platform";
+  return value === "short_term" ? "Short-term rental" : "Long-term rental";
+}
+
+function defaultMgmtFeeForLeaseType(value: string | undefined) {
+  return LEASE_TYPE_DEFAULT_MGMT_FEE[value ?? "long_term"] ?? LEASE_TYPE_DEFAULT_MGMT_FEE.long_term;
+}
 
 function Footer({ cancelHref, label }: { cancelHref: string; label: string }) {
   return (
@@ -179,13 +194,20 @@ export function UnitForm({ action, initial = {}, properties }: { action: Action;
 export type LeaseValues = {
   unit_id?: string; tenant_id?: string; start_date?: string; end_date?: string;
   rent_amount?: number | null; billing_cycle?: string; deposit?: number | null;
-  advance?: number | null; notice_period_days?: number | null; status?: string; terms?: string;
+  advance?: number | null; remittance_due_date?: string; notice_period_days?: number | null; status?: string; terms?: string;
   lease_type?: string; mgmt_fee_pct?: number | null; vat_pct?: number | null;
 };
 export function LeaseForm({
   action, initial = {}, units, tenants,
 }: { action: Action; initial?: LeaseValues; units: Option[]; tenants: Option[] }) {
   const v = initial;
+  const initialLeaseType = v.lease_type ?? "long_term";
+  const initialMgmtFee = useMemo(
+    () => String(v.mgmt_fee_pct ?? defaultMgmtFeeForLeaseType(initialLeaseType)),
+    [initialLeaseType, v.mgmt_fee_pct]
+  );
+  const [leaseType, setLeaseType] = useState(initialLeaseType);
+  const [mgmtFeePct, setMgmtFeePct] = useState(initialMgmtFee);
   return (
     <form action={action} className="flex flex-col gap-6">
       <Group title="Lease">
@@ -202,9 +224,22 @@ export function LeaseForm({
           </select>
         </F>
         <F label="Lease type">
-          <select name="lease_type" defaultValue={v.lease_type ?? "long_term"} className={inputCls}>
-            <option value="long_term">Long term</option>
-            <option value="short_term">Short term</option>
+          <select
+            name="lease_type"
+            value={leaseType}
+            onChange={(event) => {
+              const next = event.target.value;
+              const previousDefault = String(defaultMgmtFeeForLeaseType(leaseType));
+              if (mgmtFeePct === "" || mgmtFeePct === previousDefault) {
+                setMgmtFeePct(String(defaultMgmtFeeForLeaseType(next)));
+              }
+              setLeaseType(next);
+            }}
+            className={inputCls}
+          >
+            <option value="long_term">{leaseTypeLabel("long_term")}</option>
+            <option value="short_term">{leaseTypeLabel("short_term")}</option>
+            <option value="bnb">{leaseTypeLabel("bnb")}</option>
           </select>
         </F>
         <F label="Start date"><input name="start_date" type="date" defaultValue={v.start_date} required className={inputCls} /></F>
@@ -217,6 +252,9 @@ export function LeaseForm({
         </F>
         <F label="Deposit (₱)"><input name="deposit" type="number" step="0.01" defaultValue={v.deposit ?? undefined} className={inputCls} /></F>
         <F label="Advance (₱)"><input name="advance" type="number" step="0.01" defaultValue={v.advance ?? undefined} className={inputCls} /></F>
+        <F label="Remittance due date" hint="Copied into generated owner SOAs">
+          <input name="remittance_due_date" type="date" defaultValue={v.remittance_due_date} className={inputCls} />
+        </F>
         <F label="Notice period (days)"><input name="notice_period_days" type="number" defaultValue={v.notice_period_days ?? undefined} className={inputCls} /></F>
         <F label="Status">
           <select name="status" defaultValue={v.status ?? "draft"} className={inputCls}>
@@ -226,8 +264,18 @@ export function LeaseForm({
         <F label="Terms" span><textarea name="terms" defaultValue={v.terms} rows={3} className={`${inputCls} h-auto py-2`} /></F>
       </Group>
       <Group title="Management Fees">
-        <F label="Management fee %" hint="5% long term · 20% short term">
-          <input name="mgmt_fee_pct" type="number" step="0.01" min="0" max="100" defaultValue={v.mgmt_fee_pct ?? 5} required className={inputCls} />
+        <F label="Management fee %" hint={`${leaseTypeLabel(leaseType)} default: ${defaultMgmtFeeForLeaseType(leaseType)}%. You can override per lease.`}>
+          <input
+            name="mgmt_fee_pct"
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={mgmtFeePct}
+            onChange={(event) => setMgmtFeePct(event.target.value)}
+            required
+            className={inputCls}
+          />
         </F>
         <F label="VAT %" hint="Applied on management fee">
           <input name="vat_pct" type="number" step="0.01" min="0" max="100" defaultValue={v.vat_pct ?? 12} required className={inputCls} />

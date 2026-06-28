@@ -26,7 +26,12 @@ const columns: Column<Row>[] = [
   ) },
 ];
 
-export default async function AdminLeasesPage() {
+export default async function AdminLeasesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase.from("leases").select("id,start_date,end_date,rent_amount,status,units(unit_label),tenants(name)").order("created_at", { ascending: false });
   const rows = (data ?? []) as Row[];
@@ -42,6 +47,14 @@ export default async function AdminLeasesPage() {
           <Icon name="add" size={20} /> Add lease
         </Link>
       </div>
+      {error && (
+        <div className="mt-5 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-slate">
+          <div className="flex gap-2">
+            <Icon name="warning" size={18} className="mt-0.5 shrink-0 text-warning" />
+            <p>{decodeURIComponent(error)}</p>
+          </div>
+        </div>
+      )}
       <div className="mt-6">
         <DataTable rows={rows} columns={columns} getKey={(r) => r.id} empty={<>No leases yet. <Link href="/admin/leases/new" className="text-navy-700 underline">Add the first one</Link>.</>} />
       </div>

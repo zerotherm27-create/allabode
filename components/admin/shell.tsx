@@ -56,6 +56,8 @@ const navGroups = [
   {
     group: "System",
     items: [
+      { label: "Account",       icon: "manage_accounts", href: "/admin/account"   },
+      { label: "Pending Signups", icon: "person_add", href: "/admin/pending-signups" },
       { label: "Notices",       icon: "campaign",   href: "/admin/notices"    },
       { label: "Automation",    icon: "autorenew",  href: "/admin/automation" },
       { label: "Site Settings", icon: "tune",       href: "/admin/settings"   },

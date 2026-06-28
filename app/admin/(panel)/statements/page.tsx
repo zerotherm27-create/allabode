@@ -28,6 +28,10 @@ function leaseTypeLabel(value: string) {
   return value === "short_term" ? "Short-term rental" : "Long-term rental";
 }
 
+function leaseStatusLabel(value: string) {
+  return value.replace(/_/g, " ");
+}
+
 const columns: Column<Row>[] = [
   { header: "Party", primary: true, cell: (r) => <Link href={`/admin/statements/${r.id}`} className="font-medium text-navy hover:text-navy-700">{pick(r.statement_type === "owner" ? r.owners : r.tenants)?.name ?? "—"}</Link> },
   { header: "Type", cell: (r) => <span className="text-slate capitalize">{r.statement_type}</span> },
@@ -47,8 +51,8 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
       .order("created_at", { ascending: false }),
     supabase.from("tenants").select("id,name").order("name"),
     supabase.from("leases")
-      .select("id,lease_type,mgmt_fee_pct,rent_amount,units(unit_label,properties(name,owners(name)))")
-      .in("status", ["active", "renewal_pending", "expiring"])
+      .select("id,status,lease_type,mgmt_fee_pct,rent_amount,units(unit_label,properties(name,owners(name)))")
+      .in("status", ["draft", "pending_signature", "active", "renewal_pending", "renewed", "expiring"])
       .order("created_at", { ascending: false }),
   ]);
 
@@ -56,7 +60,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
   const tenantOpts = (tenants ?? []) as { id: string; name: string }[];
 
   type RawLease = {
-    id: string; lease_type: string; mgmt_fee_pct: number; rent_amount: number;
+    id: string; status: string; lease_type: string; mgmt_fee_pct: number; rent_amount: number;
     units: { unit_label: string; properties: { name: string; owners: { name: string } | { name: string }[] | null } | null } | null;
   };
   const leaseOpts: LeaseOpt[] = ((leasesData ?? []) as unknown as RawLease[]).map((l) => {
@@ -64,7 +68,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
     const owner = prop ? (Array.isArray((prop as { owners?: unknown }).owners) ? (prop as { owners: { name: string }[] }).owners[0] : (prop as { owners: { name: string } | null }).owners) : null;
     return {
       id:    l.id,
-      label: `${(owner as { name?: string } | null)?.name ?? "?"} · ${(prop as { name?: string } | null)?.name ?? "?"} ${l.units?.unit_label ?? ""} (${leaseTypeLabel(l.lease_type)} · ${Number(l.mgmt_fee_pct ?? 0)}% fee · ₱${Number(l.rent_amount).toLocaleString("en-PH")})`,
+      label: `${(owner as { name?: string } | null)?.name ?? "?"} · ${(prop as { name?: string } | null)?.name ?? "?"} ${l.units?.unit_label ?? ""} (${leaseStatusLabel(l.status)} · ${leaseTypeLabel(l.lease_type)} · ${Number(l.mgmt_fee_pct ?? 0)}% fee · ₱${Number(l.rent_amount).toLocaleString("en-PH")})`,
     };
   });
 
@@ -95,7 +99,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
           <p className="mt-1 text-xs text-slate">Auto-populates from charge templates + expense records. Templates and mgmt fee pulled from the lease.</p>
           <div className="mt-4 flex flex-col gap-3">
             <select name="lease_id" required defaultValue="" className={inputCls}>
-              <option value="" disabled>Select active lease…</option>
+              <option value="" disabled>Select lease…</option>
               {leaseOpts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
             <div className="grid grid-cols-2 gap-3">

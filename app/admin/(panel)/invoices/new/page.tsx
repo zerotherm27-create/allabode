@@ -6,18 +6,23 @@ import { InvoiceForm, type LeaseOption } from "@/components/admin/invoice-form";
 
 type LeaseRow = {
   id: string;
+  status: string;
   rent_amount: number;
   units: { unit_label: string; properties: { name: string } | null } | null;
   tenants: { name: string } | null;
 };
+
+function leaseStatusLabel(value: string) {
+  return value.replace(/_/g, " ");
+}
 
 export default async function NewInvoicePage({ searchParams }: { searchParams: Promise<{ lease_id?: string }> }) {
   const { lease_id } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from("leases")
-    .select("id,rent_amount,units(unit_label,properties(name)),tenants(name)")
-    .in("status", ["active", "renewal_pending", "expiring"])
+    .select("id,status,rent_amount,units(unit_label,properties(name)),tenants(name)")
+    .in("status", ["draft", "pending_signature", "active", "renewal_pending", "renewed", "expiring"])
     .order("created_at", { ascending: false });
 
   const leases: LeaseOption[] = ((data ?? []) as unknown as LeaseRow[]).map((l) => {
@@ -29,7 +34,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: P
     const tenantName = (tenant as { name?: string } | null)?.name ?? "Tenant";
     return {
       id:            l.id,
-      label:         `${propName} — ${unitLabel} (${tenantName})`,
+      label:         `${propName} — ${unitLabel} (${tenantName} · ${leaseStatusLabel(l.status)})`,
       tenant_name:   tenantName,
       unit_label:    unitLabel,
       property_name: propName,
@@ -47,7 +52,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: P
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">New invoice</h1>
       <p className="mt-1 text-sm text-slate">
-        Select an active lease — a draft invoice is created from the monthly rent amount.
+        Select a lease — a draft invoice is created from the monthly rent amount.
       </p>
       <div className="mt-6">
         <InvoiceForm action={createInvoice} leases={leases} defaultLeaseId={lease_id} />

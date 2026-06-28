@@ -10,10 +10,16 @@ export type RoleContext = {
   tenantId: string | null;
 };
 
+function sameEmail(a?: string | null, b?: string | null) {
+  return !!a && !!b && a.toLowerCase() === b.toLowerCase();
+}
+
 /**
  * Resolves the signed-in user's role from the DB.
+ * Owner/tenant is checked first, but only when the linked record email matches
+ * the auth email. That avoids stale/wrong auth_user_id links stealing an admin
+ * session while still allowing true owner/staff dual records into the portal.
  * Staff → `users` (via the is_staff() RPC, which is security-definer).
- * Owner/tenant → their record's `auth_user_id` (linked at signup).
  * Returns role `null` when signed in but not yet linked ("pending").
  */
 export async function getCurrentRole(): Promise<RoleContext> {
@@ -27,22 +33,26 @@ export async function getCurrentRole(): Promise<RoleContext> {
   }
   const base = { userId: user.id, email: user.email ?? null };
 
-  const { data: isStaff } = await supabase.rpc("is_staff");
-  if (isStaff) return { role: "staff", ownerId: null, tenantId: null, ...base };
-
   const { data: owner } = await supabase
     .from("owners")
-    .select("id")
+    .select("id,email")
     .eq("auth_user_id", user.id)
     .maybeSingle();
-  if (owner) return { role: "owner", ownerId: owner.id as string, tenantId: null, ...base };
+  if (owner && sameEmail((owner as { email?: string | null }).email, user.email)) {
+    return { role: "owner", ownerId: owner.id as string, tenantId: null, ...base };
+  }
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id")
+    .select("id,email")
     .eq("auth_user_id", user.id)
     .maybeSingle();
-  if (tenant) return { role: "tenant", ownerId: null, tenantId: tenant.id as string, ...base };
+  if (tenant && sameEmail((tenant as { email?: string | null }).email, user.email)) {
+    return { role: "tenant", ownerId: null, tenantId: tenant.id as string, ...base };
+  }
+
+  const { data: isStaff } = await supabase.rpc("is_staff");
+  if (isStaff) return { role: "staff", ownerId: null, tenantId: null, ...base };
 
   return { role: null, ownerId: null, tenantId: null, ...base };
 }
@@ -67,17 +77,21 @@ export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null;
   // --- Pass 1: look up by auth_user_id (works after a successful RPC link) ---
   const { data: owner } = await supabase
     .from("owners")
-    .select("id")
+    .select("id,email")
     .eq("auth_user_id", user.id)
     .maybeSingle();
-  if (owner) return { role: "owner", redirect: "/dashboard/owner" };
+  if (owner && sameEmail((owner as { email?: string | null }).email, user.email)) {
+    return { role: "owner", redirect: "/dashboard/owner" };
+  }
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id")
+    .select("id,email")
     .eq("auth_user_id", user.id)
     .maybeSingle();
-  if (tenant) return { role: "tenant", redirect: "/dashboard/tenant" };
+  if (tenant && sameEmail((tenant as { email?: string | null }).email, user.email)) {
+    return { role: "tenant", redirect: "/dashboard/tenant" };
+  }
 
   // --- Pass 2: email fallback for the "dual-role" edge case ---
   // If the auth UUID is also in public.users, the RPC bails before setting

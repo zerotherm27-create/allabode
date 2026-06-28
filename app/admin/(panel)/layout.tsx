@@ -27,8 +27,11 @@ export default async function AdminPanelLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const { role } = await getCurrentRole();
-  if (role !== "staff") redirect(homeForRole(role));
+  const { data: isStaff } = await supabase.rpc("is_staff");
+  if (!isStaff) {
+    const { role } = await getCurrentRole();
+    redirect(homeForRole(role));
+  }
 
   return <AdminShell email={user.email ?? "Staff"}>{children}</AdminShell>;
 }

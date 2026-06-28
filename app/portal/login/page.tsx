@@ -27,7 +27,9 @@ function LoginForm() {
     const email = String(data.get("email") ?? "");
     const password = String(data.get("password") ?? "");
     setLoading(true);
-    const { error } = await createClient().auth.signInWithPassword({ email, password });
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setLoading(false);
       setError(error.message);
@@ -59,7 +61,12 @@ function LoginForm() {
         </p>
 
         <div className="mt-7">
-          <GoogleAuthButton next="/portal" label="Continue with Google" />
+          <GoogleAuthButton
+            next="/portal"
+            label="Continue with Google"
+            signOutBefore
+            queryParams={{ prompt: "select_account" }}
+          />
         </div>
 
         <div className="my-6 flex items-center gap-3">

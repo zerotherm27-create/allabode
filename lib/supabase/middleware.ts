@@ -68,8 +68,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirect);
   }
 
-  // Portal login/signup: already signed in → portal index (role-routes from there).
-  if ((path === "/portal/login" || path === "/portal/signup") && user) {
+  // Portal signup: already signed in → portal index (role-routes from there).
+  // Portal login stays accessible so staff/admin users can switch into an
+  // owner or tenant account without being bounced back to /admin.
+  if (path === "/portal/signup" && user) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/portal";
     return NextResponse.redirect(redirect);

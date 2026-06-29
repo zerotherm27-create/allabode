@@ -22,7 +22,15 @@ const nav: NavItem[] = [
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString("en-PH")}`;
 
-type Unit = { id: string; status: string; base_rent: number | null };
+type Unit = {
+  id: string;
+  unit_label: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  floor_area: number | null;
+  status: string;
+  base_rent: number | null;
+};
 type Property = { id: string; name: string; city: string | null; status: string; units: Unit[] | null };
 type Soa = {
   id: string; period_start: string; period_end: string; net_remittance: number; closing_balance: number;
@@ -40,6 +48,13 @@ const PAYOUT_BADGE: Record<string, { label: string; cls: string }> = {
   refund_pending: { label: "Payment Required",     cls: "bg-error-bg text-error" },
 };
 
+const UNIT_STATUS_TONE: Record<string, string> = {
+  Occupied: "bg-available/10 text-available",
+  Vacant: "bg-surface-gray text-slate",
+  Reserved: "bg-reserved/10 text-reserved",
+  Maintenance: "bg-warning/10 text-warning",
+};
+
 export default async function OwnerDashboard({
   searchParams,
 }: {
@@ -51,7 +66,10 @@ export default async function OwnerDashboard({
 
   const supabase = await createClient();
   const [{ data: propData }, { data: soaData }, { data: expenseData }, { data: ownerRow }] = await Promise.all([
-    supabase.from("properties").select("id,name,city,status,units(id,status,base_rent)").order("name"),
+    supabase
+      .from("properties")
+      .select("id,name,city,status,units(id,unit_label,bedrooms,bathrooms,floor_area,status,base_rent)")
+      .order("name"),
     supabase.from("statements_of_account")
       .select("id,period_start,period_end,net_remittance,closing_balance,status,pdf_path,payout_status,payout_due_at,payout_slip_url,paid_at")
       .eq("statement_type", "owner")
@@ -216,6 +234,43 @@ export default async function OwnerDashboard({
                       <div className="mt-3 flex items-center justify-between border-t border-line pt-3 text-sm">
                         <div><p className="label-caps text-slate">Units</p><p className="font-semibold text-navy">{units.length}</p></div>
                         <div className="text-right"><p className="label-caps text-slate">Occupied</p><p className="text-navy">{occ}/{units.length}</p></div>
+                      </div>
+                      <div className="mt-4 border-t border-line pt-3">
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="label-caps text-slate">Unit List</p>
+                          <Icon name="door_front" size={15} className="text-slate" />
+                        </div>
+                        {units.length === 0 ? (
+                          <p className="rounded-md bg-surface-gray px-3 py-2 text-xs text-slate">No units added yet.</p>
+                        ) : (
+                          <ul className="max-h-56 divide-y divide-line overflow-y-auto pr-1">
+                            {units.map((unit) => {
+                              const specs = [
+                                unit.bedrooms != null ? `${unit.bedrooms} bed` : null,
+                                unit.bathrooms != null ? `${unit.bathrooms} bath` : null,
+                                unit.floor_area != null ? `${Math.round(Number(unit.floor_area))} sqm` : null,
+                              ].filter(Boolean);
+                              return (
+                                <li key={unit.id} className="py-2 first:pt-0 last:pb-0">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-semibold text-navy">{unit.unit_label}</p>
+                                      <p className="mt-0.5 text-xs text-slate">
+                                        {specs.length > 0 ? specs.join(" · ") : "Specs not set"}
+                                      </p>
+                                    </div>
+                                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${UNIT_STATUS_TONE[unit.status] ?? "bg-surface-gray text-slate"}`}>
+                                      {unit.status}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-xs font-medium text-navy">
+                                    {unit.base_rent != null ? `${peso(Number(unit.base_rent))} monthly rent` : "Rent not set"}
+                                  </p>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </div>
                     </div>
                   </article>

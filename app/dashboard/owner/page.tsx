@@ -195,9 +195,9 @@ export default async function OwnerDashboard({
                               )}
 
                               {s.pdf_path && s.status === "published" && (
-                                <a href={`/api/portal/soa/${s.id}`} target="_blank" rel="noopener noreferrer" aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
+                                <Link href={`/dashboard/owner/statements/${s.id}`} aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
                                   <Icon name="visibility" size={18} />
-                                </a>
+                                </Link>
                               )}
                             </div>
                           </li>

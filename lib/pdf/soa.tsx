@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, Svg, Path, renderToBuffer } from "@react-pdf/renderer";
 import fs from "fs";
 import path from "path";
 import type { SoaLine, SoaTotals, SoaType, OwnerSoaLineExtended } from "@/lib/finance/soa";
@@ -14,6 +14,17 @@ function getLogo(): string | null {
 }
 
 const peso = (n: number) => `PHP ${Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+function normalizePesoText(text: string | null | undefined) {
+  if (!text) return null;
+  return text
+    .replace(/\$\s*([\d,]+(?:\.\d{1,2})?)/g, (_match, amount: string) => {
+      const value = Number(String(amount).replace(/,/g, ""));
+      return Number.isFinite(value) ? peso(value) : `PHP ${amount}`;
+    })
+    .replace(/\bUSD\b/g, "PHP")
+    .replace(/\bdollars?\b/gi, "pesos");
+}
 
 const NAVY = "#0a2540";
 const GOLD = "#b4975a";
@@ -79,7 +90,9 @@ export type OwnerSoaPdfInput = {
 
 const ownerStyles = StyleSheet.create({
   page:       { padding: 36, fontSize: 9, color: "#16202c", fontFamily: "Helvetica" },
-  contactRow: { flexDirection: "row", justifyContent: "flex-end", marginBottom: 10, fontSize: 8, color: SLATE },
+  contactRow: { flexDirection: "row", justifyContent: "flex-end", alignItems: "center", fontSize: 8, color: SLATE },
+  contactItem: { flexDirection: "row", alignItems: "center", marginLeft: 10 },
+  contactIcon: { width: 8, height: 8, marginRight: 3 },
   docTitle:   { fontSize: 13, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 10 },
   gridRow:    { flexDirection: "row", marginBottom: 6 },
   gridCell:   { flex: 1 },
@@ -110,6 +123,7 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
 
   const dedLines = lines.filter((l) => l.line_type.startsWith("deduction_"));
   const totalDed = dedLines.reduce((s, l) => s + Math.abs(Number(l.amount)), 0);
+  const normalizedSummary = normalizePesoText(input.summary);
 
   const otherExpLines = lines.filter((l) =>
     ["deduction_expense_recurring", "deduction_expense_manual", "deduction_expense"].includes(l.line_type)
@@ -131,6 +145,25 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
     </View>
   );
 
+  const ContactItem = ({ type, label }: { type: "email" | "web"; label: string }) => (
+    <View style={ownerStyles.contactItem}>
+      <Svg viewBox="0 0 24 24" style={ownerStyles.contactIcon}>
+        {type === "email" ? (
+          <Path
+            d="M3 5h18v14H3V5zm2.2 2 6.8 5.1L18.8 7H5.2zM5 17h14V8.9l-7 5.2-7-5.2V17z"
+            fill={NAVY}
+          />
+        ) : (
+          <Path
+            d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 9h-3.2a15.8 15.8 0 0 0-1.2-5 8.05 8.05 0 0 1 4.4 5zM12 4.1c.8 1.2 1.4 3.7 1.6 6.9h-3.2c.2-3.2.8-5.7 1.6-6.9zM4.3 13h3.9c.1 1.8.4 3.5.8 4.9A8.04 8.04 0 0 1 4.3 13zm3.9-2H4.3A8.04 8.04 0 0 1 9 6.1 20 20 0 0 0 8.2 11zm3.8 8.9c-.8-1.2-1.4-3.7-1.6-6.9h3.2c-.2 3.2-.8 5.7-1.6 6.9zm1.8-8.9h-3.6c.2-3.7.9-6.1 1.8-6.9.9.8 1.6 3.2 1.8 6.9zm1.2 6.9c.4-1.4.7-3.1.8-4.9h3.9a8.04 8.04 0 0 1-4.7 4.9z"
+            fill={NAVY}
+          />
+        )}
+      </Svg>
+      <Text>{label}</Text>
+    </View>
+  );
+
   const doc = (
     <Document>
       <Page size="A4" style={ownerStyles.page}>
@@ -141,7 +174,10 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
             ? <Image src={getLogo()!} style={{ width: 120, height: 34, objectFit: "contain" }} />
             : <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: NAVY }}>All Abode</Text>
           }
-          <Text style={{ fontSize: 8, color: SLATE }}>E: info@allabodeph.com   W: allabodeph.com</Text>
+          <View style={ownerStyles.contactRow}>
+            <ContactItem type="email" label="info@allabodeph.com" />
+            <ContactItem type="web" label="allabodeph.com" />
+          </View>
         </View>
 
         <Text style={ownerStyles.docTitle}>STATEMENT OF ACCOUNT</Text>
@@ -149,7 +185,7 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
         {/* Meta grid */}
         <View style={ownerStyles.gridRow}>
           <View style={ownerStyles.gridCell}>
-            <Text style={ownerStyles.label}>Invoice for</Text>
+            <Text style={ownerStyles.label}>Owner</Text>
             <Text style={ownerStyles.value}>{input.ownerName}</Text>
           </View>
           <View style={ownerStyles.gridCell}>
@@ -262,7 +298,7 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
             * Negative payout — balance is collectible from owner. See portal for payment options.
           </Text>
         )}
-        {input.summary ? <Text style={ownerStyles.aiBox}>{input.summary}</Text> : null}
+        {normalizedSummary ? <Text style={ownerStyles.aiBox}>{normalizedSummary}</Text> : null}
 
         <Text style={ownerStyles.footer} fixed>
           R = Receipt on file · All Abode Property Solutions · allabodeph.com · Reviewed before release.

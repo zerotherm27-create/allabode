@@ -23,7 +23,8 @@ export async function generateSoaSummary(input: {
           role: "system",
           content:
             "You write a brief (2-3 sentence), neutral, plain-English summary of a property statement of account for the recipient. " +
-            "Describe only the figures provided. Do not invent numbers, do not recompute, do not give financial advice.",
+            "Describe only the figures provided. Use Philippine peso currency only, formatted as PHP 1,234.56. " +
+            "Do not invent numbers, do not recompute, do not give financial advice.",
         },
         { role: "user", content: JSON.stringify(input) },
       ],

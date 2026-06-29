@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { DashboardShell, StatCard, Panel, type NavItem } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
+import { MONTH_OPTIONS, archiveByYear, availableYears, filterByMonthYear } from "@/lib/portal/document-filters";
 
 export const metadata: Metadata = { title: "Tenant Dashboard", robots: { index: false } };
 
@@ -31,7 +33,12 @@ type Lease = {
 type Payment = { id: string; received_at: string; amount: number; method: string; status: string };
 type Soa = { id: string; period_start: string; period_end: string; closing_balance: number; status: string };
 
-export default async function TenantDashboard() {
+export default async function TenantDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ soa_month?: string; soa_year?: string }>;
+}) {
+  const { soa_month, soa_year } = await searchParams;
   const { role, tenantId } = await getCurrentRole();
   if (role !== "tenant") redirect(homeForRole(role));
 
@@ -50,6 +57,9 @@ export default async function TenantDashboard() {
   const payments = (payData ?? []) as Payment[];
   const statements = (soaData ?? []) as Soa[];
   const tenantName = (tenantRow as { name?: string } | null)?.name ?? "Tenant";
+  const statementYears = availableYears(statements, (s) => s.period_end);
+  const filteredStatements = filterByMonthYear(statements, (s) => s.period_end, soa_month, soa_year);
+  const statementArchive = archiveByYear(filteredStatements, (s) => s.period_end);
 
   const unit = one(lease?.units ?? null);
   const property = one(unit?.properties ?? null);
@@ -121,25 +131,57 @@ export default async function TenantDashboard() {
 
             {/* Statements */}
             <div id="statements" className="mt-8 scroll-mt-20">
-              <Panel title="Statements of Account">
+              <Panel
+                title="Statements of Account"
+                action={
+                  <form className="flex flex-wrap items-center gap-2">
+                    <select name="soa_month" defaultValue={soa_month ?? ""} className="h-9 rounded-md border border-line bg-surface px-2 text-xs text-navy">
+                      <option value="">All months</option>
+                      {MONTH_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                    <select name="soa_year" defaultValue={soa_year ?? ""} className="h-9 rounded-md border border-line bg-surface px-2 text-xs text-navy">
+                      <option value="">All years</option>
+                      {statementYears.map((year) => <option key={year} value={year}>{year}</option>)}
+                    </select>
+                    <button className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-800">
+                      <Icon name="filter_alt" size={15} /> Filter
+                    </button>
+                    {(soa_month || soa_year) && (
+                      <Link href="/dashboard/tenant#statements" className="text-xs font-medium text-slate hover:text-navy">Clear</Link>
+                    )}
+                  </form>
+                }
+              >
                 {statements.length === 0 ? (
                   <p className="py-6 text-center text-sm text-slate">No statements published yet.</p>
+                ) : filteredStatements.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-slate">No statements match this filter.</p>
                 ) : (
-                  <ul className="divide-y divide-line">
-                    {statements.map((s) => (
-                      <li key={s.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                        <span className="flex size-9 items-center justify-center rounded-md bg-navy/5 text-navy-700"><Icon name="receipt_long" size={20} /></span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-navy">{s.period_start} → {s.period_end}</p>
-                          <p className="text-xs text-slate capitalize">{s.status}</p>
+                  <div className="space-y-5">
+                    {statementArchive.map((archive) => (
+                      <section key={archive.year}>
+                        <div className="mb-2 flex items-center gap-2">
+                          <Icon name="archive" size={16} className="text-slate" />
+                          <h3 className="text-sm font-semibold text-navy">{archive.year} Archive</h3>
                         </div>
-                        <span className="text-sm font-semibold text-navy">{peso(Number(s.closing_balance))}</span>
-                        <a href={`/api/portal/soa/${s.id}`} target="_blank" rel="noopener noreferrer" aria-label="Download PDF" className="flex size-9 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy">
-                          <Icon name="download" size={20} />
-                        </a>
-                      </li>
+                        <ul className="divide-y divide-line">
+                          {archive.items.map((s) => (
+                            <li key={s.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                              <span className="flex size-9 items-center justify-center rounded-md bg-navy/5 text-navy-700"><Icon name="receipt_long" size={20} /></span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-navy">{s.period_start} → {s.period_end}</p>
+                                <p className="text-xs text-slate capitalize">{s.status}</p>
+                              </div>
+                              <span className="text-sm font-semibold text-navy">{peso(Number(s.closing_balance))}</span>
+                              <Link href={`/dashboard/tenant/statements/${s.id}`} aria-label="View SOA" className="flex size-9 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy">
+                                <Icon name="visibility" size={20} />
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </Panel>
             </div>

@@ -9,6 +9,7 @@ import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { searchParams } = new URL(_req.url);
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(new URL("/portal/login", _req.url));
@@ -25,5 +26,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const url = await signedUrl(supabase, FINANCE_DOCS_BUCKET, stmt.pdf_path, 120);
   if (!url) return new NextResponse("Unavailable", { status: 404 });
-  return NextResponse.redirect(url);
+  const pdf = await fetch(url);
+  if (!pdf.ok) return new NextResponse("Unavailable", { status: 404 });
+
+  const filename = `soa-${id}.pdf`;
+  const disposition = searchParams.get("download") === "1" ? "attachment" : "inline";
+  return new NextResponse(await pdf.arrayBuffer(), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `${disposition}; filename="${filename}"`,
+    },
+  });
 }

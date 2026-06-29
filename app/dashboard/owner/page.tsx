@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { DashboardShell, StatCard, Panel, type NavItem } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
+import { MONTH_OPTIONS, archiveByYear, availableYears, filterByMonthYear } from "@/lib/portal/document-filters";
 
 export const metadata: Metadata = { title: "Owner Dashboard", robots: { index: false } };
 
@@ -38,7 +40,12 @@ const PAYOUT_BADGE: Record<string, { label: string; cls: string }> = {
   refund_pending: { label: "Payment Required",     cls: "bg-error-bg text-error" },
 };
 
-export default async function OwnerDashboard() {
+export default async function OwnerDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ soa_month?: string; soa_year?: string }>;
+}) {
+  const { soa_month, soa_year } = await searchParams;
   const { role, ownerId } = await getCurrentRole();
   if (role !== "owner") redirect(homeForRole(role));
 
@@ -58,6 +65,9 @@ export default async function OwnerDashboard() {
   const statements = (soaData ?? []) as Soa[];
   const expenses = (expenseData ?? []) as Expense[];
   const ownerName = (ownerRow as { name?: string } | null)?.name ?? "Owner";
+  const statementYears = availableYears(statements, (s) => s.period_end);
+  const filteredStatements = filterByMonthYear(statements, (s) => s.period_end, soa_month, soa_year);
+  const statementArchive = archiveByYear(filteredStatements, (s) => s.period_end);
 
   // Generate signed URLs for slips (published SOAs only)
   const slipUrls: Record<string, string> = {};
@@ -90,70 +100,95 @@ export default async function OwnerDashboard() {
 
         {/* Statements */}
         <div id="statements" className="mt-8 scroll-mt-20">
-          <Panel title="Owner Statements">
+          <Panel
+            title="Owner Statements"
+            action={
+              <form className="flex flex-wrap items-center gap-2">
+                <select name="soa_month" defaultValue={soa_month ?? ""} className="h-9 rounded-md border border-line bg-surface px-2 text-xs text-navy">
+                  <option value="">All months</option>
+                  {MONTH_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <select name="soa_year" defaultValue={soa_year ?? ""} className="h-9 rounded-md border border-line bg-surface px-2 text-xs text-navy">
+                  <option value="">All years</option>
+                  {statementYears.map((year) => <option key={year} value={year}>{year}</option>)}
+                </select>
+                <button className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-800">
+                  <Icon name="filter_alt" size={15} /> Filter
+                </button>
+                {(soa_month || soa_year) && (
+                  <Link href="/dashboard/owner#statements" className="text-xs font-medium text-slate hover:text-navy">Clear</Link>
+                )}
+              </form>
+            }
+          >
             {statements.length === 0 ? (
               <p className="py-6 text-center text-sm text-slate">No statements published yet.</p>
+            ) : filteredStatements.length === 0 ? (
+              <p className="py-6 text-center text-sm text-slate">No statements match this filter.</p>
             ) : (
-              <ul className="divide-y divide-line">
-                {statements.map((s) => {
-                  const payout = Number(s.closing_balance ?? s.net_remittance ?? 0);
-                  const badge = PAYOUT_BADGE[s.payout_status ?? "pending"];
-                  const needsPay = payout < 0 && s.status === "published" && s.payout_status !== "collected";
-                  return (
-                    <li key={s.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
-                      <span className="flex size-9 items-center justify-center rounded-md bg-navy/5 text-navy-700 shrink-0">
-                        <Icon name="receipt_long" size={20} />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-navy">{s.period_start} → {s.period_end}</p>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-slate capitalize">{s.status}</span>
-                          {s.status === "published" && badge && (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.cls}`}>{badge.label}</span>
-                          )}
-                          {s.payout_due_at && s.status === "published" && (
-                            <span className="text-[10px] text-slate">Due {s.payout_due_at}</span>
-                          )}
-                        </div>
-                      </div>
+              <div className="space-y-5">
+                {statementArchive.map((archive) => (
+                  <section key={archive.year}>
+                    <div className="mb-2 flex items-center gap-2">
+                      <Icon name="archive" size={16} className="text-slate" />
+                      <h3 className="text-sm font-semibold text-navy">{archive.year} Archive</h3>
+                    </div>
+                    <ul className="divide-y divide-line">
+                      {archive.items.map((s) => {
+                        const payout = Number(s.closing_balance ?? s.net_remittance ?? 0);
+                        const badge = PAYOUT_BADGE[s.payout_status ?? "pending"];
+                        const needsPay = payout < 0 && s.status === "published" && s.payout_status !== "collected";
+                        return (
+                          <li key={s.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
+                            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-navy/5 text-navy-700">
+                              <Icon name="receipt_long" size={20} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-navy">{s.period_start} → {s.period_end}</p>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                                <span className="text-xs text-slate capitalize">{s.status}</span>
+                                {s.status === "published" && badge && (
+                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.cls}`}>{badge.label}</span>
+                                )}
+                                {s.payout_due_at && s.status === "published" && (
+                                  <span className="text-[10px] text-slate">Due {s.payout_due_at}</span>
+                                )}
+                              </div>
+                            </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-semibold ${payout < 0 ? "text-error" : "text-navy"}`}>
-                          {peso(payout)}
-                        </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-semibold ${payout < 0 ? "text-error" : "text-navy"}`}>
+                                {peso(payout)}
+                              </span>
 
-                        {/* Pay Balance button — only when payout is negative */}
-                        {needsPay && (
-                          <form action="/api/payments/create-from-soa" method="POST" className="contents">
-                            <input type="hidden" name="soa_id" value={s.id} />
-                            <button
-                              type="submit"
-                              className="inline-flex items-center gap-1.5 rounded-md bg-error px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
-                              formAction={`/api/payments/create-from-soa`}
-                            >
-                              <Icon name="credit_card" size={14} /> Pay Balance
-                            </button>
-                          </form>
-                        )}
+                              {needsPay && (
+                                <form action="/api/payments/create-from-soa" method="POST" className="contents">
+                                  <input type="hidden" name="soa_id" value={s.id} />
+                                  <button type="submit" className="inline-flex items-center gap-1.5 rounded-md bg-error px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90" formAction="/api/payments/create-from-soa">
+                                    <Icon name="credit_card" size={14} /> Pay Balance
+                                  </button>
+                                </form>
+                              )}
 
-                        {/* Bank slip link */}
-                        {slipUrls[s.id] && (
-                          <a href={slipUrls[s.id]} target="_blank" rel="noopener noreferrer" className="flex size-8 items-center justify-center rounded-md text-available hover:bg-surface-gray" title="View bank transfer slip">
-                            <Icon name="account_balance" size={18} />
-                          </a>
-                        )}
+                              {slipUrls[s.id] && (
+                                <a href={slipUrls[s.id]} target="_blank" rel="noopener noreferrer" className="flex size-8 items-center justify-center rounded-md text-available hover:bg-surface-gray" title="View bank deposit / remittance slip">
+                                  <Icon name="account_balance" size={18} />
+                                </a>
+                              )}
 
-                        {/* PDF download */}
-                        {s.pdf_path && (
-                          <a href={`/api/portal/soa/${s.id}`} target="_blank" rel="noopener noreferrer" aria-label="Download PDF" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy">
-                            <Icon name="download" size={18} />
-                          </a>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+                              {s.pdf_path && (
+                                <Link href={`/dashboard/owner/statements/${s.id}`} aria-label="View SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy">
+                                  <Icon name="visibility" size={18} />
+                                </Link>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                ))}
+              </div>
             )}
           </Panel>
         </div>

@@ -89,15 +89,10 @@ export default async function OwnerDashboard({
 
   // Generate signed URLs for slips (published SOAs only)
   const slipUrls: Record<string, string> = {};
-  const soaUrls: Record<string, string> = {};
   for (const s of statements) {
     if (s.payout_slip_url && s.status === "published") {
       const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 300);
       if (u) slipUrls[s.id] = u;
-    }
-    if (s.pdf_path && s.status === "published") {
-      const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.pdf_path, 300);
-      if (u) soaUrls[s.id] = u;
     }
   }
 
@@ -199,8 +194,8 @@ export default async function OwnerDashboard({
                                 </a>
                               )}
 
-                              {soaUrls[s.id] && (
-                                <a href={soaUrls[s.id]} target="_blank" rel="noopener noreferrer" aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
+                              {s.pdf_path && s.status === "published" && (
+                                <a href={`/api/portal/soa/${s.id}`} target="_blank" rel="noopener noreferrer" aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
                                   <Icon name="visibility" size={18} />
                                 </a>
                               )}

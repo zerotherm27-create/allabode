@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 
 /**
- * Owner/tenant PDF download. RLS scopes the statement to published + belonging to
+ * Owner/tenant PDF preview/download. RLS scopes the statement to published + belonging to
  * the signed-in user, so a stranger gets a 404 and never a signed URL.
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +35,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `${disposition}; filename="${filename}"`,
+      "Cache-Control": "private, no-store",
     },
   });
 }

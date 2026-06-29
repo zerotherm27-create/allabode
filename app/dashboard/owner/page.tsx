@@ -58,9 +58,9 @@ const UNIT_STATUS_TONE: Record<string, string> = {
 export default async function OwnerDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ soa_month?: string; soa_year?: string; preview_soa?: string }>;
+  searchParams: Promise<{ soa_month?: string; soa_year?: string }>;
 }) {
-  const { soa_month, soa_year, preview_soa } = await searchParams;
+  const { soa_month, soa_year } = await searchParams;
   const { role, ownerId } = await getCurrentRole();
   if (role !== "owner") redirect(homeForRole(role));
 
@@ -86,22 +86,18 @@ export default async function OwnerDashboard({
   const statementYears = availableYears(statements, (s) => s.period_end);
   const filteredStatements = filterByMonthYear(statements, (s) => s.period_end, soa_month, soa_year);
   const statementArchive = archiveByYear(filteredStatements, (s) => s.period_end);
-  const previewStatement = statements.find((s) => s.id === preview_soa && s.status === "published" && s.pdf_path);
-  const statementHref = (statementId?: string) => {
-    const params = new URLSearchParams();
-    if (soa_month) params.set("soa_month", soa_month);
-    if (soa_year) params.set("soa_year", soa_year);
-    if (statementId) params.set("preview_soa", statementId);
-    const query = params.toString();
-    return `/dashboard/owner${query ? `?${query}` : ""}#statements`;
-  };
 
   // Generate signed URLs for slips (published SOAs only)
   const slipUrls: Record<string, string> = {};
+  const soaUrls: Record<string, string> = {};
   for (const s of statements) {
     if (s.payout_slip_url && s.status === "published") {
       const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 300);
       if (u) slipUrls[s.id] = u;
+    }
+    if (s.pdf_path && s.status === "published") {
+      const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.pdf_path, 300);
+      if (u) soaUrls[s.id] = u;
     }
   }
 
@@ -154,27 +150,6 @@ export default async function OwnerDashboard({
               <p className="py-6 text-center text-sm text-slate">No statements match this filter.</p>
             ) : (
               <div className="space-y-5">
-                {previewStatement && (
-                  <section className="overflow-hidden rounded-lg border border-line bg-surface">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-                      <div>
-                        <p className="label-caps text-slate">SOA Preview</p>
-                        <h3 className="mt-0.5 text-sm font-semibold text-navy">
-                          {previewStatement.period_start} to {previewStatement.period_end}
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <a href={`/api/portal/soa/${previewStatement.id}?download=1`} className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-navy hover:bg-surface-gray">
-                          <Icon name="download" size={15} /> Download
-                        </a>
-                        <Link href={statementHref()} className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" aria-label="Close SOA preview">
-                          <Icon name="close" size={18} />
-                        </Link>
-                      </div>
-                    </div>
-                    <iframe src={`/api/portal/soa/${previewStatement.id}`} title="Statement of Account PDF preview" className="h-[72vh] min-h-[520px] w-full bg-white" />
-                  </section>
-                )}
                 {statementArchive.map((archive) => (
                   <section key={archive.year}>
                     <div className="mb-2 flex items-center gap-2">
@@ -224,10 +199,10 @@ export default async function OwnerDashboard({
                                 </a>
                               )}
 
-                              {s.pdf_path && (
-                                <Link href={statementHref(s.id)} aria-label="Preview SOA in dashboard" className={`flex size-8 items-center justify-center rounded-md hover:bg-surface-gray ${previewStatement?.id === s.id ? "bg-navy text-white hover:bg-navy-800" : "text-slate hover:text-navy"}`}>
+                              {soaUrls[s.id] && (
+                                <a href={soaUrls[s.id]} target="_blank" rel="noopener noreferrer" aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
                                   <Icon name="visibility" size={18} />
-                                </Link>
+                                </a>
                               )}
                             </div>
                           </li>

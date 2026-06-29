@@ -18,7 +18,7 @@ const peso = (n: number) => `PHP ${Number(n).toLocaleString("en-PH", { minimumFr
 function normalizePesoText(text: string | null | undefined) {
   if (!text) return null;
   return text
-    .replace(/\$\s*([\d,]+(?:\.\d{1,2})?)/g, (_match, amount: string) => {
+    .replace(/\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/g, (_match, amount: string) => {
       const value = Number(String(amount).replace(/,/g, ""));
       return Number.isFinite(value) ? peso(value) : `PHP ${amount}`;
     })

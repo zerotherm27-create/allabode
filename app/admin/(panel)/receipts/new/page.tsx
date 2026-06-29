@@ -6,11 +6,17 @@ import { ReceiptUploadForm } from "./upload-form";
 
 export default async function NewReceiptPage() {
   const supabase = await createClient();
-  const [{ data: props }, { data: owners }, { data: vendors }] = await Promise.all([
+  const [{ data: props }, { data: owners }, { data: vendors }, { data: unitsRaw }, { data: tenantsRaw }] = await Promise.all([
     supabase.from("properties").select("id,name").order("name"),
     supabase.from("owners").select("id,name").order("name"),
     supabase.from("vendors").select("id,name").order("name"),
+    supabase.from("units").select("id,unit_label").order("unit_label"),
+    supabase.from("tenants").select("id,name").order("name"),
   ]);
+
+  type Opt = { id: string; name: string };
+  const units = (unitsRaw ?? []).map((u) => ({ id: u.id, name: (u as { unit_label: string }).unit_label })) as Opt[];
+  const tenants = (tenantsRaw ?? []) as Opt[];
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -20,9 +26,11 @@ export default async function NewReceiptPage() {
       <h1 className="font-display text-2xl font-bold text-navy">Upload receipt</h1>
       <ReceiptUploadForm
         aiEnabled={isAiConfigured()}
-        properties={(props ?? []) as { id: string; name: string }[]}
-        owners={(owners ?? []) as { id: string; name: string }[]}
-        vendors={(vendors ?? []) as { id: string; name: string }[]}
+        properties={(props ?? []) as Opt[]}
+        owners={(owners ?? []) as Opt[]}
+        vendors={(vendors ?? []) as Opt[]}
+        units={units}
+        tenants={tenants}
       />
     </div>
   );

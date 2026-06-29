@@ -77,6 +77,17 @@ export async function uploadReceipt(
     return { error: `[v6-ssr-rpc] ${error.message} | code=${error.code ?? "?"} | hint=${error.hint ?? "-"} | details=${error.details ?? "-"}` };
 
   const id = rowId as string;
+
+  // Set unit + tenant tags (not in legacy RPC signature — update separately)
+  const unitId   = s(formData, "related_unit_id");
+  const tenantId = s(formData, "related_tenant_id");
+  if (unitId || tenantId) {
+    await supabase.from("receipt_uploads").update({
+      ...(unitId   ? { related_unit_id:   unitId   } : {}),
+      ...(tenantId ? { related_tenant_id: tenantId } : {}),
+    }).eq("id", id);
+  }
+
   await logAudit(supabase, { action: "receipt.uploaded", entityType: "receipt_upload", entityId: id, actorId: user?.id });
   // runExtraction needs the admin client for storage download; skip gracefully if unavailable.
   try { await runExtraction(id); } catch { /* receipt saved — AI extraction deferred */ }

@@ -161,7 +161,7 @@ export default async function ReceiptReviewPage({ params }: { params: Promise<{ 
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-navy">Unit</span>
-              <select name="unit_id" className={inputCls}>
+              <select name="unit_id" className={inputCls} defaultValue={receipt.related_unit_id ?? ""}>
                 <option value="">—</option>{opt(units)}
               </select>
             </label>
@@ -173,7 +173,7 @@ export default async function ReceiptReviewPage({ params }: { params: Promise<{ 
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-navy">Tenant</span>
-              <select name="tenant_id" className={inputCls}>
+              <select name="tenant_id" className={inputCls} defaultValue={(receipt as { related_tenant_id?: string | null }).related_tenant_id ?? ""}>
                 <option value="">—</option>{opt(tenants)}
               </select>
             </label>

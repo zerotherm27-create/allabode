@@ -14,11 +14,15 @@ export function ReceiptUploadForm({
   properties,
   owners,
   vendors,
+  units,
+  tenants,
 }: {
   aiEnabled: boolean;
   properties: SelectOption[];
   owners: SelectOption[];
   vendors: SelectOption[];
+  units: SelectOption[];
+  tenants: SelectOption[];
 }) {
   const [state, action, pending] = useActionState<UploadReceiptState, FormData>(
     uploadReceipt,
@@ -59,6 +63,22 @@ export function ReceiptUploadForm({
           <select name="related_owner_id" className={inputCls}>
             <option value="">—</option>
             {owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-navy">Unit (optional)</span>
+          <select name="related_unit_id" className={inputCls}>
+            <option value="">—</option>
+            {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-navy">Tenant (optional)</span>
+          <select name="related_tenant_id" className={inputCls}>
+            <option value="">—</option>
+            {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </label>
 

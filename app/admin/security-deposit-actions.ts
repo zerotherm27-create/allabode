@@ -212,6 +212,53 @@ export async function waiveCommission(commissionId: string) {
   revalidatePath("/admin/security-deposits");
 }
 
+export async function updateDeposit(depositId: string, leaseId: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const amountHeld = parseFloat(str(formData, "amount_held") ?? "0");
+  const monthsHeld = parseFloat(str(formData, "months_held") ?? "2");
+  const receivedAt = str(formData, "received_at");
+  const method     = str(formData, "payment_method");
+  const notes      = str(formData, "notes");
+  if (!receivedAt || isNaN(amountHeld) || amountHeld <= 0) throw new Error("Amount and date are required.");
+
+  await supabase.from("security_deposits").update({
+    amount_held: amountHeld, months_held: monthsHeld,
+    received_at: receivedAt, payment_method: method, notes,
+  }).eq("id", depositId).eq("status", "held");
+
+  await logAudit(supabase, {
+    action: "deposit.updated", entityType: "security_deposit", entityId: depositId, actorId: user?.id,
+  });
+
+  revalidatePath(`/admin/security-deposits/${depositId}`);
+  revalidatePath(`/admin/leases/${leaseId}/edit`);
+  redirect(`/admin/security-deposits/${depositId}`);
+}
+
+export async function updateCommission(commissionId: string, leaseId: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const amount         = parseFloat(str(formData, "amount") ?? "0");
+  const commissionType = str(formData, "commission_type") ?? "new_lease";
+  const description    = str(formData, "description");
+  const notes          = str(formData, "notes");
+  if (isNaN(amount) || amount <= 0) throw new Error("Amount is required.");
+
+  await supabase.from("lease_commissions").update({
+    amount, commission_type: commissionType, description, notes,
+  }).eq("id", commissionId).eq("status", "pending");
+
+  await logAudit(supabase, {
+    action: "commission.updated", entityType: "lease_commission", entityId: commissionId, actorId: user?.id,
+  });
+
+  revalidatePath(`/admin/leases/${leaseId}/edit`);
+  redirect(`/admin/leases/${leaseId}/edit`);
+}
+
 export async function deleteDeposit(depositId: string, leaseId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

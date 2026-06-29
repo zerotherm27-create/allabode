@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { LeaseForm, type LeaseValues } from "@/components/admin/pm-forms";
 import { updateLease } from "@/app/admin/pm-actions";
-import { recordPaymentOnLease, deletePayment, voidInvoice } from "@/app/admin/invoice-actions";
-import { recordDeposit, recordCommission, waiveCommission } from "@/app/admin/security-deposit-actions";
+import { recordPaymentOnLease, updatePayment, deletePayment, voidInvoice } from "@/app/admin/invoice-actions";
+import { recordDeposit, recordCommission, updateCommission, waiveCommission } from "@/app/admin/security-deposit-actions";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { createClient } from "@/lib/supabase/server";
 import { inputCls } from "@/components/admin/form-kit";
@@ -38,8 +38,15 @@ type PaymentRow = {
   received_at: string; status: string; notes: string | null;
 };
 
-export default async function EditLeasePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditLeasePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ editPayment?: string; editComm?: string }>;
+}) {
   const { id } = await params;
+  const { editPayment, editComm } = await searchParams;
   const supabase = await createClient();
   const [{ data: row }, { data: unitData }, { data: tenantData }, { data: invoiceData }, { data: paymentData }, { data: depositData }, { data: commData }] =
     await Promise.all([
@@ -194,6 +201,58 @@ export default async function EditLeasePage({ params }: { params: Promise<{ id: 
           </div>
         </form>
 
+        {/* Inline edit panel for a payment */}
+        {editPayment && (() => {
+          const p = payments.find((x) => x.id === editPayment);
+          if (!p) return null;
+          return (
+            <form action={updatePayment.bind(null, p.id, id)}
+              className="m-4 rounded-lg border border-navy/20 bg-surface-gray p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-navy">
+                Editing payment — {p.received_at}
+              </p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="mb-1 block text-xs font-medium text-slate">Amount</label>
+                  <input name="amount" type="number" step="0.01" min="0" defaultValue={p.amount} required className={inputCls} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate">Method</label>
+                  <select name="method" defaultValue={p.method} className={inputCls}>
+                    <option value="cash">Cash</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="gcash">GCash</option>
+                    <option value="maya">Maya</option>
+                    <option value="check">Check</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate">Date received</label>
+                  <input name="received_at" type="date" defaultValue={p.received_at} required className={inputCls} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate">Reference</label>
+                  <input name="reference" type="text" defaultValue={p.reference ?? ""} className={inputCls} />
+                </div>
+                <div className="col-span-2 md:col-span-3">
+                  <label className="mb-1 block text-xs font-medium text-slate">Notes</label>
+                  <input name="notes" type="text" defaultValue={p.notes ?? ""} className={inputCls} />
+                </div>
+                <div className="flex items-end gap-2">
+                  <button type="submit" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-navy px-3 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+                    <Icon name="save" size={16} /> Save
+                  </button>
+                  <Link href={`/admin/leases/${id}/edit`}
+                    className="inline-flex items-center justify-center rounded-md border border-line px-3 py-2.5 text-sm text-slate hover:bg-surface-gray">
+                    Cancel
+                  </Link>
+                </div>
+              </div>
+            </form>
+          );
+        })()}
+
         {/* Payments list */}
         {payments.length === 0 ? (
           <p className="px-5 py-6 text-center text-sm text-slate">No payments recorded yet.</p>
@@ -206,23 +265,30 @@ export default async function EditLeasePage({ params }: { params: Promise<{ id: 
                 <th className="px-4 py-2.5 font-medium text-slate">Method</th>
                 <th className="px-4 py-2.5 font-medium text-slate">Reference</th>
                 <th className="px-4 py-2.5 font-medium text-slate">Notes</th>
-                <th className="px-4 py-2.5 font-medium text-slate text-right">Delete</th>
+                <th className="px-4 py-2.5 font-medium text-slate text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {payments.map((p) => (
-                <tr key={p.id}>
+                <tr key={p.id} className={editPayment === p.id ? "bg-navy/5" : ""}>
                   <td className="px-4 py-3 text-slate">{p.received_at}</td>
                   <td className="px-4 py-3 text-right font-semibold text-navy">{peso(p.amount)}</td>
                   <td className="px-4 py-3 text-slate">{PAYMENT_METHOD_LABEL[p.method] ?? p.method}</td>
                   <td className="px-4 py-3 text-slate">{p.reference ?? "—"}</td>
                   <td className="px-4 py-3 text-slate">{p.notes ?? "—"}</td>
                   <td className="px-4 py-3 text-right">
-                    <form action={deletePayment.bind(null, p.id, id)}>
-                      <button type="submit" aria-label="Delete payment" className="flex h-8 w-8 items-center justify-center rounded-md text-error hover:bg-error-bg ml-auto">
-                        <Icon name="delete" size={16} />
-                      </button>
-                    </form>
+                    <div className="flex items-center justify-end gap-1">
+                      <Link href={`/admin/leases/${id}/edit?editPayment=${p.id}`}
+                        aria-label="Edit payment"
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-navy-700 hover:bg-surface-gray">
+                        <Icon name="edit" size={16} />
+                      </Link>
+                      <form action={deletePayment.bind(null, p.id, id)}>
+                        <button type="submit" aria-label="Delete payment" className="flex h-8 w-8 items-center justify-center rounded-md text-error hover:bg-error-bg">
+                          <Icon name="delete" size={16} />
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -367,6 +433,51 @@ export default async function EditLeasePage({ params }: { params: Promise<{ id: 
           </div>
         </form>
 
+        {/* Inline edit panel for a commission */}
+        {editComm && (() => {
+          const c = commissions.find((x) => x.id === editComm);
+          if (!c || c.status !== "pending") return null;
+          return (
+            <form action={updateCommission.bind(null, c.id, id)}
+              className="m-4 rounded-lg border border-navy/20 bg-surface-gray p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-navy">
+                Editing commission
+              </p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate">Type</label>
+                  <select name="commission_type" defaultValue={c.commission_type} className={inputCls}>
+                    <option value="new_lease">New lease</option>
+                    <option value="renewal">Renewal</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate">Amount (₱)</label>
+                  <input name="amount" type="number" step="0.01" min="0" defaultValue={c.amount} required className={inputCls} />
+                </div>
+                <div className="col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-slate">Description</label>
+                  <input name="description" type="text" defaultValue={c.description ?? ""} className={inputCls} />
+                </div>
+                <div className="col-span-2 md:col-span-3">
+                  <label className="mb-1 block text-xs font-medium text-slate">Notes</label>
+                  <input name="notes" type="text" className={inputCls} placeholder="Optional" />
+                </div>
+                <div className="flex items-end gap-2">
+                  <button type="submit" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-navy px-3 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+                    <Icon name="save" size={16} /> Save
+                  </button>
+                  <Link href={`/admin/leases/${id}/edit`}
+                    className="inline-flex items-center justify-center rounded-md border border-line px-3 py-2.5 text-sm text-slate hover:bg-surface-gray">
+                    Cancel
+                  </Link>
+                </div>
+              </div>
+            </form>
+          );
+        })()}
+
         {/* Commissions list */}
         {commissions.length === 0 ? (
           <p className="px-5 py-6 text-center text-sm text-slate">No commissions recorded yet.</p>
@@ -378,12 +489,12 @@ export default async function EditLeasePage({ params }: { params: Promise<{ id: 
                 <th className="px-4 py-2.5 font-medium text-slate text-right">Amount</th>
                 <th className="px-4 py-2.5 font-medium text-slate">Status</th>
                 <th className="px-4 py-2.5 font-medium text-slate">Applied</th>
-                <th className="px-4 py-2.5 font-medium text-slate text-right">Action</th>
+                <th className="px-4 py-2.5 font-medium text-slate text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {commissions.map((c) => (
-                <tr key={c.id}>
+                <tr key={c.id} className={editComm === c.id ? "bg-navy/5" : ""}>
                   <td className="px-4 py-3 text-ink">
                     {c.description ?? c.commission_type.replace(/_/g, " ")}
                   </td>
@@ -404,6 +515,12 @@ export default async function EditLeasePage({ params }: { params: Promise<{ id: 
                   </td>
                   <td className="px-4 py-3 text-right">
                     {c.status === "pending" && (
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/admin/leases/${id}/edit?editComm=${c.id}`}
+                          aria-label="Edit commission"
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-navy-700 hover:bg-surface-gray">
+                          <Icon name="edit" size={16} />
+                        </Link>
                       <ConfirmActionForm
                         action={waiveCommission.bind(null, c.id)}
                         message="Waive this commission? It will no longer appear on the SOA."
@@ -413,6 +530,7 @@ export default async function EditLeasePage({ params }: { params: Promise<{ id: 
                           Waive
                         </button>
                       </ConfirmActionForm>
+                      </div>
                     )}
                   </td>
                 </tr>

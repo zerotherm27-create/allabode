@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
-import { processDepositReturn, processDepositForfeiture, deleteDeposit } from "@/app/admin/security-deposit-actions";
+import { processDepositReturn, processDepositForfeiture, updateDeposit, deleteDeposit } from "@/app/admin/security-deposit-actions";
 import { inputCls } from "@/components/admin/form-kit";
 
 const peso = (n: number) =>
@@ -149,6 +149,52 @@ export default async function DepositDetailPage({ params }: { params: Promise<{ 
           <p className="text-sm text-slate"><span className="font-medium text-navy">Reason:</span> {d.forfeiture_reason}</p>
           <p className="mt-1 text-sm text-slate">Amount forfeited: <span className="font-semibold text-navy">{peso(d.forfeited_amount ?? d.amount_held)}</span></p>
         </div>
+      )}
+
+      {/* Edit core deposit details (only while held) */}
+      {d.status === "held" && (
+        <details className="mt-4 rounded-lg border border-line bg-surface">
+          <summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-navy select-none hover:bg-surface-gray">
+            <Icon name="edit" size={16} className="mr-1.5 inline text-navy-700" />
+            Edit deposit details
+          </summary>
+          <form action={updateDeposit.bind(null, id, d.lease_id)}
+            className="grid grid-cols-2 gap-3 border-t border-line p-5 md:grid-cols-4">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate">Months</label>
+              <input name="months_held" type="number" step="0.5" min="1" defaultValue={d.months_held} required className={inputCls} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate">Amount held (₱)</label>
+              <input name="amount_held" type="number" step="0.01" min="0" defaultValue={d.amount_held} required className={inputCls} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate">Received date</label>
+              <input name="received_at" type="date" defaultValue={d.received_at} required className={inputCls} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate">Method</label>
+              <select name="payment_method" defaultValue={d.payment_method ?? "cash"} className={inputCls}>
+                <option value="cash">Cash</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="gcash">GCash</option>
+                <option value="maya">Maya</option>
+                <option value="check">Check</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="col-span-2 md:col-span-3">
+              <label className="mb-1 block text-xs font-medium text-slate">Notes</label>
+              <input name="notes" type="text" defaultValue={d.notes ?? ""} className={inputCls} placeholder="Optional" />
+            </div>
+            <div className="flex items-end">
+              <button type="submit"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+                <Icon name="save" size={16} /> Save changes
+              </button>
+            </div>
+          </form>
+        </details>
       )}
 
       {/* Actions — only if still held */}

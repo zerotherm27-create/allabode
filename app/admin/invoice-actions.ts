@@ -228,6 +228,30 @@ export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
 // ============================================================
 // Delete a payment record
 // ============================================================
+export async function updatePayment(paymentId: string, leaseId: string, fd: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const amount      = n(fd, "amount");
+  const method      = s(fd, "method");
+  const receivedAt  = s(fd, "received_at");
+  const reference   = s(fd, "reference");
+  const notes       = s(fd, "notes");
+  if (!amount || !receivedAt) throw new Error("Amount and date are required.");
+
+  const { error } = await supabase.from("payments").update({
+    amount, method, received_at: receivedAt, reference, notes,
+  }).eq("id", paymentId);
+  if (error) throw new Error(error.message);
+
+  await logAudit(supabase, {
+    action: "payment.updated", entityType: "payment", entityId: paymentId, actorId: user?.id,
+  });
+
+  revalidatePath(`/admin/leases/${leaseId}/edit`);
+  redirect(`/admin/leases/${leaseId}/edit`);
+}
+
 export async function deletePayment(paymentId: string, leaseId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

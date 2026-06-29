@@ -217,7 +217,7 @@ export default async function OwnerDashboard({
                               )}
 
                               {s.status === "published" && (
-                                <Link href={statementHref(s.id)} aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
+                                <Link href={`/dashboard/owner/statements/${s.id}`} aria-label="View SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="View SOA">
                                   <Icon name="visibility" size={18} />
                                 </Link>
                               )}

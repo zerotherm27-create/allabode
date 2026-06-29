@@ -51,6 +51,30 @@ export async function getCurrentRole(): Promise<RoleContext> {
     return { role: "tenant", ownerId: null, tenantId: tenant.id as string, ...base };
   }
 
+  // Dual-role/staff fallback: if the auth UUID is in public.users, the
+  // link_portal_account RPC may intentionally leave auth_user_id unset. Staff
+  // RLS can still read these rows, so preserve owner/tenant portal access by
+  // matching the verified auth email before falling back to staff.
+  if (user.email) {
+    const { data: ownerByEmail } = await supabase
+      .from("owners")
+      .select("id")
+      .ilike("email", user.email)
+      .maybeSingle();
+    if (ownerByEmail) {
+      return { role: "owner", ownerId: ownerByEmail.id as string, tenantId: null, ...base };
+    }
+
+    const { data: tenantByEmail } = await supabase
+      .from("tenants")
+      .select("id")
+      .ilike("email", user.email)
+      .maybeSingle();
+    if (tenantByEmail) {
+      return { role: "tenant", ownerId: null, tenantId: tenantByEmail.id as string, ...base };
+    }
+  }
+
   const { data: isStaff } = await supabase.rpc("is_staff");
   if (isStaff) return { role: "staff", ownerId: null, tenantId: null, ...base };
 

@@ -22,6 +22,11 @@ function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabode.vercel.app").replace(/\/$/, "");
 }
 
+function revalidateOwnerStatementPaths(statementId: string) {
+  revalidatePath("/dashboard/owner");
+  revalidatePath(`/dashboard/owner/statements/${statementId}`);
+}
+
 async function notifyOwnerStatementAvailable(
   supabase: Awaited<ReturnType<typeof createClient>>,
   ownerId: string | null,
@@ -42,7 +47,7 @@ async function notifyOwnerStatementAvailable(
   const period = `${periodStart} to ${periodEnd}`;
   const title = "Statement of Account available";
   const body = `Your Statement of Account for ${period} is now available. Please check your owner dashboard.`;
-  const link = "/dashboard/owner#statements";
+  const link = `/dashboard/owner/statements/${statementId}`;
 
   if (row.auth_user_id) {
     await createNotification(supabase, {
@@ -281,23 +286,26 @@ export async function publishStatement(id: string) {
   }
   revalidatePath(`/admin/statements/${id}`);
   revalidatePath("/admin/statements");
+  if (stored.statement_type === "owner") revalidateOwnerStatementPaths(id);
 }
 
 export async function voidStatement(id: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const { data: s } = await supabase.from("statements_of_account").select("statement_type").eq("id", id).maybeSingle();
   const reason = str(formData, "reason") ?? "Voided";
   await supabase.from("statements_of_account").update({ status: "voided" }).eq("id", id);
   await logAudit(supabase, { action: "soa.voided", entityType: "statement", entityId: id, actorId: user?.id, metadata: { reason } });
   revalidatePath(`/admin/statements/${id}`);
   revalidatePath("/admin/statements");
+  if ((s as { statement_type?: string } | null)?.statement_type === "owner") revalidateOwnerStatementPaths(id);
 }
 
 export async function reopenStatement(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: s } = await supabase.from("statements_of_account").select("status").eq("id", id).maybeSingle();
+  const { data: s } = await supabase.from("statements_of_account").select("status,statement_type").eq("id", id).maybeSingle();
   if (!s) throw new Error("Statement not found.");
   if (s.status !== "approved" && s.status !== "published") {
     throw new Error("Only approved or published statements can be re-opened.");
@@ -315,6 +323,7 @@ export async function reopenStatement(id: string) {
 
   await logAudit(supabase, { action: "soa.reopened", entityType: "statement", entityId: id, actorId: user?.id, metadata: { from_status: s.status } });
   revalidatePath(`/admin/statements/${id}`);
+  if ((s as { statement_type?: string }).statement_type === "owner") revalidateOwnerStatementPaths(id);
 }
 
 export async function deleteStatement(id: string) {

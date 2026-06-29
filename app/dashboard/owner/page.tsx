@@ -34,10 +34,12 @@ type Unit = {
 type Property = { id: string; name: string; city: string | null; status: string; units: Unit[] | null };
 type Soa = {
   id: string; period_start: string; period_end: string; net_remittance: number; closing_balance: number;
+  gross_income: number | null; total_deductions: number | null;
   status: string; pdf_path: string | null;
   payout_status: string | null; payout_due_at: string | null;
   payout_slip_url: string | null; paid_at: string | null;
 };
+type SoaLine = { id: string; description: string; amount: number; line_type: string; billing_note: string | null };
 type Expense = { id: string; expense_date: string; description: string | null; total_amount: number; category: string; status: string };
 
 const PAYOUT_BADGE: Record<string, { label: string; cls: string }> = {
@@ -58,9 +60,9 @@ const UNIT_STATUS_TONE: Record<string, string> = {
 export default async function OwnerDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ soa_month?: string; soa_year?: string }>;
+  searchParams: Promise<{ soa_month?: string; soa_year?: string; preview_soa?: string }>;
 }) {
-  const { soa_month, soa_year } = await searchParams;
+  const { soa_month, soa_year, preview_soa } = await searchParams;
   const { role, ownerId } = await getCurrentRole();
   if (role !== "owner") redirect(homeForRole(role));
 
@@ -71,7 +73,7 @@ export default async function OwnerDashboard({
       .select("id,name,city,status,units(id,unit_label,bedrooms,bathrooms,floor_area,status,base_rent)")
       .order("name"),
     supabase.from("statements_of_account")
-      .select("id,period_start,period_end,net_remittance,closing_balance,status,pdf_path,payout_status,payout_due_at,payout_slip_url,paid_at")
+      .select("id,period_start,period_end,gross_income,total_deductions,net_remittance,closing_balance,status,pdf_path,payout_status,payout_due_at,payout_slip_url,paid_at")
       .eq("statement_type", "owner")
       .order("period_end", { ascending: false }),
     supabase.from("expenses").select("id,expense_date,description,total_amount,category,status")
@@ -86,6 +88,24 @@ export default async function OwnerDashboard({
   const statementYears = availableYears(statements, (s) => s.period_end);
   const filteredStatements = filterByMonthYear(statements, (s) => s.period_end, soa_month, soa_year);
   const statementArchive = archiveByYear(filteredStatements, (s) => s.period_end);
+  const previewStatement = statements.find((s) => s.id === preview_soa && s.status === "published");
+  const { data: previewLineRows } = previewStatement
+    ? await supabase.from("soa_lines").select("id,description,amount,line_type,billing_note").eq("statement_id", previewStatement.id).order("sort_order")
+    : { data: null };
+  const previewLines = (previewLineRows ?? []) as SoaLine[];
+  const previewIncomeLines = previewLines.filter((line) => line.line_type.startsWith("income_"));
+  const previewDeductionLines = previewLines.filter((line) => line.line_type.startsWith("deduction_"));
+  const previewIncome = previewIncomeLines.reduce((sum, line) => sum + Number(line.amount), 0);
+  const previewDeductions = previewDeductionLines.reduce((sum, line) => sum + Math.abs(Number(line.amount)), 0);
+  const previewNet = Number(previewStatement?.closing_balance ?? previewStatement?.net_remittance ?? 0);
+  const statementHref = (statementId?: string) => {
+    const params = new URLSearchParams();
+    if (soa_month) params.set("soa_month", soa_month);
+    if (soa_year) params.set("soa_year", soa_year);
+    if (statementId) params.set("preview_soa", statementId);
+    const query = params.toString();
+    return `/dashboard/owner${query ? `?${query}` : ""}#statements`;
+  };
 
   // Generate signed URLs for slips (published SOAs only)
   const slipUrls: Record<string, string> = {};
@@ -195,7 +215,7 @@ export default async function OwnerDashboard({
                               )}
 
                               {s.pdf_path && s.status === "published" && (
-                                <Link href={`/dashboard/owner/statements/${s.id}`} aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
+                                <Link href={statementHref(s.id)} aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
                                   <Icon name="visibility" size={18} />
                                 </Link>
                               )}
@@ -302,6 +322,86 @@ export default async function OwnerDashboard({
           </Panel>
         </div>
       </div>
+
+      {previewStatement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/55 p-4">
+          <div className="max-h-[88vh] w-full max-w-4xl overflow-hidden rounded-lg border border-line bg-surface shadow-2xl">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4">
+              <div>
+                <p className="label-caps text-gold">SOA Preview</p>
+                <h2 className="mt-1 font-display text-xl font-bold text-navy">
+                  {previewStatement.period_start} to {previewStatement.period_end}
+                </h2>
+                <p className="mt-1 text-sm text-slate">
+                  Remittance due: {previewStatement.payout_due_at ?? "Not set"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <a href={`/api/portal/soa/${previewStatement.id}?download=1`} className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-navy hover:bg-surface-gray">
+                  <Icon name="download" size={15} /> Download
+                </a>
+                <Link href={statementHref()} className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" aria-label="Close SOA preview">
+                  <Icon name="close" size={18} />
+                </Link>
+              </div>
+            </div>
+
+            <div className="max-h-[72vh] overflow-y-auto">
+              <section>
+                <div className="bg-[#dbeafe] px-5 py-2.5 text-sm font-bold text-[#1a56db]">Income</div>
+                <table className="w-full text-left text-sm">
+                  <tbody className="divide-y divide-line">
+                    {previewIncomeLines.length === 0 ? (
+                      <tr><td colSpan={2} className="px-5 py-4 text-center text-slate">No income recorded for this period.</td></tr>
+                    ) : previewIncomeLines.map((line) => (
+                      <tr key={line.id}>
+                        <td className="px-5 py-3 text-ink">{line.description}</td>
+                        <td className="px-5 py-3 text-right font-medium text-navy">{peso(Number(line.amount))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-[#dbeafe]">
+                      <td className="px-5 py-3 font-bold text-navy">Total Income</td>
+                      <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(previewStatement.gross_income ?? previewIncome))}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </section>
+
+              <section>
+                <div className="bg-[#fee2e2] px-5 py-2.5 text-sm font-bold text-[#e02424]">Deductions</div>
+                <table className="w-full text-left text-sm">
+                  <tbody className="divide-y divide-line">
+                    {previewDeductionLines.length === 0 ? (
+                      <tr><td colSpan={3} className="px-5 py-4 text-center text-slate">No deductions recorded for this period.</td></tr>
+                    ) : previewDeductionLines.map((line) => (
+                      <tr key={line.id}>
+                        <td className="px-5 py-3 text-ink">{line.description}</td>
+                        <td className="px-5 py-3 text-xs text-slate">{line.billing_note ?? ""}</td>
+                        <td className="px-5 py-3 text-right font-medium text-navy">{peso(Math.abs(Number(line.amount)))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-[#fee2e2]">
+                      <td colSpan={2} className="px-5 py-3 font-bold text-navy">Total Deductions</td>
+                      <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(previewStatement.total_deductions ?? previewDeductions))}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </section>
+
+              <div className="border-t-2 border-navy bg-surface-gray px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="font-display text-lg font-bold text-navy">Net Remittance</span>
+                  <span className={`font-display text-2xl font-bold ${previewNet < 0 ? "text-error" : "text-navy"}`}>{peso(previewNet)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }

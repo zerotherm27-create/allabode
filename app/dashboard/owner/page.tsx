@@ -34,7 +34,7 @@ type Unit = {
 type Property = { id: string; name: string; city: string | null; status: string; units: Unit[] | null };
 type Soa = {
   id: string; period_start: string; period_end: string; net_remittance: number; closing_balance: number;
-  gross_income: number | null; total_deductions: number | null;
+  total_payments: number | null; total_expenses: number | null;
   status: string; owner_id: string | null; pdf_path: string | null;
   payout_status: string | null; payout_due_at: string | null;
   payout_slip_url: string | null; paid_at: string | null;
@@ -73,7 +73,7 @@ export default async function OwnerDashboard({
       .select("id,name,city,status,units(id,unit_label,bedrooms,bathrooms,floor_area,status,base_rent)")
       .order("name"),
     supabase.from("statements_of_account")
-      .select("id,owner_id,period_start,period_end,gross_income,total_deductions,net_remittance,closing_balance,status,pdf_path,payout_status,payout_due_at,payout_slip_url,paid_at")
+      .select("id,owner_id,period_start,period_end,total_payments,total_expenses,net_remittance,closing_balance,status,pdf_path,payout_status,payout_due_at,payout_slip_url,paid_at")
       .eq("statement_type", "owner")
       .eq("owner_id", ownerId ?? "")
       .eq("status", "published")
@@ -367,7 +367,7 @@ export default async function OwnerDashboard({
                   <tfoot>
                     <tr className="bg-[#dbeafe]">
                       <td className="px-5 py-3 font-bold text-navy">Total Income</td>
-                      <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(previewStatement.gross_income ?? previewIncome))}</td>
+                      <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(previewStatement.total_payments ?? previewIncome))}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -390,7 +390,7 @@ export default async function OwnerDashboard({
                   <tfoot>
                     <tr className="bg-[#fee2e2]">
                       <td colSpan={2} className="px-5 py-3 font-bold text-navy">Total Deductions</td>
-                      <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(previewStatement.total_deductions ?? previewDeductions))}</td>
+                      <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(previewStatement.total_expenses ?? previewDeductions))}</td>
                     </tr>
                   </tfoot>
                 </table>

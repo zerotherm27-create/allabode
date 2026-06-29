@@ -45,7 +45,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
   const supabase = await createClient();
   const [{ data: statement }, { data: ownerRow }, { data: lineRows }] = await Promise.all([
     supabase.from("statements_of_account")
-      .select("id,period_start,period_end,status,pdf_path,owner_id,property_id,unit_id,gross_income,total_deductions,closing_balance,net_remittance,payout_due_at")
+      .select("id,period_start,period_end,status,pdf_path,owner_id,property_id,unit_id,total_payments,total_expenses,closing_balance,net_remittance,payout_due_at")
       .eq("id", id)
       .eq("statement_type", "owner")
       .maybeSingle(),
@@ -129,7 +129,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
               <tfoot>
                 <tr className="bg-[#dbeafe]">
                   <td className="px-5 py-3 font-bold text-navy">Total Income</td>
-                  <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(statement.gross_income ?? totalIncome))}</td>
+                  <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(statement.total_payments ?? totalIncome))}</td>
                 </tr>
               </tfoot>
             </table>
@@ -152,7 +152,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
               <tfoot>
                 <tr className="bg-[#fee2e2]">
                   <td colSpan={2} className="px-5 py-3 font-bold text-navy">Total Deductions</td>
-                  <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(statement.total_deductions ?? totalDeductions))}</td>
+                  <td className="px-5 py-3 text-right font-bold text-navy">{peso(Number(statement.total_expenses ?? totalDeductions))}</td>
                 </tr>
               </tfoot>
             </table>

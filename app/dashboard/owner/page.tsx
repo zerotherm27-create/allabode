@@ -35,7 +35,7 @@ type Property = { id: string; name: string; city: string | null; status: string;
 type Soa = {
   id: string; period_start: string; period_end: string; net_remittance: number; closing_balance: number;
   gross_income: number | null; total_deductions: number | null;
-  status: string; pdf_path: string | null;
+  status: string; owner_id: string | null; pdf_path: string | null;
   payout_status: string | null; payout_due_at: string | null;
   payout_slip_url: string | null; paid_at: string | null;
 };
@@ -73,8 +73,10 @@ export default async function OwnerDashboard({
       .select("id,name,city,status,units(id,unit_label,bedrooms,bathrooms,floor_area,status,base_rent)")
       .order("name"),
     supabase.from("statements_of_account")
-      .select("id,period_start,period_end,gross_income,total_deductions,net_remittance,closing_balance,status,pdf_path,payout_status,payout_due_at,payout_slip_url,paid_at")
+      .select("id,owner_id,period_start,period_end,gross_income,total_deductions,net_remittance,closing_balance,status,pdf_path,payout_status,payout_due_at,payout_slip_url,paid_at")
       .eq("statement_type", "owner")
+      .eq("owner_id", ownerId ?? "")
+      .eq("status", "published")
       .order("period_end", { ascending: false }),
     supabase.from("expenses").select("id,expense_date,description,total_amount,category,status")
       .in("status", ["posted", "locked", "included_in_statement"]).order("expense_date", { ascending: false }).limit(8),
@@ -88,7 +90,7 @@ export default async function OwnerDashboard({
   const statementYears = availableYears(statements, (s) => s.period_end);
   const filteredStatements = filterByMonthYear(statements, (s) => s.period_end, soa_month, soa_year);
   const statementArchive = archiveByYear(filteredStatements, (s) => s.period_end);
-  const previewStatement = statements.find((s) => s.id === preview_soa && s.status === "published");
+  const previewStatement = statements.find((s) => s.id === preview_soa && s.owner_id === ownerId && s.status === "published");
   const { data: previewLineRows } = previewStatement
     ? await supabase.from("soa_lines").select("id,description,amount,line_type,billing_note").eq("statement_id", previewStatement.id).order("sort_order")
     : { data: null };
@@ -214,7 +216,7 @@ export default async function OwnerDashboard({
                                 </a>
                               )}
 
-                              {s.pdf_path && s.status === "published" && (
+                              {s.status === "published" && (
                                 <Link href={statementHref(s.id)} aria-label="Preview SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="Preview SOA">
                                   <Icon name="visibility" size={18} />
                                 </Link>
@@ -337,9 +339,11 @@ export default async function OwnerDashboard({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <a href={`/api/portal/soa/${previewStatement.id}?download=1`} className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-navy hover:bg-surface-gray">
-                  <Icon name="download" size={15} /> Download
-                </a>
+                {previewStatement.pdf_path && (
+                  <a href={`/api/portal/soa/${previewStatement.id}?download=1`} className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-navy hover:bg-surface-gray">
+                    <Icon name="download" size={15} /> Download
+                  </a>
+                )}
                 <Link href={statementHref()} className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" aria-label="Close SOA preview">
                   <Icon name="close" size={18} />
                 </Link>

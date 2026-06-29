@@ -40,8 +40,9 @@ const navGroups = [
       { label: "Invoices",   icon: "request_quote", href: "/admin/invoices"   },
       { label: "Receipts",   icon: "receipt",       href: "/admin/receipts"   },
       { label: "Expenses",   icon: "payments",      href: "/admin/expenses"   },
-      { label: "Statements", icon: "receipt_long",  href: "/admin/statements" },
-      { label: "Audit Log",  icon: "history",       href: "/admin/audit"      },
+      { label: "Statements", icon: "receipt_long",  href: "/admin/statements"        },
+      { label: "Deposits",   icon: "savings",       href: "/admin/security-deposits" },
+      { label: "Audit Log",  icon: "history",       href: "/admin/audit"             },
     ],
   },
   {

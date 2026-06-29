@@ -275,6 +275,22 @@ export async function publishStatement(id: string) {
   }
 
   await logAudit(supabase, { action: "soa.published", entityType: "statement", entityId: id, actorId: user?.id });
+
+  // Mark any commissions included in this SOA as applied
+  const { data: commLines } = await supabase
+    .from("soa_lines")
+    .select("commission_id")
+    .eq("statement_id", id)
+    .eq("line_type", "deduction_commission")
+    .not("commission_id", "is", null);
+  const commIds = ((commLines ?? []) as { commission_id: string | null }[])
+    .map((l) => l.commission_id).filter(Boolean) as string[];
+  if (commIds.length) {
+    await supabase.from("lease_commissions")
+      .update({ status: "applied", soa_id: id, applied_at: new Date().toISOString() })
+      .in("id", commIds);
+  }
+
   if (stored.statement_type === "owner") {
     await notifyOwnerStatementAvailable(
       supabase,
@@ -398,14 +414,15 @@ export async function generateOwnerSoaByLease(formData: FormData) {
   if (lines.length) {
     await supabase.from("soa_lines").insert(
       lines.map((l) => ({
-        statement_id: soaId,
-        line_type:    l.line_type,
-        description:  l.description,
-        amount:       l.amount,
-        sort_order:   l.sort_order,
-        expense_id:   (l as { expense_id?: string | null }).expense_id ?? null,
-        receipt_path: (l as { receipt_path?: string | null }).receipt_path ?? null,
-        billing_note: (l as { billing_note?: string | null }).billing_note ?? null,
+        statement_id:  soaId,
+        line_type:     l.line_type,
+        description:   l.description,
+        amount:        l.amount,
+        sort_order:    l.sort_order,
+        expense_id:    (l as { expense_id?: string | null }).expense_id ?? null,
+        receipt_path:  (l as { receipt_path?: string | null }).receipt_path ?? null,
+        billing_note:  (l as { billing_note?: string | null }).billing_note ?? null,
+        commission_id: (l as { commission_id?: string | null }).commission_id ?? null,
       }))
     );
   }

@@ -157,6 +157,7 @@ export type OwnerSoaLineExtended = SoaLine & {
   expense_id?: string | null;
   receipt_path?: string | null;
   billing_note?: string | null;
+  commission_id?: string | null;
 };
 
 export type OwnerSoaByLeaseMeta = {
@@ -221,7 +222,16 @@ export async function computeOwnerSoaByLease(
   type ExpRow = { id: string; total_amount: number; description: string | null; expense_date: string; receipt_uploads: { file_path: string } | { file_path: string }[] | null };
   const expenses = (expData ?? []) as ExpRow[];
 
-  // 5. Active charge templates for this unit
+  // 5. Pending commissions for this lease (new lease / renewal fee — one-time deduction)
+  const { data: commData } = await supabase
+    .from("lease_commissions")
+    .select("id,amount,description,commission_type")
+    .eq("lease_id", leaseId)
+    .eq("status", "pending");
+  type CommRow = { id: string; amount: number; description: string | null; commission_type: string };
+  const commissions = (commData ?? []) as CommRow[];
+
+  // 6. Active charge templates for this unit
   const leaseType = (lease.lease_type as string) ?? "long_term";
   const { data: tplData } = await supabase
     .from("charge_templates")
@@ -233,7 +243,7 @@ export async function computeOwnerSoaByLease(
   type TplRow = { id: string; name: string; amount: number; billing_note: string | null; template_type: string; sort_order: number };
   const templates = (tplData ?? []) as TplRow[];
 
-  // 6. Previous published SOA recurring line amounts (for pre-fill)
+  // 7. Previous published SOA recurring line amounts (for pre-fill)
   const { data: prevSoa } = await supabase
     .from("statements_of_account")
     .select("id")
@@ -255,7 +265,7 @@ export async function computeOwnerSoaByLease(
     });
   }
 
-  // 7. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
+  // 8. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
   const incomeType = incomeTypeForLeaseType(leaseType);
   const incomeLines: OwnerSoaLineExtended[] = payments.length > 0
     ? payments.map((p, i) => ({
@@ -272,23 +282,34 @@ export async function computeOwnerSoaByLease(
       }];
   const totalIncome = sum(incomeLines.map((l) => l.amount));
 
-  // 8. De-duplicate templates against expense records (by name)
+  // 9. De-duplicate templates against expense records (by name)
   const expNames = new Set(expenses.map((e) => (e.description ?? "").toLowerCase().trim()));
   const filteredTpls = templates.filter((t) => !expNames.has(t.name.toLowerCase().trim()));
 
-  // 9. Fees
+  // 10. Fees
   const mgmtFeePct = Number(lease.mgmt_fee_pct ?? 5);
   const vatPct = Number(lease.vat_pct ?? 12);
   const mgmtFeeAmt = Math.round(totalIncome * mgmtFeePct) / 100;
   const vatAmt = Math.round(mgmtFeeAmt * vatPct) / 100;
 
-  // 10. Deduction lines
+  // 11. Deduction lines
   const getReceiptPath = (e: ExpRow): string | null => {
     const ru = Array.isArray(e.receipt_uploads) ? e.receipt_uploads[0] : e.receipt_uploads;
     return (ru as { file_path?: string } | null)?.file_path ?? null;
   };
 
   const deductionLines: OwnerSoaLineExtended[] = [
+    // Commissions appear first (sort 50+) — one-time, not recurring
+    ...commissions.map((c, i) => ({
+      line_type:     "deduction_commission",
+      description:   c.description ?? (
+        c.commission_type === "new_lease" ? "New Lease Commission" :
+        c.commission_type === "renewal"   ? "Renewal Commission"   : "Commission"
+      ),
+      amount:        -Number(c.amount),
+      sort_order:    50 + i,
+      commission_id: c.id,
+    })),
     { line_type: "deduction_mgmt_fee", description: `Management Fee (${mgmtFeePct}%)`, amount: -mgmtFeeAmt, sort_order: 100 },
     { line_type: "deduction_vat",      description: `VAT (${vatPct}%)`,                amount: -vatAmt,    sort_order: 101 },
     ...expenses.map((e, i) => ({

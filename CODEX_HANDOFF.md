@@ -4,6 +4,76 @@ Production property management platform for **All Abode Property Solutions** (PR
 
 ---
 
+## Latest Handoff for Claude Code - 2026-06-30
+
+### Current branch and deployment
+
+- Workspace: `/Users/jojo/allabode`
+- Branch: `codex/property-management-soa-updates`
+- Production alias: https://allabode.vercel.app
+- Latest production deployment for the SOA work:
+  - https://allabode-hby7f3z2t-zerotherm27-8336s-projects.vercel.app
+  - Vercel deployment id: `dpl_EsMnKnPkTcDBD6vCRR5Df5N6TeFU`
+- Recent commits already pushed/deployed:
+  - `0fb5145 fix: restore owner soa portal visibility`
+  - `80281a7 fix: use actual owner soa totals columns`
+  - `1076d90 fix: polish owner soa pdf template`
+  - `6beff88 fix: preserve punctuation in soa peso summaries`
+
+### What was fixed
+
+Owner SOAs were missing from the owner dashboard because the owner dashboard/detail code selected stale columns from `statements_of_account`.
+
+- Stale columns that caused the Supabase select error: `gross_income`, `total_deductions`
+- Real columns in the live schema: `total_payments`, `total_expenses`, `closing_balance`, `net_remittance`
+
+This was a schema mismatch, not an RLS bug. Owner portal visibility is still intentionally limited to `status = published`; `generated` and `approved` SOAs remain hidden from owners.
+
+SOA PDF polish was also completed from the user's marked screenshot:
+
+- In `lib/pdf/soa.tsx`, `INVOICE FOR` is now `OWNER`.
+- The contact line uses vector mail/globe icons instead of `E:` and `W:`.
+- Summary text is normalized to PHP/peso currency, including punctuation-safe conversion from dollar-formatted AI output.
+- In `lib/ai/soa-summary.ts`, the AI summary prompt now requires PHP currency formatting.
+
+The already-published Jojo Cruzado PDF was manually refreshed in Supabase storage after deployment:
+
+- Statement id: `d214f99c-7376-45dd-a404-4579f0087798`
+- Storage path: `soa/d214f99c-7376-45dd-a404-4579f0087798.pdf`
+- Final summary stored on the row:
+
+```text
+This statement of account for Jojo Cruzado from June 1 to June 30, 2026, shows an opening balance of PHP 0.00, no charges during the period, payments totaling PHP 25,000.00, and expenses amounting to PHP 5,200.00. The closing balance is PHP 19,800.00, which is also the net remittance.
+```
+
+### Live data notes
+
+- `nodesandfoliage@gmail.com` / Jojo Cruzado has one published owner SOA and one generated owner SOA.
+- `owner@allabode.test` / Demo Owner has generated/approved SOAs only, so the portal hides them by design.
+- `tungz10@gmail.com` / JOLEMAR has no properties, leases, or SOAs.
+
+### Verification already done
+
+- `npm run lint` passed.
+- `npm run build` passed.
+- Vercel production build passed.
+- The refreshed PDF was rendered locally with macOS Quick Look and visually checked for the All Abode logo, `OWNER` label, mail/globe icons, and PHP summary.
+
+### Claude Code next steps
+
+1. Pull or inspect `codex/property-management-soa-updates`.
+2. Check `git status -sb` before editing.
+3. If changing app code, follow `AGENTS.md`: read the relevant Next.js guide under `node_modules/next/dist/docs/` first.
+4. If changing the PDF template again, remember existing PDFs in Supabase storage do not change automatically; publish/regenerate or run a controlled one-off refresh.
+5. Avoid printing or committing secrets from `.env.local`. If a service role is needed for emergency repair work, keep it strictly local and prefer server actions/RPCs for normal product behavior.
+6. For local PDF visual checks, prefer Quick Look because Poppler `pdftoppm` flooded fontconfig warnings in this environment:
+
+```bash
+qlmanage -t -s 1200 -o /tmp/output-dir /path/to/file.pdf
+```
+
+---
+
 ## Stack
 
 | Layer | Tech |

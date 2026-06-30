@@ -121,8 +121,11 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
   const incOth = lines.filter((l) => l.line_type === "income_other");
   const totalIncome = [...incLT, ...incST, ...incBnb, ...incOth].reduce((s, l) => s + Number(l.amount), 0);
 
-  const dedLines = lines.filter((l) => l.line_type.startsWith("deduction_"));
-  const totalDed = dedLines.reduce((s, l) => s + Math.abs(Number(l.amount)), 0);
+  const infoLines   = lines.filter((l) => l.line_type.startsWith("info_"));
+  const commLines   = lines.filter((l) => l.line_type === "deduction_commission");
+  const cfPdfLines  = lines.filter((l) => l.line_type === "deduction_carry_forward");
+  const dedLines    = lines.filter((l) => l.line_type.startsWith("deduction_"));
+  const totalDed    = dedLines.reduce((s, l) => s + Math.abs(Number(l.amount)), 0);
   const normalizedSummary = normalizePesoText(input.summary);
 
   const otherExpLines = lines.filter((l) =>
@@ -248,10 +251,39 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
         )}
         <TotalRow label="Total Income" amt={totalIncome} bg={BLUE_BG} />
 
+        {/* ── SECURITY DEPOSITS HELD (informational) ── */}
+        {infoLines.length > 0 && (
+          <>
+            <View style={[ownerStyles.sectionHdr, { backgroundColor: "#f3f4f6", color: "#5b6573" }]}>
+              <Text>Security Deposits Held</Text>
+            </View>
+            {infoLines.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
+            <View style={{ paddingHorizontal: 6, paddingBottom: 4 }}>
+              <Text style={{ fontSize: 7, color: SLATE }}>Held on behalf of owner — not included in remittance calculation</Text>
+            </View>
+          </>
+        )}
+
         {/* ── DEDUCTIONS ── */}
         <View style={[ownerStyles.sectionHdr, { backgroundColor: RED_BG, color: RED_HDR }]}>
           <Text>Deductions</Text>
         </View>
+
+        {/* Carry-forward from prior negative SOAs */}
+        {cfPdfLines.length > 0 && (
+          <Text style={ownerStyles.subHdr}>Prior Balance</Text>
+        )}
+        {cfPdfLines.map((l, i) => (
+          <LineRow key={i} desc={l.description} amt={Math.abs(l.amount)} />
+        ))}
+
+        {/* Commissions (new lease / renewal) */}
+        {commLines.length > 0 && (
+          <Text style={ownerStyles.subHdr}>Commission</Text>
+        )}
+        {commLines.map((l, i) => (
+          <LineRow key={i} desc={l.description} amt={Math.abs(l.amount)} />
+        ))}
 
         {/* Fees */}
         {lines.filter((l) => l.line_type === "deduction_mgmt_fee").map((l, i) => (

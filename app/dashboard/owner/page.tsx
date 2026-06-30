@@ -47,7 +47,8 @@ const PAYOUT_BADGE: Record<string, { label: string; cls: string }> = {
   processing:     { label: "Transfer in Progress", cls: "bg-reserved/10 text-reserved" },
   paid:           { label: "Paid",                 cls: "bg-available/10 text-available" },
   collected:      { label: "Collected",            cls: "bg-available/10 text-available" },
-  refund_pending: { label: "Payment Required",     cls: "bg-error-bg text-error" },
+  refund_pending:   { label: "Payment Required",     cls: "bg-error-bg text-error" },
+  carried_forward:  { label: "Carried Forward",      cls: "bg-surface-gray text-slate" },
 };
 
 const UNIT_STATUS_TONE: Record<string, string> = {
@@ -177,7 +178,7 @@ export default async function OwnerDashboard({
                       {archive.items.map((s) => {
                         const payout = Number(s.closing_balance ?? s.net_remittance ?? 0);
                         const badge = PAYOUT_BADGE[s.payout_status ?? "pending"];
-                        const needsPay = payout < 0 && s.status === "published" && s.payout_status !== "collected";
+                        const needsPay = payout < 0 && s.status === "published" && !["collected", "carried_forward"].includes(s.payout_status ?? "");
                         return (
                           <li key={s.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
                             <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-navy/5 text-navy-700">

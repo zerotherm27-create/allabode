@@ -535,6 +535,25 @@ export async function markSoaPaid(id: string, formData: FormData) {
   revalidatePath(`/admin/statements/${id}`);
 }
 
+export async function carryForwardSoa(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: s } = await supabase
+    .from("statements_of_account")
+    .select("status,closing_balance,statement_type")
+    .eq("id", id).maybeSingle();
+  if (!s) throw new Error("Statement not found.");
+  if (s.status !== "published") throw new Error("Only published statements can be carried forward.");
+  if (Number(s.closing_balance) >= 0) throw new Error("Carry forward only applies to negative payouts.");
+
+  await supabase.from("statements_of_account")
+    .update({ payout_status: "carried_forward" })
+    .eq("id", id);
+  await logAudit(supabase, { action: "soa.carried_forward", entityType: "statement", entityId: id, actorId: user?.id });
+  revalidatePath(`/admin/statements/${id}`);
+  if ((s as { statement_type?: string }).statement_type === "owner") revalidateOwnerStatementPaths(id);
+}
+
 export async function markMultipleSoasPaid(soaIds: string[], formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

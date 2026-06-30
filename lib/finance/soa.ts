@@ -265,7 +265,27 @@ export async function computeOwnerSoaByLease(
     });
   }
 
-  // 8. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
+  // 8a. Held security deposits for this lease (informational — never affect payout math)
+  const { data: depositData } = await supabase
+    .from("security_deposits")
+    .select("id,amount_held,deposit_type")
+    .eq("lease_id", leaseId)
+    .eq("status", "held");
+  type DepositRow = { id: string; amount_held: number; deposit_type: string };
+  const heldDeposits = (depositData ?? []) as DepositRow[];
+
+  // 8b. Prior carried-forward SOA balances for this lease (auto-deducted from next payout)
+  const { data: cfData } = await supabase
+    .from("statements_of_account")
+    .select("closing_balance,period_start")
+    .eq("lease_id", leaseId)
+    .eq("payout_status", "carried_forward")
+    .neq("status", "voided");
+  type CfRow = { closing_balance: number; period_start: string };
+  const cfRows = (cfData ?? []) as CfRow[];
+  const cfTotal = sum(cfRows.map((r) => Number(r.closing_balance)));
+
+  // 9. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
   const incomeType = incomeTypeForLeaseType(leaseType);
   const incomeLines: OwnerSoaLineExtended[] = payments.length > 0
     ? payments.map((p, i) => ({
@@ -281,6 +301,16 @@ export async function computeOwnerSoaByLease(
         sort_order: 0,
       }];
   const totalIncome = sum(incomeLines.map((l) => l.amount));
+
+  // Informational lines — excluded from totals; sort_order 15+ so they sort after income
+  const infoLines: OwnerSoaLineExtended[] = heldDeposits.map((d, i) => ({
+    line_type:   "info_security_deposit",
+    description: d.deposit_type === "security"
+      ? "Security Deposit (Held by AllAbode)"
+      : "Deposit Held by AllAbode",
+    amount:      Number(d.amount_held),
+    sort_order:  15 + i,
+  }));
 
   // 9. De-duplicate templates against expense records (by name)
   const expNames = new Set(expenses.map((e) => (e.description ?? "").toLowerCase().trim()));
@@ -299,6 +329,15 @@ export async function computeOwnerSoaByLease(
   };
 
   const deductionLines: OwnerSoaLineExtended[] = [
+    // Carry-forward balance from prior negative SOAs (sort 45 = just before commissions)
+    ...(cfTotal < 0 ? [{
+      line_type:   "deduction_carry_forward",
+      description: cfRows.length === 1
+        ? `Carry Forward (${cfRows[0].period_start.slice(0, 7)})`
+        : `Carry Forward (${cfRows.length} prior periods)`,
+      amount:      cfTotal,
+      sort_order:  45,
+    }] : []),
     // Commissions appear first (sort 50+) — one-time, not recurring
     ...commissions.map((c, i) => ({
       line_type:     "deduction_commission",
@@ -342,7 +381,7 @@ export async function computeOwnerSoaByLease(
 
   const totalDeductions = sum(deductionLines.map((l) => Math.abs(l.amount)));
   const payout = totalIncome - totalDeductions;
-  const allLines = [...incomeLines, ...deductionLines];
+  const allLines = [...incomeLines, ...infoLines, ...deductionLines];
 
   return {
     totals: {

@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import {
   submitForReview, approveStatement, publishStatement, voidStatement, deleteStatement, reopenStatement,
-  saveOwnerSoaReview, markSoaProcessing, markSoaPaid,
+  saveOwnerSoaReview, markSoaProcessing, markSoaPaid, carryForwardSoa,
 } from "@/app/admin/soa-actions";
 
 const peso = (n: number) =>
@@ -41,18 +41,20 @@ const STATUS_COLOR: Record<string, string> = {
   voided:         "bg-error-bg text-error",
 };
 const PAYOUT_LABEL: Record<string, string> = {
-  pending:        "Awaiting Transfer",
-  processing:     "Transfer in Progress",
-  paid:           "Paid",
-  collected:      "Collected",
-  refund_pending: "Collection Pending",
+  pending:          "Awaiting Transfer",
+  processing:       "Transfer in Progress",
+  paid:             "Paid",
+  collected:        "Collected",
+  refund_pending:   "Collection Pending",
+  carried_forward:  "Carried Forward",
 };
 const PAYOUT_COLOR: Record<string, string> = {
-  pending:        "bg-reserved/10 text-reserved",
-  processing:     "bg-reserved/10 text-reserved",
-  paid:           "bg-available/10 text-available",
-  collected:      "bg-available/10 text-available",
-  refund_pending: "bg-error-bg text-error",
+  pending:          "bg-reserved/10 text-reserved",
+  processing:       "bg-reserved/10 text-reserved",
+  paid:             "bg-available/10 text-available",
+  collected:        "bg-available/10 text-available",
+  refund_pending:   "bg-error-bg text-error",
+  carried_forward:  "bg-surface-gray text-slate",
 };
 
 export default async function StatementDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -103,7 +105,10 @@ export default async function StatementDetailPage({ params }: { params: Promise<
   const btn = "inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold";
 
   const incomeLines   = lines.filter((l) => l.line_type.startsWith("income_"));
+  const infoLines     = lines.filter((l) => l.line_type.startsWith("info_"));
   const expReceipt    = lines.filter((l) => l.line_type === "deduction_expense");
+  const commLines     = lines.filter((l) => l.line_type === "deduction_commission");
+  const cfLines       = lines.filter((l) => l.line_type === "deduction_carry_forward");
   const mgmtFeeLines  = lines.filter((l) => l.line_type === "deduction_mgmt_fee" || l.line_type === "deduction_vat");
   const editableLines = lines.filter((l) => ["deduction_utility", "deduction_expense_recurring"].includes(l.line_type));
   const manualLines   = lines.filter((l) => l.line_type === "deduction_expense_manual");
@@ -197,11 +202,51 @@ export default async function StatementDetailPage({ params }: { params: Promise<
             </table>
           </div>
 
+          {/* Security Deposits Held (informational only) */}
+          {infoLines.length > 0 && (
+            <div className="overflow-hidden rounded-lg border border-line bg-surface">
+              <div className="border-b border-line bg-surface-gray px-4 py-2.5 text-sm font-semibold text-slate">Security Deposits Held</div>
+              <table className="w-full text-left text-sm">
+                <tbody className="divide-y divide-line">
+                  {infoLines.map((l) => (
+                    <tr key={l.id}>
+                      <td className="px-4 py-2.5 text-ink">{l.description}</td>
+                      <td className="px-4 py-2.5 text-right text-slate">{peso(l.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="px-4 py-2 text-xs text-slate">Held on behalf of owner — not counted in remittance</p>
+            </div>
+          )}
+
           {/* Deductions */}
           <div className="overflow-hidden rounded-lg border border-line bg-surface">
             <div className="border-b border-line bg-[#fee2e2] px-4 py-2.5 text-sm font-bold text-[#e02424]">Deductions</div>
             <table className="w-full text-left text-sm">
               <tbody className="divide-y divide-line">
+                {/* Carry-forward balance from prior negative SOAs */}
+                {cfLines.length > 0 && (
+                  <tr><td colSpan={3} className="bg-surface-gray px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate">Carry Forward</td></tr>
+                )}
+                {cfLines.map((l) => (
+                  <tr key={l.id} className="bg-surface-gray/20">
+                    <td className="px-4 py-2.5 text-ink">{l.description}</td>
+                    <td className="px-4 py-2.5 text-xs italic text-slate">prior period balance</td>
+                    <td className="w-36 px-4 py-2.5 text-right font-medium text-navy">{peso(Math.abs(l.amount))}</td>
+                  </tr>
+                ))}
+                {/* Commissions */}
+                {commLines.length > 0 && (
+                  <tr><td colSpan={3} className="bg-surface-gray px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate">Commission</td></tr>
+                )}
+                {commLines.map((l) => (
+                  <tr key={l.id}>
+                    <td className="px-4 py-2.5 text-ink">{l.description}</td>
+                    <td className="px-4 py-2.5 text-xs italic text-slate">one-time</td>
+                    <td className="w-36 px-4 py-2.5 text-right font-medium text-navy">{peso(Math.abs(l.amount))}</td>
+                  </tr>
+                ))}
                 {/* Mgmt fee + VAT */}
                 {mgmtFeeLines.map((l) => (
                   <tr key={l.id}>
@@ -323,7 +368,9 @@ export default async function StatementDetailPage({ params }: { params: Promise<
               <span className={payout < 0 ? "text-error" : "text-available"}>{peso(payout)}</span>
             </div>
             {payout < 0 && (
-              <p className="mt-1.5 text-xs text-error">Negative — owner owes PM. A &quot;Pay Balance&quot; button will appear on their portal.</p>
+              <p className="mt-1.5 text-xs text-error">
+                Negative — commission or deductions exceed income for this period. After publishing, use &quot;Carry to Next Payout&quot; to auto-deduct from the next SOA, or the owner can pay via their portal.
+              </p>
             )}
           </div>
 
@@ -440,6 +487,23 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                 </button>
               </form>
             </div>
+          )}
+
+          {payout < 0 && s.payout_status === "pending" && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+              <form action={carryForwardSoa.bind(null, id)}>
+                <button className={`${btn} border border-line text-navy hover:bg-surface-gray`}>
+                  <Icon name="forward" size={16} /> Carry to Next Payout
+                </button>
+              </form>
+              <p className="text-xs text-slate">Auto-deducts from the next SOA. Owner can also pay via portal.</p>
+            </div>
+          )}
+          {s.payout_status === "carried_forward" && (
+            <p className="mt-3 text-sm text-slate">
+              <Icon name="info" size={14} className="inline mr-1 text-slate" />
+              This negative balance will be deducted from the owner&apos;s next generated SOA.
+            </p>
           )}
         </div>
       )}

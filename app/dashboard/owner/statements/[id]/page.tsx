@@ -57,6 +57,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
   const ownerName = (ownerRow as { name?: string } | null)?.name ?? "Owner";
   const lines = (lineRows ?? []) as SoaLine[];
   const incomeLines = lines.filter((line) => line.line_type.startsWith("income_"));
+  const infoLines = lines.filter((line) => line.line_type.startsWith("info_"));
   const deductionLines = lines.filter((line) => line.line_type.startsWith("deduction_"));
   const totalIncome = incomeLines.reduce((sum, line) => sum + Number(line.amount), 0);
   const totalDeductions = deductionLines.reduce((sum, line) => sum + Math.abs(Number(line.amount)), 0);
@@ -134,6 +135,25 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
               </tfoot>
             </table>
           </section>
+
+          {infoLines.length > 0 && (
+            <section>
+              <div className="bg-surface-gray px-5 py-2.5 text-sm font-semibold text-slate">Security Deposits Held</div>
+              <table className="w-full text-left text-sm">
+                <tbody className="divide-y divide-line">
+                  {infoLines.map((line) => (
+                    <tr key={line.id}>
+                      <td className="px-5 py-3 text-ink">{line.description}</td>
+                      <td className="px-5 py-3 text-right font-medium text-slate">{peso(Math.abs(Number(line.amount)))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="border-t border-line px-5 py-2.5 text-xs text-slate">
+                These amounts are held by All Abode on your behalf and are not part of your remittance.
+              </p>
+            </section>
+          )}
 
           <section>
             <div className="bg-[#fee2e2] px-5 py-2.5 text-sm font-bold text-[#e02424]">Deductions</div>

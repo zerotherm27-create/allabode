@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
+import { renderPaymentReceiptPdf, METHOD_LABEL } from "@/lib/pdf/payment-receipt";
+import { sendEmail } from "@/lib/email";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -188,6 +190,7 @@ export async function recordPaymentOnInvoice(invoiceId: string, fd: FormData) {
 
 // ============================================================
 // Record a payment directly against a lease (no invoice required)
+// Auto-generates a PDF acknowledgement receipt and emails the tenant.
 // ============================================================
 export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
   const supabase = await createClient();
@@ -196,6 +199,7 @@ export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
   const amount     = n(fd, "amount") ?? 0;
   const method     = s(fd, "method") ?? "cash";
   const reference  = s(fd, "reference");
+  const paymentFor = s(fd, "payment_for");
   const notes      = s(fd, "notes");
   const receivedAt = s(fd, "received_at") ?? new Date().toISOString().slice(0, 10);
 
@@ -203,7 +207,7 @@ export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
     .from("leases").select("tenant_id").eq("id", leaseId).maybeSingle();
   if (!lease) throw new Error("Lease not found");
 
-  const { error } = await supabase.from("payments").insert({
+  const { data: payment, error } = await supabase.from("payments").insert({
     lease_id:    leaseId,
     tenant_id:   (lease as { tenant_id: string }).tenant_id,
     amount,
@@ -212,9 +216,17 @@ export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
     status:      "verified",
     received_at: receivedAt,
     recorded_by: user?.id ?? null,
+    payment_for: paymentFor ?? null,
     notes,
-  });
+  }).select("id").single();
   if (error) throw new Error(error.message);
+
+  // Generate PDF receipt + email tenant (best-effort; never fails the action)
+  try {
+    await generateAndSendPaymentReceipt(supabase, payment.id, leaseId, user?.id ?? null);
+  } catch (err) {
+    console.warn("[receipt] generateAndSendPaymentReceipt failed:", err);
+  }
 
   await logAudit(supabase, {
     action: "payment.recorded", entityType: "lease", entityId: leaseId,
@@ -223,6 +235,219 @@ export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
 
   revalidatePath(`/admin/leases/${leaseId}/edit`);
   revalidatePath("/admin/leases");
+}
+
+// ── Receipt helpers ──────────────────────────────────────────
+
+type DbClient = Awaited<ReturnType<typeof createClient>>;
+
+function formatReceiptDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+async function generateAndSendPaymentReceipt(
+  supabase: DbClient,
+  paymentId: string,
+  leaseId: string,
+  actorId: string | null
+): Promise<void> {
+  // Fetch payment row
+  const { data: rawPayment } = await supabase
+    .from("payments")
+    .select("id, amount, method, reference, payment_for, received_at, tenant_id")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!rawPayment) return;
+
+  const pay = rawPayment as {
+    id: string; amount: number; method: string;
+    reference: string | null; payment_for: string | null;
+    received_at: string; tenant_id: string | null;
+  };
+
+  // Fetch tenant
+  const { data: tenantRaw } = pay.tenant_id
+    ? await supabase.from("tenants").select("name, email").eq("id", pay.tenant_id).maybeSingle()
+    : { data: null };
+
+  const tenant = tenantRaw as { name: string; email: string } | null;
+  if (!tenant?.email) return;
+
+  // Fetch property address via lease → unit → property
+  let propertyAddress = "";
+  const { data: leaseRaw } = await supabase
+    .from("leases")
+    .select("units(unit_label, properties(name, address))")
+    .eq("id", leaseId)
+    .maybeSingle();
+  if (leaseRaw) {
+    const lr = leaseRaw as {
+      units?: {
+        unit_label?: string;
+        properties?: { name?: string; address?: string } | null;
+      } | null;
+    };
+    const unit = lr.units;
+    const prop = unit?.properties ?? null;
+    const propName = prop?.address ?? prop?.name ?? "";
+    const unitLabel = unit?.unit_label ?? "";
+    propertyAddress = [propName, unitLabel].filter(Boolean).join(" ");
+  }
+
+  // Fetch recorded-by staff name
+  let receivedBy = "All Abode Staff";
+  if (actorId) {
+    const { data: actorRaw } = await supabase
+      .from("users")
+      .select("full_name, email")
+      .eq("id", actorId)
+      .maybeSingle();
+    if (actorRaw) {
+      const a = actorRaw as { full_name?: string | null; email?: string | null };
+      receivedBy = a.full_name ?? a.email ?? "All Abode Staff";
+    }
+  }
+
+  const formattedDate  = formatReceiptDate(pay.received_at);
+  const receiptNumber  = `REC-${paymentId.slice(0, 8).toUpperCase()}`;
+
+  // Render PDF
+  const buffer = await renderPaymentReceiptPdf({
+    receiptNumber,
+    date:            formattedDate,
+    tenantName:      tenant.name,
+    propertyAddress,
+    amount:          Number(pay.amount),
+    method:          pay.method,
+    paymentFor:      pay.payment_for,
+    remarks:         pay.reference,
+    receivedBy,
+  });
+
+  // Upload to finance-docs bucket
+  const pdfPath = `receipts/payment-${paymentId}.pdf`;
+  await supabase.storage
+    .from("finance-docs")
+    .upload(pdfPath, buffer, { contentType: "application/pdf", upsert: true });
+
+  // Save path on the payment row
+  await supabase.from("payments").update({ receipt_pdf_path: pdfPath }).eq("id", paymentId);
+
+  // Signed URL valid for 7 days so the tenant can download from the email
+  const { data: signed } = await supabase.storage
+    .from("finance-docs")
+    .createSignedUrl(pdfPath, 60 * 60 * 24 * 7);
+
+  // Email tenant
+  await sendEmail({
+    to:      tenant.email,
+    subject: `Payment Acknowledgement Receipt — ${formattedDate}`,
+    html:    buildReceiptEmail({
+      receiptNumber,
+      tenantName:    tenant.name,
+      propertyAddress,
+      amount:        Number(pay.amount),
+      methodLabel:   METHOD_LABEL[pay.method] ?? pay.method,
+      paymentFor:    pay.payment_for,
+      remarks:       pay.reference,
+      date:          formattedDate,
+      receivedBy,
+      receiptUrl:    signed?.signedUrl ?? null,
+    }),
+  });
+
+  await logAudit(supabase, {
+    action: "payment.receipt_sent", entityType: "payment", entityId: paymentId,
+    actorId, metadata: { tenant_email: tenant.email, receipt_number: receiptNumber },
+  });
+}
+
+function buildReceiptEmail({
+  receiptNumber, tenantName, propertyAddress, amount,
+  methodLabel, paymentFor, remarks, date, receivedBy, receiptUrl,
+}: {
+  receiptNumber: string; tenantName: string; propertyAddress: string;
+  amount: number; methodLabel: string; paymentFor?: string | null;
+  remarks?: string | null; date: string; receivedBy: string;
+  receiptUrl: string | null;
+}): string {
+  const pesoFmt = (n: number) =>
+    `PHP ${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const row = (label: string, value?: string | null) =>
+    value
+      ? `<tr>
+           <td style="padding:10px 0;color:#5b6573;font-size:13px;width:42%;border-bottom:1px solid #e2e6ec;vertical-align:top;">${label}</td>
+           <td style="padding:10px 0;color:#0a2540;font-weight:bold;font-size:13px;border-bottom:1px solid #e2e6ec;">${value}</td>
+         </tr>`
+      : "";
+
+  const downloadBtn = receiptUrl
+    ? `<p style="margin:28px 0 0;">
+         <a href="${receiptUrl}"
+            style="display:inline-block;background:#0a2540;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:6px;font-weight:bold;font-size:14px;">
+           &#8681;&nbsp; Download PDF Receipt
+         </a>
+       </p>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:600px;margin:32px auto;border-radius:10px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+
+    <!-- Header -->
+    <div style="background:#0a2540;padding:28px 36px;text-align:center;">
+      <p style="margin:0;color:#b4975a;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;">All Abode Property Solutions</p>
+      <h1 style="margin:10px 0 4px;color:#ffffff;font-size:20px;letter-spacing:2px;font-weight:bold;text-transform:uppercase;">Acknowledgement Receipt</h1>
+      <p style="margin:0;color:rgba(255,255,255,0.45);font-size:11px;">${receiptNumber}</p>
+    </div>
+
+    <!-- Body -->
+    <div style="background:#ffffff;padding:36px;">
+      <p style="margin:0 0 28px;color:#374151;font-size:14px;line-height:1.7;">
+        Dear <strong style="color:#0a2540;">${tenantName}</strong>,<br><br>
+        We are pleased to confirm that your payment has been received and verified by All Abode Property Solutions. Please see the details below.
+      </p>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
+        ${row("Date", date)}
+        ${row("Property", propertyAddress)}
+        ${row("Amount Received", `<span style="font-size:16px;">${pesoFmt(amount)}</span>`)}
+        ${row("Mode of Payment", methodLabel)}
+        ${row("Payment For", paymentFor)}
+        ${row("Remarks", remarks)}
+      </table>
+
+      <div style="margin-top:24px;padding:16px 20px;background:#f8f6f1;border-left:4px solid #b4975a;border-radius:0 6px 6px 0;">
+        <p style="margin:0;color:#5b6573;font-size:12px;line-height:1.6;">
+          <strong style="color:#0a2540;">Received by:</strong>&nbsp; ${receivedBy}<br>
+          <strong style="color:#0a2540;">Date:</strong>&nbsp; ${date}<br>
+          <span style="font-size:11px;color:#9ca3af;">Authorized Representative</span>
+        </p>
+      </div>
+
+      ${downloadBtn}
+
+      <p style="margin:28px 0 0;color:#9ca3af;font-size:11px;line-height:1.7;">
+        This is an automated notification from All Abode Property Solutions. Please keep this email for your records.<br>
+        ${receiptUrl ? "The PDF download link is valid for 7 days." : ""}
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#0a2540;padding:20px 36px;text-align:center;">
+      <p style="margin:0;color:rgba(255,255,255,0.45);font-size:11px;line-height:1.7;">
+        &copy; All Abode Property Solutions &bull; PRC Licensed Real Estate Firm<br>
+        This is your official acknowledgement receipt.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>`;
 }
 
 // ============================================================

@@ -190,9 +190,13 @@ export default async function EditLeasePage({
             <label className="mb-1 block text-xs font-medium text-slate">Reference</label>
             <input name="reference" type="text" className={inputCls} placeholder="Optional" />
           </div>
+          <div className="col-span-2 md:col-span-4">
+            <label className="mb-1 block text-xs font-medium text-slate">Payment for</label>
+            <input name="payment_for" type="text" className={inputCls} placeholder="e.g. 1 month advance rental and 2 months security deposit" />
+          </div>
           <div className="col-span-2 md:col-span-3">
             <label className="mb-1 block text-xs font-medium text-slate">Notes</label>
-            <input name="notes" type="text" className={inputCls} placeholder="Optional notes" />
+            <input name="notes" type="text" className={inputCls} placeholder="Internal notes (not shown on receipt)" />
           </div>
           <div className="flex items-end">
             <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">

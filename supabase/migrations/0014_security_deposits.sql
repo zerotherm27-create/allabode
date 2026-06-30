@@ -6,7 +6,7 @@
 -- ─── Security deposits ────────────────────────────────────────────
 -- Money collected from tenant on lease signing: 1–3 months rent.
 -- Held by AllAbode; NOT owner income until forfeited or applied to damages.
-create table security_deposits (
+create table if not exists security_deposits (
   id             uuid primary key default gen_random_uuid(),
   lease_id       uuid not null references leases(id) on delete cascade,
   tenant_id      uuid references tenants(id),
@@ -36,7 +36,7 @@ create table security_deposits (
 -- ─── Lease commissions ────────────────────────────────────────────
 -- One-time fee AllAbode earns for sourcing/renewing a lease.
 -- Deducted from the owner's first SOA for that lease period.
-create table lease_commissions (
+create table if not exists lease_commissions (
   id              uuid primary key default gen_random_uuid(),
   lease_id        uuid not null references leases(id) on delete cascade,
   owner_id        uuid references owners(id),
@@ -58,27 +58,50 @@ create table lease_commissions (
 alter table soa_lines add column if not exists commission_id uuid references lease_commissions(id);
 
 -- ─── Triggers ────────────────────────────────────────────────────
-create trigger set_updated_at_security_deposits
-  before update on security_deposits
-  for each row execute function set_updated_at();
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'set_updated_at_security_deposits') then
+    create trigger set_updated_at_security_deposits
+      before update on security_deposits
+      for each row execute function set_updated_at();
+  end if;
+end $$;
 
-create trigger set_updated_at_lease_commissions
-  before update on lease_commissions
-  for each row execute function set_updated_at();
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'set_updated_at_lease_commissions') then
+    create trigger set_updated_at_lease_commissions
+      before update on lease_commissions
+      for each row execute function set_updated_at();
+  end if;
+end $$;
 
 -- ─── RLS ─────────────────────────────────────────────────────────
 alter table security_deposits enable row level security;
 alter table lease_commissions  enable row level security;
 
-create policy "staff full security_deposits" on security_deposits
-  using (is_staff()) with check (is_staff());
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'security_deposits' and policyname = 'staff full security_deposits') then
+    create policy "staff full security_deposits" on security_deposits
+      using (is_staff()) with check (is_staff());
+  end if;
+end $$;
 
-create policy "staff full lease_commissions" on lease_commissions
-  using (is_staff()) with check (is_staff());
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'lease_commissions' and policyname = 'staff full lease_commissions') then
+    create policy "staff full lease_commissions" on lease_commissions
+      using (is_staff()) with check (is_staff());
+  end if;
+end $$;
 
--- Owners can read their own deposit and commission records (portal transparency)
-create policy "owner reads own deposits" on security_deposits
-  for select using (owner_id = current_owner_id());
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'security_deposits' and policyname = 'owner reads own deposits') then
+    create policy "owner reads own deposits" on security_deposits
+      for select using (owner_id = current_owner_id());
+  end if;
+end $$;
 
-create policy "owner reads own commissions" on lease_commissions
-  for select using (owner_id = current_owner_id());
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'lease_commissions' and policyname = 'owner reads own commissions') then
+    create policy "owner reads own commissions" on lease_commissions
+      for select using (owner_id = current_owner_id());
+  end if;
+end $$;

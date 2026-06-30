@@ -4,12 +4,12 @@
 -- ─────────────────────────────────────────────────────────────────
 -- 1. Charge templates
 -- ─────────────────────────────────────────────────────────────────
-create table charge_templates (
+create table if not exists charge_templates (
   id            uuid primary key default gen_random_uuid(),
   unit_id       uuid not null references units(id) on delete cascade,
   name          text not null,
   amount        numeric(12,2) not null default 0,
-  billing_note  text,                          -- "June", "inclusive of VAT", etc.
+  billing_note  text,
   template_type text not null default 'utility'
                 check (template_type in ('utility', 'expense_recurring')),
   sort_order    int  not null default 0,
@@ -20,22 +20,52 @@ create table charge_templates (
   updated_at    timestamptz not null default now()
 );
 
-create index charge_templates_unit_idx on charge_templates (unit_id, is_active);
-create trigger charge_templates_updated_at before update on charge_templates
-  for each row execute function set_updated_at();
+-- Ensure all columns exist in case the table was created with an older schema
+alter table charge_templates add column if not exists billing_note  text;
+alter table charge_templates add column if not exists template_type text not null default 'utility';
+alter table charge_templates add column if not exists sort_order    int  not null default 0;
+alter table charge_templates add column if not exists is_active     boolean not null default true;
+alter table charge_templates add column if not exists applies_to    text not null default 'both';
+alter table charge_templates add column if not exists created_at    timestamptz not null default now();
+alter table charge_templates add column if not exists updated_at    timestamptz not null default now();
+
+create index if not exists charge_templates_unit_idx on charge_templates (unit_id, is_active);
+
+do $$ begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'charge_templates_updated_at'
+  ) then
+    create trigger charge_templates_updated_at before update on charge_templates
+      for each row execute function set_updated_at();
+  end if;
+end $$;
 
 alter table charge_templates enable row level security;
-create policy "staff_all_charge_templates" on charge_templates
-  for all using (is_staff()) with check (is_staff());
-create policy "owner_read_charge_templates" on charge_templates
-  for select using (
-    exists (
-      select 1 from units u
-      join properties p on p.id = u.property_id
-      where u.id = charge_templates.unit_id
-        and p.owner_id = current_owner_id()
-    )
-  );
+
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'charge_templates' and policyname = 'staff_all_charge_templates'
+  ) then
+    create policy "staff_all_charge_templates" on charge_templates
+      for all using (is_staff()) with check (is_staff());
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'charge_templates' and policyname = 'owner_read_charge_templates'
+  ) then
+    create policy "owner_read_charge_templates" on charge_templates
+      for select using (
+        exists (
+          select 1 from units u
+          join properties p on p.id = u.property_id
+          where u.id = charge_templates.unit_id
+            and p.owner_id = current_owner_id()
+        )
+      );
+  end if;
+end $$;
 
 -- ─────────────────────────────────────────────────────────────────
 -- 2. Lease type and management fee

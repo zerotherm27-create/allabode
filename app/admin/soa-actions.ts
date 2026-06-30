@@ -277,11 +277,12 @@ export async function publishStatement(id: string) {
   await logAudit(supabase, { action: "soa.published", entityType: "statement", entityId: id, actorId: user?.id });
 
   // Mark any commissions included in this SOA as applied
+  // Supports both info_commission (new) and deduction_commission (legacy historical SOAs)
   const { data: commLines } = await supabase
     .from("soa_lines")
     .select("commission_id")
     .eq("statement_id", id)
-    .eq("line_type", "deduction_commission")
+    .in("line_type", ["info_commission", "deduction_commission"])
     .not("commission_id", "is", null);
   const commIds = ((commLines ?? []) as { commission_id: string | null }[])
     .map((l) => l.commission_id).filter(Boolean) as string[];

@@ -302,15 +302,28 @@ export async function computeOwnerSoaByLease(
       }];
   const totalIncome = sum(incomeLines.map((l) => l.amount));
 
-  // Informational lines — excluded from totals; sort_order 15+ so they sort after income
-  const infoLines: OwnerSoaLineExtended[] = heldDeposits.map((d, i) => ({
-    line_type:   "info_security_deposit",
-    description: d.deposit_type === "security"
-      ? "Security Deposit (Held by AllAbode)"
-      : "Deposit Held by AllAbode",
-    amount:      Number(d.amount_held),
-    sort_order:  15 + i,
-  }));
+  // Informational lines — excluded from totals; sort_order 15+ so they sort after income.
+  // Commission is taken from the security deposit by AllAbode, not from the owner's remittance.
+  const infoLines: OwnerSoaLineExtended[] = [
+    ...heldDeposits.map((d, i) => ({
+      line_type:   "info_security_deposit",
+      description: d.deposit_type === "security"
+        ? "Security Deposit (Held by AllAbode)"
+        : "Deposit Held by AllAbode",
+      amount:      Number(d.amount_held),
+      sort_order:  15 + i,
+    })),
+    ...commissions.map((c, i) => ({
+      line_type:    "info_commission",
+      description:  c.description ?? (
+        c.commission_type === "new_lease" ? "New Lease Commission (from Security Deposit)" :
+        c.commission_type === "renewal"   ? "Renewal Commission (from Security Deposit)"   : "Commission (from Security Deposit)"
+      ),
+      amount:       Number(c.amount),
+      sort_order:   20 + i,
+      commission_id: c.id,
+    })),
+  ];
 
   // 9. De-duplicate templates against expense records (by name)
   const expNames = new Set(expenses.map((e) => (e.description ?? "").toLowerCase().trim()));
@@ -329,7 +342,7 @@ export async function computeOwnerSoaByLease(
   };
 
   const deductionLines: OwnerSoaLineExtended[] = [
-    // Carry-forward balance from prior negative SOAs (sort 45 = just before commissions)
+    // Carry-forward balance from prior negative SOAs (sort 45)
     ...(cfTotal < 0 ? [{
       line_type:   "deduction_carry_forward",
       description: cfRows.length === 1
@@ -338,17 +351,8 @@ export async function computeOwnerSoaByLease(
       amount:      cfTotal,
       sort_order:  45,
     }] : []),
-    // Commissions appear first (sort 50+) — one-time, not recurring
-    ...commissions.map((c, i) => ({
-      line_type:     "deduction_commission",
-      description:   c.description ?? (
-        c.commission_type === "new_lease" ? "New Lease Commission" :
-        c.commission_type === "renewal"   ? "Renewal Commission"   : "Commission"
-      ),
-      amount:        -Number(c.amount),
-      sort_order:    50 + i,
-      commission_id: c.id,
-    })),
+    // Commission is NOT deducted here — AllAbode takes it from the security deposit.
+    // It appears as an info_commission line instead (see infoLines above).
     { line_type: "deduction_mgmt_fee", description: `Management Fee (${mgmtFeePct}%)`, amount: -mgmtFeeAmt, sort_order: 100 },
     { line_type: "deduction_vat",      description: `VAT (${vatPct}%)`,                amount: -vatAmt,    sort_order: 101 },
     ...expenses.map((e, i) => ({

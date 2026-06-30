@@ -122,7 +122,6 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
   const totalIncome = [...incLT, ...incST, ...incBnb, ...incOth].reduce((s, l) => s + Number(l.amount), 0);
 
   const infoLines   = lines.filter((l) => l.line_type.startsWith("info_"));
-  const commLines   = lines.filter((l) => l.line_type === "deduction_commission");
   const cfPdfLines  = lines.filter((l) => l.line_type === "deduction_carry_forward");
   const dedLines    = lines.filter((l) => l.line_type.startsWith("deduction_"));
   const totalDed    = dedLines.reduce((s, l) => s + Math.abs(Number(l.amount)), 0);
@@ -251,15 +250,15 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
         )}
         <TotalRow label="Total Income" amt={totalIncome} bg={BLUE_BG} />
 
-        {/* ── SECURITY DEPOSITS HELD (informational) ── */}
+        {/* ── SECURITY DEPOSIT & COMMISSION (informational — not in remittance) ── */}
         {infoLines.length > 0 && (
           <>
             <View style={[ownerStyles.sectionHdr, { backgroundColor: "#f3f4f6", color: "#5b6573" }]}>
-              <Text>Security Deposits Held</Text>
+              <Text>Security Deposit &amp; Commission</Text>
             </View>
             {infoLines.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
             <View style={{ paddingHorizontal: 6, paddingBottom: 4 }}>
-              <Text style={{ fontSize: 7, color: SLATE }}>Held on behalf of owner — not included in remittance calculation</Text>
+              <Text style={{ fontSize: 7, color: SLATE }}>AllAbode&apos;s commission is taken from the security deposit — not deducted from owner remittance</Text>
             </View>
           </>
         )}
@@ -274,14 +273,6 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
           <Text style={ownerStyles.subHdr}>Prior Balance</Text>
         )}
         {cfPdfLines.map((l, i) => (
-          <LineRow key={i} desc={l.description} amt={Math.abs(l.amount)} />
-        ))}
-
-        {/* Commissions (new lease / renewal) */}
-        {commLines.length > 0 && (
-          <Text style={ownerStyles.subHdr}>Commission</Text>
-        )}
-        {commLines.map((l, i) => (
           <LineRow key={i} desc={l.description} amt={Math.abs(l.amount)} />
         ))}
 

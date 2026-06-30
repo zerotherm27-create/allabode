@@ -107,7 +107,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
   const incomeLines   = lines.filter((l) => l.line_type.startsWith("income_"));
   const infoLines     = lines.filter((l) => l.line_type.startsWith("info_"));
   const expReceipt    = lines.filter((l) => l.line_type === "deduction_expense");
-  const commLines     = lines.filter((l) => l.line_type === "deduction_commission");
+  const commLines     = lines.filter((l) => l.line_type === "info_commission" || l.line_type === "deduction_commission");
   const cfLines       = lines.filter((l) => l.line_type === "deduction_carry_forward");
   const mgmtFeeLines  = lines.filter((l) => l.line_type === "deduction_mgmt_fee" || l.line_type === "deduction_vat");
   const editableLines = lines.filter((l) => ["deduction_utility", "deduction_expense_recurring"].includes(l.line_type));
@@ -202,21 +202,29 @@ export default async function StatementDetailPage({ params }: { params: Promise<
             </table>
           </div>
 
-          {/* Security Deposits Held (informational only) */}
-          {infoLines.length > 0 && (
+          {/* Security Deposit & Commission — informational, not counted in remittance */}
+          {(infoLines.length > 0 || commLines.length > 0) && (
             <div className="overflow-hidden rounded-lg border border-line bg-surface">
-              <div className="border-b border-line bg-surface-gray px-4 py-2.5 text-sm font-semibold text-slate">Security Deposits Held</div>
+              <div className="border-b border-line bg-surface-gray px-4 py-2.5 text-sm font-semibold text-slate">Security Deposit &amp; Commission (Informational)</div>
               <table className="w-full text-left text-sm">
                 <tbody className="divide-y divide-line">
                   {infoLines.map((l) => (
                     <tr key={l.id}>
                       <td className="px-4 py-2.5 text-ink">{l.description}</td>
-                      <td className="px-4 py-2.5 text-right text-slate">{peso(l.amount)}</td>
+                      <td className="px-4 py-2.5 text-xs text-slate">held</td>
+                      <td className="w-36 px-4 py-2.5 text-right text-slate">{peso(l.amount)}</td>
+                    </tr>
+                  ))}
+                  {commLines.map((l) => (
+                    <tr key={l.id} className="bg-surface-gray/30">
+                      <td className="px-4 py-2.5 text-ink">{l.description}</td>
+                      <td className="px-4 py-2.5 text-xs text-slate">from deposit</td>
+                      <td className="w-36 px-4 py-2.5 text-right text-slate">{peso(Math.abs(l.amount))}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <p className="px-4 py-2 text-xs text-slate">Held on behalf of owner — not counted in remittance</p>
+              <p className="px-4 py-2 text-xs text-slate">AllAbode&apos;s commission is taken from the security deposit — not deducted from owner remittance</p>
             </div>
           )}
 
@@ -233,17 +241,6 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                   <tr key={l.id} className="bg-surface-gray/20">
                     <td className="px-4 py-2.5 text-ink">{l.description}</td>
                     <td className="px-4 py-2.5 text-xs italic text-slate">prior period balance</td>
-                    <td className="w-36 px-4 py-2.5 text-right font-medium text-navy">{peso(Math.abs(l.amount))}</td>
-                  </tr>
-                ))}
-                {/* Commissions */}
-                {commLines.length > 0 && (
-                  <tr><td colSpan={3} className="bg-surface-gray px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate">Commission</td></tr>
-                )}
-                {commLines.map((l) => (
-                  <tr key={l.id}>
-                    <td className="px-4 py-2.5 text-ink">{l.description}</td>
-                    <td className="px-4 py-2.5 text-xs italic text-slate">one-time</td>
                     <td className="w-36 px-4 py-2.5 text-right font-medium text-navy">{peso(Math.abs(l.amount))}</td>
                   </tr>
                 ))}

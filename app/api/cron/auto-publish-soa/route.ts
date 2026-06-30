@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
   // Check if auto-send is enabled in automation_rules
   const { data: rule } = await supabase
     .from("automation_rules")
-    .select("enabled")
-    .eq("rule_key", "auto_publish_owner_soa")
+    .select("is_active")
+    .eq("code", "auto_publish_owner_soa")
     .maybeSingle();
 
-  if (!rule?.enabled) {
+  if (!rule?.is_active) {
     return NextResponse.json({ skipped: "Auto-send is disabled. Enable it in Admin → Automation to auto-publish approved SOAs." });
   }
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   const status = errors.length === 0 ? "success" : published > 0 ? "partial" : "failed";
-  await logCronRun(supabase, "auto_publish_soa", {
+  await logCronRun(supabase, "auto_publish_owner_soa", {
     processed: soaIds.length,
     taken: published,
     errors: errors.length ? errors : undefined,

@@ -96,10 +96,10 @@ export default async function StatementDetailPage({ params }: { params: Promise<
 
   const { data: autoSendRule } = await supabase
     .from("automation_rules")
-    .select("enabled")
-    .eq("rule_key", "auto_publish_owner_soa")
+    .select("is_active")
+    .eq("code", "auto_publish_owner_soa")
     .maybeSingle();
-  const autoSendOn = !!(autoSendRule as { enabled?: boolean } | null)?.enabled;
+  const autoSendOn = !!(autoSendRule as { is_active?: boolean } | null)?.is_active;
 
   const lineReceiptUrls: Record<string, string> = {};
   for (const l of lines) {

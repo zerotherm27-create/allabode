@@ -62,6 +62,7 @@ const navGroups = [
       { label: "Notices",       icon: "campaign",   href: "/admin/notices"    },
       { label: "Automation",    icon: "autorenew",  href: "/admin/automation" },
       { label: "Site Settings", icon: "tune",       href: "/admin/settings"   },
+      { label: "Setup Guide",   icon: "menu_book",  href: "/admin/setup"      },
     ],
   },
 ];

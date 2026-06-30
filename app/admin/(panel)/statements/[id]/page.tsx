@@ -224,7 +224,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                   ))}
                 </tbody>
               </table>
-              <p className="px-4 py-2 text-xs text-slate">AllAbode&apos;s commission is taken from the security deposit — not deducted from owner remittance</p>
+              <p className="px-4 py-2 text-xs text-slate">Tenant paid 2 months deposit: 1 month held as security, 1 month taken as AllAbode commission — not deducted from owner remittance</p>
             </div>
           )}
 

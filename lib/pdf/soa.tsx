@@ -258,7 +258,7 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
             </View>
             {infoLines.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
             <View style={{ paddingHorizontal: 6, paddingBottom: 4 }}>
-              <Text style={{ fontSize: 7, color: SLATE }}>AllAbode&apos;s commission is taken from the security deposit — not deducted from owner remittance</Text>
+              <Text style={{ fontSize: 7, color: SLATE }}>Tenant paid 2 months deposit: 1 month held as security, 1 month taken as AllAbode commission — not deducted from owner remittance</Text>
             </View>
           </>
         )}

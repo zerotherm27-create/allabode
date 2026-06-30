@@ -307,17 +307,15 @@ export async function computeOwnerSoaByLease(
   const infoLines: OwnerSoaLineExtended[] = [
     ...heldDeposits.map((d, i) => ({
       line_type:   "info_security_deposit",
-      description: d.deposit_type === "security"
-        ? "Security Deposit (Held by AllAbode)"
-        : "Deposit Held by AllAbode",
+      description: "Security Deposit – 1 Month Held by AllAbode",
       amount:      Number(d.amount_held),
       sort_order:  15 + i,
     })),
     ...commissions.map((c, i) => ({
       line_type:    "info_commission",
       description:  c.description ?? (
-        c.commission_type === "new_lease" ? "New Lease Commission (from Security Deposit)" :
-        c.commission_type === "renewal"   ? "Renewal Commission (from Security Deposit)"   : "Commission (from Security Deposit)"
+        c.commission_type === "new_lease" ? "New Lease Commission – 1 Month (from Security Deposit)" :
+        c.commission_type === "renewal"   ? "Renewal Commission (from Security Deposit)"              : "Commission (from Security Deposit)"
       ),
       amount:       Number(c.amount),
       sort_order:   20 + i,

@@ -150,7 +150,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
                 </tbody>
               </table>
               <p className="border-t border-line px-5 py-2.5 text-xs text-slate">
-                These amounts are held by All Abode on your behalf and are not part of your remittance.
+                Tenant paid 2 months deposit: 1 month held as security, 1 month taken as AllAbode commission. These are not part of your remittance.
               </p>
             </section>
           )}

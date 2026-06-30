@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 /** True when Supabase env vars are present. Lets routes degrade gracefully. */
@@ -35,5 +36,17 @@ export async function createClient() {
         },
       },
     }
+  );
+}
+
+/**
+ * Service-role Supabase client — bypasses RLS.
+ * Use ONLY in cron/system routes where no user session is available.
+ * Never use in user-facing server actions.
+ */
+export function createServiceClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }

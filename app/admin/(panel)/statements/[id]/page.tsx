@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import {
   submitForReview, approveStatement, publishStatement, voidStatement, deleteStatement, reopenStatement,
-  saveOwnerSoaReview, markSoaProcessing, markSoaPaid, carryForwardSoa,
+  saveOwnerSoaReview, markSoaProcessing, markSoaPaid, carryForwardSoa, regenerateSoaLines,
 } from "@/app/admin/soa-actions";
 
 const peso = (n: number) =>
@@ -93,6 +93,13 @@ export default async function StatementDetailPage({ params }: { params: Promise<
 
   const pdfUrl  = s.pdf_path        ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.pdf_path,        300) : null;
   const slipUrl = s.payout_slip_url ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 300) : null;
+
+  const { data: autoSendRule } = await supabase
+    .from("automation_rules")
+    .select("enabled")
+    .eq("rule_key", "auto_publish_owner_soa")
+    .maybeSingle();
+  const autoSendOn = !!(autoSendRule as { enabled?: boolean } | null)?.enabled;
 
   const lineReceiptUrls: Record<string, string> = {};
   for (const l of lines) {
@@ -522,9 +529,30 @@ export default async function StatementDetailPage({ params }: { params: Promise<
           </form>
         )}
         {s.status === "approved" && (
-          <form action={publishStatement.bind(null, id)}>
-            <button className={`${btn} bg-available text-white hover:opacity-90`}>
-              <Icon name="publish" size={18} /> Publish to Portal
+          <>
+            <form action={publishStatement.bind(null, id)}>
+              <button className={`${btn} bg-available text-white hover:opacity-90`}>
+                <Icon name="send" size={18} /> Publish &amp; Send to Owner
+              </button>
+            </form>
+            {isLeaseBased && (
+              <form action={regenerateSoaLines.bind(null, id)}>
+                <button className={`${btn} border border-line text-navy hover:bg-surface-gray`}>
+                  <Icon name="refresh" size={18} /> Regenerate Lines
+                </button>
+              </form>
+            )}
+            <p className={`text-xs ${autoSendOn ? "text-available" : "text-slate"}`}>
+              {autoSendOn
+                ? "Auto-send ON — will publish automatically tomorrow at 02:00 if no changes are made"
+                : "Auto-send OFF — publish manually when ready (or enable in Admin → Automation)"}
+            </p>
+          </>
+        )}
+        {(s.status === "generated" && isLeaseBased) && (
+          <form action={regenerateSoaLines.bind(null, id)}>
+            <button className={`${btn} border border-line text-navy hover:bg-surface-gray`}>
+              <Icon name="refresh" size={18} /> Regenerate Lines
             </button>
           </form>
         )}

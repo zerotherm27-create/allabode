@@ -11,6 +11,8 @@ import { logAudit } from "@/lib/audit";
 import { archiveOwnerSoaToDrive, archiveTenantSoaToDrive } from "@/lib/archive";
 import { createNotification } from "@/lib/notify";
 import { sendEmail } from "@/lib/email";
+import { runSoaPublishPipeline } from "@/lib/finance/soa-pipeline";
+import { validateSoaForAutoApproval } from "@/lib/ai/soa-validate";
 
 function str(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -158,152 +160,19 @@ export async function approveStatement(id: string) {
   revalidatePath(`/admin/statements/${id}`);
 }
 
-// ---- Publish: render PDF, store privately, lock period expenses, expose to portal ----
+// ---- Publish: delegates to runSoaPublishPipeline ----
 export async function publishStatement(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: stored } = await supabase.from("statements_of_account").select("*").eq("id", id).maybeSingle();
-  if (!stored) throw new Error("Statement not found");
-  if (stored.status !== "approved") throw new Error("Statement must be approved before publishing.");
+  const result = await runSoaPublishPipeline(supabase, id, { actorId: user?.id });
+  if (!result.ok) throw new Error(result.error ?? "Publish failed");
 
-  const { data: lineRows } = await supabase.from("soa_lines").select("*").eq("statement_id", id).order("sort_order");
-  const path = `soa/${id}.pdf`;
-  let pdf: Buffer;
-  let summary: string | null = null;
-
-  // Variables for Drive archive — populated inside each branch
-  let driveOwnerParams: { ownerName: string; propertyName?: string; unitLabel?: string } | null = null;
-  let driveTenantName: string | null = null;
-
-  if (stored.lease_id) {
-    // ── New lease-based owner SOA ──
-    const { data: leaseRow } = await supabase
-      .from("leases").select("rent_amount,lease_type,mgmt_fee_pct,vat_pct,unit_id").eq("id", stored.lease_id).maybeSingle();
-    const lease = leaseRow as { rent_amount: number; lease_type: string; mgmt_fee_pct: number; vat_pct: number; unit_id: string } | null;
-
-    const { data: unitRow } = lease ? await supabase.from("units").select("unit_label,property_id").eq("id", lease.unit_id).maybeSingle() : { data: null };
-    const unit = unitRow as { unit_label: string; property_id: string } | null;
-
-    const { data: propRow } = unit ? await supabase.from("properties").select("name,owner_id").eq("id", unit.property_id).maybeSingle() : { data: null };
-    const prop = propRow as { name: string; owner_id: string } | null;
-
-    const { data: ownerRow } = prop ? await supabase.from("owners").select("name").eq("id", prop.owner_id).maybeSingle() : { data: null };
-    const ownerName = (ownerRow as { name?: string } | null)?.name ?? "Owner";
-
-    driveOwnerParams = { ownerName, propertyName: prop?.name, unitLabel: unit?.unit_label };
-
-    const totals = {
-      opening_balance: 0, total_charges: 0,
-      total_payments: Number(stored.total_payments), total_expenses: Number(stored.total_expenses),
-      total_adjustments: 0, closing_balance: Number(stored.closing_balance), net_remittance: Number(stored.net_remittance),
-    };
-    summary = await generateSoaSummary({ type: "owner", party: ownerName, periodStart: stored.period_start, periodEnd: stored.period_end, totals });
-
-    pdf = await renderOwnerSoaPdf({
-      ownerName,
-      propertyName: prop?.name ?? "Property",
-      unitLabel:    unit?.unit_label ?? "",
-      periodStart:  stored.period_start,
-      periodEnd:    stored.period_end,
-      monthlyRent:  Number(lease?.rent_amount ?? 0),
-      payoutDueAt:  stored.payout_due_at ?? null,
-      leaseType:    stored.lease_type ?? "long_term",
-      mgmtFeePct:   Number(stored.mgmt_fee_amt && stored.total_payments ? (Number(stored.mgmt_fee_amt) / Number(stored.total_payments) * 100) : (lease?.mgmt_fee_pct ?? 5)),
-      vatPct:       Number(lease?.vat_pct ?? 12),
-      adjustments:  Number(stored.adjustments ?? 0),
-      prevSoaRef:   stored.prev_soa_ref ?? null,
-      payout:       Number(stored.closing_balance),
-      lines:        (lineRows ?? []) as never,
-      summary,
-    });
-  } else {
-    // ── Legacy per-owner/tenant SOA ──
-    const { match } = await recalcTotals(supabase, stored);
-    if (!match) throw new Error("Totals no longer match the ledger — re-approve before publishing.");
-
-    const type = stored.statement_type as SoaType;
-    const partyId = (type === "owner" ? stored.owner_id : stored.tenant_id) as string;
-    const { data: partyRow } = type === "owner"
-      ? await supabase.from("owners").select("name").eq("id", partyId).maybeSingle()
-      : await supabase.from("tenants").select("name").eq("id", partyId).maybeSingle();
-    const party = (partyRow as { name?: string } | null)?.name ?? (type === "owner" ? "Owner" : "Tenant");
-
-    if (type === "owner") driveOwnerParams = { ownerName: party };
-    else driveTenantName = party;
-
-    const totals = {
-      opening_balance: Number(stored.opening_balance), total_charges: Number(stored.total_charges),
-      total_payments: Number(stored.total_payments), total_expenses: Number(stored.total_expenses),
-      total_adjustments: Number(stored.total_adjustments), closing_balance: Number(stored.closing_balance),
-      net_remittance: Number(stored.net_remittance),
-    };
-    summary = await generateSoaSummary({ type, party, periodStart: stored.period_start, periodEnd: stored.period_end, totals });
-    pdf = await renderSoaPdf({
-      type, party, periodStart: stored.period_start, periodEnd: stored.period_end,
-      lines: (lineRows ?? []) as never, totals, summary,
-    });
-
-    // Lock the period's posted expenses for this party (spec §10.8 step 9).
-    const col = type === "owner" ? "owner_id" : "tenant_id";
-    await supabase.from("expenses")
-      .update({ status: "locked", locked_at: new Date().toISOString() })
-      .eq(col, partyId).eq("status", "posted")
-      .gte("expense_date", stored.period_start).lte("expense_date", stored.period_end);
-  }
-
-  const { error: upErr } = await supabase.storage
-    .from(FINANCE_DOCS_BUCKET)
-    .upload(path, pdf, { contentType: "application/pdf", upsert: true });
-  if (upErr) throw new Error(`PDF upload failed: ${upErr.message}. Make sure the private "finance-docs" bucket exists.`);
-
-  await supabase.from("statements_of_account")
-    .update({ status: "published", pdf_path: path, ai_summary: summary, published_at: new Date().toISOString(), payout_status: "pending" })
-    .eq("id", id);
-
-  // Best-effort Google Drive archive — never blocks publish
-  const driveResult = driveOwnerParams
-    ? await archiveOwnerSoaToDrive({ pdf, ...driveOwnerParams, periodStart: stored.period_start })
-    : driveTenantName
-    ? await archiveTenantSoaToDrive({ pdf, tenantName: driveTenantName, periodStart: stored.period_start })
-    : null;
-  if (driveResult) {
-    await supabase.from("statements_of_account").update({
-      gdrive_file_id:    driveResult.fileId,
-      gdrive_folder_url: driveResult.folderUrl,
-    }).eq("id", id);
-  }
-
-  await logAudit(supabase, { action: "soa.published", entityType: "statement", entityId: id, actorId: user?.id });
-
-  // Mark any commissions included in this SOA as applied
-  // Supports both info_commission (new) and deduction_commission (legacy historical SOAs)
-  const { data: commLines } = await supabase
-    .from("soa_lines")
-    .select("commission_id")
-    .eq("statement_id", id)
-    .in("line_type", ["info_commission", "deduction_commission"])
-    .not("commission_id", "is", null);
-  const commIds = ((commLines ?? []) as { commission_id: string | null }[])
-    .map((l) => l.commission_id).filter(Boolean) as string[];
-  if (commIds.length) {
-    await supabase.from("lease_commissions")
-      .update({ status: "applied", soa_id: id, applied_at: new Date().toISOString() })
-      .in("id", commIds);
-  }
-
-  if (stored.statement_type === "owner") {
-    await notifyOwnerStatementAvailable(
-      supabase,
-      (stored.owner_id as string | null) ?? null,
-      id,
-      stored.period_start,
-      stored.period_end
-    );
-  }
   revalidatePath(`/admin/statements/${id}`);
   revalidatePath("/admin/statements");
-  if (stored.statement_type === "owner") revalidateOwnerStatementPaths(id);
+
+  const { data: s } = await supabase.from("statements_of_account").select("statement_type").eq("id", id).maybeSingle();
+  if ((s as { statement_type?: string } | null)?.statement_type === "owner") revalidateOwnerStatementPaths(id);
 }
 
 export async function voidStatement(id: string, formData: FormData) {
@@ -431,6 +300,79 @@ export async function generateOwnerSoaByLease(formData: FormData) {
   await logAudit(supabase, { action: "soa.generated", entityType: "statement", entityId: soaId, actorId: user?.id, metadata: { leaseId } });
   revalidatePath("/admin/statements");
   redirect(`/admin/statements/${soaId}`);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Regenerate lines for an existing SOA (e.g. after entering a late receipt)
+// ─────────────────────────────────────────────────────────────────
+
+export async function regenerateSoaLines(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: s } = await supabase
+    .from("statements_of_account")
+    .select("lease_id,status,period_start,period_end,mgmt_fee_pct,vat_pct")
+    .eq("id", id)
+    .maybeSingle();
+  if (!s) throw new Error("Statement not found.");
+  if (!s.lease_id) throw new Error("Only lease-based SOAs can be regenerated.");
+  if (s.status === "published") throw new Error("Cannot regenerate a published SOA — re-open it first.");
+
+  // Delete existing lines and recompute from current DB state
+  await supabase.from("soa_lines").delete().eq("statement_id", id);
+
+  const computed = await computeOwnerSoaByLease(supabase, s.lease_id, s.period_start, s.period_end);
+
+  if (computed.lines.length > 0) {
+    await supabase.from("soa_lines").insert(
+      computed.lines.map((l) => ({
+        statement_id:  id,
+        line_type:     l.line_type,
+        description:   l.description,
+        amount:        l.amount,
+        sort_order:    l.sort_order,
+        expense_id:    l.expense_id ?? null,
+        receipt_path:  l.receipt_path ?? null,
+        billing_note:  l.billing_note ?? null,
+        commission_id: l.commission_id ?? null,
+      }))
+    );
+  }
+
+  // Update totals from recomputed lines and re-run AI validation
+  await supabase.from("statements_of_account").update({
+    total_payments:  computed.totals.total_payments,
+    total_expenses:  computed.totals.total_expenses,
+    closing_balance: computed.totals.closing_balance,
+    net_remittance:  computed.totals.net_remittance,
+    mgmt_fee_amt:    computed.meta.mgmtFeeAmt,
+    vat_amt:         computed.meta.vatAmt,
+    status:          "generated",
+  }).eq("id", id);
+
+  // Re-run AI validation to determine if still auto-approvable
+  const validation = await validateSoaForAutoApproval({
+    totalIncome:     computed.totals.total_payments,
+    totalDeductions: computed.totals.total_expenses,
+    payout:          computed.totals.closing_balance,
+    mgmtFeePct:      computed.meta.mgmtFeePct,
+    vatPct:          computed.meta.vatPct,
+    lines:           computed.lines,
+  });
+
+  if (validation.safe) {
+    await supabase.from("statements_of_account").update({ status: "approved" }).eq("id", id);
+  }
+
+  await logAudit(supabase, {
+    action: "soa.regenerated",
+    entityType: "statement",
+    entityId: id,
+    actorId: user?.id,
+    metadata: { newStatus: validation.safe ? "approved" : "generated" },
+  });
+  revalidatePath(`/admin/statements/${id}`);
 }
 
 // ─────────────────────────────────────────────────────────────────

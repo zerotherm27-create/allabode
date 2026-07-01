@@ -9,7 +9,7 @@ import { getPublicSiteUrl, getAuthRedirectUrl } from "@/lib/url";
 import { sendEmail } from "@/lib/email";
 import { createNotification } from "@/lib/notify";
 import { logAudit } from "@/lib/audit";
-import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
+import { signedUrl, AGREEMENTS_BUCKET, DOCUMENTS_BUCKET } from "@/lib/storage";
 import { renderAgreementPdf, type AgreementPdfInput } from "@/lib/pdf/agreement";
 import { ownerIdTypeLabel } from "@/lib/pm/agreement-labels";
 
@@ -220,13 +220,15 @@ async function completeAgreement(id: string) {
   if (!a) throw new Error("Agreement not found.");
 
   let ownerIdImageDataUri: string | null = null;
+  let ownerIdFileBuffer: Buffer | null = null;
+  let ownerIdMime = "image/jpeg";
   if (a.owner_id_document_path) {
     const { data: idFile } = await supabase.storage.from(AGREEMENTS_BUCKET).download(a.owner_id_document_path);
     if (idFile) {
-      const buf = Buffer.from(await idFile.arrayBuffer());
+      ownerIdFileBuffer = Buffer.from(await idFile.arrayBuffer());
       const ext = a.owner_id_document_path.split(".").pop()?.toLowerCase();
-      const mime = ext === "png" ? "image/png" : "image/jpeg";
-      ownerIdImageDataUri = `data:${mime};base64,${buf.toString("base64")}`;
+      ownerIdMime = ext === "png" ? "image/png" : "image/jpeg";
+      ownerIdImageDataUri = `data:${ownerIdMime};base64,${ownerIdFileBuffer.toString("base64")}`;
     }
   }
 
@@ -263,6 +265,26 @@ async function completeAgreement(id: string) {
     upsert: false,
   });
   if (upErr) throw new Error(`PDF upload failed: ${upErr.message}`);
+
+  // The generic /api/portal/documents/[id] download route only signs URLs
+  // against the `documents` bucket (the `agreements` bucket's RLS is
+  // staff-only, so an owner session can never sign a URL for a path there).
+  // Copy the files a `documents` row will point to into `documents` too,
+  // rather than reusing the agreements-bucket path.
+  const documentsPdfPath = `agreement/${a.id}/agreement-signed.pdf`;
+  await supabase.storage.from(DOCUMENTS_BUCKET).upload(documentsPdfPath, pdfBuffer, {
+    contentType: "application/pdf",
+    upsert: true,
+  });
+  let documentsIdPath: string | null = null;
+  if (ownerIdFileBuffer) {
+    const ext = ownerIdMime === "image/png" ? "png" : "jpg";
+    documentsIdPath = `agreement/${a.id}/owner-id.${ext}`;
+    await supabase.storage.from(DOCUMENTS_BUCKET).upload(documentsIdPath, ownerIdFileBuffer, {
+      contentType: ownerIdMime,
+      upsert: true,
+    });
+  }
 
   // Upsert owner by email
   const od = (a.owner_details ?? {}) as { name?: string; phone?: string; address?: string; contact?: string };
@@ -360,7 +382,7 @@ async function completeAgreement(id: string) {
     entity_id: ownerId,
     document_type: "agreement",
     title: "Property Management Agreement (signed)",
-    file_path: pdfPath,
+    file_path: documentsPdfPath,
     file_name: "property-management-agreement.pdf",
     file_mime_type: "application/pdf",
     is_signed: true,
@@ -370,14 +392,14 @@ async function completeAgreement(id: string) {
   });
 
   // Attach uploaded government ID as a staff-only document
-  if (a.owner_id_document_path) {
+  if (documentsIdPath) {
     await supabase.from("documents").insert({
       entity_type: "owner",
       entity_id: ownerId,
       document_type: "id",
       title: `Government ID (${ownerIdTypeLabel(a.owner_id_type)})`,
-      file_path: a.owner_id_document_path,
-      file_name: a.owner_id_document_path.split("/").pop() ?? "id",
+      file_path: documentsIdPath,
+      file_name: documentsIdPath.split("/").pop() ?? "id",
       is_signed: false,
       is_immutable: true,
       visibility: "staff",

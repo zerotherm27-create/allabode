@@ -35,6 +35,12 @@ const navGroups = [
     ],
   },
   {
+    group: "Agreements",
+    items: [
+      { label: "Contracts", icon: "history_edu", href: "/admin/contracts" },
+    ],
+  },
+  {
     group: "Finance",
     items: [
       { label: "Invoices",   icon: "request_quote", href: "/admin/invoices"   },

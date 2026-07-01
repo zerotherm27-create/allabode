@@ -105,6 +105,53 @@ not diversify. All design assets and the token reference live in `design/`:
   below). All admin tables use it (PM lists + `listings`); inquiries/appraisals/leads were
   already card-based.
 
+**DONE — Digital Contract Signing (Property Management Agreement e-signature):**
+- Migration `supabase/migrations/0020_contract_signing.sql` — `agreements` table
+  (status machine `draft→sent→owner_signed→completed`/`voided`, token-based public
+  access via `access_token`), `users.is_signatory`, `owners.spa_authorization_received`
+  (staff follow-up reminder, unrelated to signing). RLS: staff full access only — the
+  public flow never gets anon table policies; it goes entirely through 3 SECURITY
+  DEFINER RPCs (`get_agreement_by_token`, `save_agreement_draft`,
+  `save_agreement_id_upload`, `submit_owner_signature`) that validate the token
+  themselves. **User must run it in the SQL editor.**
+- Flow: admin sends a link from `/admin/contracts/new` (name + email only) →
+  owner fills everything themselves at `/sign/agreement/[token]` (no login) — their
+  details, property details, service package, Annex C authority matrix, optional
+  reference info, required government ID (type + number + image upload) — reviews,
+  then signs with `react-signature-canvas`. A designated signatory (`is_signatory`
+  flag) countersigns from `/admin/contracts/[id]`, which triggers PDF generation +
+  completion.
+- `lib/pdf/agreement.tsx` — Letter-size (not A4) PDF: full 14-section contract +
+  Annexes A/C filled from submitted data; Annex B (inventory checklist) prints blank
+  unless staff pre-filled it via the optional `/admin/contracts/[id]` "Pre-fill
+  Inventory" form (`components/admin/annex-b-form.tsx`,
+  `lib/pm/annex-b-fields.ts` shared field list); Acknowledgment table fills the
+  Owner's ID type/number (notary portions stay blank — no notary in this flow);
+  appended Certificate of Electronic Signature page (cites R.A. 8792 + Rules on
+  Electronic Evidence) and an ID-image attachment page. Authorization Letter/SPA are
+  **not** collected here — that's a separate, deferred staff reminder.
+- On completion (`app/admin/agreement-actions.ts`): upserts `owners` by email,
+  **auto-provisions the owner's portal login** via `createAdminClient()` (the only
+  way to create a confirmed auth user without going through self-signup) +
+  `admin.auth.admin.generateLink({type:'recovery'})`, with the set-password link
+  emailed through Resend (not Supabase's mailer) to `/auth/set-password`
+  (new page) → `/auth/callback` → session established → user sets password. Attaches
+  the signed PDF as a `documents` row (`document_type:'agreement', visibility:'owner'`)
+  so it shows up in the existing owner dashboard documents UI automatically.
+- Public ID upload (`uploadAgreementId` in `app/sign/agreement-actions.ts`) and the
+  token-gated download (`app/api/sign/agreement/[token]/pdf/route.ts`) both use
+  `createAdminClient()` narrowly — no anon RLS policy exists on the private
+  `agreements` storage bucket, by design.
+- **Manual setup to activate:**
+  1. Run migration `0020` in the SQL editor.
+  2. Re-run `supabase/setup-storage.sql` — adds the private `agreements` bucket +
+     staff-only RLS policies (idempotent).
+  3. Flag the designated signatory:
+     `update users set is_signatory = true where id = (select id from auth.users where email = '<email>');`
+  4. Confirm `SUPABASE_SERVICE_ROLE_KEY` is set in `.env.local` **and** Vercel
+     Production — already documented as optional in `.env.example`, but this
+     feature makes it load-bearing (owner account auto-provisioning needs it).
+
 **DONE — Property Management platform (Foundation + AI Finance), single-tenant:**
 - Migration `supabase/migrations/0003_property_management.sql` (18 tables: owners,
   tenants, properties, units, leases, payments, vendors, the receipt→expense→ledger→

@@ -8,7 +8,8 @@ values
   ('receipts',     'receipts',     false),
   ('finance-docs', 'finance-docs', false),
   ('site-assets',  'site-assets',  true ),
-  ('documents',    'documents',    false)
+  ('documents',    'documents',    false),
+  ('agreements',   'agreements',   false)
 on conflict (id) do nothing;
 
 -- ── 2. Drop existing policies (idempotent) ────────────────────────────────────
@@ -26,6 +27,10 @@ drop policy if exists "staff select documents"     on storage.objects;
 drop policy if exists "staff update documents"     on storage.objects;
 drop policy if exists "staff delete documents"     on storage.objects;
 drop policy if exists "portal select documents"    on storage.objects;
+drop policy if exists "staff insert agreements"    on storage.objects;
+drop policy if exists "staff select agreements"    on storage.objects;
+drop policy if exists "staff update agreements"    on storage.objects;
+drop policy if exists "staff delete agreements"    on storage.objects;
 
 -- ── 3. receipts (private — staff only) ───────────────────────────────────────
 create policy "staff insert receipts"
@@ -90,3 +95,24 @@ create policy "staff delete documents"
 create policy "portal select documents"
   on storage.objects for select to authenticated
   using (bucket_id = 'documents');
+
+-- ── 7. agreements (private — staff only). The public owner-signing flow
+-- never gets a direct anon policy here: ID uploads and the final signed-PDF
+-- download both go through narrow, token-validated server actions/routes
+-- using the service-role client, which bypasses RLS entirely. No anon
+-- policy is needed or added.
+create policy "staff insert agreements"
+  on storage.objects for insert to authenticated
+  with check (bucket_id = 'agreements' and public.is_staff());
+
+create policy "staff select agreements"
+  on storage.objects for select to authenticated
+  using (bucket_id = 'agreements' and public.is_staff());
+
+create policy "staff update agreements"
+  on storage.objects for update to authenticated
+  using (bucket_id = 'agreements' and public.is_staff());
+
+create policy "staff delete agreements"
+  on storage.objects for delete to authenticated
+  using (bucket_id = 'agreements' and public.is_staff());

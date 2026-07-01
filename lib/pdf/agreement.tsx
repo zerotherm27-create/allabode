@@ -165,7 +165,10 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
 
   const doc = (
     <Document>
-      {/* ── Page 1: Title + parties + Section I-V ── */}
+      {/* Main body flows continuously across as many pages as the content
+          actually needs — do not hardcode page boundaries by section, or
+          every page ends wherever the split falls instead of where the
+          content runs out, leaving large trailing blank areas. */}
       <Page size="LETTER" style={styles.page}>
         {getLogo() && (
           // eslint-disable-next-line jsx-a11y/alt-text
@@ -244,11 +247,6 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Text style={styles.p}><Text style={styles.bold}>g. Renewals &amp; Inspections &#x2014; </Text>negotiate renewal/extension terms prior to lease expiration, subject to Owner approval; conduct periodic property inspections with reasonable notice to the Tenant.</Text>
         <Hr />
 
-        <Footer />
-      </Page>
-
-      {/* ── Page 2: Section V-VII ── */}
-      <Page size="LETTER" style={styles.page}>
         <Text style={styles.h1}>V. MANAGER&#x2019;S AUTHORITY AND LIMITATIONS</Text>
         <Text style={styles.p}>
           The Manager is authorized to: advertise and market the Property; respond to inquiries; screen and recommend
@@ -281,11 +279,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Text style={styles.h2}>7.5 Taxes</Text>
         <Text style={styles.p}>Each Party bears government taxes for which it is legally responsible under Philippine law unless otherwise agreed in writing.</Text>
         <Hr />
-        <Footer />
-      </Page>
 
-      {/* ── Page 3: Section VIII-XI ── */}
-      <Page size="LETTER" style={styles.page}>
         <Text style={styles.h1}>VIII. SECURITY DEPOSIT</Text>
         <Text style={styles.p}>The security deposit belongs to the Owner and serves as security for the Tenant&#x2019;s obligations. The Manager administers it until completion of move-out inspection and final accounting. It may be applied to unpaid rent, utilities, association dues chargeable to the Tenant, damage beyond normal wear and tear, missing items, excess cleaning costs, and other Tenant obligations under the Lease Agreement. Any remaining balance shall be returned to the Tenant after deducting all lawful charges, per the timeline in the Lease Agreement.</Text>
         <Hr />
@@ -311,11 +305,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Text style={styles.h2}>Insurance</Text>
         <Text style={styles.p}>The Manager strongly recommends the Owner maintain adequate insurance, including Fire, Comprehensive Property, Public Liability, and Contents Insurance for furnished units. The Manager shall not be responsible for uninsured losses.</Text>
         <Hr />
-        <Footer />
-      </Page>
 
-      {/* ── Page 4: Section XII-XIV ── */}
-      <Page size="LETTER" style={styles.page}>
         <Text style={styles.h1}>XII. CONFIDENTIALITY AND DATA PRIVACY</Text>
         <Text style={styles.p}>Both Parties shall keep confidential all personal, financial, tenant, business, and proprietary information obtained under this Agreement, except where disclosure is required by law or necessary to perform obligations herein. This obligation continues after termination.</Text>
         <Text style={styles.p}>The Parties shall comply with Republic Act No. 10173 (Data Privacy Act of 2012) and its implementing rules. The Owner authorizes the Manager to collect, process, store, and disclose personal information only as necessary for marketing the Property, tenant screening, lease administration, rental collection, and legal/regulatory compliance.</Text>
@@ -470,49 +460,44 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
                 );
               })}
             </View>
+
+            <Text style={styles.h2}>Appliances</Text>
+            <View style={styles.table}>
+              <View style={styles.trow}>
+                <Text style={styles.thCell}>Item</Text>
+                <Text style={styles.thCell}>Brand</Text>
+                <Text style={styles.tdCellLast}>Condition</Text>
+              </View>
+              {APPLIANCE_ITEMS.map(([key, label], i) => {
+                const v = ab?.appliances?.[key];
+                return (
+                  <View key={key} style={i === APPLIANCE_ITEMS.length - 1 ? styles.trowLast : styles.trow}>
+                    <Text style={styles.tdCell}>{label}</Text>
+                    <Text style={styles.tdCell}>{v?.brand || "—"}</Text>
+                    <Text style={styles.tdCellLast}>{v?.condition || "—"}</Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            <Text style={styles.h2}>Fixtures Present</Text>
+            {FIXTURE_ITEMS.map(([key, label]) => (
+              <CheckItem key={key} checked={ab?.fixtures?.includes(key)} label={label} />
+            ))}
+
+            <Text style={styles.h2}>Initial Condition Report</Text>
+            {CONDITION_AREAS.map(([key, label]) => (
+              <Field key={key} label={`${label}:`} value={ab?.conditionReport?.[key]} />
+            ))}
+            <Text style={styles.p}>
+              The Parties agree that photographs taken during turnover shall form part of this Inventory and shall be
+              used as reference during move-out inspection.
+            </Text>
+            <Text style={[styles.p, { marginTop: 10 }]}>Owner Signature: ______________________   Manager Signature: ______________________   Date: ______________________</Text>
           </>
         )}
         <Footer />
       </Page>
-
-      {hasAnnexB && (
-        <Page size="LETTER" style={styles.page}>
-          <Text style={styles.h2}>Appliances</Text>
-          <View style={styles.table}>
-            <View style={styles.trow}>
-              <Text style={styles.thCell}>Item</Text>
-              <Text style={styles.thCell}>Brand</Text>
-              <Text style={styles.tdCellLast}>Condition</Text>
-            </View>
-            {APPLIANCE_ITEMS.map(([key, label], i) => {
-              const v = ab?.appliances?.[key];
-              return (
-                <View key={key} style={i === APPLIANCE_ITEMS.length - 1 ? styles.trowLast : styles.trow}>
-                  <Text style={styles.tdCell}>{label}</Text>
-                  <Text style={styles.tdCell}>{v?.brand || "—"}</Text>
-                  <Text style={styles.tdCellLast}>{v?.condition || "—"}</Text>
-                </View>
-              );
-            })}
-          </View>
-
-          <Text style={styles.h2}>Fixtures Present</Text>
-          {FIXTURE_ITEMS.map(([key, label]) => (
-            <CheckItem key={key} checked={ab?.fixtures?.includes(key)} label={label} />
-          ))}
-
-          <Text style={styles.h2}>Initial Condition Report</Text>
-          {CONDITION_AREAS.map(([key, label]) => (
-            <Field key={key} label={`${label}:`} value={ab?.conditionReport?.[key]} />
-          ))}
-          <Text style={styles.p}>
-            The Parties agree that photographs taken during turnover shall form part of this Inventory and shall be
-            used as reference during move-out inspection.
-          </Text>
-          <Text style={[styles.p, { marginTop: 10 }]}>Owner Signature: ______________________   Manager Signature: ______________________   Date: ______________________</Text>
-          <Footer />
-        </Page>
-      )}
 
       {/* ── Annex C ── */}
       <Page size="LETTER" style={styles.page}>

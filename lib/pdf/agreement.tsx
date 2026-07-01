@@ -133,6 +133,7 @@ export type AgreementPdfInput = {
   effectiveDate?: string | null;
   ownerIdTypeLabel: string;
   ownerIdNumber: string;
+  ownerIdIssuedDate?: string | null;
   ownerIdImageDataUri: string | null;
   ownerTypedName: string;
   ownerSignatureDataUri: string;
@@ -357,7 +358,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
           <View style={styles.trow}>
             <Text style={styles.tdCell}>{od.name}</Text>
             <Text style={styles.tdCell}>{input.ownerIdTypeLabel} No. {input.ownerIdNumber}</Text>
-            <Text style={styles.tdCellLast}>____________________</Text>
+            <Text style={styles.tdCellLast}>{input.ownerIdIssuedDate || "____________________"}</Text>
           </View>
           <View style={styles.trowLast}>
             <Text style={styles.tdCell}>Aremchel M. Cruzado</Text>
@@ -569,6 +570,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Text style={styles.annexTitle}>ATTACHMENT &#x2014; OWNER GOVERNMENT ID</Text>
         <Field label="ID Type:" value={input.ownerIdTypeLabel} />
         <Field label="ID Number:" value={input.ownerIdNumber} />
+        <Field label="Date Issued:" value={input.ownerIdIssuedDate} />
         {input.ownerIdImageDataUri ? (
           // eslint-disable-next-line jsx-a11y/alt-text
           <Image src={input.ownerIdImageDataUri} style={{ width: "100%", marginTop: 12, objectFit: "contain" }} />

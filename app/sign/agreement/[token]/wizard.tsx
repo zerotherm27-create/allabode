@@ -89,6 +89,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
   const [effectiveDate, setEffectiveDate] = useState<string>(initial.effective_date ?? "");
   const [ownerIdType, setOwnerIdType] = useState(initial.owner_id_type ?? "passport");
   const [ownerIdNumber, setOwnerIdNumber] = useState(initial.owner_id_number ?? "");
+  const [ownerIdIssuedDate, setOwnerIdIssuedDate] = useState(initial.owner_id_issued_date ?? "");
   const [idUploaded, setIdUploaded] = useState(!!initial.owner_id_document_path);
   const [idUploading, setIdUploading] = useState(false);
 
@@ -103,6 +104,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         ownerDetails, propertyDetails, serviceSelections, annexC,
         effectiveDate: effectiveDate || null,
         ownerIdType, ownerIdNumber,
+        ownerIdIssuedDate: ownerIdIssuedDate || null,
         intakeProfile,
       });
       if (err) {
@@ -125,8 +127,8 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         setError("Please fill in your name, address, and email.");
         return;
       }
-      if (!ownerIdNumber || !idUploaded) {
-        setError("Please enter your ID number and upload a copy of your government ID before continuing.");
+      if (!ownerIdNumber || !ownerIdIssuedDate || !idUploaded) {
+        setError("Please enter your ID number and issue date, and upload a copy of your government ID before continuing.");
         return;
       }
     }
@@ -279,6 +281,9 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
                 <Input className={inputCls} value={ownerIdNumber} onChange={(e) => setOwnerIdNumber(e.target.value)} />
               </Field>
             </div>
+            <Field label="Date issued" required>
+              <Input className={inputCls} type="date" value={ownerIdIssuedDate} onChange={(e) => setOwnerIdIssuedDate(e.target.value)} />
+            </Field>
             <Field label="Upload ID image" required hint="JPG, PNG, or PDF, up to 10 MB">
               <input
                 type="file"
@@ -465,6 +470,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
               effectiveDate={effectiveDate}
               ownerIdType={ownerIdType}
               ownerIdNumber={ownerIdNumber}
+              ownerIdIssuedDate={ownerIdIssuedDate}
             />
           </div>
         </StepShell>

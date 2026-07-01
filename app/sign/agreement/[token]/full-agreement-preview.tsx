@@ -49,7 +49,7 @@ function Check({ checked, label }: { checked?: boolean; label: string }) {
 
 export function FullAgreementPreview({
   ownerDetails: od, propertyDetails: pd, serviceSelections: ss, annexC: ac, effectiveDate,
-  ownerIdType, ownerIdNumber, payoutDay,
+  ownerIdType, ownerIdNumber, ownerIdIssuedDate, payoutDay,
 }: {
   ownerDetails: OwnerDetails;
   propertyDetails: PropertyDetails;
@@ -59,6 +59,7 @@ export function FullAgreementPreview({
   effectiveDate: string;
   ownerIdType: string;
   ownerIdNumber: string;
+  ownerIdIssuedDate?: string;
 }) {
   return (
     <div className="text-xs leading-relaxed text-ink">
@@ -199,7 +200,10 @@ export function FullAgreementPreview({
         IN WITNESS WHEREOF, the Parties will hereunto set their hands as of {effectiveDate || "the date of full execution"},
         Philippines, once both parties have signed below.
       </P>
-      <Row label="Government ID on file:" value={ownerIdNumber ? `${ownerIdTypeLabel(ownerIdType)} No. ${ownerIdNumber}` : undefined} />
+      <Row
+        label="Government ID on file:"
+        value={ownerIdNumber ? `${ownerIdTypeLabel(ownerIdType)} No. ${ownerIdNumber}${ownerIdIssuedDate ? ` (issued ${ownerIdIssuedDate})` : ""}` : undefined}
+      />
 
       <p className="mt-6 text-center font-display text-sm font-bold text-navy">ANNEX &#x201C;A&#x201D; &#x2014; SERVICE FEES</p>
       <table className="mt-2 w-full border-collapse border border-line text-xs">

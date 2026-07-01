@@ -17,6 +17,7 @@ export type AgreementRecord = {
   effective_date: string | null;
   owner_id_type: string | null;
   owner_id_number: string | null;
+  owner_id_issued_date: string | null;
   owner_id_document_path: string | null;
   intake_profile: Record<string, unknown>;
   pdf_path: string | null;
@@ -42,6 +43,7 @@ export type SaveDraftInput = {
   effectiveDate: string | null;
   ownerIdType: string | null;
   ownerIdNumber: string | null;
+  ownerIdIssuedDate: string | null;
   intakeProfile: Record<string, unknown>;
 };
 
@@ -56,6 +58,7 @@ export async function saveAgreementDraft(token: string, input: SaveDraftInput): 
     p_effective_date: input.effectiveDate,
     p_owner_id_type: input.ownerIdType,
     p_owner_id_number: input.ownerIdNumber,
+    p_owner_id_issued_date: input.ownerIdIssuedDate,
     p_intake_profile: input.intakeProfile,
   });
   if (error) return { error: error.message };

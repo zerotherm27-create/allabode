@@ -244,6 +244,7 @@ async function completeAgreement(id: string) {
     effectiveDate: a.effective_date,
     ownerIdTypeLabel: ownerIdTypeLabel(a.owner_id_type),
     ownerIdNumber: a.owner_id_number ?? "",
+    ownerIdIssuedDate: a.owner_id_issued_date,
     ownerIdImageDataUri,
     ownerTypedName: a.owner_typed_name ?? "",
     ownerSignatureDataUri: a.owner_signature_data ?? "",

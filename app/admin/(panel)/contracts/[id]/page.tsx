@@ -24,6 +24,7 @@ type Agreement = {
   effective_date: string | null;
   owner_id_type: string | null;
   owner_id_number: string | null;
+  owner_id_issued_date: string | null;
   owner_id_document_path: string | null;
   intake_profile: Record<string, string> | null;
   payout_day: number | null;
@@ -116,6 +117,7 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
               ["Contact", od.contact], ["Property", pd.condo], ["Unit", pd.unit],
               ["Effective date", a.effective_date], ["Owner typed name", a.owner_typed_name],
               ["Government ID", a.owner_id_type ? `${a.owner_id_type} — ${a.owner_id_number}` : null],
+              ["ID issued date", a.owner_id_issued_date],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-2 border-b border-line pb-2">
                 <dt className="text-slate">{k}</dt>

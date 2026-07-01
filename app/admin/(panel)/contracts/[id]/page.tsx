@@ -6,8 +6,9 @@ import { CountersignForm } from "@/components/admin/countersign-form";
 import { AnnexBForm } from "@/components/admin/annex-b-form";
 import { SpaToggle } from "@/components/admin/spa-toggle";
 import { CopyLink } from "@/components/admin/copy-link";
-import { sendAgreementLink, updateAnnexB, getAgreementPdfSignedUrl } from "@/app/admin/agreement-actions";
+import { sendAgreementLink, updateAnnexB, updatePayoutDay, getAgreementPdfSignedUrl } from "@/app/admin/agreement-actions";
 import { getPublicSiteUrl } from "@/lib/url";
+import { payoutScheduleLabel } from "@/lib/pm/agreement-labels";
 
 type Agreement = {
   id: string;
@@ -25,6 +26,7 @@ type Agreement = {
   owner_id_number: string | null;
   owner_id_document_path: string | null;
   intake_profile: Record<string, string> | null;
+  payout_day: number | null;
   owner_typed_name: string | null;
   owner_signed_at: string | null;
   manager_signed_at: string | null;
@@ -63,6 +65,7 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
   const intake = a.intake_profile ?? {};
   const doSendLink = sendAgreementLink.bind(null, id);
   const doUpdateAnnexB = updateAnnexB.bind(null, id);
+  const doUpdatePayoutDay = updatePayoutDay.bind(null, id);
   const signingLink = `${getPublicSiteUrl()}/sign/agreement/${a.access_token}`;
 
   return (
@@ -143,6 +146,33 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
           <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-navy-700 underline">
             <Icon name="picture_as_pdf" size={18} /> View signed PDF
           </a>
+        </div>
+      )}
+
+      {a.status !== "draft" && (
+        <div className="mt-6 rounded-lg border border-line bg-surface p-5">
+          <h2 className="mb-1 font-display text-sm font-semibold text-navy">Payout Schedule</h2>
+          <p className="mb-3 text-xs text-slate">
+            Payout is always monthly (fixed in the contract) — the owner never picks this. Set which day of the
+            month it prints in Annex C.
+          </p>
+          <p className="mb-3 text-sm font-medium text-navy">Current: {payoutScheduleLabel(a.payout_day)}</p>
+          {a.status !== "completed" && (
+            <form action={doUpdatePayoutDay} className="flex items-center gap-2">
+              <input
+                type="number"
+                name="payout_day"
+                min={1}
+                max={31}
+                defaultValue={a.payout_day ?? undefined}
+                placeholder="e.g. 5"
+                className="h-10 w-24 rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+              />
+              <button type="submit" className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800">
+                Save
+              </button>
+            </form>
+          )}
         </div>
       )}
 

@@ -8,6 +8,7 @@ import { Icon } from "@/components/icon";
 import { saveAgreementDraft, createAgreementIdUploadTicket, confirmAgreementIdUpload, submitOwnerSignature, type AgreementRecord } from "@/app/sign/agreement-actions";
 import { createClient } from "@/lib/supabase/client";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
+import { payoutScheduleLabel } from "@/lib/pm/agreement-labels";
 import { FullAgreementPreview } from "./full-agreement-preview";
 
 type OwnerDetails = { name: string; nationality: string; civilStatus: string; address: string; email: string; contact: string };
@@ -21,7 +22,7 @@ type AnnexC = {
   smokingPolicy: string; subleasing: string; shortTermRentals: string; furnishing: string;
   preferredCommunication: string; preferredResponseTime: string;
   bankName: string; bankAccountName: string; bankAccountNo: string;
-  preferredPayout: string; payoutOther: string; specialInstructions: string;
+  specialInstructions: string;
 };
 type IntakeProfile = { spouseOrEmergencyName: string; spouseOrEmergencyRelation: string; spouseOrEmergencyContact: string; messenger: string; viberWhatsapp: string };
 
@@ -50,7 +51,7 @@ function emptyAnnexC(r: AgreementRecord): AnnexC {
     shortTermRentals: d.shortTermRentals ?? "subject_to_rules", furnishing: d.furnishing ?? "bare",
     preferredCommunication: d.preferredCommunication ?? "email", preferredResponseTime: d.preferredResponseTime ?? "office_hours",
     bankName: d.bankName ?? "", bankAccountName: d.bankAccountName ?? "", bankAccountNo: d.bankAccountNo ?? "",
-    preferredPayout: d.preferredPayout ?? "monthly", payoutOther: d.payoutOther ?? "", specialInstructions: d.specialInstructions ?? "",
+    specialInstructions: d.specialInstructions ?? "",
   };
 }
 function emptyIntakeProfile(r: AgreementRecord): IntakeProfile {
@@ -425,11 +426,9 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
               <Field label="Account name"><Input className={inputCls} value={annexC.bankAccountName} onChange={(e) => setAnnexC({ ...annexC, bankAccountName: e.target.value })} /></Field>
               <Field label="Account number"><Input className={inputCls} value={annexC.bankAccountNo} onChange={(e) => setAnnexC({ ...annexC, bankAccountNo: e.target.value })} /></Field>
             </div>
-            <Field label="Preferred payout schedule">
-              <Select value={annexC.preferredPayout} onChange={(e) => setAnnexC({ ...annexC, preferredPayout: e.target.value })}>
-                <option value="monthly">Monthly</option><option value="15th">Every 15th</option><option value="30th">Every 30th</option><option value="other">Other</option>
-              </Select>
-            </Field>
+            <p className="rounded-md bg-surface-gray px-3 py-2 text-xs text-slate">
+              Payout schedule: {payoutScheduleLabel(initial.payout_day)}{!initial.payout_day && " (exact day is set by All Abode)"}.
+            </p>
             <Field label="Special instructions"><Textarea value={annexC.specialInstructions} onChange={(e) => setAnnexC({ ...annexC, specialInstructions: e.target.value })} /></Field>
           </div>
         </StepShell>
@@ -462,6 +461,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
               propertyDetails={propertyDetails}
               serviceSelections={serviceSelections}
               annexC={annexC}
+              payoutDay={initial.payout_day}
               effectiveDate={effectiveDate}
               ownerIdType={ownerIdType}
               ownerIdNumber={ownerIdNumber}

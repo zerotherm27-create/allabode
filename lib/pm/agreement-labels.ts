@@ -11,7 +11,22 @@ export const YN_LABEL: Record<string, string> = { allowed: "Allowed", not_allowe
 export const FURNISHING_LABEL: Record<string, string> = { fully: "Fully Furnished", semi: "Semi Furnished", bare: "Bare Unit" };
 export const COMMS_LABEL: Record<string, string> = { call: "Call", sms: "SMS", viber: "Viber", whatsapp: "WhatsApp", email: "Email" };
 export const RESPONSE_LABEL: Record<string, string> = { anytime: "Anytime", office_hours: "Office Hours", weekdays: "Weekdays Only" };
-export const PAYOUT_LABEL: Record<string, string> = { monthly: "Monthly", "15th": "Every 15th", "30th": "Every 30th" };
+
+/** Payout is always monthly; only the day of the month is staff-set. */
+export function payoutScheduleLabel(payoutDay: number | null | undefined): string {
+  return payoutDay ? `Monthly — every ${ordinal(payoutDay)}` : "Monthly";
+}
+
+function ordinal(n: number): string {
+  const rem100 = n % 100;
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1: return `${n}st`;
+    case 2: return `${n}nd`;
+    case 3: return `${n}rd`;
+    default: return `${n}th`;
+  }
+}
 
 export const ID_TYPE_LABEL: Record<string, string> = {
   passport: "Passport",

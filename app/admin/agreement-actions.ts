@@ -141,6 +141,32 @@ export async function updateAnnexB(id: string, fd: FormData) {
   revalidatePath(`/admin/contracts/${id}`);
 }
 
+// Payout is always monthly (fixed in the contract text); the owner never
+// picks a schedule. Only the specific day of the month is staff-set, and
+// it lives in its own column rather than inside annex_c — the owner's
+// save_agreement_draft overwrites annex_c wholesale on every "Next" click,
+// which would silently wipe this if it were stored there instead.
+export async function updatePayoutDay(id: string, fd: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: agreement } = await supabase.from("agreements").select("status").eq("id", id).maybeSingle();
+  if (!agreement) throw new Error("Agreement not found.");
+  if (agreement.status === "completed") throw new Error("This agreement is already fully signed and locked.");
+
+  const raw = s(fd, "payout_day");
+  const day = raw ? Number(raw) : null;
+  if (day !== null && (!Number.isInteger(day) || day < 1 || day > 31)) {
+    throw new Error("Payout day must be between 1 and 31.");
+  }
+
+  const { error } = await supabase.from("agreements").update({ payout_day: day }).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  await logAudit(supabase, { action: "agreement.payout_day_updated", entityType: "agreement", entityId: id, actorId: user?.id, metadata: { day } });
+  revalidatePath(`/admin/contracts/${id}`);
+}
+
 export async function toggleSpaAuthorizationReceived(ownerId: string, received: boolean) {
   const supabase = await createClient();
   const { error } = await supabase.from("owners").update({ spa_authorization_received: received }).eq("id", ownerId);
@@ -214,6 +240,7 @@ async function completeAgreement(id: string) {
     serviceSelections: a.service_selections ?? {},
     annexC: a.annex_c ?? {},
     annexB: a.annex_b && Object.keys(a.annex_b).length ? a.annex_b : null,
+    payoutDay: a.payout_day ?? null,
     effectiveDate: a.effective_date,
     ownerIdTypeLabel: ownerIdTypeLabel(a.owner_id_type),
     ownerIdNumber: a.owner_id_number ?? "",

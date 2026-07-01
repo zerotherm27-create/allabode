@@ -13,6 +13,7 @@ export type AgreementRecord = {
   property_details: Record<string, unknown>;
   service_selections: Record<string, unknown>;
   annex_c: Record<string, unknown>;
+  payout_day: number | null;
   effective_date: string | null;
   owner_id_type: string | null;
   owner_id_number: string | null;

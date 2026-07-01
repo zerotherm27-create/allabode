@@ -2,7 +2,7 @@
 
 import {
   LEASE_TERM_LABEL, PET_LABEL, SMOKING_LABEL, YN_LABEL, FURNISHING_LABEL,
-  COMMS_LABEL, RESPONSE_LABEL, PAYOUT_LABEL, ownerIdTypeLabel,
+  COMMS_LABEL, RESPONSE_LABEL, payoutScheduleLabel, ownerIdTypeLabel,
 } from "@/lib/pm/agreement-labels";
 
 type OwnerDetails = { name: string; nationality: string; civilStatus: string; address: string; email: string; contact: string };
@@ -16,7 +16,7 @@ type AnnexC = {
   smokingPolicy: string; subleasing: string; shortTermRentals: string; furnishing: string;
   preferredCommunication: string; preferredResponseTime: string;
   bankName: string; bankAccountName: string; bankAccountNo: string;
-  preferredPayout: string; payoutOther: string; specialInstructions: string;
+  specialInstructions: string;
 };
 
 function H1({ children }: { children: React.ReactNode }) {
@@ -49,12 +49,13 @@ function Check({ checked, label }: { checked?: boolean; label: string }) {
 
 export function FullAgreementPreview({
   ownerDetails: od, propertyDetails: pd, serviceSelections: ss, annexC: ac, effectiveDate,
-  ownerIdType, ownerIdNumber,
+  ownerIdType, ownerIdNumber, payoutDay,
 }: {
   ownerDetails: OwnerDetails;
   propertyDetails: PropertyDetails;
   serviceSelections: ServiceSelections;
   annexC: AnnexC;
+  payoutDay?: number | null;
   effectiveDate: string;
   ownerIdType: string;
   ownerIdNumber: string;
@@ -252,7 +253,7 @@ export function FullAgreementPreview({
       <Row label="Bank:" value={ac.bankName} />
       <Row label="Account Name:" value={ac.bankAccountName} />
       <Row label="Account Number:" value={ac.bankAccountNo} />
-      <Row label="Preferred Payout:" value={PAYOUT_LABEL[ac.preferredPayout || ""] || ac.payoutOther} />
+      <Row label="Preferred Payout:" value={payoutScheduleLabel(payoutDay)} />
 
       <H2>Special Instructions</H2>
       <P>{ac.specialInstructions || "None."}</P>

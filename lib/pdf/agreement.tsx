@@ -4,7 +4,7 @@ import path from "path";
 import { KEY_ITEMS, FURNITURE_ITEMS, APPLIANCE_ITEMS, FIXTURE_ITEMS, CONDITION_AREAS } from "@/lib/pm/annex-b-fields";
 import {
   LEASE_TERM_LABEL, PET_LABEL, SMOKING_LABEL, YN_LABEL, FURNISHING_LABEL,
-  COMMS_LABEL, RESPONSE_LABEL, PAYOUT_LABEL,
+  COMMS_LABEL, RESPONSE_LABEL, payoutScheduleLabel,
 } from "@/lib/pm/agreement-labels";
 
 let _logoBase64: string | null = null;
@@ -110,7 +110,7 @@ export type AnnexC = {
   smokingPolicy?: string; subleasing?: string; shortTermRentals?: string; furnishing?: string;
   preferredCommunication?: string; preferredResponseTime?: string;
   bankName?: string; bankAccountName?: string; bankAccountNo?: string;
-  preferredPayout?: string; payoutOther?: string; specialInstructions?: string;
+  specialInstructions?: string;
 };
 type QtyCond = { qty?: string; condition?: string; remarks?: string; brand?: string };
 export type AnnexB = {
@@ -129,6 +129,7 @@ export type AgreementPdfInput = {
   serviceSelections: ServiceSelections;
   annexC: AnnexC;
   annexB: AnnexB;
+  payoutDay?: number | null;
   effectiveDate?: string | null;
   ownerIdTypeLabel: string;
   ownerIdNumber: string;
@@ -526,7 +527,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Field label="Bank:" value={ac.bankName} />
         <Field label="Account Name:" value={ac.bankAccountName} />
         <Field label="Account Number:" value={ac.bankAccountNo} />
-        <Field label="Preferred Payout:" value={PAYOUT_LABEL[ac.preferredPayout || ""] || ac.payoutOther} />
+        <Field label="Preferred Payout:" value={payoutScheduleLabel(input.payoutDay)} />
 
         <Text style={styles.h2}>Special Instructions</Text>
         <Text style={styles.p}>{ac.specialInstructions || "None."}</Text>

@@ -374,7 +374,10 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
           acknowledged to me that the same is their free and voluntary act and deed.
         </Text>
         <Text style={[styles.bold, { marginTop: 10 }]}>NOTARY PUBLIC</Text>
-        <Text style={{ marginTop: 4 }}>Doc. No. _____ &#xb7; Page No. _____ &#xb7; Book No. _____ &#xb7; Series of {new Date().getFullYear()}</Text>
+        <Text style={{ marginTop: 4 }}>Doc. No. _____</Text>
+        <Text>Page No. _____</Text>
+        <Text>Book No. _____</Text>
+        <Text>Series of {new Date().getFullYear()}.</Text>
         <Footer />
       </Page>
 

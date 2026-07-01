@@ -75,7 +75,7 @@ function StepShell({ title, children }: { title: string; children: React.ReactNo
 }
 
 export function AgreementWizard({ token, initial }: { token: string; initial: AgreementRecord }) {
-  const [step, setStep] = useState(initial.status === "owner_signed" || initial.status === "completed" ? 6 : 1);
+  const [step, setStep] = useState(initial.status === "owner_signed" || initial.status === "completed" ? 7 : 1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -128,8 +128,17 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         return;
       }
     }
+    if (step === 2) {
+      const anySelected = serviceSelections.fullPropertyManagement || serviceSelections.longTermLeasing
+        || serviceSelections.shortTermLeasing || serviceSelections.tenantHunting || serviceSelections.condotelManagement
+        || !!serviceSelections.otherServices.trim();
+      if (!anySelected) {
+        setError("Please select at least one service, or describe the service you need under \"Other services.\"");
+        return;
+      }
+    }
     const ok = await persist();
-    if (ok) setStep((s) => Math.min(s + 1, 5));
+    if (ok) setStep((s) => Math.min(s + 1, 6));
   }
   function back() {
     setError("");
@@ -190,7 +199,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         setError(err);
         return;
       }
-      setStep(6);
+      setStep(7);
     } catch {
       setError("Couldn't submit your signature — please check your connection and try again.");
     } finally {
@@ -205,9 +214,9 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         <p className="label-caps text-gold">Property Management Agreement</p>
       </div>
 
-      {step <= 5 && (
+      {step <= 6 && (
         <div className="mb-6 flex items-center gap-1.5">
-          {[1, 2, 3, 4, 5].map((n) => (
+          {[1, 2, 3, 4, 5, 6].map((n) => (
             <span key={n} className={`h-1.5 flex-1 rounded-full ${n <= step ? "bg-navy" : "bg-surface-gray"}`} />
           ))}
         </div>
@@ -286,9 +295,12 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
       )}
 
       {step === 2 && (
-        <StepShell title="Services and authority">
+        <StepShell title="Services Selected">
+          <p className="rounded-md bg-surface-gray px-4 py-3 text-xs text-slate">
+            Choose at least one service you&apos;d like All Abode to provide &#8212; this becomes Section III of your
+            agreement.
+          </p>
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-navy">Services you&apos;d like to avail of</h3>
             {([
               ["fullPropertyManagement", "Full Property Management"],
               ["longTermLeasing", "Long-Term Leasing (Six Months or More)"],
@@ -296,15 +308,21 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
               ["tenantHunting", "Tenant Hunting Only"],
               ["condotelManagement", "Condotel Management"],
             ] as const).map(([key, label]) => (
-              <label key={key} className="flex items-center gap-2 py-1 text-sm text-ink">
+              <label key={key} className="flex items-center gap-2 py-1.5 text-sm text-ink">
                 <input type="checkbox" checked={serviceSelections[key]} onChange={(e) => setServiceSelections({ ...serviceSelections, [key]: e.target.checked })} className="h-4 w-4 accent-navy" />
                 {label}
               </label>
             ))}
-            <Field label="Other services (optional)"><Input className={inputCls} value={serviceSelections.otherServices} onChange={(e) => setServiceSelections({ ...serviceSelections, otherServices: e.target.value })} /></Field>
+            <Field label="Other services (optional)" hint="e.g. Bills Payment, Unit Furnishing, Unit Repairs">
+              <Input className={inputCls} value={serviceSelections.otherServices} onChange={(e) => setServiceSelections({ ...serviceSelections, otherServices: e.target.value })} />
+            </Field>
           </div>
+        </StepShell>
+      )}
 
-          <div className="border-t border-line pt-5">
+      {step === 3 && (
+        <StepShell title="Authority and preferences">
+          <div>
             <h3 className="mb-3 text-sm font-semibold text-navy">Leasing authority</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Minimum monthly rent (₱)"><Input className={inputCls} value={annexC.minMonthlyRent} onChange={(e) => setAnnexC({ ...annexC, minMonthlyRent: e.target.value })} /></Field>
@@ -416,7 +434,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         </StepShell>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <StepShell title="Additional reference info">
           <p className="rounded-md bg-surface-gray px-4 py-3 text-xs text-slate">
             For our internal records only — this is not printed in your contract.
@@ -431,7 +449,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         </StepShell>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <StepShell title="Review your agreement">
           <div className="max-h-[60vh] overflow-y-auto rounded-md border border-line bg-surface-gray p-5 text-sm leading-relaxed text-ink">
             <p className="mb-3 font-display text-base font-bold text-navy">PROPERTY MANAGEMENT AGREEMENT</p>
@@ -453,7 +471,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         </StepShell>
       )}
 
-      {step === 5 && (
+      {step === 6 && (
         <StepShell title="Sign your agreement">
           <Field label="Type your full legal name" required>
             <Input className={inputCls} value={typedName} onChange={(e) => setTypedName(e.target.value)} />
@@ -472,7 +490,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         </StepShell>
       )}
 
-      {step === 6 && (
+      {step === 7 && (
         <div className="flex flex-col items-center py-8 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-available/10 text-available">
             <Icon name="check_circle" size={36} fill={1} />
@@ -499,12 +517,12 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
 
       {error && <p role="alert" className="mt-4 text-sm text-error">{error}</p>}
 
-      {step <= 5 && (
+      {step <= 6 && (
         <div className="mt-6 flex items-center justify-between gap-3">
           {step > 1 ? (
             <button type="button" onClick={back} className="text-sm font-medium text-slate hover:text-navy">Back</button>
           ) : <span />}
-          {step < 5 ? (
+          {step < 6 ? (
             <button type="button" onClick={next} disabled={saving} className="inline-flex items-center gap-2 rounded-md bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50">
               {saving ? <Icon name="progress_activity" size={18} className="animate-spin" /> : null}
               Next

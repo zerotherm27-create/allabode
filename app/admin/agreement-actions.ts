@@ -10,7 +10,8 @@ import { sendEmail } from "@/lib/email";
 import { createNotification } from "@/lib/notify";
 import { logAudit } from "@/lib/audit";
 import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
-import { renderAgreementPdf, ownerIdTypeLabel, type AgreementPdfInput } from "@/lib/pdf/agreement";
+import { renderAgreementPdf, type AgreementPdfInput } from "@/lib/pdf/agreement";
+import { ownerIdTypeLabel } from "@/lib/pm/agreement-labels";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);

@@ -8,6 +8,7 @@ import { Icon } from "@/components/icon";
 import { saveAgreementDraft, createAgreementIdUploadTicket, confirmAgreementIdUpload, submitOwnerSignature, type AgreementRecord } from "@/app/sign/agreement-actions";
 import { createClient } from "@/lib/supabase/client";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
+import { FullAgreementPreview } from "./full-agreement-preview";
 
 type OwnerDetails = { name: string; nationality: string; civilStatus: string; address: string; email: string; contact: string };
 type PropertyDetails = { condo: string; unit: string; address: string; floorArea: string; parking: string; storage: string; furnished: boolean; inclusions: string };
@@ -451,22 +452,20 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
 
       {step === 5 && (
         <StepShell title="Review your agreement">
-          <div className="max-h-[60vh] overflow-y-auto rounded-md border border-line bg-surface-gray p-5 text-sm leading-relaxed text-ink">
-            <p className="mb-3 font-display text-base font-bold text-navy">PROPERTY MANAGEMENT AGREEMENT</p>
-            <p className="mb-3">Between <strong>{ownerDetails.name || "—"}</strong> (&quot;Owner&quot;) and <strong>All Abode Property Solutions OPC.</strong> (&quot;Manager&quot;).</p>
-            <p className="mb-1"><strong>Property:</strong> {propertyDetails.condo} {propertyDetails.unit}, {propertyDetails.address}</p>
-            <p className="mb-1"><strong>ID on file:</strong> {ID_TYPES.find((t) => t.value === ownerIdType)?.label} No. {ownerIdNumber}</p>
-            <p className="mb-3"><strong>Effective date:</strong> {effectiveDate || "date of full execution"}</p>
-            <p className="mb-3">
-              The Owner appoints the Manager as exclusive Property Manager under the full terms of the Property
-              Management Agreement, including the Manager&#39;s authority and limitations, fee schedule (Annex A),
-              and the authority matrix selected above (Annex C). The Owner warrants the information provided is
-              true and complete and agrees to be bound by the Agreement upon signing below.
-            </p>
-            <p className="text-xs text-slate">
-              The full legal text of the Agreement (Sections I&#8211;XIV and Annexes A&#8211;C) will be included in
-              your downloadable, signed PDF once both parties have signed.
-            </p>
+          <p className="text-xs text-slate">
+            Please read the full agreement below before signing. Annex &#x201C;B&#x201D; and the notarial acknowledgment
+            are handled separately and are not shown here.
+          </p>
+          <div className="max-h-[60vh] overflow-y-auto rounded-md border border-line bg-surface-gray p-5">
+            <FullAgreementPreview
+              ownerDetails={ownerDetails}
+              propertyDetails={propertyDetails}
+              serviceSelections={serviceSelections}
+              annexC={annexC}
+              effectiveDate={effectiveDate}
+              ownerIdType={ownerIdType}
+              ownerIdNumber={ownerIdNumber}
+            />
           </div>
         </StepShell>
       )}

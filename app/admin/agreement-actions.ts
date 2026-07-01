@@ -167,6 +167,56 @@ export async function updatePayoutDay(id: string, fd: FormData) {
   revalidatePath(`/admin/contracts/${id}`);
 }
 
+// Void invalidates the agreement (blocks the signing link / countersigning)
+// but keeps the record and any signed PDF for history. Allowed at any
+// status, including completed — e.g. a fully executed contract that later
+// needs to be nullified, without destroying the executed record.
+export async function voidAgreement(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: agreement } = await supabase.from("agreements").select("status").eq("id", id).maybeSingle();
+  if (!agreement) throw new Error("Agreement not found.");
+  if (agreement.status === "voided") return;
+
+  const { error } = await supabase.from("agreements").update({ status: "voided" }).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  await logAudit(supabase, { action: "agreement.voided", entityType: "agreement", entityId: id, actorId: user?.id });
+  revalidatePath(`/admin/contracts/${id}`);
+  revalidatePath("/admin/contracts");
+}
+
+// Delete permanently removes the agreement and its storage files. Blocked
+// once completed — a fully executed contract should be voided instead so
+// the signed record is preserved, not destroyed.
+export async function deleteAgreement(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: agreement } = await supabase
+    .from("agreements")
+    .select("status,pdf_path,owner_id_document_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!agreement) throw new Error("Agreement not found.");
+  if (agreement.status === "completed") {
+    throw new Error("A fully executed agreement can't be deleted — void it instead to preserve the signed record.");
+  }
+
+  const paths = [agreement.pdf_path, agreement.owner_id_document_path].filter((p): p is string => !!p);
+  if (paths.length) {
+    await supabase.storage.from(AGREEMENTS_BUCKET).remove(paths);
+  }
+
+  const { error } = await supabase.from("agreements").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  await logAudit(supabase, { action: "agreement.deleted", entityType: "agreement", entityId: id, actorId: user?.id });
+  revalidatePath("/admin/contracts");
+  redirect("/admin/contracts");
+}
+
 export async function toggleSpaAuthorizationReceived(ownerId: string, received: boolean) {
   const supabase = await createClient();
   const { error } = await supabase.from("owners").update({ spa_authorization_received: received }).eq("id", ownerId);

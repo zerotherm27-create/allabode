@@ -6,7 +6,11 @@ import { CountersignForm } from "@/components/admin/countersign-form";
 import { AnnexBForm } from "@/components/admin/annex-b-form";
 import { SpaToggle } from "@/components/admin/spa-toggle";
 import { CopyLink } from "@/components/admin/copy-link";
-import { sendAgreementLink, updateAnnexB, updatePayoutDay, getAgreementPdfSignedUrl } from "@/app/admin/agreement-actions";
+import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
+import {
+  sendAgreementLink, updateAnnexB, updatePayoutDay, getAgreementPdfSignedUrl,
+  voidAgreement, deleteAgreement,
+} from "@/app/admin/agreement-actions";
 import { getPublicSiteUrl } from "@/lib/url";
 import { payoutScheduleLabel } from "@/lib/pm/agreement-labels";
 
@@ -42,6 +46,13 @@ const STATUS_LABEL: Record<string, string> = {
   completed: "Fully executed",
   voided: "Voided",
 };
+const STATUS_COLOR: Record<string, string> = {
+  draft: "bg-surface-gray text-slate",
+  sent: "bg-gold/15 text-gold-bright",
+  owner_signed: "bg-reserved/15 text-reserved",
+  completed: "bg-available/15 text-available",
+  voided: "bg-error/10 text-error",
+};
 
 export default async function AdminContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -67,6 +78,8 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
   const doSendLink = sendAgreementLink.bind(null, id);
   const doUpdateAnnexB = updateAnnexB.bind(null, id);
   const doUpdatePayoutDay = updatePayoutDay.bind(null, id);
+  const doVoid = voidAgreement.bind(null, id);
+  const doDelete = deleteAgreement.bind(null, id);
   const signingLink = `${getPublicSiteUrl()}/sign/agreement/${a.access_token}`;
 
   return (
@@ -80,7 +93,7 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
           <h1 className="font-display text-2xl font-bold text-navy">{od.name || a.owner_name_hint || a.owner_email}</h1>
           <p className="mt-1 text-sm text-slate">{a.owner_email}</p>
         </div>
-        <span className="rounded-full bg-surface-gray px-3 py-1 text-sm font-medium text-navy">
+        <span className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_COLOR[a.status] ?? "bg-surface-gray text-navy"}`}>
           {STATUS_LABEL[a.status] ?? a.status}
         </span>
       </div>
@@ -138,6 +151,12 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
             Only a designated signatory account can countersign this agreement.
           </div>
         )
+      )}
+
+      {a.status === "voided" && (
+        <div className="mt-4 rounded-lg border border-error/30 bg-error/5 p-5 text-sm text-error">
+          This agreement has been voided. The signing link no longer works and it can&#x2019;t be countersigned.
+        </div>
       )}
 
       {a.status === "completed" && pdfUrl && (
@@ -209,6 +228,36 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
           )}
         </div>
       </div>
+
+      {a.status !== "voided" && (
+        <div className="mt-6 rounded-lg border border-error/30 bg-error/5 p-5">
+          <h2 className="mb-1 font-display text-sm font-semibold text-error">Danger Zone</h2>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <ConfirmActionForm
+              action={doVoid}
+              message="Void this agreement? This invalidates the signing link and blocks countersigning, but keeps the record for history. This can't be undone."
+            >
+              <button type="submit" className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray">
+                Void agreement
+              </button>
+            </ConfirmActionForm>
+            {a.status === "completed" ? (
+              <p className="flex items-center text-xs text-slate">
+                Fully executed agreements can&#x2019;t be deleted — void it instead to invalidate it while keeping the signed record.
+              </p>
+            ) : (
+              <ConfirmActionForm
+                action={doDelete}
+                message="Permanently delete this agreement and its uploaded files? This can't be undone."
+              >
+                <button type="submit" className="rounded-md bg-error px-4 py-2 text-sm font-semibold text-white hover:bg-error/90">
+                  Delete agreement
+                </button>
+              </ConfirmActionForm>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

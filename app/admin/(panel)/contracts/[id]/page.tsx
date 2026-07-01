@@ -5,10 +5,13 @@ import { Icon } from "@/components/icon";
 import { CountersignForm } from "@/components/admin/countersign-form";
 import { AnnexBForm } from "@/components/admin/annex-b-form";
 import { SpaToggle } from "@/components/admin/spa-toggle";
+import { CopyLink } from "@/components/admin/copy-link";
 import { sendAgreementLink, updateAnnexB, getAgreementPdfSignedUrl } from "@/app/admin/agreement-actions";
+import { getPublicSiteUrl } from "@/lib/url";
 
 type Agreement = {
   id: string;
+  access_token: string;
   status: string;
   owner_email: string;
   owner_name_hint: string | null;
@@ -60,6 +63,7 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
   const intake = a.intake_profile ?? {};
   const doSendLink = sendAgreementLink.bind(null, id);
   const doUpdateAnnexB = updateAnnexB.bind(null, id);
+  const signingLink = `${getPublicSiteUrl()}/sign/agreement/${a.access_token}`;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -85,14 +89,17 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
               Send signing link
             </button>
           </form>
+          <p className="mt-3 text-xs text-slate">Or copy the link below to share it directly:</p>
+          <CopyLink link={signingLink} ownerName={od.name || a.owner_name_hint || undefined} />
         </div>
       )}
 
       {a.status === "sent" && (
         <div className="mt-4 rounded-lg border border-line bg-surface p-5">
           <p className="text-sm text-slate">Awaiting the owner to fill out and sign their copy.</p>
+          <CopyLink link={signingLink} ownerName={od.name || a.owner_name_hint || undefined} />
           <form action={doSendLink} className="mt-3">
-            <button type="submit" className="text-sm font-medium text-navy-700 underline">Resend link</button>
+            <button type="submit" className="text-sm font-medium text-navy-700 underline">Resend email</button>
           </form>
         </div>
       )}

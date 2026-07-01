@@ -64,11 +64,23 @@ export async function saveAgreementDraft(token: string, input: SaveDraftInput): 
 const ALLOWED_ID_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const MAX_ID_SIZE = 10 * 1024 * 1024;
 
-export async function uploadAgreementId(token: string, formData: FormData): Promise<{ error?: string }> {
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: "Please choose a file." };
-  if (file.size > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
-  if (!ALLOWED_ID_TYPES.includes(file.type)) return { error: "Please upload a JPG, PNG, or PDF file." };
+/**
+ * Vercel Functions cap request bodies at 4.5MB platform-wide (not
+ * configurable) — well under phone-camera ID photos, which are commonly
+ * 5-10MB. So the file never touches our server action: the browser uploads
+ * directly to Supabase Storage using a short-lived signed upload URL/token,
+ * which requires no RLS permissions of its own (the token is the
+ * credential). This step only validates + issues that ticket.
+ */
+export async function createAgreementIdUploadTicket(
+  token: string,
+  fileName: string,
+  fileSize: number,
+  fileType: string
+): Promise<{ signedUrl?: string; uploadToken?: string; path?: string; error?: string }> {
+  if (fileSize <= 0) return { error: "Please choose a file." };
+  if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
+  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG, PNG, or PDF file." };
 
   const supabase = await createClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_agreement_by_token", { p_token: token });
@@ -76,23 +88,24 @@ export async function uploadAgreementId(token: string, formData: FormData): Prom
   const record = agreement as AgreementRecord;
   if (record.status !== "sent") return { error: "This agreement can no longer be edited." };
 
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const ext = (fileName.split(".").pop() || "jpg").toLowerCase();
   const path = `${record.id}/owner-id-${Date.now()}.${ext}`;
-  const buf = Buffer.from(await file.arrayBuffer());
 
   try {
     const admin = createAdminClient();
-    const { error: upErr } = await admin.storage.from(AGREEMENTS_BUCKET).upload(path, buf, {
-      contentType: file.type,
-      upsert: false,
-    });
-    if (upErr) return { error: `Upload failed: ${upErr.message}` };
+    const { data, error } = await admin.storage.from(AGREEMENTS_BUCKET).createSignedUploadUrl(path);
+    if (error || !data) return { error: error?.message ?? "Could not prepare upload." };
+    return { signedUrl: data.signedUrl, uploadToken: data.token, path: data.path };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Upload failed." };
+    return { error: err instanceof Error ? err.message : "Could not prepare upload." };
   }
+}
 
-  const { error: rpcError } = await supabase.rpc("save_agreement_id_upload", { p_token: token, p_path: path });
-  if (rpcError) return { error: rpcError.message };
+/** Called after the browser has uploaded the file directly to storage. */
+export async function confirmAgreementIdUpload(token: string, path: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_agreement_id_upload", { p_token: token, p_path: path });
+  if (error) return { error: error.message };
   return {};
 }
 

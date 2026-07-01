@@ -4,6 +4,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  experimental: {
+    serverActions: {
+      // Next.js defaults Server Action bodies to 1MB — well under the 10MB
+      // government-ID upload allowed by the contract-signing flow (phone
+      // camera photos are commonly 2-8MB). Without this, uploads silently
+      // fail past 1MB.
+      bodySizeLimit: "12mb",
+    },
+  },
   async headers() {
     return [
       {

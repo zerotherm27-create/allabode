@@ -5,7 +5,9 @@ import Image from "next/image";
 import SignatureCanvas from "react-signature-canvas";
 import { Field, Input, Textarea, Select } from "@/components/forms/fields";
 import { Icon } from "@/components/icon";
-import { saveAgreementDraft, uploadAgreementId, submitOwnerSignature, type AgreementRecord } from "@/app/sign/agreement-actions";
+import { saveAgreementDraft, createAgreementIdUploadTicket, confirmAgreementIdUpload, submitOwnerSignature, type AgreementRecord } from "@/app/sign/agreement-actions";
+import { createClient } from "@/lib/supabase/client";
+import { AGREEMENTS_BUCKET } from "@/lib/storage";
 
 type OwnerDetails = { name: string; nationality: string; civilStatus: string; address: string; email: string; contact: string };
 type PropertyDetails = { condo: string; unit: string; address: string; floorArea: string; parking: string; storage: string; furnished: boolean; inclusions: string };
@@ -94,18 +96,24 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
 
   async function persist() {
     setSaving(true);
-    const { error: err } = await saveAgreementDraft(token, {
-      ownerDetails, propertyDetails, serviceSelections, annexC,
-      effectiveDate: effectiveDate || null,
-      ownerIdType, ownerIdNumber,
-      intakeProfile,
-    });
-    setSaving(false);
-    if (err) {
-      setError(err);
+    try {
+      const { error: err } = await saveAgreementDraft(token, {
+        ownerDetails, propertyDetails, serviceSelections, annexC,
+        effectiveDate: effectiveDate || null,
+        ownerIdType, ownerIdNumber,
+        intakeProfile,
+      });
+      if (err) {
+        setError(err);
+        return false;
+      }
+      return true;
+    } catch {
+      setError("Couldn't save your progress — please check your connection and try again.");
       return false;
+    } finally {
+      setSaving(false);
     }
-    return true;
   }
 
   async function next() {
@@ -131,15 +139,33 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
   async function onIdFileChange(file: File) {
     setIdUploading(true);
     setError("");
-    const fd = new FormData();
-    fd.set("file", file);
-    const { error: err } = await uploadAgreementId(token, fd);
-    setIdUploading(false);
-    if (err) {
-      setError(err);
-      return;
+    try {
+      const ticket = await createAgreementIdUploadTicket(token, file.name, file.size, file.type);
+      if (ticket.error || !ticket.signedUrl || !ticket.uploadToken || !ticket.path) {
+        setError(ticket.error || "Could not prepare upload.");
+        return;
+      }
+      // Uploads straight from the browser to Supabase Storage — never
+      // passes through our server, so it isn't subject to any server
+      // function's request-body size limit.
+      const { error: upErr } = await createClient()
+        .storage.from(AGREEMENTS_BUCKET)
+        .uploadToSignedUrl(ticket.path, ticket.uploadToken, file, { contentType: file.type });
+      if (upErr) {
+        setError(`Upload failed: ${upErr.message}`);
+        return;
+      }
+      const { error: confirmErr } = await confirmAgreementIdUpload(token, ticket.path);
+      if (confirmErr) {
+        setError(confirmErr);
+        return;
+      }
+      setIdUploaded(true);
+    } catch {
+      setError("Upload failed — please check your connection and try again.");
+    } finally {
+      setIdUploading(false);
     }
-    setIdUploaded(true);
   }
 
   async function sign() {
@@ -157,14 +183,19 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
       return;
     }
     setSaving(true);
-    const dataUrl = padRef.current.toDataURL("image/png");
-    const { error: err } = await submitOwnerSignature(token, { typedName, signatureDataUrl: dataUrl });
-    setSaving(false);
-    if (err) {
-      setError(err);
-      return;
+    try {
+      const dataUrl = padRef.current.toDataURL("image/png");
+      const { error: err } = await submitOwnerSignature(token, { typedName, signatureDataUrl: dataUrl });
+      if (err) {
+        setError(err);
+        return;
+      }
+      setStep(6);
+    } catch {
+      setError("Couldn't submit your signature — please check your connection and try again.");
+    } finally {
+      setSaving(false);
     }
-    setStep(6);
   }
 
   return (

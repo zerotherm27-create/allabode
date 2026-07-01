@@ -64,7 +64,7 @@ export function FullAgreementPreview({
   return (
     <div className="text-xs leading-relaxed text-ink">
       <p className="text-center font-display text-base font-bold text-navy">PROPERTY MANAGEMENT AGREEMENT</p>
-      <p className="text-center text-[11px] text-gold">All Abode Property Solutions OPC</p>
+      <p className="text-center text-[11px] text-gold">All Abode Brokerage and Valuation OPC</p>
       <p className="mt-3 text-center">
         This Agreement is entered into on {effectiveDate || "the date of full execution"}, by and between:
       </p>
@@ -79,9 +79,9 @@ export function FullAgreementPreview({
       <P>Hereinafter referred to as the &#x201C;Owner.&#x201D;</P>
       <p className="mt-2 text-center">&#x2014; and &#x2014;</p>
       <P>
-        <strong>ALL ABODE PROPERTY SOLUTIONS OPC.</strong>, a One Person Corporation duly organized under Philippine law,
+        <strong>ALL ABODE BROKERAGE AND VALUATION OPC.</strong>, a One Person Corporation duly organized under Philippine law,
         with principal office at 2216 Chino Roces Ave., Makati, Laureano Di Trevi Towers, Tower 2 #2804, represented by
-        its <strong>President, Aremchel M. Cruzado</strong>; hereinafter referred to as the <strong>&#x201C;Manager.&#x201D;</strong>
+        its <strong>Property Manager, Aremchel M. Cruzado</strong>; hereinafter referred to as the <strong>&#x201C;Manager.&#x201D;</strong>
       </P>
 
       <H1>I. PROPERTY</H1>
@@ -97,7 +97,7 @@ export function FullAgreementPreview({
 
       <H1>II. APPOINTMENT AND TERM</H1>
       <P>
-        The Owner exclusively appoints <strong>All Abode Property Solutions OPC.</strong> as Property Manager, and the
+        The Owner exclusively appoints <strong>All Abode Brokerage and Valuation OPC.</strong> as Property Manager, and the
         Manager accepts, agreeing to perform services with commercially reasonable care, diligence, and professional
         standards consistent with Philippine industry practice. The Manager acts as an independent contractor; nothing
         herein creates an employer-employee relationship, partnership, joint venture, or agency beyond the authority

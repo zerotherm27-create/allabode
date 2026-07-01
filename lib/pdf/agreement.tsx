@@ -83,7 +83,7 @@ function Hr() { return <View style={styles.hr} />; }
 function PageFooter({ refCode, ownerName }: { refCode: string; ownerName: string }) {
   return (
     <View style={styles.footer} fixed>
-      <Text>{refCode} · {ownerName} · All Abode Property Solutions OPC</Text>
+      <Text>{refCode} · {ownerName} · All Abode Brokerage and Valuation OPC</Text>
       <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} fixed />
     </View>
   );
@@ -172,7 +172,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
           <Image src={getLogo()!} style={{ width: 120, height: 34, objectFit: "contain", alignSelf: "center", marginBottom: 8 }} />
         )}
         <Text style={styles.title}>PROPERTY MANAGEMENT AGREEMENT</Text>
-        <Text style={styles.subtitle}>All Abode Property Solutions OPC</Text>
+        <Text style={styles.subtitle}>All Abode Brokerage and Valuation OPC</Text>
         <Text style={styles.intro}>
           This Agreement is entered into on {input.effectiveDate || "the date of full execution"}, by and between:
         </Text>
@@ -187,9 +187,9 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Text style={styles.p}>Hereinafter referred to as the &#x201C;Owner.&#x201D;</Text>
         <Text style={[styles.p, { textAlign: "center" }]}>&#x2014; and &#x2014;</Text>
         <Text style={styles.p}>
-          <Text style={styles.bold}>ALL ABODE PROPERTY SOLUTIONS OPC.</Text>, a One Person Corporation duly organized under
+          <Text style={styles.bold}>ALL ABODE BROKERAGE AND VALUATION OPC.</Text>, a One Person Corporation duly organized under
           Philippine law, with principal office at 2216 Chino Roces Ave., Makati, Laureano Di Trevi Towers, Tower 2 #2804,
-          represented by its <Text style={styles.bold}>President, Aremchel M. Cruzado</Text>; hereinafter referred to as the{" "}
+          represented by its <Text style={styles.bold}>Property Manager, Aremchel M. Cruzado</Text>; hereinafter referred to as the{" "}
           <Text style={styles.bold}>&#x201C;Manager.&#x201D;</Text>
         </Text>
         <Hr />
@@ -208,7 +208,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
 
         <Text style={styles.h1}>II. APPOINTMENT AND TERM</Text>
         <Text style={styles.p}>
-          The Owner exclusively appoints <Text style={styles.bold}>All Abode Property Solutions OPC.</Text> as Property
+          The Owner exclusively appoints <Text style={styles.bold}>All Abode Brokerage and Valuation OPC.</Text> as Property
           Manager, and the Manager accepts, agreeing to perform services with commercially reasonable care, diligence, and
           professional standards consistent with Philippine industry practice. The Manager acts as an independent
           contractor; nothing herein creates an employer-employee relationship, partnership, joint venture, or agency
@@ -334,12 +334,12 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
             <Text style={{ fontSize: 8, color: SLATE }}>Signed: {input.ownerSignedAtManila}</Text>
           </View>
           <View style={styles.sigCol}>
-            <Text style={styles.bold}>ALL ABODE PROPERTY SOLUTIONS OPC</Text>
+            <Text style={styles.bold}>ALL ABODE BROKERAGE AND VALUATION OPC</Text>
             {input.managerSignatureDataUri
               // eslint-disable-next-line jsx-a11y/alt-text
               ? <Image src={input.managerSignatureDataUri} style={styles.sigImg} />
               : <View style={styles.sigLine} />}
-            <Text>Aremchel M. Cruzado &#x2014; President</Text>
+            <Text>Aremchel M. Cruzado &#x2014; Property Manager</Text>
             <Text style={{ fontSize: 8, color: SLATE }}>Signed: {input.managerSignedAtManila}</Text>
           </View>
         </View>
@@ -555,9 +555,9 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Field label="IP Address:" value={input.ownerSignedIp} />
         <Field label="Authentication Method:" value="Signed via secure, single-use access link sent to verified email address; signature captured via electronic signature pad" />
 
-        <Text style={styles.h2}>Signer 2 &#x2014; Manager (All Abode Property Solutions OPC)</Text>
+        <Text style={styles.h2}>Signer 2 &#x2014; Manager (All Abode Brokerage and Valuation OPC)</Text>
         <Field label="Name:" value="Aremchel M. Cruzado" />
-        <Field label="Title:" value="President" />
+        <Field label="Title:" value="Property Manager" />
         <Field label="Account Email:" value={input.managerSignerEmail} />
         <Field label="Date/Time Signed:" value={`${input.managerSignedAtManila} (Asia/Manila)`} />
         <Field label="IP Address:" value={input.managerSignedIp} />

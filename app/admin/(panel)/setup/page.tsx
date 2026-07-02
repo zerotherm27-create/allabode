@@ -142,10 +142,10 @@ export default async function SetupGuidePage() {
             <p>Go to <strong>Leases → New Lease</strong>. Set the rent amount, management fee %, VAT %, and the remittance due date (the day each month the owner expects to receive their payout).</p>
           </WorkflowStep>
           <WorkflowStep icon="savings" title="Record the security deposit">
-            <p>Open the lease and click <strong>"Record Deposit"</strong>. Enter the amount the tenant paid (usually 2 months' rent). The system tracks this separately — it doesn&apos;t affect the monthly payout calculation.</p>
+            <p>Open the lease and click <strong>&quot;Record Deposit&quot;</strong>. Enter the amount the tenant paid (usually 2 months&apos; rent). The system tracks this separately — it doesn&apos;t affect the monthly payout calculation.</p>
           </WorkflowStep>
           <WorkflowStep icon="payments" title="Record the AllAbode commission">
-            <p>Still on the lease page, click <strong>"Record Commission"</strong>. This logs the one-time leasing fee AllAbode earns. It shows on the first SOA as an informational line — not deducted from the owner&apos;s income.</p>
+            <p>Still on the lease page, click <strong>&quot;Record Commission&quot;</strong>. This logs the one-time leasing fee AllAbode earns. It shows on the first SOA as an informational line — not deducted from the owner&apos;s income.</p>
           </WorkflowStep>
           <WorkflowStep icon="mark_email_read" title="Invite the tenant to the portal">
             <p>Go to <strong>System → Pending Signups</strong>. The tenant can sign up at the portal login page using their registered email. Once signed up, they can view their lease, pay invoices, submit maintenance requests, and download documents.</p>
@@ -160,13 +160,13 @@ export default async function SetupGuidePage() {
         <div className="flex flex-col gap-3">
 
           <WorkflowStep icon="payments" title="Record rent payments" tag="As they come in">
-            <p>When a tenant pays rent, go to their <strong>Lease</strong> and click <strong>"Record Payment"</strong>. Enter the amount and date received. Do this as soon as payment is received — payments recorded before the end of the month are automatically included in that month&apos;s statement.</p>
+            <p>When a tenant pays rent, go to their <strong>Lease</strong> and click <strong>&quot;Record Payment&quot;</strong>. Enter the amount and date received. Do this as soon as payment is received — payments recorded before the end of the month are automatically included in that month&apos;s statement.</p>
             <p>Invoices are generated automatically on the 1st of each month and sent to the tenant.</p>
           </WorkflowStep>
 
           <WorkflowStep icon="receipt" title="Upload receipts for property expenses" tag="As they happen" cta="Upload a receipt" ctaHref="/admin/receipts/new">
             <p>Whenever there&apos;s an expense for a property (repairs, utility bills, maintenance work), take a photo or scan of the receipt and upload it under <strong>Finance → Receipts → Upload</strong>.</p>
-            <p>The system reads the receipt automatically and extracts the amount and vendor. You just confirm it&apos;s correct and click <strong>"Post to Ledger"</strong> — this is what makes it appear on the owner&apos;s statement.</p>
+            <p>The system reads the receipt automatically and extracts the amount and vendor. You just confirm it&apos;s correct and click <strong>&quot;Post to Ledger&quot;</strong> — this is what makes it appear on the owner&apos;s statement.</p>
           </WorkflowStep>
 
           <WorkflowStep icon="auto_awesome" title="Statements are generated automatically" tag="1st of month, 2:00 AM">
@@ -181,11 +181,11 @@ export default async function SetupGuidePage() {
               <li>Deductions — are the expenses correct?</li>
               <li>Payout — does the final amount look right?</li>
             </ul>
-            <p>If you uploaded a receipt late and it&apos;s missing, post it to ledger then click <strong>"Regenerate Lines"</strong> on the statement — it will recalculate everything.</p>
+            <p>If you uploaded a receipt late and it&apos;s missing, post it to ledger then click <strong>&quot;Regenerate Lines&quot;</strong> on the statement — it will recalculate everything.</p>
           </WorkflowStep>
 
           <WorkflowStep icon="send" title={`Send to owner — click "Publish & Send to Owner"`}>
-            <p>When you&apos;re happy with the numbers, click <strong>"Publish &amp; Send to Owner"</strong>. The system will:</p>
+            <p>When you&apos;re happy with the numbers, click <strong>&quot;Publish &amp; Send to Owner&quot;</strong>. The system will:</p>
             <ul className="ml-4 list-disc space-y-1">
               <li>Generate a PDF of the statement</li>
               <li>Send the owner an email notification</li>

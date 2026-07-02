@@ -92,6 +92,46 @@ not diversify. All design assets and the token reference live in `design/`:
 
 ## Build status (updated — resume here)
 
+**DONE — Tenancy Agreement e-signature (sibling of the PM contract flow):**
+- Migration `supabase/migrations/0023_tenancy_signing.sql` — `tenancy_agreements` table
+  (status machine `draft→sent→tenant_signed→completed`/`voided`), **two** tokens
+  (tenant `access_token` + `landlord_access_token`, issued only after the tenant signs,
+  +14-day validity extended on resend), staff-only RLS, 7 SECURITY DEFINER RPCs (each
+  validates only its own token and strips the other party's token from the returned
+  JSON). **User must run it in the SQL editor.** No storage changes — reuses the
+  `agreements` bucket under `tenancy/{id}/...`.
+- Reversed authoring model vs the PM flow: **admin pre-fills all lease terms** at
+  `/admin/contracts/tenancy/new` (`components/admin/tenancy-terms-form.tsx` — optional
+  `units` picker prefills property + rent and enables auto-lease creation; auto
+  peso-words via `lib/pm/amount-words.ts`; payment-schedule generator). Tenant fills
+  only personal details + occupants + government ID at `/sign/tenancy/[token]`
+  (3-step wizard), then signs. Terms lock at `tenant_signed`; the inventory annex
+  (`components/admin/tenancy-inventory-form.tsx`) stays editable until completed.
+- Landlord dual-path: remote link `/sign/tenancy/landlord/[token]` (landlord reviews,
+  confirms ID + uploads image, signs) **or** staff countersign fallback
+  (`components/admin/tenancy-countersign-form.tsx`, `users.is_signatory`);
+  `landlord_signed_via ('remote'|'countersign')` records which; race guarded by
+  `landlord_signature_data is null` in the RPC + a check in the countersign action.
+- Completion (`lib/tenancy/complete.ts`, takes the Supabase client as a param —
+  staff client from countersign, `createAdminClient()` from the anonymous remote
+  path): renders `lib/pdf/tenancy.tsx`, cross-copies to `documents` bucket, upserts
+  `tenants` by email, creates a `leases` row when `unit_id` is linked (status
+  `active`, 30-day notice), auto-provisions the tenant portal login (recovery-link
+  email), inserts `documents` rows (`visibility:'tenant'`). If completion fails after
+  the landlord signs, status stays `tenant_signed` and the admin detail page shows a
+  "Finalize agreement" retry button.
+- Contract text lives once in `lib/pm/tenancy-clauses.ts` (clauses 1–30 verbatim from
+  the reference doc, interpretation block, reminders, default inventory/bank details) —
+  shared by the on-screen preview (`app/sign/tenancy/[token]/full-tenancy-preview.tsx`)
+  and the PDF so they can't drift. PDF matches the 11-page reference: per-page logo
+  header + disclaimer footer + "PLEASE SIGN" LANDLORD|TENANT initials box (stamped with
+  signature thumbnails once signed), bank + payment-schedule tables, Copy of Valid IDs
+  page, blank notary Acknowledgement, Inventory List + Reminders, R.A. 8792 e-signature
+  certificate. Token-gated download `app/api/sign/tenancy/[token]/pdf/route.ts` serves
+  both parties (tries tenant RPC then landlord RPC).
+- `/admin/contracts` is now a merged list (PM + Tenancy with a Type badge, two create
+  buttons). Detail page: `/admin/contracts/tenancy/[id]`.
+
 **DONE — PWA + mobile parity:**
 - Installable PWA via native `app/manifest.ts` (navy theme, standalone) + icons generated
   from `public/logo/favicon.png` with `sips` (`public/icon-{192,512}.png` + `-maskable`,

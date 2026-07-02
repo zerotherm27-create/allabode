@@ -101,6 +101,9 @@ create policy "portal select documents"
 -- download both go through narrow, token-validated server actions/routes
 -- using the service-role client, which bypasses RLS entirely. No anon
 -- policy is needed or added.
+-- The Tenancy Agreement e-signature flow (migration 0023) shares this bucket
+-- under the `tenancy/{agreement_id}/...` path prefix with the exact same
+-- access model — no additional policies are required for it.
 create policy "staff insert agreements"
   on storage.objects for insert to authenticated
   with check (bucket_id = 'agreements' and public.is_staff());

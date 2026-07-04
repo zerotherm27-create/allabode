@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
   page: { paddingTop: 92, paddingBottom: 118, paddingHorizontal: 44, fontSize: 9.5, color: INK, fontFamily: "Helvetica", lineHeight: 1.4 },
   header: { position: "absolute", top: 22, left: 44, right: 44, alignItems: "center" },
   headerContact: { fontSize: 7, color: SLATE, marginTop: 3 },
-  footer: { position: "absolute", bottom: 20, left: 44, right: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  footer: { position: "absolute", top: 700, left: 44, right: 44, height: 70, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   footerLeft: { flex: 1, paddingRight: 10 },
   footerDisclaimer: { fontSize: 6, color: SLATE, lineHeight: 1.25 },
   footerPage: { fontSize: 7.5, color: SLATE, marginBottom: 2 },
@@ -205,6 +205,7 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
       {/* Main contract body — flows continuously; don't hardcode page breaks. */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.title}>PARKING SPACE RENTAL AGREEMENT</Text>
 
         <Text style={styles.center}>KNOW ALL MEN BY THESE PRESENTS:</Text>
@@ -284,12 +285,12 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             {input.tenantSignedAtManila ? <Text style={styles.meta}>Signed: {input.tenantSignedAtManila}</Text> : null}
           </View>
         </View>
-        <Footer />
       </Page>
 
       {/* ── COPY OF Valid IDs ── */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.annexTitle}>COPY OF Valid IDs</Text>
 
         <Text style={styles.idSectionLabel}>LANDLORD</Text>
@@ -323,12 +324,12 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
         ) : (
           <Text style={styles.meta}>ID image unavailable.</Text>
         )}
-        <Footer />
       </Page>
 
       {/* ── Acknowledgement (notarial portions stay blank — no notary in this flow) ── */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.annexTitle}>ACKNOWLEDGEMENT</Text>
 
         <Text style={{ marginTop: 10 }}>REPUBLIC OF THE PHILIPPINES)</Text>
@@ -365,6 +366,26 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
           has been signed on each and every page thereof by the concerned parties and their witnesses, and sealed
           with my notarial seal.
         </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }} wrap={false}>
+          <View style={{ width: "44%" }}>
+            <Text style={styles.bold}>By: LANDLORD</Text>
+            {input.landlordSignatureDataUri
+              // eslint-disable-next-line jsx-a11y/alt-text
+              ? <Image src={input.landlordSignatureDataUri} style={[styles.sigImg, { width: 130, height: 36 }]} />
+              : <View style={{ height: 36 }} />}
+            <View style={[styles.sigLine, { width: "100%" }]} />
+            <Text style={styles.meta}>{landlordName || " "}</Text>
+          </View>
+          <View style={{ width: "44%" }}>
+            <Text style={styles.bold}>By: TENANT</Text>
+            {input.tenantSignatureDataUri
+              // eslint-disable-next-line jsx-a11y/alt-text
+              ? <Image src={input.tenantSignatureDataUri} style={[styles.sigImg, { width: 130, height: 36 }]} />
+              : <View style={{ height: 36 }} />}
+            <View style={[styles.sigLine, { width: "100%" }]} />
+            <Text style={styles.meta}>{tenantName || " "}</Text>
+          </View>
+        </View>
         <Text style={[styles.p, { marginTop: 14 }]}>
           WITNESS MY HAND AND SEAL, on the date and place first above written.
         </Text>
@@ -372,12 +393,12 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
         <Text>Page No. _____</Text>
         <Text>Book No. _____</Text>
         <Text>Series of {made?.year ?? new Date().getFullYear()}</Text>
-        <Footer />
       </Page>
 
       {/* ── Certificate of Electronic Signature ── */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.annexTitle}>CERTIFICATE OF ELECTRONIC SIGNATURE</Text>
         <Text style={styles.p}>
           This document was executed using electronic signatures in accordance with Republic Act No. 8792
@@ -408,7 +429,6 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             ? "Signed via secure, single-use access link sent by All Abode; signature captured via electronic signature pad"
             : `Signed on the Landlord's behalf by an authenticated, designated All Abode signatory via the admin dashboard${input.countersignerEmail ? ` (${input.countersignerEmail})` : ""}; signature captured via electronic signature pad`}
         </Text>
-        <Footer />
       </Page>
     </Document>
   );

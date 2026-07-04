@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   page: { paddingTop: 92, paddingBottom: 118, paddingHorizontal: 44, fontSize: 9.5, color: INK, fontFamily: "Helvetica", lineHeight: 1.4 },
   header: { position: "absolute", top: 22, left: 44, right: 44, alignItems: "center" },
   headerContact: { fontSize: 7, color: SLATE, marginTop: 3 },
-  footer: { position: "absolute", bottom: 20, left: 44, right: 44, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  footer: { position: "absolute", top: 700, left: 44, right: 44, height: 70, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   footerLeft: { flex: 1, paddingRight: 10 },
   footerDisclaimer: { fontSize: 6, color: SLATE, lineHeight: 1.25 },
   footerPage: { fontSize: 7.5, color: SLATE, marginBottom: 2 },
@@ -249,6 +249,7 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
           needs (same rule as the PMA PDF: don't hardcode page boundaries). */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.title}>TENANCY AGREEMENT</Text>
 
         <Text style={styles.p}>
@@ -345,12 +346,12 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             {input.tenantSignedAtManila ? <Text style={styles.meta}>Signed: {input.tenantSignedAtManila}</Text> : null}
           </View>
         </View>
-        <Footer />
       </Page>
 
       {/* ── COPY OF Valid IDs ── */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.annexTitle}>COPY OF Valid IDs</Text>
 
         <Text style={styles.idSectionLabel}>LANDLORD</Text>
@@ -384,12 +385,12 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         ) : (
           <Text style={styles.meta}>ID image unavailable.</Text>
         )}
-        <Footer />
       </Page>
 
       {/* ── Acknowledgement (notarial portions stay blank — no notary in this flow) ── */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.annexTitle}>ACKNOWLEDGEMENT</Text>
 
         <Text style={{ marginTop: 10 }}>Republic of the Philippines)</Text>
@@ -430,11 +431,21 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 18 }}>
           <View style={{ width: "44%" }}>
             <Text style={styles.bold}>By: LANDLORD</Text>
-            <View style={[styles.sigLine, { width: "100%", marginTop: 26 }]} />
+            {input.landlordSignatureDataUri
+              // eslint-disable-next-line jsx-a11y/alt-text
+              ? <Image src={input.landlordSignatureDataUri} style={[styles.sigImg, { width: 130, height: 36 }]} />
+              : <View style={{ height: 36 }} />}
+            <View style={[styles.sigLine, { width: "100%" }]} />
+            <Text style={styles.meta}>{landlordName || " "}</Text>
           </View>
           <View style={{ width: "44%" }}>
             <Text style={styles.bold}>By: TENANT</Text>
-            <View style={[styles.sigLine, { width: "100%", marginTop: 26 }]} />
+            {input.tenantSignatureDataUri
+              // eslint-disable-next-line jsx-a11y/alt-text
+              ? <Image src={input.tenantSignatureDataUri} style={[styles.sigImg, { width: 130, height: 36 }]} />
+              : <View style={{ height: 36 }} />}
+            <View style={[styles.sigLine, { width: "100%" }]} />
+            <Text style={styles.meta}>{tenantName || " "}</Text>
           </View>
         </View>
 
@@ -445,12 +456,12 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         <Text>Page No ________:</Text>
         <Text>Book No ________:</Text>
         <Text>Series of {new Date().getFullYear()}.</Text>
-        <Footer />
       </Page>
 
       {/* ── Inventory list + reminders ── */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.annexTitle}>INVENTORY LIST</Text>
         <Text style={[styles.center, { marginBottom: 8 }]}>
           {terms.propertyDetails?.buildingName || "Building"} - {terms.propertyDetails?.floorUnit || "Unit No."}
@@ -501,12 +512,12 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             <Text style={styles.meta}>{tenantName || " "}</Text>
           </View>
         </View>
-        <Footer />
       </Page>
 
       {/* ── Certificate of Electronic Signature ── */}
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
+        <Footer />
         <Text style={styles.annexTitle}>CERTIFICATE OF ELECTRONIC SIGNATURE</Text>
         <Text style={styles.p}>
           This document was executed using electronic signatures in accordance with Republic Act No. 8792
@@ -537,7 +548,6 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             ? "Signed via secure, single-use access link sent by All Abode; signature captured via electronic signature pad"
             : `Signed on the Landlord's behalf by an authenticated, designated All Abode signatory via the admin dashboard${input.countersignerEmail ? ` (${input.countersignerEmail})` : ""}; signature captured via electronic signature pad`}
         </Text>
-        <Footer />
       </Page>
     </Document>
   );

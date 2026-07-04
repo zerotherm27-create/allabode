@@ -4,7 +4,64 @@ Production property management platform for **All Abode Property Solutions** (PR
 
 ---
 
-## Latest Handoff for Claude Code - 2026-06-30
+## Latest Handoff for Claude Code - 2026-07-05
+
+### Current branch and deployment
+
+- Workspace: `/Users/jojo/allabode`
+- Branch: `main`
+- Git status expected now: `main` ahead of `origin/main` by 1 commit, with `CODEX_HANDOFF.md` modified by this handoff update unless the user commits it.
+- Production alias: https://allabode.vercel.app
+- Latest local commit, not yet pushed or deployed:
+  - `66a2b78 feat: improve contract signing ID uploads`
+- Previous PDF-render fix was pushed and deployed before this handoff:
+  - `8356d73 fix: stabilize tenancy and parking PDF footers`
+
+### What was just changed
+
+The user requested contract webform updates for tenancy, parking, and the other contract signing surfaces:
+
+- Upload file controls are now visible button-style controls via `components/forms/file-upload-button.tsx`.
+- Shared signing ID options now live in `lib/signing/form-helpers.ts`.
+- ID type selects now include `School ID (students 18+ only)` across:
+  - PM owner signing: `app/sign/agreement/[token]/wizard.tsx`
+  - tenancy tenant signing: `app/sign/tenancy/[token]/wizard.tsx`
+  - tenancy landlord signing: `app/sign/tenancy/landlord/[token]/landlord-sign.tsx`
+  - parking tenant signing: `app/sign/parking/[token]/wizard.tsx`
+  - parking landlord signing: `app/sign/parking/landlord/[token]/landlord-sign.tsx`
+- Admin tenancy and parking forms now collect optional tenant address/contact and save them into `tenant_details`, so signer forms auto-populate name/address/contact/email:
+  - `components/admin/tenancy-terms-form.tsx`
+  - `components/admin/parking-terms-form.tsx`
+  - `app/admin/tenancy-actions.ts`
+  - `app/admin/parking-actions.ts`
+- Admin updates merge tenant prefill fields into existing `tenant_details` instead of replacing the full JSON, preserving signer-saved fields such as additional ID uploads.
+- Tenancy requires ID uploads for every named occupant after the primary tenant.
+- Parking has an additional authorized persons section and requires an ID upload for each named additional person.
+- Additional occupant/person ID upload metadata is stored in `tenant_details.additionalOccupantIds`; no database migration was added.
+
+### Verification already done
+
+- `npx tsc --noEmit` passed.
+- `npm run lint` passed with existing warnings only:
+  - unused vars in `app/admin/(panel)/setup/page.tsx`
+  - unused SOA imports in `app/admin/soa-actions.ts`
+  - missing alt warning in `lib/pdf/payment-receipt.tsx`
+- `NODE_OPTIONS=--max-old-space-size=4096 npm run build` passed.
+- Plain `npm run build` hit a Node heap OOM after compilation; use the larger heap locally.
+- Playwright smoke could not run because the browser binary was missing locally, even though the package exists.
+
+### Claude Code next steps
+
+1. Run `git status -sb`. Expected: `main...origin/main [ahead 1]`, with `CODEX_HANDOFF.md` modified by this handoff update unless it has been committed.
+2. If the user asks to publish product changes, push `main`; the GitHub-connected Vercel project should auto-deploy.
+3. If the user asks for a Vercel deploy check, inspect the new deployment after push.
+4. If doing visual UI verification, install/fix Playwright browsers or use another browser automation route.
+5. Follow `AGENTS.md` before app-code edits: read the relevant Next.js 16 docs under `node_modules/next/dist/docs/`.
+6. Keep `.env.local` secrets out of handoff notes, logs, and commits.
+
+---
+
+## Previous Handoff for Claude Code - 2026-06-30
 
 ### Current branch and deployment
 

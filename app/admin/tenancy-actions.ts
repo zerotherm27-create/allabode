@@ -11,7 +11,7 @@ import { logAudit } from "@/lib/audit";
 import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeTenancyAgreement } from "@/lib/tenancy/complete";
 import type { PaymentScheduleRow, InventoryRow } from "@/lib/pm/tenancy-clauses";
-import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
+import { DEFAULT_BANK_DETAILS, DEFAULT_INVENTORY } from "@/lib/pm/tenancy-clauses";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -114,6 +114,7 @@ export async function createTenancyAgreement(fd: FormData) {
       tenant_name_hint: s(fd, "tenant_name_hint"),
       tenant_details: tenantDetailsFromForm(fd, tenantEmail),
       created_by: user?.id ?? null,
+      inventory: DEFAULT_INVENTORY,
       ...parseTerms(fd),
     })
     .select("id")

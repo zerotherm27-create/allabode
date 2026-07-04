@@ -200,6 +200,7 @@ export type TenancyPdfInput = {
   tenantIdNumber: string;
   tenantIdIssuedDate?: string | null;
   tenantIdImageDataUri: string | null;
+  additionalOccupantIds: { name: string; idImageDataUri: string | null }[];
   landlordIdTypeLabel: string | null;
   landlordIdNumber: string | null;
   landlordIdIssuedDate?: string | null;
@@ -385,6 +386,18 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         ) : (
           <Text style={styles.meta}>ID image unavailable.</Text>
         )}
+
+        {input.additionalOccupantIds.map((occupant, i) => (
+          <View key={i} style={{ marginTop: 16 }} wrap={false}>
+            <Text style={styles.meta}>{occupant.name}</Text>
+            {occupant.idImageDataUri ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image src={occupant.idImageDataUri} style={{ width: 320, maxHeight: 220, objectFit: "contain", marginTop: 6, alignSelf: "flex-start" }} />
+            ) : (
+              <Text style={styles.meta}>ID image unavailable.</Text>
+            )}
+          </View>
+        ))}
       </Page>
 
       {/* ── Acknowledgement (notarial portions stay blank — no notary in this flow) ── */}

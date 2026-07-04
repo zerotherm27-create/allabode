@@ -8,6 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { AGREEMENTS_BUCKET, DOCUMENTS_BUCKET } from "@/lib/storage";
 import { renderParkingPdf, type ParkingPdfInput } from "@/lib/pdf/parking";
 import { ownerIdTypeLabel } from "@/lib/pm/agreement-labels";
+import { normalizeOccupantIdUploads } from "@/lib/signing/form-helpers";
 import type {
   ParkingLandlordDetails, ParkingTenantDetails, ParkingSpaceDetails,
   VehicleDetails, ParkingScheduleRow, ParkingBankDetails,
@@ -66,6 +67,15 @@ export async function completeParkingAgreement(id: string, supabase: SupabaseCli
   // 1-2. ID images
   const tenantIdFile = await downloadAsDataUri(supabase, a.tenant_id_document_path);
   const landlordIdFile = await downloadAsDataUri(supabase, a.landlord_id_document_path);
+  const occupantIdUploads = normalizeOccupantIdUploads(
+    (a.tenant_details as { additionalOccupantIds?: unknown } | null)?.additionalOccupantIds
+  );
+  const additionalOccupantIds = await Promise.all(
+    occupantIdUploads.map(async (upload) => ({
+      name: upload.occupantName,
+      idImageDataUri: (await downloadAsDataUri(supabase, upload.path)).dataUri,
+    }))
+  );
 
   // 3. Render the PDF
   const pdfInput: ParkingPdfInput = {
@@ -93,6 +103,7 @@ export async function completeParkingAgreement(id: string, supabase: SupabaseCli
     tenantIdNumber: a.tenant_id_number ?? "",
     tenantIdIssuedDate: a.tenant_id_issued_date,
     tenantIdImageDataUri: tenantIdFile.dataUri,
+    additionalOccupantIds,
     landlordIdTypeLabel: a.landlord_id_type ? ownerIdTypeLabel(a.landlord_id_type) : null,
     landlordIdNumber: a.landlord_id_number,
     landlordIdIssuedDate: a.landlord_id_issued_date,

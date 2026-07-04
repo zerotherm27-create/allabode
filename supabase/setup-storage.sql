@@ -103,7 +103,9 @@ create policy "portal select documents"
 -- policy is needed or added.
 -- The Tenancy Agreement e-signature flow (migration 0023) shares this bucket
 -- under the `tenancy/{agreement_id}/...` path prefix with the exact same
--- access model — no additional policies are required for it.
+-- access model — no additional policies are required for it. Likewise the
+-- Parking Space Rental Agreement flow (migration 0024) uses the
+-- `parking/{agreement_id}/...` prefix.
 create policy "staff insert agreements"
   on storage.objects for insert to authenticated
   with check (bucket_id = 'agreements' and public.is_staff());

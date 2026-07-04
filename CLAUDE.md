@@ -92,6 +92,31 @@ not diversify. All design assets and the token reference live in `design/`:
 
 ## Build status (updated — resume here)
 
+**DONE — Parking Space Rental Agreement e-signature (third sibling flow):**
+- Migration `supabase/migrations/0024_parking_signing.sql` — `parking_agreements` table
+  + 7 SECURITY DEFINER RPCs, exact structural mirror of the tenancy flow (0023): same
+  dual-token design, status machine, race guards, staff-only RLS. **User must run it in
+  the SQL editor.** Reuses the `agreements` bucket under `parking/{id}/...`.
+- Same authoring model as tenancy: admin pre-fills all terms at
+  `/admin/contracts/parking/new` (`components/admin/parking-terms-form.tsx` — slot/building,
+  BDO bank defaults [Banco de Oro / Makati Cinema Square / 004290181697 — different bank
+  than tenancy], 2-months-advance + 1-month-deposit signing total auto = 3× rent, sticker
+  fee, 4-column payment-schedule generator [DATE DUE|AMOUNT|BANK/BRANCH|COVERAGE]). Tenant
+  fills personal details + **authorized vehicle (make/model, plate, color)** + ID at
+  `/sign/parking/[token]`; landlord dual-path at `/sign/parking/landlord/[token]` or
+  countersign (`components/admin/parking-countersign-form.tsx`).
+- **No lease record on completion** (`lib/parking/complete.ts`, per user decision): tenant
+  upsert + portal login + `documents` row (`document_type:'parking_contract'`) only. No
+  unit picker, no inventory annex.
+- Contract text once in `lib/pm/parking-clauses.ts` (clauses 1–11 verbatim from the
+  reference template; prose party recitals "KNOW ALL MEN BY THESE PRESENTS", WHEREAS;
+  reuses date helpers + Clause types exported from `lib/pm/tenancy-clauses.ts`). PDF
+  `lib/pdf/parking.tsx` = house style (per-page logo header, parking disclaimer footer,
+  PLEASE SIGN box) over the template's exact text; hanging-indent numbered clauses where
+  untitled clauses (5, 6) get the number inlined; Copy of Valid IDs + blank notary
+  Acknowledgement (NAME|ID NUMBER|ISSUED DATE/PLACE) + R.A. 8792 certificate. Detail page:
+  `/admin/contracts/parking/[id]`; merged `/admin/contracts` list shows all 3 types.
+
 **DONE — Tenancy Agreement e-signature (sibling of the PM contract flow):**
 - Migration `supabase/migrations/0023_tenancy_signing.sql` — `tenancy_agreements` table
   (status machine `draft→sent→tenant_signed→completed`/`voided`), **two** tokens

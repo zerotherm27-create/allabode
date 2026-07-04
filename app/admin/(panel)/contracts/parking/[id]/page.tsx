@@ -78,9 +78,12 @@ const STATUS_COLOR: Record<string, string> = {
 function toTermsInitial(a: ParkingAgreement): ParkingTermsInitial {
   const ld = a.landlord_details ?? {};
   const pd = a.parking_details ?? {};
+  const td = a.tenant_details ?? {};
   return {
     tenantNameHint: a.tenant_name_hint ?? "",
     tenantEmail: a.tenant_email,
+    tenantAddress: td.address ?? "",
+    tenantContact: td.contact ?? "",
     landlordName: ld.name ?? "",
     landlordIdNumber: ld.idNumber ?? "",
     landlordAddress: ld.address ?? "",

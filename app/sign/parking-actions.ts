@@ -122,6 +122,35 @@ export async function createParkingIdUploadTicket(
   }
 }
 
+export async function createParkingOccupantIdUploadTicket(
+  token: string,
+  fileName: string,
+  fileSize: number,
+  fileType: string
+): Promise<{ signedUrl?: string; uploadToken?: string; path?: string; error?: string }> {
+  if (fileSize <= 0) return { error: "Please choose a file." };
+  if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
+  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG, PNG, or PDF file." };
+
+  const supabase = await createClient();
+  const { data: agreement, error: lookupError } = await supabase.rpc("get_parking_agreement_by_token", { p_token: token });
+  if (lookupError || !agreement) return { error: "This link is no longer valid." };
+  const record = agreement as ParkingAgreementRecord;
+  if (record.status !== "sent") return { error: "This agreement can no longer be edited." };
+
+  const ext = (fileName.split(".").pop() || "jpg").toLowerCase();
+  const path = `parking/${record.id}/occupant-id-${Date.now()}.${ext}`;
+
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.storage.from(AGREEMENTS_BUCKET).createSignedUploadUrl(path);
+    if (error || !data) return { error: error?.message ?? "Could not prepare upload." };
+    return { signedUrl: data.signedUrl, uploadToken: data.token, path: data.path };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not prepare upload." };
+  }
+}
+
 export async function confirmParkingIdUpload(token: string, path: string): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("save_parking_id_upload", { p_token: token, p_path: path });

@@ -33,6 +33,7 @@ export const ID_TYPE_LABEL: Record<string, string> = {
   drivers_license: "Driver's License",
   national_id: "Philippine National ID",
   umid: "UMID",
+  school_id: "School ID",
   other: "Government ID",
 };
 

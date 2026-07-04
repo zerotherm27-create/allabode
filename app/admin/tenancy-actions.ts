@@ -26,6 +26,16 @@ function num(fd: FormData, k: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function tenantDetailsFromForm(fd: FormData, tenantEmail: string | null, existing: Record<string, unknown> = {}) {
+  return {
+    ...existing,
+    name: s(fd, "tenant_name_hint") ?? "",
+    address: s(fd, "tenant_address") ?? "",
+    contact: s(fd, "tenant_contact") ?? "",
+    email: tenantEmail ?? "",
+  };
+}
+
 async function clientIp() {
   const h = await headers();
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
@@ -103,6 +113,7 @@ export async function createTenancyAgreement(fd: FormData) {
     .insert({
       tenant_email: tenantEmail,
       tenant_name_hint: s(fd, "tenant_name_hint"),
+      tenant_details: tenantDetailsFromForm(fd, tenantEmail),
       created_by: user?.id ?? null,
       ...parseTerms(fd),
     })
@@ -144,7 +155,7 @@ export async function sendTenancyTenantLink(id: string) {
       <p>Hi ${agreement.tenant_name_hint ?? "there"},</p>
       <p>All Abode Property Solutions has prepared your Tenancy Agreement${pd.buildingName ? ` for ${pd.buildingName}${pd.floorUnit ? ` ${pd.floorUnit}` : ""}` : ""} for review and electronic signature.</p>
       <p><a href="${link}">Review and sign your tenancy agreement</a></p>
-      <p>You'll need a valid government ID (passport preferred) on hand to complete the form.</p>
+      <p>You'll need a valid ID (passport preferred; School ID allowed for students 18+) on hand to complete the form.</p>
     `,
   });
 
@@ -195,7 +206,7 @@ export async function sendTenancyLandlordLink(id: string, fd: FormData) {
       <p>Hi ${agreement.landlord_name_hint ?? "there"},</p>
       <p>${td.name ?? "Your tenant"} has signed the Tenancy Agreement prepared by All Abode Property Solutions. It's now ready for your signature.</p>
       <p><a href="${link}">Review and sign the tenancy agreement</a></p>
-      <p>You'll need a valid government ID (passport preferred) on hand to complete the signing. This link is valid for ${LANDLORD_LINK_VALIDITY_DAYS} days.</p>
+      <p>You'll need a valid ID (passport preferred; School ID allowed for students 18+) on hand to complete the signing. This link is valid for ${LANDLORD_LINK_VALIDITY_DAYS} days.</p>
     `,
   });
 
@@ -211,7 +222,7 @@ export async function updateTenancyTerms(id: string, fd: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: agreement } = await supabase.from("tenancy_agreements").select("status").eq("id", id).maybeSingle();
+  const { data: agreement } = await supabase.from("tenancy_agreements").select("status,tenant_details").eq("id", id).maybeSingle();
   if (!agreement) throw new Error("Agreement not found.");
   if (agreement.status !== "draft" && agreement.status !== "sent") {
     throw new Error("Terms are locked once the tenant has signed against them.");
@@ -221,6 +232,7 @@ export async function updateTenancyTerms(id: string, fd: FormData) {
   const { error } = await supabase.from("tenancy_agreements").update({
     landlord_email, landlord_name_hint, ...terms,
     tenant_name_hint: s(fd, "tenant_name_hint"),
+    tenant_details: tenantDetailsFromForm(fd, s(fd, "tenant_email"), (agreement.tenant_details ?? {}) as Record<string, unknown>),
   }).eq("id", id);
   if (error) throw new Error(error.message);
 

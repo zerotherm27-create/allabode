@@ -83,7 +83,7 @@ export async function sendAgreementLink(id: string) {
       <p>Hi ${agreement.owner_name_hint ?? "there"},</p>
       <p>All Abode Property Solutions has prepared a Property Management Agreement for your review and electronic signature.</p>
       <p><a href="${link}">Review and sign your agreement</a></p>
-      <p>You'll need a valid government ID (passport preferred) on hand to complete the form.</p>
+      <p>You'll need a valid ID (passport preferred; School ID allowed for students 18+) on hand to complete the form.</p>
     `,
   });
 

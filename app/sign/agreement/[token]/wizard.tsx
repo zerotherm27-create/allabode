@@ -4,11 +4,13 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import SignatureCanvas from "react-signature-canvas";
 import { Field, Input, Textarea, Select } from "@/components/forms/fields";
+import { FileUploadButton } from "@/components/forms/file-upload-button";
 import { Icon } from "@/components/icon";
 import { saveAgreementDraft, createAgreementIdUploadTicket, confirmAgreementIdUpload, submitOwnerSignature, type AgreementRecord } from "@/app/sign/agreement-actions";
 import { createClient } from "@/lib/supabase/client";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { payoutScheduleLabel } from "@/lib/pm/agreement-labels";
+import { SIGNING_ID_TYPES } from "@/lib/signing/form-helpers";
 import { FullAgreementPreview } from "./full-agreement-preview";
 
 type OwnerDetails = { name: string; nationality: string; civilStatus: string; address: string; email: string; contact: string };
@@ -58,14 +60,6 @@ function emptyIntakeProfile(r: AgreementRecord): IntakeProfile {
   const d = (r.intake_profile ?? {}) as Partial<IntakeProfile>;
   return { spouseOrEmergencyName: d.spouseOrEmergencyName ?? "", spouseOrEmergencyRelation: d.spouseOrEmergencyRelation ?? "", spouseOrEmergencyContact: d.spouseOrEmergencyContact ?? "", messenger: d.messenger ?? "", viberWhatsapp: d.viberWhatsapp ?? "" };
 }
-
-const ID_TYPES = [
-  { value: "passport", label: "Passport" },
-  { value: "drivers_license", label: "Driver's License" },
-  { value: "national_id", label: "Philippine National ID" },
-  { value: "umid", label: "UMID" },
-  { value: "other", label: "Other government ID" },
-];
 
 function StepShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -128,7 +122,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
         return;
       }
       if (!ownerIdNumber || !ownerIdIssuedDate || !idUploaded) {
-        setError("Please enter your ID number and issue date, and upload a copy of your government ID before continuing.");
+        setError("Please enter your ID number and issue date, and upload a copy of your valid ID before continuing.");
         return;
       }
     }
@@ -274,7 +268,7 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="ID type" required>
                 <Select value={ownerIdType} onChange={(e) => setOwnerIdType(e.target.value)}>
-                  {ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {SIGNING_ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </Field>
               <Field label="ID number" required>
@@ -285,12 +279,11 @@ export function AgreementWizard({ token, initial }: { token: string; initial: Ag
               <Input className={inputCls} type="date" value={ownerIdIssuedDate} onChange={(e) => setOwnerIdIssuedDate(e.target.value)} />
             </Field>
             <Field label="Upload ID image" required hint="JPG, PNG, or PDF, up to 10 MB">
-              <input
-                type="file"
+              <FileUploadButton
                 accept="image/jpeg,image/png,application/pdf"
                 disabled={idUploading}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) onIdFileChange(f); }}
-                className="block w-full text-sm text-slate"
+                onFile={onIdFileChange}
+                label={idUploaded ? "Replace ID file" : "Upload ID file"}
               />
             </Field>
             {idUploading && <p className="text-xs text-slate">Uploading…</p>}

@@ -5,30 +5,33 @@ import Image from "next/image";
 import SignatureCanvas from "react-signature-canvas";
 import { Field, Input } from "@/components/forms/fields";
 import { Select } from "@/components/forms/fields";
+import { FileUploadButton } from "@/components/forms/file-upload-button";
 import { Icon } from "@/components/icon";
 import {
-  saveTenancyDraft, createTenancyIdUploadTicket, confirmTenancyIdUpload, submitTenantSignature,
+  saveTenancyDraft, createTenancyIdUploadTicket, createTenancyOccupantIdUploadTicket,
+  confirmTenancyIdUpload, submitTenantSignature,
   type TenancyAgreementRecord,
 } from "@/app/sign/tenancy-actions";
 import { createClient } from "@/lib/supabase/client";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import type { TenancyTenantDetails } from "@/lib/pm/tenancy-clauses";
+import {
+  SIGNING_ID_TYPES,
+  type OccupantIdUpload,
+  missingAdditionalOccupantIdNames,
+  normalizeOccupantIdUploads,
+  tenantContactPrefill,
+} from "@/lib/signing/form-helpers";
 import { FullTenancyPreview } from "./full-tenancy-preview";
 
-type TenantForm = { name: string; idNumber: string; address: string; contact: string; email: string };
+type TenantForm = { name: string; address: string; contact: string; email: string };
+type TenantDetailsWithUploads = Partial<TenancyTenantDetails> & { additionalOccupantIds?: unknown };
 
 const inputCls = "h-9";
 const DONE_STEP = 4;
 
 function initialTenantForm(r: TenancyAgreementRecord): TenantForm {
-  const d = (r.tenant_details ?? {}) as Partial<TenancyTenantDetails>;
-  return {
-    name: d.name ?? "",
-    idNumber: d.idNumber ?? "",
-    address: d.address ?? "",
-    contact: d.contact ?? "",
-    email: d.email ?? r.tenant_email,
-  };
+  return tenantContactPrefill(r);
 }
 
 function initialOccupants(r: TenancyAgreementRecord): string[] {
@@ -36,14 +39,6 @@ function initialOccupants(r: TenancyAgreementRecord): string[] {
   while (list.length < 4) list.push("");
   return list;
 }
-
-const ID_TYPES = [
-  { value: "passport", label: "Passport" },
-  { value: "drivers_license", label: "Driver's License" },
-  { value: "national_id", label: "Philippine National ID" },
-  { value: "umid", label: "UMID" },
-  { value: "other", label: "Other government ID" },
-];
 
 function StepShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -66,6 +61,11 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
   const [idIssuedDate, setIdIssuedDate] = useState(initial.tenant_id_issued_date ?? "");
   const [idUploaded, setIdUploaded] = useState(!!initial.tenant_id_document_path);
   const [idUploading, setIdUploading] = useState(false);
+  const [occupantIdUploads, setOccupantIdUploads] = useState<OccupantIdUpload[]>(() => {
+    const details = (initial.tenant_details ?? {}) as TenantDetailsWithUploads;
+    return normalizeOccupantIdUploads(details.additionalOccupantIds);
+  });
+  const [occupantIdUploading, setOccupantIdUploading] = useState<number | null>(null);
 
   const [typedName, setTypedName] = useState("");
   const [agreeChecked, setAgreeChecked] = useState(false);
@@ -75,7 +75,7 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
     setSaving(true);
     try {
       const { error: err } = await saveTenancyDraft(token, {
-        tenantDetails: { ...tenant },
+        tenantDetails: { ...tenant, additionalOccupantIds: occupantIdUploads },
         occupants: occupants.filter((o) => o.trim()),
         tenantIdType: idType,
         tenantIdNumber: idNumber || null,
@@ -102,7 +102,12 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
         return;
       }
       if (!idNumber || !idIssuedDate || !idUploaded) {
-        setError("Please enter your ID number and issue date, and upload a copy of your government ID before continuing.");
+        setError("Please copy your ID number and issue date from the uploaded ID, then continue.");
+        return;
+      }
+      const missingNames = missingAdditionalOccupantIdNames(occupants, occupantIdUploads);
+      if (missingNames.length > 0) {
+        setError(`Please upload valid IDs for: ${missingNames.join(", ")}.`);
         return;
       }
     }
@@ -142,6 +147,41 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
       setError("Upload failed — please check your connection and try again.");
     } finally {
       setIdUploading(false);
+    }
+  }
+
+  async function onOccupantIdFileChange(occupantIndex: number, occupantName: string, file: File) {
+    setOccupantIdUploading(occupantIndex);
+    setError("");
+    try {
+      const ticket = await createTenancyOccupantIdUploadTicket(token, file.name, file.size, file.type);
+      if (ticket.error || !ticket.signedUrl || !ticket.uploadToken || !ticket.path) {
+        setError(ticket.error || "Could not prepare upload.");
+        return;
+      }
+      const { error: upErr } = await createClient()
+        .storage.from(AGREEMENTS_BUCKET)
+        .uploadToSignedUrl(ticket.path, ticket.uploadToken, file, { contentType: file.type });
+      if (upErr) {
+        setError(`Upload failed: ${upErr.message}`);
+        return;
+      }
+      const nextUploads = [
+        ...occupantIdUploads.filter((upload) => upload.occupantIndex !== occupantIndex),
+        { occupantIndex, occupantName, path: ticket.path, fileName: file.name, uploadedAt: new Date().toISOString() },
+      ];
+      setOccupantIdUploads(nextUploads);
+      await saveTenancyDraft(token, {
+        tenantDetails: { ...tenant, additionalOccupantIds: nextUploads },
+        occupants: occupants.filter((o) => o.trim()),
+        tenantIdType: idType,
+        tenantIdNumber: idNumber || null,
+        tenantIdIssuedDate: idIssuedDate || null,
+      });
+    } catch {
+      setError("Upload failed — please check your connection and try again.");
+    } finally {
+      setOccupantIdUploading(null);
     }
   }
 
@@ -243,7 +283,7 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="ID type" required>
                 <Select value={idType} onChange={(e) => setIdType(e.target.value)}>
-                  {ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {SIGNING_ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </Field>
               <Field label="ID number" required>
@@ -254,12 +294,11 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
               <Input className={inputCls} type="date" value={idIssuedDate} onChange={(e) => setIdIssuedDate(e.target.value)} />
             </Field>
             <Field label="Upload ID image" required hint="JPG, PNG, or PDF, up to 10 MB">
-              <input
-                type="file"
+              <FileUploadButton
                 accept="image/jpeg,image/png,application/pdf"
                 disabled={idUploading}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) onIdFileChange(f); }}
-                className="block w-full text-sm text-slate"
+                onFile={onIdFileChange}
+                label={idUploaded ? "Replace ID file" : "Upload ID file"}
               />
             </Field>
             {idUploading && <p className="text-xs text-slate">Uploading…</p>}
@@ -267,6 +306,31 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
               <p className="flex items-center gap-1.5 text-xs text-available"><Icon name="check_circle" size={16} fill={1} /> ID uploaded</p>
             )}
           </div>
+
+          {occupants.map((occupant, index) => {
+            const name = occupant.trim();
+            if (index === 0 || !name) return null;
+            const uploaded = occupantIdUploads.some((upload) => upload.occupantIndex === index && upload.path);
+            const uploading = occupantIdUploading === index;
+            return (
+              <div key={`occupant-id-${index}`} className="border-t border-line pt-4">
+                <Field label={`${name}'s ID`} required hint="Required for each additional occupant">
+                  <FileUploadButton
+                    accept="image/jpeg,image/png,application/pdf"
+                    disabled={uploading}
+                    onFile={(file) => onOccupantIdFileChange(index, name, file)}
+                    label={uploaded ? "Replace ID file" : "Upload ID file"}
+                  />
+                </Field>
+                {uploading && <p className="mt-2 text-xs text-slate">Uploading…</p>}
+                {uploaded && !uploading && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-available">
+                    <Icon name="check_circle" size={16} fill={1} /> ID uploaded
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </StepShell>
       )}
 

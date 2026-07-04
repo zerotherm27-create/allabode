@@ -19,6 +19,8 @@ export type UnitOption = {
 export type TenancyTermsInitial = {
   tenantNameHint: string;
   tenantEmail: string;
+  tenantAddress: string;
+  tenantContact: string;
   landlordName: string;
   landlordIdNumber: string;
   landlordAddress: string;
@@ -44,7 +46,7 @@ export type TenancyTermsInitial = {
 
 function emptyTenancyTerms(): TenancyTermsInitial {
   return {
-    tenantNameHint: "", tenantEmail: "",
+    tenantNameHint: "", tenantEmail: "", tenantAddress: "", tenantContact: "",
     landlordName: "", landlordIdNumber: "", landlordAddress: "", landlordEmail: "",
     unitId: "", agreementDate: "",
     buildingName: "", floorUnit: "", propertyAddress: "",
@@ -160,6 +162,7 @@ export function TenancyTermsForm({
     <form action={action} className="flex flex-col gap-6">
       <input type="hidden" name="payment_schedule" value={JSON.stringify(t.paymentSchedule)} />
       <input type="hidden" name="unit_id" value={t.unitId} />
+      {lockTenant && <input type="hidden" name="tenant_email" value={init.tenantEmail} />}
 
       <Group title="Tenant">
         <F label="Tenant name" hint="Used in the email greeting and as a fallback label">
@@ -167,6 +170,12 @@ export function TenancyTermsForm({
         </F>
         <F label="Tenant email" hint={lockTenant ? "The signing link was already issued to this address" : "The signing link is sent here"}>
           <input name="tenant_email" type="email" required defaultValue={init.tenantEmail} disabled={lockTenant} className={inputCls} />
+        </F>
+        <F label="Tenant address" span>
+          <input name="tenant_address" defaultValue={init.tenantAddress} className={inputCls} />
+        </F>
+        <F label="Tenant contact number">
+          <input name="tenant_contact" defaultValue={init.tenantContact} className={inputCls} />
         </F>
       </Group>
 

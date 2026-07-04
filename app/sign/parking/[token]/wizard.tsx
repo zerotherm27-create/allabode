@@ -4,30 +4,37 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import SignatureCanvas from "react-signature-canvas";
 import { Field, Input, Select } from "@/components/forms/fields";
+import { FileUploadButton } from "@/components/forms/file-upload-button";
 import { Icon } from "@/components/icon";
 import {
-  saveParkingDraft, createParkingIdUploadTicket, confirmParkingIdUpload, submitParkingTenantSignature,
+  saveParkingDraft, createParkingIdUploadTicket, createParkingOccupantIdUploadTicket,
+  confirmParkingIdUpload, submitParkingTenantSignature,
   type ParkingAgreementRecord,
 } from "@/app/sign/parking-actions";
 import { createClient } from "@/lib/supabase/client";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import type { ParkingTenantDetails, VehicleDetails } from "@/lib/pm/parking-clauses";
+import {
+  SIGNING_ID_TYPES,
+  type OccupantIdUpload,
+  missingAdditionalOccupantIdNames,
+  normalizeOccupantIdUploads,
+  tenantContactPrefill,
+} from "@/lib/signing/form-helpers";
 import { FullParkingPreview } from "./full-parking-preview";
 
 type TenantForm = { name: string; address: string; contact: string; email: string };
 type VehicleForm = { makeModel: string; plateNo: string; color: string };
+type ParkingTenantDetailsWithOccupants = Partial<ParkingTenantDetails> & {
+  additionalOccupants?: unknown;
+  additionalOccupantIds?: unknown;
+};
 
 const inputCls = "h-9";
 const DONE_STEP = 4;
 
 function initialTenantForm(r: ParkingAgreementRecord): TenantForm {
-  const d = (r.tenant_details ?? {}) as Partial<ParkingTenantDetails>;
-  return {
-    name: d.name ?? "",
-    address: d.address ?? "",
-    contact: d.contact ?? "",
-    email: d.email ?? r.tenant_email,
-  };
+  return tenantContactPrefill(r);
 }
 
 function initialVehicleForm(r: ParkingAgreementRecord): VehicleForm {
@@ -35,13 +42,14 @@ function initialVehicleForm(r: ParkingAgreementRecord): VehicleForm {
   return { makeModel: d.makeModel ?? "", plateNo: d.plateNo ?? "", color: d.color ?? "" };
 }
 
-const ID_TYPES = [
-  { value: "passport", label: "Passport" },
-  { value: "drivers_license", label: "Driver's License" },
-  { value: "national_id", label: "Philippine National ID" },
-  { value: "umid", label: "UMID" },
-  { value: "other", label: "Other government ID" },
-];
+function initialAdditionalOccupants(r: ParkingAgreementRecord): string[] {
+  const details = (r.tenant_details ?? {}) as ParkingTenantDetailsWithOccupants;
+  const saved = Array.isArray(details.additionalOccupants)
+    ? details.additionalOccupants.filter((o): o is string => typeof o === "string")
+    : [];
+  while (saved.length < 2) saved.push("");
+  return saved;
+}
 
 function StepShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -59,11 +67,17 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
 
   const [tenant, setTenant] = useState(initialTenantForm(initial));
   const [vehicle, setVehicle] = useState(initialVehicleForm(initial));
+  const [additionalOccupants, setAdditionalOccupants] = useState<string[]>(initialAdditionalOccupants(initial));
   const [idType, setIdType] = useState(initial.tenant_id_type ?? "passport");
   const [idNumber, setIdNumber] = useState(initial.tenant_id_number ?? "");
   const [idIssuedDate, setIdIssuedDate] = useState(initial.tenant_id_issued_date ?? "");
   const [idUploaded, setIdUploaded] = useState(!!initial.tenant_id_document_path);
   const [idUploading, setIdUploading] = useState(false);
+  const [occupantIdUploads, setOccupantIdUploads] = useState<OccupantIdUpload[]>(() => {
+    const details = (initial.tenant_details ?? {}) as ParkingTenantDetailsWithOccupants;
+    return normalizeOccupantIdUploads(details.additionalOccupantIds);
+  });
+  const [occupantIdUploading, setOccupantIdUploading] = useState<number | null>(null);
 
   const [typedName, setTypedName] = useState("");
   const [agreeChecked, setAgreeChecked] = useState(false);
@@ -73,7 +87,11 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
     setSaving(true);
     try {
       const { error: err } = await saveParkingDraft(token, {
-        tenantDetails: { ...tenant },
+        tenantDetails: {
+          ...tenant,
+          additionalOccupants: additionalOccupants.filter((o) => o.trim()),
+          additionalOccupantIds: occupantIdUploads,
+        },
         vehicleDetails: { ...vehicle },
         tenantIdType: idType,
         tenantIdNumber: idNumber || null,
@@ -104,7 +122,12 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
         return;
       }
       if (!idNumber || !idIssuedDate || !idUploaded) {
-        setError("Please enter your ID number and issue date, and upload a copy of your government ID before continuing.");
+        setError("Please copy your ID number and issue date from the uploaded ID, then continue.");
+        return;
+      }
+      const missingNames = missingAdditionalOccupantIdNames([tenant.name, ...additionalOccupants], occupantIdUploads);
+      if (missingNames.length > 0) {
+        setError(`Please upload valid IDs for: ${missingNames.join(", ")}.`);
         return;
       }
     }
@@ -144,6 +167,45 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
       setError("Upload failed — please check your connection and try again.");
     } finally {
       setIdUploading(false);
+    }
+  }
+
+  async function onOccupantIdFileChange(occupantIndex: number, occupantName: string, file: File) {
+    setOccupantIdUploading(occupantIndex);
+    setError("");
+    try {
+      const ticket = await createParkingOccupantIdUploadTicket(token, file.name, file.size, file.type);
+      if (ticket.error || !ticket.signedUrl || !ticket.uploadToken || !ticket.path) {
+        setError(ticket.error || "Could not prepare upload.");
+        return;
+      }
+      const { error: upErr } = await createClient()
+        .storage.from(AGREEMENTS_BUCKET)
+        .uploadToSignedUrl(ticket.path, ticket.uploadToken, file, { contentType: file.type });
+      if (upErr) {
+        setError(`Upload failed: ${upErr.message}`);
+        return;
+      }
+      const nextUploads = [
+        ...occupantIdUploads.filter((upload) => upload.occupantIndex !== occupantIndex),
+        { occupantIndex, occupantName, path: ticket.path, fileName: file.name, uploadedAt: new Date().toISOString() },
+      ];
+      setOccupantIdUploads(nextUploads);
+      await saveParkingDraft(token, {
+        tenantDetails: {
+          ...tenant,
+          additionalOccupants: additionalOccupants.filter((o) => o.trim()),
+          additionalOccupantIds: nextUploads,
+        },
+        vehicleDetails: { ...vehicle },
+        tenantIdType: idType,
+        tenantIdNumber: idNumber || null,
+        tenantIdIssuedDate: idIssuedDate || null,
+      });
+    } catch {
+      setError("Upload failed — please check your connection and try again.");
+    } finally {
+      setOccupantIdUploading(null);
     }
   }
 
@@ -231,13 +293,39 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
             </div>
           </div>
 
+          <div className="mt-2 border-t border-line pt-5">
+            <h3 className="mb-1 text-sm font-semibold text-navy">Additional authorized occupants</h3>
+            <p className="mb-3 text-xs text-slate">
+              If anyone else will occupy or use the parking space under this agreement, add their name and upload their ID.
+            </p>
+            <div className="flex flex-col gap-2">
+              {additionalOccupants.map((o, i) => (
+                <Input
+                  key={i}
+                  className={inputCls}
+                  aria-label={`Additional authorized occupant ${i + 1}`}
+                  placeholder={`Additional person ${i + 1}`}
+                  value={o}
+                  onChange={(e) => setAdditionalOccupants(additionalOccupants.map((x, j) => (j === i ? e.target.value : x)))}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setAdditionalOccupants([...additionalOccupants, ""])}
+              className="mt-2 text-xs font-semibold text-navy-700 underline"
+            >
+              Add another person
+            </button>
+          </div>
+
           <div className="border-t border-line pt-5">
             <h3 className="mb-1 text-sm font-semibold text-navy">Identity verification</h3>
             <p className="mb-3 text-xs text-slate">Required before you can sign. A passport is preferred.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="ID type" required>
                 <Select value={idType} onChange={(e) => setIdType(e.target.value)}>
-                  {ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {SIGNING_ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </Field>
               <Field label="ID number" required>
@@ -248,12 +336,11 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
               <Input className={inputCls} type="date" value={idIssuedDate} onChange={(e) => setIdIssuedDate(e.target.value)} />
             </Field>
             <Field label="Upload ID image" required hint="JPG, PNG, or PDF, up to 10 MB">
-              <input
-                type="file"
+              <FileUploadButton
                 accept="image/jpeg,image/png,application/pdf"
                 disabled={idUploading}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) onIdFileChange(f); }}
-                className="block w-full text-sm text-slate"
+                onFile={onIdFileChange}
+                label={idUploaded ? "Replace ID file" : "Upload ID file"}
               />
             </Field>
             {idUploading && <p className="text-xs text-slate">Uploading…</p>}
@@ -261,6 +348,32 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
               <p className="flex items-center gap-1.5 text-xs text-available"><Icon name="check_circle" size={16} fill={1} /> ID uploaded</p>
             )}
           </div>
+
+          {additionalOccupants.map((occupant, index) => {
+            const name = occupant.trim();
+            if (!name) return null;
+            const uploadIndex = index + 1;
+            const uploaded = occupantIdUploads.some((upload) => upload.occupantIndex === uploadIndex && upload.path);
+            const uploading = occupantIdUploading === uploadIndex;
+            return (
+              <div key={`parking-occupant-id-${index}`} className="border-t border-line pt-4">
+                <Field label={`${name}'s ID`} required hint="Required for each additional occupant">
+                  <FileUploadButton
+                    accept="image/jpeg,image/png,application/pdf"
+                    disabled={uploading}
+                    onFile={(file) => onOccupantIdFileChange(uploadIndex, name, file)}
+                    label={uploaded ? "Replace ID file" : "Upload ID file"}
+                  />
+                </Field>
+                {uploading && <p className="mt-2 text-xs text-slate">Uploading…</p>}
+                {uploaded && !uploading && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-available">
+                    <Icon name="check_circle" size={16} fill={1} /> ID uploaded
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </StepShell>
       )}
 

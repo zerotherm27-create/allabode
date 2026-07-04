@@ -22,7 +22,6 @@ export type TenancyTermsInitial = {
   tenantAddress: string;
   tenantContact: string;
   landlordName: string;
-  landlordIdNumber: string;
   landlordAddress: string;
   landlordEmail: string;
   unitId: string;
@@ -47,7 +46,7 @@ export type TenancyTermsInitial = {
 function emptyTenancyTerms(): TenancyTermsInitial {
   return {
     tenantNameHint: "", tenantEmail: "", tenantAddress: "", tenantContact: "",
-    landlordName: "", landlordIdNumber: "", landlordAddress: "", landlordEmail: "",
+    landlordName: "", landlordAddress: "", landlordEmail: "",
     unitId: "", agreementDate: "",
     buildingName: "", floorUnit: "", propertyAddress: "",
     leaseMonths: "12", leaseStartDate: "", leaseEndDate: "",
@@ -182,9 +181,6 @@ export function TenancyTermsForm({
       <Group title="Landlord (property owner)">
         <F label="Landlord full name">
           <input name="landlord_name" required defaultValue={init.landlordName} className={inputCls} />
-        </F>
-        <F label="Landlord ID number" hint="Printed in the parties block; the landlord confirms it when signing">
-          <input name="landlord_id_number" defaultValue={init.landlordIdNumber} className={inputCls} />
         </F>
         <F label="Landlord address" span>
           <input name="landlord_address" defaultValue={init.landlordAddress} className={inputCls} />

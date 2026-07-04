@@ -26,7 +26,7 @@ export function ParkingLandlordSign({ token, initial }: { token: string; initial
   const [error, setError] = useState("");
 
   const [idType, setIdType] = useState(initial.landlord_id_type ?? "passport");
-  const [idNumber, setIdNumber] = useState(initial.landlord_id_number ?? initial.landlord_details?.idNumber ?? "");
+  const [idNumber, setIdNumber] = useState(initial.landlord_id_number ?? "");
   const [idIssuedDate, setIdIssuedDate] = useState(initial.landlord_id_issued_date ?? "");
   const [idUploaded, setIdUploaded] = useState(!!initial.landlord_id_document_path);
   const [idUploading, setIdUploading] = useState(false);

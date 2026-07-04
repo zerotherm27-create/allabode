@@ -14,7 +14,6 @@ export type ParkingTermsInitial = {
   tenantAddress: string;
   tenantContact: string;
   landlordName: string;
-  landlordIdNumber: string;
   landlordAddress: string;
   landlordEmail: string;
   agreementDate: string;
@@ -37,7 +36,7 @@ export type ParkingTermsInitial = {
 function emptyParkingTerms(): ParkingTermsInitial {
   return {
     tenantNameHint: "", tenantEmail: "", tenantAddress: "", tenantContact: "",
-    landlordName: "", landlordIdNumber: "", landlordAddress: "", landlordEmail: "",
+    landlordName: "", landlordAddress: "", landlordEmail: "",
     agreementDate: "", agreementCity: "Makati City",
     slotLabel: "", buildingName: "", parkingAddress: "",
     leaseStartDate: "", leaseEndDate: "",
@@ -187,9 +186,6 @@ export function ParkingTermsForm({
       <Group title="Landlord (parking space owner)">
         <F label="Landlord full name">
           <input name="landlord_name" required defaultValue={init.landlordName} className={inputCls} />
-        </F>
-        <F label="Landlord ID number" hint="Optional — the landlord confirms it when signing">
-          <input name="landlord_id_number" defaultValue={init.landlordIdNumber} className={inputCls} />
         </F>
         <F label="Landlord residential address" span>
           <input name="landlord_address" defaultValue={init.landlordAddress} className={inputCls} />

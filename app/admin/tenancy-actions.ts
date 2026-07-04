@@ -69,7 +69,6 @@ function parseTerms(fd: FormData) {
     landlord_name_hint: s(fd, "landlord_name"),
     landlord_details: {
       name: s(fd, "landlord_name") ?? "",
-      idNumber: s(fd, "landlord_id_number") ?? "",
       address: s(fd, "landlord_address") ?? "",
     },
     property_details: {

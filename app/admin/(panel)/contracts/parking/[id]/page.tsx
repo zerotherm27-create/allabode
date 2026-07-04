@@ -85,7 +85,6 @@ function toTermsInitial(a: ParkingAgreement): ParkingTermsInitial {
     tenantAddress: td.address ?? "",
     tenantContact: td.contact ?? "",
     landlordName: ld.name ?? "",
-    landlordIdNumber: ld.idNumber ?? "",
     landlordAddress: ld.address ?? "",
     landlordEmail: a.landlord_email ?? "",
     agreementDate: a.agreement_date ?? "",

@@ -66,7 +66,10 @@ export async function completeTenancyAgreement(id: string, supabase: SupabaseCli
     const landlordIdFile = await downloadAsDataUri(supabase, a.landlord_id_document_path);
 
     // 3. Render the PDF
-    const ld = (a.landlord_details ?? {}) as TenancyLandlordDetails;
+    // Party recital shows the landlord's actual captured ID (from the ID they
+    // upload while signing), not an admin guess — landlord_details no longer
+    // carries an idNumber field.
+    const ld = { ...((a.landlord_details ?? {}) as TenancyLandlordDetails), idNumber: a.landlord_id_number ?? "" };
     const td = (a.tenant_details ?? {}) as TenancyTenantDetails;
     const pdfInput: TenancyPdfInput = {
       id: a.id,

@@ -89,7 +89,6 @@ function toTermsInitial(a: TenancyAgreement): TenancyTermsInitial {
     tenantAddress: td.address ?? "",
     tenantContact: td.contact ?? "",
     landlordName: ld.name ?? "",
-    landlordIdNumber: ld.idNumber ?? "",
     landlordAddress: ld.address ?? "",
     landlordEmail: a.landlord_email ?? "",
     unitId: a.unit_id ?? "",

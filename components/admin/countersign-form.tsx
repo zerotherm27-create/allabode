@@ -1,24 +1,28 @@
 "use client";
 
 import { useRef, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
 import { Icon } from "@/components/icon";
 import { countersignAgreement } from "@/app/admin/agreement-actions";
+import { SignatureInput, type SignatureInputHandle } from "@/components/forms/signature-input";
 
 export function CountersignForm({ agreementId }: { agreementId: string }) {
-  const padRef = useRef<SignatureCanvas>(null);
+  const padRef = useRef<SignatureInputHandle>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
   async function submit() {
     setError("");
     if (!padRef.current || padRef.current.isEmpty()) {
-      setError("Please draw your signature first.");
+      setError("Please draw or upload your signature first.");
+      return;
+    }
+    const dataUrl = padRef.current.getDataUrl();
+    if (!dataUrl) {
+      setError("Please draw or upload your signature first.");
       return;
     }
     setPending(true);
     try {
-      const dataUrl = padRef.current.toDataURL("image/png");
       await countersignAgreement(agreementId, dataUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to countersign.");
@@ -29,22 +33,7 @@ export function CountersignForm({ agreementId }: { agreementId: string }) {
   return (
     <div className="rounded-lg border border-line bg-surface p-5">
       <h2 className="mb-3 font-display text-sm font-semibold text-navy">Countersign as Manager</h2>
-      <div className="overflow-hidden rounded-md border border-line bg-surface-gray">
-        <SignatureCanvas
-          ref={padRef}
-          penColor="#0a2540"
-          canvasProps={{ className: "h-40 w-full" }}
-        />
-      </div>
-      <div className="mt-2 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => padRef.current?.clear()}
-          className="text-xs font-medium text-slate hover:text-navy"
-        >
-          Clear
-        </button>
-      </div>
+      <SignatureInput ref={padRef} />
       {error && <p role="alert" className="mt-2 text-sm text-error">{error}</p>}
       <button
         type="button"

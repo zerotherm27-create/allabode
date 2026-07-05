@@ -2,10 +2,10 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import SignatureCanvas from "react-signature-canvas";
 import { Field, Input } from "@/components/forms/fields";
 import { Select } from "@/components/forms/fields";
 import { FileUploadButton } from "@/components/forms/file-upload-button";
+import { SignatureInput, type SignatureInputHandle } from "@/components/forms/signature-input";
 import { Icon } from "@/components/icon";
 import {
   saveTenancyDraft, createTenancyIdUploadTicket, createTenancyOccupantIdUploadTicket,
@@ -69,7 +69,7 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
 
   const [typedName, setTypedName] = useState("");
   const [agreeChecked, setAgreeChecked] = useState(false);
-  const padRef = useRef<SignatureCanvas>(null);
+  const padRef = useRef<SignatureInputHandle>(null);
 
   async function persist() {
     setSaving(true);
@@ -192,7 +192,7 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
       return;
     }
     if (!padRef.current || padRef.current.isEmpty()) {
-      setError("Please draw your signature.");
+      setError("Please draw or upload your signature.");
       return;
     }
     if (!agreeChecked) {
@@ -201,7 +201,11 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
     }
     setSaving(true);
     try {
-      const dataUrl = padRef.current.toDataURL("image/png");
+      const dataUrl = padRef.current.getDataUrl();
+      if (!dataUrl) {
+        setError("Please draw or upload your signature.");
+        return;
+      }
       const { error: err } = await submitTenantSignature(token, { typedName, signatureDataUrl: dataUrl });
       if (err) {
         setError(err);
@@ -356,11 +360,8 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
             <Input className={inputCls} value={typedName} onChange={(e) => setTypedName(e.target.value)} />
           </Field>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-navy">Draw your signature</label>
-            <div className="overflow-hidden rounded-md border border-line bg-surface-gray">
-              <SignatureCanvas ref={padRef} penColor="#0a2540" canvasProps={{ className: "h-40 w-full" }} />
-            </div>
-            <button type="button" onClick={() => padRef.current?.clear()} className="mt-1 text-xs font-medium text-slate hover:text-navy">Clear</button>
+            <label className="mb-1.5 block text-sm font-medium text-navy">Your signature</label>
+            <SignatureInput ref={padRef} />
           </div>
           <label className="flex items-start gap-3 text-sm text-slate">
             <input type="checkbox" checked={agreeChecked} onChange={(e) => setAgreeChecked(e.target.checked)} className="mt-0.5 h-4 w-4 accent-navy" />

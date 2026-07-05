@@ -4,7 +4,7 @@ import path from "path";
 import {
   buildTenancyClausesBeforeTables, buildTenancyClausesAfterTables,
   recitalDateParts, BLANK,
-  TENANCY_HEADER_CONTACT, TENANCY_DISCLAIMER, TENANCY_WITNESS_NAME,
+  TENANCY_HEADER_CONTACT, TENANCY_DISCLAIMER,
   TENANCY_REMINDERS, TENANCY_INTERPRETATION, DEFAULT_PAYMENT_PARTICULARS,
   type TenancyClause, type ClauseParagraph, type TenancyTermsInput,
   type TenancyLandlordDetails, type TenancyTenantDetails,
@@ -215,6 +215,8 @@ export type TenancyPdfInput = {
   landlordSignedIp: string;
   landlordSignedVia: "remote" | "countersign";
   countersignerEmail?: string | null;
+  witnessName: string | null;
+  witnessSignatureDataUri: string | null;
 };
 
 export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> {
@@ -330,8 +332,11 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         <View style={{ flexDirection: "row", marginTop: 14 }} wrap={false}>
           <Text style={styles.sigLabelCol}>In the presence of:</Text>
           <View>
-            <View style={[styles.sigLine, { height: 24 }]} />
-            <Text>{TENANCY_WITNESS_NAME}</Text>
+            {input.witnessSignatureDataUri
+              // eslint-disable-next-line jsx-a11y/alt-text
+              ? <Image src={input.witnessSignatureDataUri} style={[styles.sigImg, { width: 130, height: 24 }]} />
+              : <View style={[styles.sigLine, { height: 24 }]} />}
+            {input.witnessName ? <Text>{input.witnessName}</Text> : null}
           </View>
         </View>
 

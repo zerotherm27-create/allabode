@@ -124,10 +124,20 @@ export async function completeTenancyAgreement(id: string, supabase: SupabaseCli
       landlordSignedIp: a.landlord_signed_ip ?? "unknown",
       landlordSignedVia: (a.landlord_signed_via ?? "countersign") as "remote" | "countersign",
       countersignerEmail: null,
+      witnessName: null,
+      witnessSignatureDataUri: null,
     };
     if (a.signatory_user_id) {
-      const { data: signatoryRow } = await supabase.from("users").select("email").eq("id", a.signatory_user_id).maybeSingle();
+      const { data: signatoryRow } = await supabase.from("users").select("name,email").eq("id", a.signatory_user_id).maybeSingle();
       pdfInput.countersignerEmail = signatoryRow?.email ?? null;
+      // The countersigning staff member's own pen-stroke represents the
+      // landlord's consent (delegated) *and* doubles as their witnessing —
+      // only meaningful when they were physically present for it, i.e. the
+      // countersign path (never the remote landlord-signs-own-link path).
+      if (a.landlord_signed_via === "countersign") {
+        pdfInput.witnessName = signatoryRow?.name ?? null;
+        pdfInput.witnessSignatureDataUri = a.landlord_signature_data ?? null;
+      }
     }
     const pdfBuffer = await renderTenancyPdf(pdfInput);
 

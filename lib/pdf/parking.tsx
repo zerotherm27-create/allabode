@@ -184,6 +184,8 @@ export type ParkingPdfInput = {
   landlordSignedIp: string;
   landlordSignedVia: "remote" | "countersign";
   countersignerEmail?: string | null;
+  witnessName: string | null;
+  witnessSignatureDataUri: string | null;
 };
 
 export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> {
@@ -286,6 +288,16 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             {input.tenantSignedAtManila ? <Text style={styles.meta}>Signed: {input.tenantSignedAtManila}</Text> : null}
           </View>
         </View>
+
+        {input.witnessSignatureDataUri && input.witnessName && (
+          <View style={{ marginTop: 16, width: "44%" }} wrap={false}>
+            <Text style={styles.meta}>Witnessed by:</Text>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image src={input.witnessSignatureDataUri} style={[styles.sigImg, { height: 30 }]} />
+            <View style={[styles.sigLine, { width: "100%" }]} />
+            <Text>{input.witnessName}</Text>
+          </View>
+        )}
       </Page>
 
       {/* ── COPY OF Valid IDs ── */}

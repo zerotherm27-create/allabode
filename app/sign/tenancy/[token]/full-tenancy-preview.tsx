@@ -4,7 +4,7 @@ import {
   buildTenancyClausesBeforeTables, buildTenancyClausesAfterTables,
   recitalDate, BLANK,
   DEFAULT_BANK_DETAILS, DEFAULT_PAYMENT_PARTICULARS,
-  TENANCY_INTERPRETATION, TENANCY_REMINDERS, TENANCY_WITNESS_NAME,
+  TENANCY_INTERPRETATION, TENANCY_REMINDERS,
   type TenancyClause, type ClauseParagraph, type TenancyTenantDetails,
   type PaymentScheduleRow,
 } from "@/lib/pm/tenancy-clauses";
@@ -168,7 +168,7 @@ export function FullTenancyPreview({
 
       <p className="mb-2 mt-4 text-sm">
         IN WITNESS WHEREOF the parties have hereunto set their hands as shown below — the Landlord and the Tenant sign
-        electronically, witnessed by {TENANCY_WITNESS_NAME}.
+        electronically.
       </p>
 
       {inventory.length > 0 && (

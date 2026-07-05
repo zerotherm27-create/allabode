@@ -58,8 +58,6 @@ export const TENANCY_DISCLAIMER =
   "owners, representatives and employees, shall not be held responsible for any disputes arising from " +
   "non-compliance of either parties to this agreement.";
 
-export const TENANCY_WITNESS_NAME = "Aremchel M. Cruzado";
-
 export const TENANCY_REMINDERS = [
   "Please follow building rules and regulations. Kindly review building house rules for reference.",
   "For bank transfer payments, please email your transfer slip via email at info@allabodeph.com with a Subject header: Rental Payment due (Month) – Bldg. & Unit Number – Date of Transfer",

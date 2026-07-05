@@ -119,10 +119,19 @@ export async function completeParkingAgreement(id: string, supabase: SupabaseCli
     landlordSignedIp: a.landlord_signed_ip ?? "unknown",
     landlordSignedVia: (a.landlord_signed_via ?? "countersign") as "remote" | "countersign",
     countersignerEmail: null,
+    witnessName: null,
+    witnessSignatureDataUri: null,
   };
   if (a.signatory_user_id) {
-    const { data: signatoryRow } = await supabase.from("users").select("email").eq("id", a.signatory_user_id).maybeSingle();
+    const { data: signatoryRow } = await supabase.from("users").select("name,email").eq("id", a.signatory_user_id).maybeSingle();
     pdfInput.countersignerEmail = signatoryRow?.email ?? null;
+    // Same reasoning as the tenancy flow: the countersigning staff member's
+    // own signature doubles as their witnessing — only when they were
+    // physically present for it (countersign path, not remote).
+    if (a.landlord_signed_via === "countersign") {
+      pdfInput.witnessName = signatoryRow?.name ?? null;
+      pdfInput.witnessSignatureDataUri = a.landlord_signature_data ?? null;
+    }
   }
   const pdfBuffer = await renderParkingPdf(pdfInput);
 

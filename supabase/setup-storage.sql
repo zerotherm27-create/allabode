@@ -1,15 +1,16 @@
 -- Run this in Supabase → SQL Editor (idempotent — safe to re-run)
 -- Creates storage buckets + all RLS policies for receipts, finance-docs,
--- site-assets, and documents.
+-- site-assets, documents, agreements, and listing-images.
 
 -- ── 1. Buckets ────────────────────────────────────────────────────────────────
 insert into storage.buckets (id, name, public)
 values
-  ('receipts',     'receipts',     false),
-  ('finance-docs', 'finance-docs', false),
-  ('site-assets',  'site-assets',  true ),
-  ('documents',    'documents',    false),
-  ('agreements',   'agreements',   false)
+  ('receipts',       'receipts',       false),
+  ('finance-docs',   'finance-docs',   false),
+  ('site-assets',    'site-assets',    true ),
+  ('documents',       'documents',      false),
+  ('agreements',     'agreements',     false),
+  ('listing-images', 'listing-images', true )
 on conflict (id) do nothing;
 
 -- ── 2. Drop existing policies (idempotent) ────────────────────────────────────
@@ -31,6 +32,7 @@ drop policy if exists "staff insert agreements"    on storage.objects;
 drop policy if exists "staff select agreements"    on storage.objects;
 drop policy if exists "staff update agreements"    on storage.objects;
 drop policy if exists "staff delete agreements"    on storage.objects;
+drop policy if exists "staff manage listing-images" on storage.objects;
 
 -- ── 3. receipts (private — staff only) ───────────────────────────────────────
 create policy "staff insert receipts"
@@ -121,3 +123,9 @@ create policy "staff update agreements"
 create policy "staff delete agreements"
   on storage.objects for delete to authenticated
   using (bucket_id = 'agreements' and public.is_staff());
+
+-- ── 8. listing-images (public bucket — staff write, CDN handles public reads) ─
+create policy "staff manage listing-images"
+  on storage.objects for all to authenticated
+  using     (bucket_id = 'listing-images' and public.is_staff())
+  with check (bucket_id = 'listing-images' and public.is_staff());

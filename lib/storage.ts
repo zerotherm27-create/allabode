@@ -4,6 +4,7 @@ export const RECEIPTS_BUCKET = "receipts";
 export const FINANCE_DOCS_BUCKET = "finance-docs";
 export const DOCUMENTS_BUCKET = "documents";
 export const AGREEMENTS_BUCKET = "agreements";
+export const LISTING_IMAGES_BUCKET = "listing-images";
 
 /** Short-lived signed URL for a private storage object (spec §17.2). */
 export async function signedUrl(

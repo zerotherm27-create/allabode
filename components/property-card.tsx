@@ -1,12 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { type Listing, statusStyles } from "@/lib/data";
+import { type Listing, formatBeds, statusStyles } from "@/lib/data";
 
 export function PropertyCard({ listing }: { listing: Listing }) {
   const specs: { icon: string; label: string }[] =
     listing.specs ?? [
       ...(listing.beds != null
-        ? [{ icon: "bed", label: `${listing.beds} Beds` }]
+        ? [{ icon: "bed", label: formatBeds(listing.beds)! }]
         : []),
       ...(listing.baths != null
         ? [{ icon: "bathtub", label: `${listing.baths} Baths` }]
@@ -16,11 +17,21 @@ export function PropertyCard({ listing }: { listing: Listing }) {
 
   return (
     <article className="group flex flex-col overflow-hidden border border-line bg-surface transition-shadow duration-[var(--dur-mid)] hover:shadow-[var(--shadow-card)]">
-      {/* Image band (gradient placeholder) */}
+      {/* Image band */}
       <div className="relative aspect-[4/3] overflow-hidden">
-        <div
-          className={`h-full w-full bg-gradient-to-br ${listing.gradient} transition-transform duration-700 group-hover:scale-105`}
-        />
+        {listing.images?.[0] ? (
+          <Image
+            src={listing.images[0].url}
+            alt={listing.images[0].alt ?? listing.title}
+            fill
+            sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <div
+            className={`h-full w-full bg-gradient-to-br ${listing.gradient} transition-transform duration-700 group-hover:scale-105`}
+          />
+        )}
         <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(120%_120%_at_80%_0%,rgba(180,151,90,0.35),transparent_55%)]" />
         <span
           className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[listing.status]}`}

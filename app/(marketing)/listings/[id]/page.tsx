@@ -4,8 +4,11 @@ import { notFound } from "next/navigation";
 import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
+import { ListingGallery } from "@/components/listing-gallery";
+import { ListingMap } from "@/components/listing-map";
+import { ListingShareButton } from "@/components/listing-share-button";
 import { InquiryForm } from "@/components/forms/lead-forms";
-import { statusStyles } from "@/lib/data";
+import { formatBeds, statusStyles } from "@/lib/data";
 import { getListing, getListings } from "@/lib/listings";
 
 type Params = { params: Promise<{ id: string }> };
@@ -39,7 +42,7 @@ export default async function ListingDetailPage({ params }: Params) {
 
   const specs = listing.specs ?? [
     ...(listing.beds != null
-      ? [{ icon: "bed", label: `${listing.beds} Bedrooms` }]
+      ? [{ icon: "bed", label: formatBeds(listing.beds)! }]
       : []),
     ...(listing.baths != null
       ? [{ icon: "bathtub", label: `${listing.baths} Bathrooms` }]
@@ -53,12 +56,8 @@ export default async function ListingDetailPage({ params }: Params) {
 
   return (
     <>
-      {/* Gallery band */}
-      <div className="relative isolate">
-        <div
-          className={`h-[40vh] w-full bg-gradient-to-br ${listing.gradient} md:h-[56vh]`}
-        />
-        <div className="absolute inset-0 opacity-30 [background:radial-gradient(120%_120%_at_80%_0%,rgba(180,151,90,0.35),transparent_55%)]" />
+      {/* Gallery */}
+      <ListingGallery images={listing.images ?? []} title={listing.title} gradient={listing.gradient}>
         <Container className="absolute inset-x-0 bottom-0 pb-6">
           <Link
             href="/listings"
@@ -68,17 +67,20 @@ export default async function ListingDetailPage({ params }: Params) {
             Back to listings
           </Link>
         </Container>
-      </div>
+      </ListingGallery>
 
       <section className="py-section">
         <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_360px]">
           {/* Main */}
           <div>
-            <span
-              className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[listing.status]}`}
-            >
-              {listing.status}
-            </span>
+            <div className="flex items-center justify-between gap-3">
+              <span
+                className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[listing.status]}`}
+              >
+                {listing.status}
+              </span>
+              <ListingShareButton title={listing.title} />
+            </div>
             <h1 className="mt-4 font-display text-3xl font-bold text-navy sm:text-4xl">
               {listing.title}
             </h1>
@@ -111,6 +113,8 @@ export default async function ListingDetailPage({ params }: Params) {
               </p>
             </div>
 
+            <ListingMap location={listing.location} />
+
             {/* Property details (brief: listing/property type, furnishing, parking,
                 lot area, lease/sale terms, availability) */}
             <div className="mt-8">
@@ -118,23 +122,28 @@ export default async function ListingDetailPage({ params }: Params) {
                 Property details
               </h2>
               <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-line pt-4 sm:grid-cols-2">
-                {[
-                  ["Listing type", listing.listingType],
-                  ["Property type", listing.propertyType],
-                  ["Floor area", listing.area],
-                  ["Lot area", listing.lotArea],
-                  ["Bedrooms", listing.beds != null ? String(listing.beds) : undefined],
-                  ["Bathrooms", listing.baths != null ? String(listing.baths) : undefined],
-                  ["Parking", listing.parking != null ? `${listing.parking} slot${listing.parking === 1 ? "" : "s"}` : undefined],
-                  ["Furnishing", listing.furnishing],
-                  [listing.leaseTerms ? "Lease terms" : "Sale terms", listing.leaseTerms ?? listing.saleTerms],
-                  ["Availability", listing.availabilityDate ?? listing.status],
-                ]
-                  .filter(([, v]) => v)
-                  .map(([k, v]) => (
-                    <div key={k} className="flex justify-between gap-4 border-b border-line/60 pb-2">
-                      <dt className="text-sm text-slate">{k}</dt>
-                      <dd className="text-sm font-medium text-navy text-right">{v}</dd>
+                {(
+                  [
+                    { icon: "sell", label: "Listing type", value: listing.listingType },
+                    { icon: "home_work", label: "Property type", value: listing.propertyType },
+                    { icon: "square_foot", label: "Floor area", value: listing.area },
+                    { icon: "landscape", label: "Lot area", value: listing.lotArea },
+                    { icon: "bed", label: "Bedrooms", value: listing.beds != null ? (listing.beds === 0 ? "Studio" : String(listing.beds)) : undefined },
+                    { icon: "bathtub", label: "Bathrooms", value: listing.baths != null ? String(listing.baths) : undefined },
+                    { icon: "local_parking", label: "Parking", value: listing.parking != null ? `${listing.parking} slot${listing.parking === 1 ? "" : "s"}` : undefined },
+                    { icon: "chair", label: "Furnishing", value: listing.furnishing },
+                    { icon: "handshake", label: listing.leaseTerms ? "Lease terms" : "Sale terms", value: listing.leaseTerms ?? listing.saleTerms },
+                    { icon: "event_available", label: "Availability", value: listing.availabilityDate ?? listing.status },
+                  ] satisfies { icon: string; label: string; value: string | undefined }[]
+                )
+                  .filter((row) => row.value)
+                  .map((row) => (
+                    <div key={row.label} className="flex justify-between gap-4 border-b border-line/60 pb-2">
+                      <dt className="flex items-center gap-2 text-sm text-slate">
+                        <Icon name={row.icon} size={18} className="text-navy-700" />
+                        {row.label}
+                      </dt>
+                      <dd className="text-sm font-medium text-navy text-right">{row.value}</dd>
                     </div>
                   ))}
               </dl>

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Icon } from "@/components/icon";
+import { generateListingDescription } from "@/app/admin/actions";
 
 export type ListingValues = {
   id?: string;
@@ -88,20 +90,78 @@ function SubmitButton() {
 export function ListingForm({
   action,
   initial = {},
+  aiEnabled = false,
 }: {
   action: (fd: FormData) => void | Promise<void>;
   initial?: ListingValues;
+  /** Whether OPENAI_API_KEY is configured server-side — hides the AI-generate button otherwise. */
+  aiEnabled?: boolean;
 }) {
   const v = initial;
+  const formRef = useRef<HTMLFormElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const [genPending, setGenPending] = useState(false);
+  const [genError, setGenError] = useState("");
+
+  async function handleGenerateDescription() {
+    if (!formRef.current) return;
+    setGenError("");
+    setGenPending(true);
+    try {
+      const fd = new FormData(formRef.current);
+      const num = (key: string) => (fd.get(key) ? Number(fd.get(key)) : null);
+      const result = await generateListingDescription({
+        title: String(fd.get("title") ?? ""),
+        location: String(fd.get("location") ?? ""),
+        city: String(fd.get("city") ?? ""),
+        province: String(fd.get("province") ?? ""),
+        listingCategory: String(fd.get("listing_category") ?? ""),
+        leaseType: String(fd.get("lease_type") ?? ""),
+        propertyType: String(fd.get("property_type") ?? ""),
+        bedrooms: num("bedrooms"),
+        bathrooms: num("bathrooms"),
+        floorArea: num("floor_area"),
+        lotArea: num("lot_area"),
+        furnishing: String(fd.get("furnishing") ?? ""),
+        price: num("price"),
+        priceLabel: String(fd.get("price_label") ?? ""),
+        amenities: String(fd.get("amenities") ?? "").split(",").map((a) => a.trim()).filter(Boolean),
+      });
+      if (!result) {
+        setGenError("Couldn't generate a description right now — please try again.");
+        return;
+      }
+      if (descriptionRef.current) descriptionRef.current.value = result;
+    } catch {
+      setGenError("Couldn't generate a description right now — please try again.");
+    } finally {
+      setGenPending(false);
+    }
+  }
+
   return (
-    <form action={action} className="flex flex-col gap-6">
+    <form ref={formRef} action={action} className="flex flex-col gap-6">
       <Group title="Basics">
         <F label="Title"><input name="title" defaultValue={v.title} required className={inputCls} /></F>
         <F label="Slug" hint="Auto-generated from title if left blank">
           <input name="slug" defaultValue={v.slug} className={inputCls} />
         </F>
         <F label="Description" span>
-          <textarea name="description" defaultValue={v.description} rows={4} className={`${inputCls} h-auto py-2`} />
+          <textarea ref={descriptionRef} name="description" defaultValue={v.description} rows={4} className={`${inputCls} h-auto py-2`} />
+          {aiEnabled && (
+            <div className="mt-1.5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={genPending}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-navy-700 hover:text-navy disabled:opacity-50"
+              >
+                <Icon name={genPending ? "progress_activity" : "auto_awesome"} size={16} className={genPending ? "animate-spin" : ""} />
+                {genPending ? "Generating…" : "Generate with AI"}
+              </button>
+              {genError && <span role="alert" className="text-xs text-error">{genError}</span>}
+            </div>
+          )}
         </F>
       </Group>
 
@@ -146,7 +206,7 @@ export function ListingForm({
         <F label="Price label" hint="e.g. per month, total contract price">
           <input name="price_label" defaultValue={v.price_label} className={inputCls} />
         </F>
-        <F label="Bedrooms"><input name="bedrooms" type="number" defaultValue={v.bedrooms ?? undefined} className={inputCls} /></F>
+        <F label="Bedrooms" hint="0 = Studio"><input name="bedrooms" type="number" min={0} defaultValue={v.bedrooms ?? undefined} className={inputCls} /></F>
         <F label="Bathrooms"><input name="bathrooms" type="number" defaultValue={v.bathrooms ?? undefined} className={inputCls} /></F>
         <F label="Floor area (sqm)"><input name="floor_area" type="number" step="0.01" defaultValue={v.floor_area ?? undefined} className={inputCls} /></F>
         <F label="Lot area (sqm)"><input name="lot_area" type="number" step="0.01" defaultValue={v.lot_area ?? undefined} className={inputCls} /></F>

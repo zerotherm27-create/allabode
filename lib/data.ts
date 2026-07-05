@@ -64,6 +64,8 @@ export type Listing = {
   specs?: { icon: string; label: string }[];
   /** Tailwind gradient classes used for the placeholder image band. */
   gradient: string;
+  /** Uploaded gallery photos, sorted by display order. Empty/absent falls back to `gradient`. */
+  images?: { url: string; alt: string | null }[];
   /* ---- Detail fields (from the DB; optional so mock rows still type-check) ---- */
   propertyType?: string;
   listingType?: string;
@@ -74,6 +76,12 @@ export type Listing = {
   saleTerms?: string;
   availabilityDate?: string;
 };
+
+/** "Studio" for 0 bedrooms, "N Bedroom(s)" otherwise, undefined when unspecified. */
+export function formatBeds(beds?: number): string | undefined {
+  if (beds == null) return undefined;
+  return beds === 0 ? "Studio" : `${beds} Bedroom${beds === 1 ? "" : "s"}`;
+}
 
 export const listings: Listing[] = [
   {

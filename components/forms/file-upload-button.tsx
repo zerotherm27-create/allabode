@@ -5,12 +5,18 @@ import { Icon } from "@/components/icon";
 export function FileUploadButton({
   accept,
   disabled,
+  multiple,
   onFile,
+  onFiles,
   label = "Choose file",
 }: {
   accept?: string;
   disabled?: boolean;
+  /** Allow selecting more than one file at once. Use with `onFiles`. */
+  multiple?: boolean;
   onFile: (file: File) => void;
+  /** Called instead of `onFile` when `multiple` is set and files are selected. */
+  onFiles?: (files: File[]) => void;
   label?: string;
 }) {
   return (
@@ -24,10 +30,12 @@ export function FileUploadButton({
       <input
         type="file"
         accept={accept}
+        multiple={multiple}
         disabled={disabled}
         onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) onFile(file);
+          const files = Array.from(e.target.files ?? []);
+          if (multiple && onFiles) onFiles(files);
+          else if (files[0]) onFile(files[0]);
           e.currentTarget.value = "";
         }}
         className="sr-only"

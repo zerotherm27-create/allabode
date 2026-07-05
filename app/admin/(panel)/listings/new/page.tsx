@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { ListingForm } from "@/components/admin/listing-form";
 import { createListing } from "@/app/admin/actions";
+import { isAiConfigured } from "@/lib/ai/client";
 
 export default function NewListingPage() {
   return (
@@ -15,7 +16,7 @@ export default function NewListingPage() {
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">New listing</h1>
       <div className="mt-6">
-        <ListingForm action={createListing} />
+        <ListingForm action={createListing} aiEnabled={isAiConfigured()} />
       </div>
     </div>
   );

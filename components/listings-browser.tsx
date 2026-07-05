@@ -24,7 +24,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
   const [query, setQuery] = useState("");
   const [listingType, setListingType] = useState("All");
   const [propertyType, setPropertyType] = useState("All");
-  const [minBeds, setMinBeds] = useState(0);
+  const [minBeds, setMinBeds] = useState(-1); // -1 = Any, 0 = Studio (exact), 1+ = at least N
   const [minBaths, setMinBaths] = useState(0);
   const [furnishing, setFurnishing] = useState("All");
   const [availability, setAvailability] = useState("All");
@@ -46,7 +46,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
     setQuery("");
     setListingType("All");
     setPropertyType("All");
-    setMinBeds(0);
+    setMinBeds(-1);
     setMinBaths(0);
     setFurnishing("All");
     setAvailability("All");
@@ -61,6 +61,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
       if (listingType !== "All" && l.listingType !== listingType) return false;
       if (propertyType !== "All" && l.propertyType !== propertyType) return false;
       if (availability !== "All" && availabilityOf(l) !== availability) return false;
+      if (minBeds === 0 && (l.beds ?? -1) !== 0) return false;
       if (minBeds > 0 && (l.beds ?? 0) < minBeds) return false;
       if (minBaths > 0 && (l.baths ?? 0) < minBaths) return false;
       if (furnishing !== "All" && !(l.furnishing ?? "").startsWith(furnishing.split(" ")[0]))
@@ -149,8 +150,8 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
           <div className="grid grid-cols-2 gap-3">
             <Filter label="Beds (min)" htmlFor="filter-min-beds">
               <select id="filter-min-beds" value={minBeds} onChange={(e) => setMinBeds(Number(e.target.value))} className={selectCls}>
-                {[0, 1, 2, 3, 4].map((n) => (
-                  <option key={n} value={n}>{n === 0 ? "Any" : `${n}+`}</option>
+                {[-1, 0, 1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>{n === -1 ? "Any" : n === 0 ? "Studio" : `${n}+`}</option>
                 ))}
               </select>
             </Filter>

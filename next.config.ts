@@ -4,6 +4,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   experimental: {
     serverActions: {
       // Next.js defaults Server Action bodies to 1MB — well under the 10MB

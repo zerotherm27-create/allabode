@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { ListingForm, type ListingValues } from "@/components/admin/listing-form";
+import { ListingImagesManager } from "@/components/admin/listing-images-manager";
 import { updateListing } from "@/app/admin/actions";
 import { createClient } from "@/lib/supabase/server";
+import { isAiConfigured } from "@/lib/ai/client";
 
 export default async function EditListingPage({
   params,
@@ -12,7 +14,14 @@ export default async function EditListingPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
+  const [{ data }, { data: images }] = await Promise.all([
+    supabase.from("listings").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("listing_images")
+      .select("id, url, alt_text, sort_order")
+      .eq("listing_id", id)
+      .order("sort_order", { ascending: true }),
+  ]);
   if (!data) notFound();
 
   const initial = data as ListingValues;
@@ -30,7 +39,10 @@ export default async function EditListingPage({
       <h1 className="font-display text-2xl font-bold text-navy">Edit listing</h1>
       <p className="mt-1 text-sm text-slate">{initial.title}</p>
       <div className="mt-6">
-        <ListingForm action={action} initial={initial} />
+        <ListingImagesManager listingId={id} initialImages={images ?? []} />
+      </div>
+      <div className="mt-6">
+        <ListingForm action={action} initial={initial} aiEnabled={isAiConfigured()} />
       </div>
     </div>
   );

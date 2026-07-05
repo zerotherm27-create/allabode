@@ -17,7 +17,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const db = url && key ? createClient(url, key) : null;
 
 const COLS =
-  "slug,title,location,price,price_label,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at";
+  "slug,title,location,price,price_label,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at,listing_images(url,alt_text,sort_order)";
 
 type Row = {
   slug: string;
@@ -39,6 +39,7 @@ type Row = {
   sale_terms: string | null;
   availability_date: string | null;
   is_featured: boolean;
+  listing_images: { url: string; alt_text: string | null; sort_order: number }[] | null;
 };
 
 const GRADIENTS = [
@@ -71,6 +72,10 @@ function fmtPrice(row: Row): string {
 }
 
 function mapRow(row: Row): Listing {
+  const images = (row.listing_images ?? [])
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((img) => ({ url: img.url, alt: img.alt_text }));
   return {
     id: row.slug,
     title: row.title,
@@ -82,6 +87,7 @@ function mapRow(row: Row): Listing {
     baths: row.bathrooms ?? undefined,
     area: row.floor_area != null ? `${Math.round(Number(row.floor_area))} sqm` : "",
     gradient: gradientFor(row.slug),
+    images,
     propertyType: row.property_type,
     listingType: row.lease_type ?? row.listing_category,
     furnishing: row.furnishing ?? undefined,
@@ -99,7 +105,8 @@ export async function getListings(): Promise<Listing[]> {
     .from("listings")
     .select(COLS)
     .order("is_featured", { ascending: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("sort_order", { referencedTable: "listing_images", ascending: true });
   if (error || !data || data.length === 0) return mockListings;
   return (data as Row[]).map(mapRow);
 }
@@ -110,6 +117,7 @@ export async function getFeaturedListings(limit = 3): Promise<Listing[]> {
     .from("listings")
     .select(COLS)
     .eq("is_featured", true)
+    .order("sort_order", { referencedTable: "listing_images", ascending: true })
     .limit(limit);
   if (error || !data || data.length === 0) return mockListings.slice(0, limit);
   return (data as Row[]).map(mapRow);
@@ -121,6 +129,7 @@ export async function getListing(slug: string): Promise<Listing | null> {
     .from("listings")
     .select(COLS)
     .eq("slug", slug)
+    .order("sort_order", { referencedTable: "listing_images", ascending: true })
     .maybeSingle();
   if (error || !data) return mockListings.find((l) => l.id === slug) ?? null;
   return mapRow(data as Row);

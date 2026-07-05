@@ -3,6 +3,7 @@
 import { useActionState, useRef } from "react";
 import { Icon } from "@/components/icon";
 import { uploadDocument, markSigned, deleteDocument, type DocumentActionState } from "@/app/admin/document-actions";
+import { DocumentPreviewButton } from "@/components/admin/document-preview-modal";
 
 const inputCls = "h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15";
 
@@ -22,6 +23,7 @@ export type DocumentRow = {
   document_type: string;
   file_name: string;
   file_size: number | null;
+  file_mime_type?: string | null;
   visibility: string;
   is_signed: boolean;
   is_immutable: boolean;
@@ -125,6 +127,7 @@ export function DocumentList({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                <DocumentPreviewButton documentId={doc.id} title={doc.title} mimeType={doc.file_mime_type ?? null} />
                 <a
                   href={`/api/portal/documents/${doc.id}`}
                   download={doc.file_name}

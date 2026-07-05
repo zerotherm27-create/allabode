@@ -70,12 +70,13 @@ export async function completeParkingAgreement(id: string, supabase: SupabaseCli
   const occupantIdUploads = normalizeOccupantIdUploads(
     (a.tenant_details as { additionalOccupantIds?: unknown } | null)?.additionalOccupantIds
   );
-  const additionalOccupantIds = await Promise.all(
+  const occupantIdFiles = await Promise.all(
     occupantIdUploads.map(async (upload) => ({
       name: upload.occupantName,
-      idImageDataUri: (await downloadAsDataUri(supabase, upload.path)).dataUri,
+      file: await downloadAsDataUri(supabase, upload.path),
     }))
   );
+  const additionalOccupantIds = occupantIdFiles.map((o) => ({ name: o.name, idImageDataUri: o.file.dataUri }));
 
   // 3. Render the PDF
   const pdfInput: ParkingPdfInput = {
@@ -148,6 +149,18 @@ export async function completeParkingAgreement(id: string, supabase: SupabaseCli
       contentType: tenantIdFile.mime,
       upsert: true,
     });
+  }
+  const occupantDocumentsIds: { name: string; path: string }[] = [];
+  for (const occupant of occupantIdFiles) {
+    if (!occupant.file.buffer) continue;
+    const ext = occupant.file.mime === "image/png" ? "png" : occupant.file.mime === "application/pdf" ? "pdf" : "jpg";
+    const safeName = occupant.name.replace(/[^a-zA-Z0-9-_]+/g, "-").toLowerCase() || "occupant";
+    const path = `parking/${a.id}/occupant-id-${safeName}-${Date.now()}.${ext}`;
+    await supabase.storage.from(DOCUMENTS_BUCKET).upload(path, occupant.file.buffer, {
+      contentType: occupant.file.mime,
+      upsert: true,
+    });
+    occupantDocumentsIds.push({ name: occupant.name, path });
   }
 
   // 6. Upsert the tenant by email (collision -> update in place, keep auth link)
@@ -234,6 +247,19 @@ export async function completeParkingAgreement(id: string, supabase: SupabaseCli
       title: `Government ID (${ownerIdTypeLabel(a.tenant_id_type)})`,
       file_path: documentsIdPath,
       file_name: documentsIdPath.split("/").pop() ?? "id",
+      is_signed: false,
+      is_immutable: true,
+      visibility: "staff",
+    });
+  }
+  for (const occupant of occupantDocumentsIds) {
+    await supabase.from("documents").insert({
+      entity_type: "tenant",
+      entity_id: tenantRecordId,
+      document_type: "id",
+      title: `Government ID (${occupant.name})`,
+      file_path: occupant.path,
+      file_name: occupant.path.split("/").pop() ?? "id",
       is_signed: false,
       is_immutable: true,
       visibility: "staff",

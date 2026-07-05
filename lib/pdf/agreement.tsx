@@ -18,19 +18,44 @@ function getLogo(): string | null {
 }
 
 const NAVY = "#0a2540";
-const GOLD = "#b4975a";
 const SLATE = "#5b6573";
 const LINE = "#e2e6ec";
 const INK = "#16202c";
 
+// Same house style as the tenancy/parking agreement PDFs: per-page logo
+// header + disclaimer/"PLEASE SIGN" footer, on every page.
+const PAGE_CONTACT = "M: +63 9171596808 | E: info@allabodeph.com | W: www.allabodeph.com";
+const PM_DISCLAIMER =
+  "DISCLAIMER: This Property Management Agreement has been prepared by All Abode Brokerage and Valuation OPC for " +
+  "submission to the Owner for review and approval. No representation or recommendation is made by the Company, " +
+  "as to the legal sufficiency, legal effect, or tax consequences of this management agreement. The Owner may " +
+  "seek legal advice when in doubt. All Abode Brokerage and Valuation OPC, its owners, representatives and " +
+  "employees, shall not be held responsible for any disputes arising from non-compliance to this agreement.";
+
 const styles = StyleSheet.create({
-  page: { paddingTop: 50, paddingBottom: 56, paddingHorizontal: 44, fontSize: 9.5, color: INK, fontFamily: "Helvetica", lineHeight: 1.4 },
-  footer: { position: "absolute", bottom: 22, left: 44, right: 44, fontSize: 7.5, color: SLATE, borderTopWidth: 1, borderTopColor: LINE, paddingTop: 6, flexDirection: "row", justifyContent: "space-between" },
+  // Extra top/bottom padding vs the old layout: every page now carries the
+  // fixed logo header and the disclaimer + "PLEASE SIGN" initials footer,
+  // matching the tenancy/parking agreement PDFs.
+  page: { paddingTop: 92, paddingBottom: 118, paddingHorizontal: 44, fontSize: 9.5, color: INK, fontFamily: "Helvetica", lineHeight: 1.4 },
+  header: { position: "absolute", top: 22, left: 44, right: 44, alignItems: "center" },
+  headerContact: { fontSize: 7, color: SLATE, marginTop: 3 },
+  footer: { position: "absolute", top: 700, left: 44, right: 44, height: 70, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  footerLeft: { flex: 1, paddingRight: 10 },
+  footerDisclaimer: { fontSize: 6, color: SLATE, lineHeight: 1.25 },
+  footerPage: { fontSize: 7.5, color: SLATE, marginBottom: 2 },
+  signBox: { width: 128, borderWidth: 0.75, borderColor: INK },
+  signBoxTitle: { fontSize: 6.5, fontFamily: "Helvetica-Bold", textAlign: "center", borderBottomWidth: 0.75, borderBottomColor: INK, paddingVertical: 1.5 },
+  signBoxRow: { flexDirection: "row" },
+  signBoxCell: { flex: 1, alignItems: "center", paddingBottom: 2 },
+  signBoxCellLeft: { borderRightWidth: 0.75, borderRightColor: INK },
+  signBoxLabel: { fontSize: 6, paddingTop: 1.5 },
+  signBoxImg: { width: 52, height: 18, objectFit: "contain" },
+  signBoxBlank: { width: 52, height: 18 },
   title: { fontSize: 16, fontFamily: "Helvetica-Bold", color: NAVY, textAlign: "center", marginBottom: 4 },
-  subtitle: { fontSize: 10, color: GOLD, textAlign: "center", marginBottom: 14 },
+  subtitle: { fontSize: 10, color: SLATE, textAlign: "center", marginBottom: 14 },
   intro: { textAlign: "center", marginBottom: 14 },
-  h1: { fontSize: 11.5, fontFamily: "Helvetica-Bold", color: NAVY, borderBottomWidth: 1.5, borderBottomColor: GOLD, paddingBottom: 3, marginTop: 16, marginBottom: 8 },
-  h2: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0d518c", marginTop: 8, marginBottom: 4 },
+  h1: { fontFamily: "Helvetica-Bold", marginTop: 9, marginBottom: 5 },
+  h2: { fontSize: 10, fontFamily: "Helvetica-Bold", marginTop: 8, marginBottom: 4 },
   p: { marginBottom: 6, textAlign: "justify" },
   bold: { fontFamily: "Helvetica-Bold" },
   hr: { borderBottomWidth: 0.75, borderBottomColor: "#aaaaaa", marginVertical: 8 },
@@ -51,8 +76,21 @@ const styles = StyleSheet.create({
   sigCol: { width: "47%" },
   sigImg: { width: 160, height: 50, objectFit: "contain", marginTop: 4, marginBottom: 2 },
   sigLine: { borderBottomWidth: 0.75, borderBottomColor: INK, height: 50, marginTop: 4, marginBottom: 2 },
-  annexTitle: { fontSize: 14, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 14 },
+  annexTitle: { fontSize: 13, fontFamily: "Helvetica-Bold", color: NAVY, textAlign: "center", marginBottom: 6 },
 });
+
+function PageHeader() {
+  const logo = getLogo();
+  return (
+    <View style={styles.header} fixed>
+      {logo && (
+        // eslint-disable-next-line jsx-a11y/alt-text
+        <Image src={logo} style={{ width: 118, height: 34, objectFit: "contain" }} />
+      )}
+      <Text style={styles.headerContact}>{PAGE_CONTACT}</Text>
+    </View>
+  );
+}
 
 function Check({ checked }: { checked?: boolean }) {
   return checked
@@ -80,11 +118,38 @@ function Field({ label, value }: { label: string; value?: string | number | null
 
 function Hr() { return <View style={styles.hr} />; }
 
-function PageFooter({ refCode, ownerName }: { refCode: string; ownerName: string }) {
+/**
+ * Same footer pattern as the tenancy/parking agreement PDFs: page number +
+ * disclaimer on the left, and the "PLEASE SIGN" initials box (OWNER |
+ * MANAGER) bottom right — stamped with small signature thumbnails once each
+ * party has signed.
+ */
+function PageFooter({ ownerSig, managerSig }: { ownerSig: string | null; managerSig: string | null }) {
   return (
     <View style={styles.footer} fixed>
-      <Text>{refCode} · {ownerName} · All Abode Brokerage and Valuation OPC</Text>
-      <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} fixed />
+      <View style={styles.footerLeft}>
+        <Text style={styles.footerPage} render={({ pageNumber }) => `Page ${pageNumber}`} fixed />
+        <Text style={styles.footerDisclaimer}>{PM_DISCLAIMER}</Text>
+      </View>
+      <View style={styles.signBox}>
+        <Text style={styles.signBoxTitle}>PLEASE SIGN</Text>
+        <View style={styles.signBoxRow}>
+          <View style={[styles.signBoxCell, styles.signBoxCellLeft]}>
+            <Text style={styles.signBoxLabel}>OWNER</Text>
+            {ownerSig
+              // eslint-disable-next-line jsx-a11y/alt-text
+              ? <Image src={ownerSig} style={styles.signBoxImg} />
+              : <View style={styles.signBoxBlank} />}
+          </View>
+          <View style={styles.signBoxCell}>
+            <Text style={styles.signBoxLabel}>MANAGER</Text>
+            {managerSig
+              // eslint-disable-next-line jsx-a11y/alt-text
+              ? <Image src={managerSig} style={styles.signBoxImg} />
+              : <View style={styles.signBoxBlank} />}
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
@@ -158,7 +223,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
     (ab.fixtures && ab.fixtures.length) ||
     (ab.conditionReport && Object.keys(ab.conditionReport).length)
   );
-  const Footer = () => <PageFooter refCode={input.referenceCode} ownerName={od.name} />;
+  const Footer = () => <PageFooter ownerSig={input.ownerSignatureDataUri || null} managerSig={input.managerSignatureDataUri || null} />;
 
   const doc = (
     <Document>
@@ -167,10 +232,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
           every page ends wherever the split falls instead of where the
           content runs out, leaving large trailing blank areas. */}
       <Page size="LETTER" style={styles.page}>
-        {getLogo() && (
-          // eslint-disable-next-line jsx-a11y/alt-text
-          <Image src={getLogo()!} style={{ width: 120, height: 34, objectFit: "contain", alignSelf: "center", marginBottom: 8 }} />
-        )}
+        <PageHeader />
         <Text style={styles.title}>PROPERTY MANAGEMENT AGREEMENT</Text>
         <Text style={styles.subtitle}>All Abode Brokerage and Valuation OPC</Text>
         <Text style={styles.intro}>
@@ -380,6 +442,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
 
       {/* ── Annex A ── */}
       <Page size="LETTER" style={styles.page}>
+        <PageHeader />
         <Text style={styles.annexTitle}>ANNEX &#x201C;A&#x201D; &#x2014; SERVICE FEES</Text>
         <View style={styles.table}>
           <View style={styles.trow}>
@@ -407,6 +470,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
 
       {/* ── Annex B ── */}
       <Page size="LETTER" style={styles.page}>
+        <PageHeader />
         <Text style={styles.annexTitle}>ANNEX &#x201C;B&#x201D; &#x2014; PROPERTY INVENTORY AND TURNOVER CHECKLIST</Text>
         {!hasAnnexB ? (
           <>
@@ -501,6 +565,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
 
       {/* ── Annex C ── */}
       <Page size="LETTER" style={styles.page}>
+        <PageHeader />
         <Text style={styles.annexTitle}>ANNEX &#x201C;C&#x201D; &#x2014; OWNER AUTHORITY MATRIX</Text>
 
         <Text style={styles.h2}>Leasing Authority</Text>
@@ -538,6 +603,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
 
       {/* ── Certificate of Electronic Signature ── */}
       <Page size="LETTER" style={styles.page}>
+        <PageHeader />
         <Text style={styles.annexTitle}>CERTIFICATE OF ELECTRONIC SIGNATURE</Text>
         <Text style={styles.p}>
           This document was executed using electronic signatures in accordance with Republic Act No. 8792
@@ -567,6 +633,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
 
       {/* ── Attachment: Owner Government ID ── */}
       <Page size="LETTER" style={styles.page}>
+        <PageHeader />
         <Text style={styles.annexTitle}>ATTACHMENT &#x2014; OWNER GOVERNMENT ID</Text>
         <Field label="ID Type:" value={input.ownerIdTypeLabel} />
         <Field label="ID Number:" value={input.ownerIdNumber} />

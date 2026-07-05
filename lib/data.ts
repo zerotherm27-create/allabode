@@ -52,6 +52,8 @@ export type ListingStatus = "For Sale" | "For Lease" | "Reserved" | "Sold";
 
 export type Listing = {
   id: string;
+  /** Real DB primary key (UUID) — absent for mock rows. Needed for booking/scheduling RPCs, which reference listings(id), not the slug. */
+  dbId?: string;
   title: string;
   location: string;
   price: string;
@@ -75,6 +77,9 @@ export type Listing = {
   leaseTerms?: string;
   saleTerms?: string;
   availabilityDate?: string;
+  /** AI-assisted nearby-places cache, refreshed on demand by staff. */
+  nearbyPlaces?: { name: string; category: string; distanceM: number; blurb?: string }[];
+  nearbyPlacesUpdatedAt?: string;
 };
 
 /** "Studio" for 0 bedrooms, "N Bedroom(s)" otherwise, undefined when unspecified. */

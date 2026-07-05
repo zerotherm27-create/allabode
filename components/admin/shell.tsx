@@ -55,6 +55,7 @@ const navGroups = [
     group: "Marketing",
     items: [
       { label: "Listings",   icon: "home_work",     href: "/admin/listings"   },
+      { label: "Viewings",   icon: "event_available", href: "/admin/viewings" },
       { label: "Inquiries",  icon: "forum",         href: "/admin/inquiries"  },
       { label: "Appraisals", icon: "analytics",     href: "/admin/appraisals" },
       { label: "PM Leads",   icon: "corporate_fare",href: "/admin/leads"      },

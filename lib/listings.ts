@@ -4,6 +4,7 @@ import {
   type Listing,
   type ListingStatus,
 } from "@/lib/data";
+import type { NearbyPlace } from "@/lib/nearby-places";
 
 /**
  * Public, read-only listings access. Uses a plain anon client (no cookies) so it
@@ -17,9 +18,10 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const db = url && key ? createClient(url, key) : null;
 
 const COLS =
-  "slug,title,location,price,price_label,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at,listing_images(url,alt_text,sort_order)";
+  "id,slug,title,location,price,price_label,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at,nearby_places,nearby_places_updated_at,listing_images(url,alt_text,sort_order)";
 
 type Row = {
+  id: string;
   slug: string;
   title: string;
   location: string | null;
@@ -39,6 +41,8 @@ type Row = {
   sale_terms: string | null;
   availability_date: string | null;
   is_featured: boolean;
+  nearby_places: NearbyPlace[] | null;
+  nearby_places_updated_at: string | null;
   listing_images: { url: string; alt_text: string | null; sort_order: number }[] | null;
 };
 
@@ -78,6 +82,7 @@ function mapRow(row: Row): Listing {
     .map((img) => ({ url: img.url, alt: img.alt_text }));
   return {
     id: row.slug,
+    dbId: row.id,
     title: row.title,
     location: row.location ?? "",
     price: fmtPrice(row),
@@ -96,6 +101,8 @@ function mapRow(row: Row): Listing {
     leaseTerms: row.lease_terms ?? undefined,
     saleTerms: row.sale_terms ?? undefined,
     availabilityDate: row.availability_date ?? undefined,
+    nearbyPlaces: row.nearby_places ?? undefined,
+    nearbyPlacesUpdatedAt: row.nearby_places_updated_at ?? undefined,
   };
 }
 

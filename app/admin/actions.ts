@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LISTING_IMAGES_BUCKET } from "@/lib/storage";
 import { draftListingDescription, type ListingDescriptionInput } from "@/lib/ai/listing-description";
+import { refreshNearbyPlaces as runNearbyPlacesRefresh } from "@/lib/nearby-places";
 
 function listingImagePath(url: string): string | null {
   const marker = `/${LISTING_IMAGES_BUCKET}/`;
@@ -108,6 +109,29 @@ export async function toggleFeatured(id: string, value: boolean) {
 
 export async function generateListingDescription(input: ListingDescriptionInput): Promise<string | null> {
   return draftListingDescription(input);
+}
+
+export async function refreshNearbyPlaces(listingId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const { data: listing, error: fetchErr } = await supabase
+    .from("listings")
+    .select("slug, location")
+    .eq("id", listingId)
+    .maybeSingle();
+  if (fetchErr || !listing) return { ok: false, error: "Listing not found." };
+
+  const result = await runNearbyPlacesRefresh(listing.location ?? "");
+  if (!result.ok) return result;
+
+  const { error: updateErr } = await supabase
+    .from("listings")
+    .update({ nearby_places: result.places, nearby_places_updated_at: new Date().toISOString() })
+    .eq("id", listingId);
+  if (updateErr) return { ok: false, error: updateErr.message };
+
+  revalidatePath(`/admin/listings/${listingId}/edit`);
+  if (listing.slug) revalidatePath(`/listings/${listing.slug}`);
+  return { ok: true };
 }
 
 /* ---- Listing images ---- */

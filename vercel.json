@@ -3,6 +3,7 @@
     { "path": "/api/cron/generate-invoices",   "schedule": "0 1 * * *" },
     { "path": "/api/cron/check-lease-expiry",  "schedule": "0 8 * * *" },
     { "path": "/api/cron/generate-owner-soa",  "schedule": "0 2 1 * *" },
-    { "path": "/api/cron/auto-publish-soa",    "schedule": "0 2 2 * *" }
+    { "path": "/api/cron/auto-publish-soa",    "schedule": "0 2 2 * *" },
+    { "path": "/api/cron/check-viewing-reminders", "schedule": "0 9 * * *" }
   ]
 }

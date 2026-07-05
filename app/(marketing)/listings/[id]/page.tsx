@@ -6,8 +6,10 @@ import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
 import { ListingGallery } from "@/components/listing-gallery";
 import { ListingMap } from "@/components/listing-map";
+import { ListingNearbyPlaces } from "@/components/listing-nearby-places";
 import { ListingShareButton } from "@/components/listing-share-button";
 import { InquiryForm } from "@/components/forms/lead-forms";
+import { ViewingScheduler } from "@/components/forms/viewing-scheduler";
 import { formatBeds, statusStyles } from "@/lib/data";
 import { getListing, getListings } from "@/lib/listings";
 
@@ -115,6 +117,8 @@ export default async function ListingDetailPage({ params }: Params) {
 
             <ListingMap location={listing.location} />
 
+            {listing.nearbyPlaces && <ListingNearbyPlaces places={listing.nearbyPlaces} />}
+
             {/* Property details (brief: listing/property type, furnishing, parking,
                 lot area, lease/sale terms, availability) */}
             <div className="mt-8">
@@ -179,7 +183,7 @@ export default async function ListingDetailPage({ params }: Params) {
                 Speak with the licensed broker handling this property.
               </p>
               <div className="mt-5 flex flex-col gap-3">
-                <Button href="#inquire">Schedule a Viewing</Button>
+                <Button href={listing.dbId ? "#schedule" : "#inquire"}>Schedule a Viewing</Button>
                 <Button href="/appraisal" variant="ghost">
                   Request Appraisal
                 </Button>
@@ -196,17 +200,36 @@ export default async function ListingDetailPage({ params }: Params) {
         </Container>
       </section>
 
+      {/* Schedule a viewing */}
+      {listing.dbId && (
+        <section id="schedule" className="scroll-mt-24 bg-surface-gray py-section">
+          <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr]">
+            <div>
+              <p className="label-caps text-gold">Schedule</p>
+              <h2 className="mt-3 font-display text-2xl font-bold text-navy sm:text-3xl">
+                Book a viewing time
+              </h2>
+              <p className="mt-4 text-slate">
+                Pick an open slot below and we&#x2019;ll confirm your viewing for{" "}
+                <strong className="text-navy">{listing.title}</strong>.
+              </p>
+            </div>
+            <ViewingScheduler listingId={listing.dbId} listingTitle={listing.title} />
+          </Container>
+        </section>
+      )}
+
       {/* Inquiry form */}
-      <section id="inquire" className="scroll-mt-24 bg-surface-gray py-section">
+      <section id="inquire" className="scroll-mt-24 py-section">
         <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <p className="label-caps text-gold">Inquire</p>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy sm:text-3xl">
-              Request details or a viewing
+              Have a question instead?
             </h2>
             <p className="mt-4 text-slate">
               Send your details and a licensed agent will reach out within one
-              business day to answer questions or schedule a viewing for{" "}
+              business day to answer questions about{" "}
               <strong className="text-navy">{listing.title}</strong>.
             </p>
           </div>

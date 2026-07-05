@@ -218,7 +218,7 @@ export default async function OwnerDashboard({
                               )}
 
                               {s.status === "published" && (
-                                <Link href={`/dashboard/owner/statements/${s.id}`} aria-label="View SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" title="View SOA">
+                                <Link href={`/dashboard/owner/statements/${s.id}`} aria-label="View SOA" className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy press" title="View SOA">
                                   <Icon name="visibility" size={18} />
                                 </Link>
                               )}
@@ -345,7 +345,7 @@ export default async function OwnerDashboard({
                     <Icon name="download" size={15} /> Download
                   </a>
                 )}
-                <Link href={statementHref()} className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy" aria-label="Close SOA preview">
+                <Link href={statementHref()} className="flex size-8 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy press" aria-label="Close SOA preview">
                   <Icon name="close" size={18} />
                 </Link>
               </div>

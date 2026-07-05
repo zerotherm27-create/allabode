@@ -54,10 +54,10 @@ export default async function WorkOrdersPage({
           <p className="mt-1 text-sm text-slate">{orders.length} {filterStatus ?? "active"} order{orders.length !== 1 ? "s" : ""}</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/admin/work-orders/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+          <Link href="/admin/work-orders/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800 press">
             <Icon name="add" size={18} /> New work order
           </Link>
-          <Link href="/admin/maintenance" className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-navy hover:bg-surface-gray">
+          <Link href="/admin/maintenance" className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-navy hover:bg-surface-gray press">
             PM plans
           </Link>
         </div>
@@ -70,7 +70,7 @@ export default async function WorkOrdersPage({
           { href: "/admin/work-orders?status=completed", label: "Completed" },
           { href: "/admin/work-orders?status=verified", label: "Verified" },
         ].map(({ href, label }) => (
-          <Link key={href} href={href} className="rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-navy hover:border-navy-700">
+          <Link key={href} href={href} className="rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-navy hover:border-navy-700 press">
             {label}
           </Link>
         ))}

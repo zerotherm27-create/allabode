@@ -151,6 +151,15 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Press feedback — every native <button> gets a subtle scale-down on click,
+   matching the shared Button component's existing active:scale-[0.98]. */
+button:not(:disabled) {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
 /* Reusable utility primitives */
 @utility container-site {
   width: 100%;
@@ -166,6 +175,15 @@ h3 {
     letter-spacing: var(--text-caps--letter-spacing);
     font-weight: 600;
     text-transform: uppercase;
+  }
+
+  /* Press feedback for non-<button> clickable elements styled as buttons
+     (e.g. a <Link> rendered as a button) — same scale/timing as native buttons. */
+  .press {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .press:active {
+    transform: scale(0.98);
   }
 }
 

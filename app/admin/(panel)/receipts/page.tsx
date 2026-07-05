@@ -55,7 +55,7 @@ export default async function AdminReceiptsPage() {
           <h1 className="font-display text-2xl font-bold text-navy">Receipts</h1>
           <p className="mt-1 text-sm text-slate">{rows.length} total · AI-extracted, pending review until approved</p>
         </div>
-        <Link href="/admin/receipts/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800">
+        <Link href="/admin/receipts/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 press">
           <Icon name="upload" size={20} /> Upload receipt
         </Link>
       </div>

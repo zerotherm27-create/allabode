@@ -103,7 +103,7 @@ export default async function EditLeasePage({
       <div className="rounded-lg border border-line bg-surface">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h2 className="font-display text-base font-semibold text-navy">Invoices</h2>
-          <Link href={`/admin/invoices/new?lease_id=${id}`} className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800">
+          <Link href={`/admin/invoices/new?lease_id=${id}`} className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800 press">
             <Icon name="add" size={16} /> New invoice
           </Link>
         </div>
@@ -139,7 +139,7 @@ export default async function EditLeasePage({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Link href={`/admin/invoices/${inv.id}`} aria-label="View" className="flex h-8 w-8 items-center justify-center rounded-md text-navy hover:bg-surface-gray">
+                      <Link href={`/admin/invoices/${inv.id}`} aria-label="View" className="flex h-8 w-8 items-center justify-center rounded-md text-navy hover:bg-surface-gray press">
                         <Icon name="open_in_new" size={16} />
                       </Link>
                       {inv.status !== "voided" && (

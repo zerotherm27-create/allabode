@@ -37,7 +37,7 @@ const columns: Column<Row>[] = [
   ) },
   { header: "Actions", align: "right", cell: (l) => (
     <div className="flex items-center justify-end gap-1">
-      <Link href={`/admin/listings/${l.id}/edit`} aria-label="Edit" className="flex h-9 w-9 items-center justify-center rounded-md text-navy hover:bg-surface-gray"><Icon name="edit" size={18} /></Link>
+      <Link href={`/admin/listings/${l.id}/edit`} aria-label="Edit" className="flex h-9 w-9 items-center justify-center rounded-md text-navy hover:bg-surface-gray press"><Icon name="edit" size={18} /></Link>
       {l.status !== "Published" && (
         <form action={setListingStatus.bind(null, l.id, "Published")}>
           <button type="submit" className="rounded-md px-2 py-1 text-xs font-medium text-available hover:bg-surface-gray">Publish</button>
@@ -70,7 +70,7 @@ export default async function AdminListingsPage() {
           <h1 className="font-display text-2xl font-bold text-navy">Listings</h1>
           <p className="mt-1 text-sm text-slate">{rows.length} total</p>
         </div>
-        <Link href="/admin/listings/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800">
+        <Link href="/admin/listings/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 press">
           <Icon name="add" size={20} /> Add listing
         </Link>
       </div>

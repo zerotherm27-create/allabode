@@ -167,13 +167,13 @@ export default async function AdminContractsPage() {
           <p className="mt-1 text-sm text-slate">{rows.length} total</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/admin/contracts/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800">
+          <Link href="/admin/contracts/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 press">
             <Icon name="add" size={20} /> PM agreement
           </Link>
-          <Link href="/admin/contracts/tenancy/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray">
+          <Link href="/admin/contracts/tenancy/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
             <Icon name="add" size={20} /> Tenancy agreement
           </Link>
-          <Link href="/admin/contracts/parking/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray">
+          <Link href="/admin/contracts/parking/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
             <Icon name="add" size={20} /> Parking agreement
           </Link>
         </div>

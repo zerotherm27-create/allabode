@@ -173,7 +173,7 @@ export default async function TenantDashboard({
                                 <p className="text-xs text-slate capitalize">{s.status}</p>
                               </div>
                               <span className="text-sm font-semibold text-navy">{peso(Number(s.closing_balance))}</span>
-                              <Link href={`/dashboard/tenant/statements/${s.id}`} aria-label="View SOA" className="flex size-9 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy">
+                              <Link href={`/dashboard/tenant/statements/${s.id}`} aria-label="View SOA" className="flex size-9 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy press">
                                 <Icon name="visibility" size={20} />
                               </Link>
                             </li>

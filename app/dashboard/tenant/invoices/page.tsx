@@ -174,11 +174,11 @@ export default async function TenantInvoicesPage({
                             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
                               <p className="text-sm text-slate">{payable ? "Payment due" : "Invoice document"}</p>
                               <div className="flex gap-2">
-                                <Link href={`/dashboard/tenant/invoices/${inv.id}`} className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray">
+                                <Link href={`/dashboard/tenant/invoices/${inv.id}`} className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray press">
                                   <Icon name="visibility" size={16} /> View
                                 </Link>
                                 {payable && (
-                                  <Link href={`/dashboard/tenant/invoices/${inv.id}/pay`} className="inline-flex items-center gap-1.5 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800">
+                                  <Link href={`/dashboard/tenant/invoices/${inv.id}/pay`} className="inline-flex items-center gap-1.5 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800 press">
                                     <Icon name="payments" size={16} /> Pay now
                                   </Link>
                                 )}

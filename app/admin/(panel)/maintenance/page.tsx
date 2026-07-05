@@ -43,10 +43,10 @@ export default async function MaintenancePlansPage() {
           <p className="mt-1 text-sm text-slate">{plans.length} plans · {dueSoon.length} due within 7 days</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/admin/maintenance/plans/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+          <Link href="/admin/maintenance/plans/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800 press">
             <Icon name="add" size={18} /> New plan
           </Link>
-          <Link href="/admin/work-orders" className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-navy hover:bg-surface-gray">
+          <Link href="/admin/work-orders" className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-navy hover:bg-surface-gray press">
             Work orders
           </Link>
         </div>

@@ -20,7 +20,7 @@ const columns: Column<Row>[] = [
   { header: "Status", cell: (r) => <span className="rounded-full bg-surface-gray px-2.5 py-1 text-xs font-medium text-navy">{r.status.replace(/_/g, " ")}</span> },
   { header: "Actions", align: "right", cell: (r) => (
     <div className="flex items-center justify-end gap-1">
-      <Link href={`/admin/leases/${r.id}/edit`} aria-label="Edit" className="flex h-9 w-9 items-center justify-center rounded-md text-navy hover:bg-surface-gray"><Icon name="edit" size={18} /></Link>
+      <Link href={`/admin/leases/${r.id}/edit`} aria-label="Edit" className="flex h-9 w-9 items-center justify-center rounded-md text-navy hover:bg-surface-gray press"><Icon name="edit" size={18} /></Link>
       <form action={deleteLease.bind(null, r.id)}><button type="submit" aria-label="Delete" className="flex h-9 w-9 items-center justify-center rounded-md text-error hover:bg-error-bg"><Icon name="delete" size={18} /></button></form>
     </div>
   ) },
@@ -43,7 +43,7 @@ export default async function AdminLeasesPage({
           <h1 className="font-display text-2xl font-bold text-navy">Leases</h1>
           <p className="mt-1 text-sm text-slate">{rows.length} total</p>
         </div>
-        <Link href="/admin/leases/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800">
+        <Link href="/admin/leases/new" className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 press">
           <Icon name="add" size={20} /> Add lease
         </Link>
       </div>

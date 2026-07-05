@@ -48,7 +48,7 @@ export default async function TenantInvoiceViewPage({ params }: { params: Promis
           </div>
           <div className="flex flex-wrap gap-2">
             {canPay && (
-              <Link href={`/dashboard/tenant/invoices/${id}/pay`} className="inline-flex items-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800">
+              <Link href={`/dashboard/tenant/invoices/${id}/pay`} className="inline-flex items-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800 press">
                 <Icon name="payments" size={18} /> Pay now
               </Link>
             )}

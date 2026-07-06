@@ -3,8 +3,13 @@ import { Icon } from "@/components/icon";
 import { ListingForm } from "@/components/admin/listing-form";
 import { createListing } from "@/app/admin/actions";
 import { isAiConfigured } from "@/lib/ai/client";
+import { createClient } from "@/lib/supabase/server";
+import { getListingUnitOptions } from "@/lib/admin/listing-units";
 
-export default function NewListingPage() {
+export default async function NewListingPage() {
+  const supabase = await createClient();
+  const units = await getListingUnitOptions(supabase);
+
   return (
     <div className="mx-auto max-w-4xl">
       <Link
@@ -16,7 +21,7 @@ export default function NewListingPage() {
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">New listing</h1>
       <div className="mt-6">
-        <ListingForm action={createListing} aiEnabled={isAiConfigured()} />
+        <ListingForm action={createListing} aiEnabled={isAiConfigured()} units={units} />
       </div>
     </div>
   );

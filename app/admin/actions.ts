@@ -66,6 +66,7 @@ function listingRow(fd: FormData) {
     owner_name: s(fd, "owner_name"),
     owner_contact: s(fd, "owner_contact"),
     internal_notes: s(fd, "internal_notes"),
+    unit_id: s(fd, "unit_id"),
   };
 }
 

@@ -35,6 +35,22 @@ export type ListingValues = {
   owner_name?: string;
   owner_contact?: string;
   internal_notes?: string;
+  unit_id?: string | null;
+};
+
+/** A property-management unit, offered as an optional auto-fill source for a listing. */
+export type UnitOption = {
+  id: string;
+  unitLabel: string;
+  propertyName: string;
+  propertyAddress: string;
+  city: string | null;
+  province: string | null;
+  propertyType: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  floorArea: number | null;
+  baseRent: number | null;
 };
 
 const CATEGORIES = ["For Sale", "For Lease"];
@@ -91,17 +107,51 @@ export function ListingForm({
   action,
   initial = {},
   aiEnabled = false,
+  units = [],
 }: {
   action: (fd: FormData) => void | Promise<void>;
   initial?: ListingValues;
   /** Whether OPENAI_API_KEY is configured server-side — hides the AI-generate button otherwise. */
   aiEnabled?: boolean;
+  /** Property-management units offered as an optional auto-fill source. */
+  units?: UnitOption[];
 }) {
   const v = initial;
   const formRef = useRef<HTMLFormElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const listingCategoryRef = useRef<HTMLSelectElement>(null);
+  const propertyTypeRef = useRef<HTMLSelectElement>(null);
+  const locationRef = useRef<HTMLInputElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
+  const provinceRef = useRef<HTMLInputElement>(null);
+  const privateAddressRef = useRef<HTMLInputElement>(null);
+  const priceRef = useRef<HTMLInputElement>(null);
+  const priceLabelRef = useRef<HTMLInputElement>(null);
+  const bedroomsRef = useRef<HTMLInputElement>(null);
+  const bathroomsRef = useRef<HTMLInputElement>(null);
+  const floorAreaRef = useRef<HTMLInputElement>(null);
   const [genPending, setGenPending] = useState(false);
   const [genError, setGenError] = useState("");
+
+  function handleUnitPick(unitId: string) {
+    const u = units.find((x) => x.id === unitId);
+    if (!u) return;
+    if (listingCategoryRef.current) listingCategoryRef.current.value = "For Lease";
+    if (u.propertyType && propertyTypeRef.current) propertyTypeRef.current.value = u.propertyType;
+    if (locationRef.current) locationRef.current.value = [u.propertyName, u.city].filter(Boolean).join(", ");
+    if (cityRef.current && u.city) cityRef.current.value = u.city;
+    if (provinceRef.current && u.province) provinceRef.current.value = u.province;
+    if (privateAddressRef.current) {
+      privateAddressRef.current.value = [u.propertyAddress, u.unitLabel].filter(Boolean).join(", ");
+    }
+    if (u.baseRent != null) {
+      if (priceRef.current) priceRef.current.value = String(u.baseRent);
+      if (priceLabelRef.current) priceLabelRef.current.value = "per month";
+    }
+    if (u.bedrooms != null && bedroomsRef.current) bedroomsRef.current.value = String(u.bedrooms);
+    if (u.bathrooms != null && bathroomsRef.current) bathroomsRef.current.value = String(u.bathrooms);
+    if (u.floorArea != null && floorAreaRef.current) floorAreaRef.current.value = String(u.floorArea);
+  }
 
   async function handleGenerateDescription() {
     if (!formRef.current) return;
@@ -141,6 +191,26 @@ export function ListingForm({
 
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-6">
+      {units.length > 0 && (
+        <Group title="Link to a unit">
+          <F label="Property-management unit" hint="Auto-fills location, price, and specs below — you can still edit them after picking." span>
+            <select
+              name="unit_id"
+              defaultValue={v.unit_id ?? ""}
+              onChange={(e) => handleUnitPick(e.target.value)}
+              className={inputCls}
+            >
+              <option value="">Not linked — enter manually</option>
+              {units.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.propertyName} — {u.unitLabel}
+                </option>
+              ))}
+            </select>
+          </F>
+        </Group>
+      )}
+
       <Group title="Basics">
         <F label="Title"><input name="title" defaultValue={v.title} required className={inputCls} /></F>
         <F label="Slug" hint="Auto-generated from title if left blank">
@@ -167,7 +237,7 @@ export function ListingForm({
 
       <Group title="Classification">
         <F label="Listing category">
-          <select name="listing_category" defaultValue={v.listing_category ?? "For Sale"} className={inputCls}>
+          <select ref={listingCategoryRef} name="listing_category" defaultValue={v.listing_category ?? "For Sale"} className={inputCls}>
             {CATEGORIES.map((o) => <option key={o}>{o}</option>)}
           </select>
         </F>
@@ -177,7 +247,7 @@ export function ListingForm({
           </select>
         </F>
         <F label="Property type">
-          <select name="property_type" defaultValue={v.property_type ?? "Condo"} className={inputCls}>
+          <select ref={propertyTypeRef} name="property_type" defaultValue={v.property_type ?? "Condo"} className={inputCls}>
             {PROPERTY_TYPES.map((o) => <option key={o}>{o}</option>)}
           </select>
         </F>
@@ -193,22 +263,22 @@ export function ListingForm({
       </Group>
 
       <Group title="Location">
-        <F label="Location (public)"><input name="location" defaultValue={v.location} className={inputCls} /></F>
-        <F label="City"><input name="city" defaultValue={v.city} className={inputCls} /></F>
-        <F label="Province"><input name="province" defaultValue={v.province} className={inputCls} /></F>
+        <F label="Location (public)"><input ref={locationRef} name="location" defaultValue={v.location} className={inputCls} /></F>
+        <F label="City"><input ref={cityRef} name="city" defaultValue={v.city} className={inputCls} /></F>
+        <F label="Province"><input ref={provinceRef} name="province" defaultValue={v.province} className={inputCls} /></F>
         <F label="Exact address" hint="Private — admin only">
-          <input name="private_address" defaultValue={v.private_address} className={inputCls} />
+          <input ref={privateAddressRef} name="private_address" defaultValue={v.private_address} className={inputCls} />
         </F>
       </Group>
 
       <Group title="Pricing & specs">
-        <F label="Price (₱)"><input name="price" type="number" step="0.01" defaultValue={v.price ?? undefined} className={inputCls} /></F>
+        <F label="Price (₱)"><input ref={priceRef} name="price" type="number" step="0.01" defaultValue={v.price ?? undefined} className={inputCls} /></F>
         <F label="Price label" hint="e.g. per month, total contract price">
-          <input name="price_label" defaultValue={v.price_label} className={inputCls} />
+          <input ref={priceLabelRef} name="price_label" defaultValue={v.price_label} className={inputCls} />
         </F>
-        <F label="Bedrooms" hint="0 = Studio"><input name="bedrooms" type="number" min={0} defaultValue={v.bedrooms ?? undefined} className={inputCls} /></F>
-        <F label="Bathrooms"><input name="bathrooms" type="number" defaultValue={v.bathrooms ?? undefined} className={inputCls} /></F>
-        <F label="Floor area (sqm)"><input name="floor_area" type="number" step="0.01" defaultValue={v.floor_area ?? undefined} className={inputCls} /></F>
+        <F label="Bedrooms" hint="0 = Studio"><input ref={bedroomsRef} name="bedrooms" type="number" min={0} defaultValue={v.bedrooms ?? undefined} className={inputCls} /></F>
+        <F label="Bathrooms"><input ref={bathroomsRef} name="bathrooms" type="number" defaultValue={v.bathrooms ?? undefined} className={inputCls} /></F>
+        <F label="Floor area (sqm)"><input ref={floorAreaRef} name="floor_area" type="number" step="0.01" defaultValue={v.floor_area ?? undefined} className={inputCls} /></F>
         <F label="Lot area (sqm)"><input name="lot_area" type="number" step="0.01" defaultValue={v.lot_area ?? undefined} className={inputCls} /></F>
         <F label="Parking slots"><input name="parking" type="number" defaultValue={v.parking ?? undefined} className={inputCls} /></F>
         <F label="Furnishing">

@@ -7,6 +7,7 @@ import { RefreshNearbyPlacesButton } from "@/components/admin/refresh-nearby-pla
 import { updateListing } from "@/app/admin/actions";
 import { createClient } from "@/lib/supabase/server";
 import { isAiConfigured } from "@/lib/ai/client";
+import { getListingUnitOptions } from "@/lib/admin/listing-units";
 
 export default async function EditListingPage({
   params,
@@ -15,13 +16,14 @@ export default async function EditListingPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data }, { data: images }] = await Promise.all([
+  const [{ data }, { data: images }, units] = await Promise.all([
     supabase.from("listings").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("listing_images")
       .select("id, url, alt_text, sort_order")
       .eq("listing_id", id)
       .order("sort_order", { ascending: true }),
+    getListingUnitOptions(supabase),
   ]);
   if (!data) notFound();
 
@@ -51,7 +53,7 @@ export default async function EditListingPage({
         <RefreshNearbyPlacesButton listingId={id} lastUpdated={nearbyPlacesUpdatedAt} />
       </div>
       <div className="mt-6">
-        <ListingForm action={action} initial={initial} aiEnabled={isAiConfigured()} />
+        <ListingForm action={action} initial={initial} aiEnabled={isAiConfigured()} units={units} />
       </div>
     </div>
   );

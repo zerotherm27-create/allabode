@@ -9,7 +9,7 @@ import { createNotification } from "@/lib/notify";
 import { sendEmail } from "@/lib/email";
 
 function siteUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabode.vercel.app").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabodeph.com").replace(/\/$/, "");
 }
 
 async function notifyOwner(

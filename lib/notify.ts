@@ -38,7 +38,7 @@ export async function createNotification(
         subject: opts.title,
         html: `<p>${opts.body}</p>${
           opts.link
-            ? `<p><a href="${process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabode.vercel.app"}${opts.link}">View in portal</a></p>`
+            ? `<p><a href="${process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabodeph.com"}${opts.link}">View in portal</a></p>`
             : ""
         }`,
       });

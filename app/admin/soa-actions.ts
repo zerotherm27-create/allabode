@@ -21,7 +21,7 @@ function str(fd: FormData, k: string): string | null {
 }
 
 function siteUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabode.vercel.app").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabodeph.com").replace(/\/$/, "");
 }
 
 function revalidateOwnerStatementPaths(statementId: string) {

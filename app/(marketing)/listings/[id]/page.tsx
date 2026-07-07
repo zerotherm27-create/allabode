@@ -23,7 +23,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const listing = await getListing(id);
-  if (!listing) return { title: "Listing not found" };
+  if (!listing)
+    return {
+      title: "Listing not found",
+      description: "This property listing could not be found. Browse current All Abode listings for available properties.",
+    };
   return {
     title: `${listing.title} | ${listing.price}`,
     description: `${listing.title} in ${listing.location}. ${listing.status}, ${listing.area}.`,
@@ -78,11 +82,11 @@ export default async function ListingDetailPage({ params }: Params) {
             <nav aria-label="Breadcrumb" className="mb-5">
               <ol className="flex flex-wrap items-center gap-1.5 text-xs text-slate">
                 <li>
-                  <Link href="/" className="hover:text-gold">Home</Link>
+                  <Link href="/" className="hover:text-gold-ink">Home</Link>
                 </li>
                 <li aria-hidden="true"><Icon name="chevron_right" size={14} /></li>
                 <li>
-                  <Link href="/listings" className="hover:text-gold">Listings</Link>
+                  <Link href="/listings" className="hover:text-gold-ink">Listings</Link>
                 </li>
                 <li aria-hidden="true"><Icon name="chevron_right" size={14} /></li>
                 <li aria-current="page" className="font-medium text-navy">{listing.title}</li>
@@ -100,7 +104,7 @@ export default async function ListingDetailPage({ params }: Params) {
               {listing.title}
             </h1>
             <p className="mt-2 flex items-center gap-1.5 text-slate">
-              <Icon name="location_on" size={20} className="text-gold" />
+              <Icon name="location_on" size={20} className="text-gold-ink" />
               {listing.location}
             </p>
 
@@ -176,7 +180,7 @@ export default async function ListingDetailPage({ params }: Params) {
                     key={h.label}
                     className="flex items-center gap-3 border border-line bg-surface px-4 py-3"
                   >
-                    <Icon name={h.icon} size={22} className="text-gold" />
+                    <Icon name={h.icon} size={22} className="text-gold-ink" />
                     <span className="text-sm text-ink">{h.label}</span>
                   </div>
                 ))}
@@ -218,7 +222,7 @@ export default async function ListingDetailPage({ params }: Params) {
         <section id="schedule" className="scroll-mt-24 bg-surface-gray py-section">
           <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr]">
             <div>
-              <p className="label-caps text-gold">Schedule</p>
+              <p className="label-caps text-gold-ink">Schedule</p>
               <h2 className="mt-3 font-display text-2xl font-bold text-navy sm:text-3xl">
                 Book a viewing time
               </h2>
@@ -236,7 +240,7 @@ export default async function ListingDetailPage({ params }: Params) {
       <section id="inquire" className="scroll-mt-24 py-section">
         <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr]">
           <div>
-            <p className="label-caps text-gold">Inquire</p>
+            <p className="label-caps text-gold-ink">Inquire</p>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy sm:text-3xl">
               Have a question instead?
             </h2>

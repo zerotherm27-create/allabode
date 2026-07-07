@@ -100,7 +100,7 @@ function FormShell({
           the purpose of responding to my inquiry, coordinating services, and
           providing property-related assistance. I understand that my
           information will be handled according to the{" "}
-          <a href="/privacy-policy" className="text-navy-700 underline underline-offset-2 hover:text-gold">
+          <a href="/privacy-policy" className="text-navy-700 underline underline-offset-2 hover:text-gold-ink">
             Privacy Policy
           </a>
           .

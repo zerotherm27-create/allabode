@@ -135,15 +135,15 @@ export default async function PropertyManagementPage() {
   return (
     <>
       <JsonLd data={serviceSchema({ name: "Property Management Services", description: "Rent collection, maintenance coordination, cleaning, furnishing, fit-out, turnover, and property care for owners.", path: "/property-solutions/property-management" })} />
-      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Property Solutions", href: "/property-solutions" }, { label: "Property Management" }])} />
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Services", href: "/property-solutions" }, { label: "Property Management" }])} />
       <PageHero
-        eyebrow="Property Management Solutions"
-        title="Property Management Solutions"
+        eyebrow="For Owners"
+        title="Property Management"
         subtitle="Owning property should not mean handling every concern alone. All Abode helps property owners manage the day-to-day needs of their units, from rent coordination and maintenance to cleaning, furnishing, turnover, and owner updates. This service is ideal for busy owners, investors, OFWs, and owners who want local support for their property."
         image={s(settings, "page_pm_image") || undefined}
         crumbs={[
           { label: "Home", href: "/" },
-          { label: "Property Solutions", href: "/property-solutions" },
+          { label: "Services", href: "/property-solutions" },
           { label: "Property Management" },
         ]}
       >
@@ -191,7 +191,7 @@ export default async function PropertyManagementPage() {
             {whoFor.map((w) => (
               <StaggerItem as="li" key={w}>
                 <div className="flex items-start gap-3 text-slate">
-                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold" fill={1} />
+                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold-ink" fill={1} />
                   <span>{w}</span>
                 </div>
               </StaggerItem>
@@ -228,19 +228,19 @@ export default async function PropertyManagementPage() {
                       <Icon name={p.icon} size={24} />
                     </span>
                     {p.featured && (
-                      <span className="label-caps bg-gold/15 px-3 py-1 text-gold-bright">
+                      <span className="label-caps bg-gold/15 px-3 py-1 text-gold-ink">
                         Most Popular
                       </span>
                     )}
                   </div>
                   <h3 className="mt-4 font-display text-lg font-bold text-navy">{p.name}</h3>
-                  <p className="mt-2 text-sm font-semibold text-gold-bright">{p.summary}</p>
+                  <p className="mt-2 text-sm font-semibold text-gold-ink">{p.summary}</p>
                   <p className="mt-3 text-sm leading-relaxed text-slate">{p.description}</p>
                   <p className="label-caps mt-5 text-slate">Included Services</p>
                   <ul className="mt-3 flex flex-1 flex-col gap-2.5 border-t border-line pt-4 text-sm text-slate">
                     {p.features.map((f) => (
                       <li key={f} className="flex items-start gap-2">
-                        <Icon name="check" size={18} className="mt-0.5 shrink-0 text-gold" />
+                        <Icon name="check" size={18} className="mt-0.5 shrink-0 text-gold-ink" />
                         {f}
                       </li>
                     ))}

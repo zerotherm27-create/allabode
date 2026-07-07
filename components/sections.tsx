@@ -38,18 +38,18 @@ export function FounderSection({
         </div>
 
         <div>
-          <p className="label-caps text-gold">{eyebrow}</p>
+          <p className="label-caps text-gold-ink">{eyebrow}</p>
           <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
             {founder.name}
           </h2>
           <p className="mt-2 font-display text-lg text-navy-700">{founder.title}</p>
           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate">
             <span className="flex items-center gap-1.5">
-              <Icon name="verified" size={18} className="text-gold" />
+              <Icon name="verified" size={18} className="text-gold-ink" />
               {founder.license}
             </span>
             <span className="flex items-center gap-1.5">
-              <Icon name="business_center" size={18} className="text-gold" />
+              <Icon name="business_center" size={18} className="text-gold-ink" />
               {founder.relationship}
             </span>
           </div>
@@ -150,7 +150,9 @@ export function SectionHeading({
         align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"
       }
     >
-      {eyebrow && <p className="label-caps text-gold">{eyebrow}</p>}
+      {eyebrow && (
+        <p className={`label-caps ${invert ? "text-gold" : "text-gold-ink"}`}>{eyebrow}</p>
+      )}
       <h2
         className={`mt-3 font-display text-3xl font-bold sm:text-4xl ${
           invert ? "text-white" : "text-navy"

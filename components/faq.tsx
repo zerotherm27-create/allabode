@@ -29,7 +29,7 @@ export function Faq({ items }: { items: FaqItem[] }) {
                   {item.q}
                 </span>
                 <span
-                  className={`shrink-0 text-gold transition-transform duration-[var(--dur-mid)] ease-[var(--ease-out)] ${
+                  className={`shrink-0 text-gold-ink transition-transform duration-[var(--dur-mid)] ease-[var(--ease-out)] ${
                     isOpen ? "rotate-180" : ""
                   }`}
                 >

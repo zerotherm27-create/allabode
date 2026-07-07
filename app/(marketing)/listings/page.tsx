@@ -40,7 +40,7 @@ export default async function ListingsPage() {
               <Link
                 key={c.href}
                 href={c.href}
-                className="label-caps border border-line bg-surface px-4 py-2.5 text-navy transition-colors hover:border-gold hover:text-gold"
+                className="label-caps border border-line bg-surface px-4 py-2.5 text-navy transition-colors hover:border-gold-ink hover:text-gold-ink"
               >
                 {c.label}
               </Link>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
-import { PageHero, SectionHeading } from "@/components/sections";
+import { PageHero, SectionHeading, FeatureItem } from "@/components/sections";
 import { Faq } from "@/components/faq";
 import { AppraisalForm } from "@/components/forms/lead-forms";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
@@ -61,8 +61,8 @@ export default async function ValuationPage() {
       <JsonLd data={serviceSchema({ name: "Valuation and Appraisal Services", description: "Real estate valuation and appraisal support for residential, commercial, office, industrial, and investment properties.", path: "/valuation" })} />
       <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Valuation" }])} />
       <PageHero
-        eyebrow="Valuation Solutions"
-        title="Valuation and Appraisal Services"
+        eyebrow="Valuation & Appraisal"
+        title="Real Estate Valuation"
         subtitle="Property decisions are easier when you understand value. All Abode provides valuation and appraisal support for property owners, buyers, sellers, investors, and businesses. Our valuation services help clients make more informed decisions for selling, buying, leasing, financing, planning, reporting, or internal review."
         image={s(settings, "page_appraisal_image") || undefined}
         crumbs={[{ label: "Home", href: "/" }, { label: "Valuation" }]}
@@ -78,22 +78,14 @@ export default async function ValuationPage() {
           <Reveal>
             <SectionHeading
               eyebrow="Valuation Services"
-              title="Valuation Services We Handle"
+              title="Valuation work we handle"
               lead="From a single condo unit to a commercial portfolio, we match the valuation output to the purpose of your request."
             />
           </Reveal>
-          <StaggerGroup className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+          <StaggerGroup className="mt-12 grid grid-cols-1 gap-x-12 gap-y-9 sm:grid-cols-2">
             {types.map((t) => (
               <StaggerItem key={t.title}>
-                <div className="h-full bg-surface p-7">
-                  <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
-                    <Icon name={t.icon} size={24} />
-                  </span>
-                  <h3 className="mt-4 font-display text-base font-semibold text-navy">
-                    {t.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate">{t.body}</p>
-                </div>
+                <FeatureItem {...t} />
               </StaggerItem>
             ))}
           </StaggerGroup>
@@ -115,7 +107,7 @@ export default async function ValuationPage() {
             {whenNeeded.map((w) => (
               <StaggerItem as="li" key={w}>
                 <div className="flex items-start gap-3 text-sm text-slate">
-                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold" fill={1} />
+                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold-ink" fill={1} />
                   <span>{w}</span>
                 </div>
               </StaggerItem>

@@ -76,15 +76,15 @@ export default async function BrokeragePage() {
   return (
     <>
       <JsonLd data={serviceSchema({ name: "Real Estate Brokerage Services", description: "Licensed real estate brokerage support for buying, selling, resale, commercial, office, industrial, and parking properties.", path: "/property-solutions/brokerage" })} />
-      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Property Solutions", href: "/property-solutions" }, { label: "Brokerage" }])} />
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Services", href: "/property-solutions" }, { label: "Brokerage" }])} />
       <PageHero
-        eyebrow="Brokerage Solutions"
-        title="Brokerage Solutions"
+        eyebrow="Brokerage"
+        title="Real Estate Brokerage"
         subtitle="Buying or selling property is a major decision. All Abode helps property owners, buyers, sellers, and investors move through real estate transactions with professional support, market guidance, and organized coordination. Brokerage services are handled under the supervision of duly licensed real estate service practitioners."
         image={s(settings, "page_buysell_image") || undefined}
         crumbs={[
           { label: "Home", href: "/" },
-          { label: "Property Solutions", href: "/property-solutions" },
+          { label: "Services", href: "/property-solutions" },
           { label: "Brokerage" },
         ]}
       >
@@ -98,26 +98,29 @@ export default async function BrokeragePage() {
         </div>
       </PageHero>
 
-      {/* Services we handle */}
+      {/* Services we handle — numbered list, not icon cards */}
       <section className="py-section">
-        <Container>
+        <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,18rem)_1fr]">
           <Reveal>
             <SectionHeading
+              align="left"
               eyebrow="What We Handle"
-              title="Brokerage Services We Handle"
+              title="Brokerage work we handle"
             />
           </Reveal>
-          <StaggerGroup className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-            {brokerageServices.map((t) => (
-              <StaggerItem key={t.title}>
-                <div className="h-full bg-surface p-7">
-                  <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
-                    <Icon name={t.icon} size={24} />
+          <StaggerGroup as="ol" className="flex flex-col divide-y divide-line border-t border-line">
+            {brokerageServices.map((t, i) => (
+              <StaggerItem as="li" key={t.title}>
+                <div className="grid grid-cols-[2.5rem_1fr] items-baseline gap-5 py-5 sm:grid-cols-[3rem_1fr]">
+                  <span className="font-display text-xl font-semibold text-line-strong">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-4 font-display text-base font-semibold text-navy">
-                    {t.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate">{t.body}</p>
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-navy">
+                      {t.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate">{t.body}</p>
+                  </div>
                 </div>
               </StaggerItem>
             ))}
@@ -129,7 +132,7 @@ export default async function BrokeragePage() {
       <section className="bg-surface-gray py-section">
         <Container className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-2">
           <div className="bg-surface p-8 sm:p-10">
-            <span className="label-caps text-gold">For Sellers</span>
+            <span className="label-caps text-gold-ink">For Sellers</span>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy">
               Sell for the right price, with less friction
             </h2>
@@ -149,7 +152,7 @@ export default async function BrokeragePage() {
           </div>
 
           <div className="bg-surface p-8 sm:p-10">
-            <span className="label-caps text-gold">For Buyers</span>
+            <span className="label-caps text-gold-ink">For Buyers</span>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy">
               Buy with confidence and representation
             </h2>
@@ -208,14 +211,14 @@ export default async function BrokeragePage() {
             <SectionHeading
               align="left"
               eyebrow="Best For"
-              title="Who brokerage solutions are for"
+              title="Who brokerage is for"
             />
           </Reveal>
           <StaggerGroup as="ul" className="flex flex-col gap-3">
             {bestFor.map((b) => (
               <StaggerItem as="li" key={b}>
                 <div className="flex items-start gap-3 text-slate">
-                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold" fill={1} />
+                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold-ink" fill={1} />
                   <span>{b}</span>
                 </div>
               </StaggerItem>

@@ -8,7 +8,8 @@ export function Logo({
   variant?: "color" | "white";
   className?: string;
 }) {
-  const src = variant === "white" ? "/logo/logo-white-icon.png" : "/logo/logo-primary.png";
+  const src = variant === "white" ? "/logo/logo-2-white.png" : "/logo/logo-primary.png";
+  const sizeClass = variant === "white" ? "h-14" : "h-10";
   return (
     <Link
       href="/"
@@ -21,7 +22,7 @@ export function Logo({
         width={180}
         height={56}
         priority
-        className={`h-10 w-auto ${className}`}
+        className={`${sizeClass} w-auto ${className}`}
       />
     </Link>
   );

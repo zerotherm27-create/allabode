@@ -7,7 +7,7 @@ import { faqSections } from "@/lib/faq-data";
 import { JsonLd, faqPageSchema, breadcrumbSchema } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
-  title: "All Abode FAQ | Property Solutions Philippines",
+  title: "All Abode FAQ | Real Estate Services Philippines",
   description:
     "Read frequently asked questions about All Abode brokerage, leasing, property management, valuation, listings, and documentation assistance.",
   alternates: { canonical: "/faq" },

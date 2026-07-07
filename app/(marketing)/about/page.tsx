@@ -9,7 +9,7 @@ import { getSettings, s } from "@/lib/settings";
 export const metadata: Metadata = {
   title: "About All Abode Property Solutions",
   description:
-    "Learn about All Abode, operated by All Abode Brokerage and Valuation OPC, providing brokerage, valuation, leasing, and property solutions.",
+    "Learn about All Abode, operated by All Abode Brokerage and Valuation OPC, providing brokerage, valuation, leasing, property management, and documentation assistance.",
   alternates: { canonical: "/about" },
 };
 
@@ -31,7 +31,7 @@ export default async function AboutPage() {
       <PageHero
         eyebrow="About All Abode"
         title="About All Abode"
-        subtitle="All Abode is a real estate service brand focused on practical property solutions for owners, buyers, sellers, tenants, investors, and businesses. All Abode is operated by All Abode Brokerage and Valuation OPC, a Philippine real estate service company providing brokerage, valuation, leasing, property management, and documentation assistance services."
+        subtitle="All Abode is a real estate service brand focused on practical support for owners, buyers, sellers, tenants, investors, and businesses. All Abode is operated by All Abode Brokerage and Valuation OPC, a Philippine real estate service company providing brokerage, valuation, leasing, property management, and documentation assistance services."
         image={s(settings, "page_about_image") || undefined}
         crumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
       />
@@ -80,11 +80,11 @@ export default async function AboutPage() {
                 </p>
               </div>
               <div className="h-px w-full bg-line" />
-              <p className="label-caps text-gold">Founded by Chel</p>
+              <p className="label-caps text-gold-ink">Founded by Chel</p>
             </div>
           </Reveal>
           <Reveal className="max-w-xl">
-            <p className="label-caps text-gold">About the Founder</p>
+            <p className="label-caps text-gold-ink">About the Founder</p>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy sm:text-3xl">
               Properties by Chel
             </h2>
@@ -119,7 +119,12 @@ export default async function AboutPage() {
               Every piece of advice we give is grounded in professional
               standards, legal compliance, and market data.
             </p>
-            <Button href="/contact" variant="secondary" size="lg" className="mt-8">
+            <Button
+              href="/contact"
+              variant="secondary"
+              size="lg"
+              className="mt-8 !border-gold !text-gold hover:!bg-gold hover:!text-navy"
+            >
               Work With Our Team
             </Button>
           </Reveal>
@@ -156,7 +161,7 @@ export default async function AboutPage() {
               {whoWeServe.map((w) => (
                 <StaggerItem as="li" key={w}>
                   <div className="flex items-start gap-3 text-sm text-slate">
-                    <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold" fill={1} />
+                    <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold-ink" fill={1} />
                     <span>{w}</span>
                   </div>
                 </StaggerItem>

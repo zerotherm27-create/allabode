@@ -8,9 +8,9 @@ import { services } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
-  title: "Property Solutions by All Abode",
+  title: "Real Estate Services by All Abode",
   description:
-    "Explore All Abode property solutions including brokerage, leasing, property management, valuation, and documentation assistance.",
+    "Explore All Abode real estate services including brokerage, leasing, property management, valuation, and documentation assistance.",
   alternates: { canonical: "/property-solutions" },
 };
 
@@ -42,17 +42,17 @@ export default async function PropertySolutionsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Property Solutions"
-        title="Property Solutions"
-        subtitle="All Abode Property Solutions brings together the real estate services you need to buy, sell, lease, manage, value, and process property-related documents. Whether you are a property owner, buyer, seller, tenant, investor, or business, we help you choose the right service and move through the process with confidence."
-        crumbs={[{ label: "Home", href: "/" }, { label: "Property Solutions" }]}
+        eyebrow="Services"
+        title="Real Estate Services"
+        subtitle="All Abode brings together the services you need to buy, sell, lease, manage, value, and process property-related documents. Whether you are a property owner, buyer, seller, tenant, investor, or business, we help you choose the right path and move through the process with confidence."
+        crumbs={[{ label: "Home", href: "/" }, { label: "Services" }]}
       >
         <Button href="#services" size="lg" variant="ghost-light">
           Choose a Service
         </Button>
       </PageHero>
 
-      {/* Service sections */}
+      {/* Service index */}
       <section id="services" className="scroll-mt-24 py-section">
         <Container>
           <Reveal>
@@ -61,36 +61,30 @@ export default async function PropertySolutionsPage() {
               title="Choose the right service for your property concern"
             />
           </Reveal>
-          <StaggerGroup className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line md:grid-cols-2">
+          <StaggerGroup as="ul" className="mt-12 flex flex-col divide-y divide-line border-t border-line">
             {services.map((service, i) => (
-              <StaggerItem
-                key={service.slug}
-                className={
-                  i === services.length - 1 && services.length % 2 === 1
-                    ? "md:col-span-2"
-                    : ""
-                }
-              >
-                <div className="flex h-full flex-col bg-surface p-8 sm:p-10">
-                  <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
-                    <Icon name={service.icon} size={28} />
+              <StaggerItem as="li" key={service.slug}>
+                <Link
+                  href={service.href}
+                  className="group grid grid-cols-[2.5rem_1fr_auto] items-start gap-5 py-7 transition-colors sm:grid-cols-[3.5rem_1fr_auto] sm:items-center sm:py-9"
+                >
+                  <span className="font-display text-xl font-semibold text-line-strong sm:text-2xl">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-5 font-display text-xl font-bold text-navy">
-                    {service.title}
-                  </h3>
-                  <p className="mt-3 flex-1 leading-relaxed text-slate">
-                    {sectionCopy[service.slug]?.audience ?? service.blurb}
-                  </p>
-                  <div className="mt-6">
-                    <Link
-                      href={service.href}
-                      className="label-caps inline-flex items-center gap-2 border-b-2 border-navy pb-1 text-navy transition-colors hover:border-gold hover:text-gold"
-                    >
-                      {service.cta ?? "Learn more"}
-                      <Icon name="arrow_forward" size={16} />
-                    </Link>
+                  <div>
+                    <h3 className="font-display text-xl font-bold text-navy transition-colors group-hover:text-gold-ink sm:text-2xl">
+                      {service.title}
+                    </h3>
+                    <p className="mt-2 max-w-2xl leading-relaxed text-slate">
+                      {sectionCopy[service.slug]?.audience ?? service.blurb}
+                    </p>
                   </div>
-                </div>
+                  <Icon
+                    name="arrow_forward"
+                    size={22}
+                    className="mt-1 hidden shrink-0 text-navy transition-all duration-[var(--dur-fast)] group-hover:translate-x-1 group-hover:text-gold-ink sm:mt-0 sm:block"
+                  />
+                </Link>
               </StaggerItem>
             ))}
           </StaggerGroup>

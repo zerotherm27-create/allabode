@@ -30,7 +30,7 @@ export function ListingNearbyPlaces({ places }: { places: NearbyPlace[] }) {
         {Array.from(groups.entries()).map(([category, items]) => (
           <div key={category}>
             <p className="label-caps flex items-center gap-2 text-slate">
-              <Icon name={CATEGORY_ICONS[category] ?? "place"} size={18} className="text-gold" />
+              <Icon name={CATEGORY_ICONS[category] ?? "place"} size={18} className="text-gold-ink" />
               {category}
             </p>
             <ul className="mt-2 flex flex-col gap-2">

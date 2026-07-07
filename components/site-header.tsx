@@ -34,35 +34,35 @@ export function SiteHeader() {
     item.children.some((child) => isActive(child.href));
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-cream/95 backdrop-blur-md">
-      <div className="container-site flex h-16 items-center justify-between gap-4 md:h-20">
+    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4">
+      <div className="mx-auto flex max-w-[var(--container-site)] items-center justify-between gap-4 rounded-2xl border border-line/70 bg-cream/85 px-4 py-2.5 shadow-[0_8px_24px_-16px_rgba(15,20,30,0.25)] backdrop-blur-md sm:px-5">
         <Logo />
 
         {/* Desktop nav — Radix NavigationMenu */}
         <nav aria-label="Primary" className="hidden lg:flex">
-          <NavigationMenu>
-            <NavigationMenuList className="gap-0">
+          <NavigationMenu viewport={false}>
+            <NavigationMenuList className="gap-0.5">
               {mainNav.map((item) => {
                 if (isDropdown(item)) {
                   return (
-                    <NavigationMenuItem key={item.label}>
+                    <NavigationMenuItem key={item.label} value={item.label.toLowerCase().replace(/\s+/g, "-")}>
                       <NavigationMenuTrigger
                         className={cn(
-                          "bg-transparent text-sm font-medium hover:bg-surface-gray hover:text-navy data-[state=open]:bg-surface-gray",
+                          "rounded-full bg-transparent text-sm font-medium hover:bg-surface-gray hover:text-navy data-[state=open]:bg-surface-gray",
                           isDropdownActive(item) ? "text-navy" : "text-slate"
                         )}
                       >
                         {item.label}
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <ul className="w-52 p-1">
+                        <ul className="w-56 p-1.5">
                           {item.children.map((child) => (
                             <li key={child.href}>
                               <NavigationMenuLink asChild>
                                 <Link
                                   href={child.href}
                                   className={cn(
-                                    "flex items-center rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-surface-gray hover:text-navy",
+                                    "flex items-center rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-surface-gray hover:text-navy",
                                     isActive(child.href)
                                       ? "font-semibold text-navy"
                                       : "text-slate"
@@ -86,14 +86,11 @@ export function SiteHeader() {
                         href={item.href}
                         aria-current={isActive(item.href) ? "page" : undefined}
                         className={cn(
-                          "relative inline-flex h-9 items-center rounded-md px-3 text-sm font-medium transition-colors hover:bg-surface-gray hover:text-navy",
+                          "inline-flex h-9 items-center rounded-full px-3.5 text-sm font-medium transition-colors hover:bg-surface-gray hover:text-navy",
                           isActive(item.href) ? "text-navy" : "text-slate"
                         )}
                       >
                         {item.label}
-                        {isActive(item.href) && (
-                          <span className="absolute -bottom-[29px] left-0 h-0.5 w-full bg-gold" />
-                        )}
                       </Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
@@ -104,7 +101,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button href="/contact" variant="gold" className="hidden sm:inline-flex">
+          <Button href="/contact" variant="gold" className="!hidden rounded-full px-5 py-2 text-xs sm:!inline-flex">
             Contact All Abode
           </Button>
           <button
@@ -112,9 +109,9 @@ export function SiteHeader() {
             aria-label="Open menu"
             aria-expanded={open}
             onClick={() => setOpen(true)}
-            className="flex h-11 w-11 items-center justify-center text-navy lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-navy lg:hidden"
           >
-            <Icon name="menu" size={28} />
+            <Icon name="menu" size={24} />
           </button>
         </div>
       </div>
@@ -132,7 +129,7 @@ export function SiteHeader() {
                 onClick={close}
                 className="flex h-11 w-11 items-center justify-center text-navy"
               >
-                <Icon name="close" size={28} />
+                <Icon name="close" size={24} />
               </button>
             </div>
             <nav aria-label="Mobile" className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
@@ -179,7 +176,7 @@ export function SiteHeader() {
               })}
             </nav>
             <div className="mt-auto border-t border-line p-5">
-              <Button href="/contact" variant="gold" onClick={close} className="w-full">
+              <Button href="/contact" variant="gold" onClick={close} className="w-full rounded-full">
                 Contact All Abode
               </Button>
             </div>

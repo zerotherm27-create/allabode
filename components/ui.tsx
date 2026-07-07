@@ -26,8 +26,8 @@ const base =
 const variants: Record<Variant, string> = {
   // Solid navy, white label — the workhorse CTA
   primary: "bg-navy text-white hover:bg-navy-800",
-  // Transparent with gold label + border — premium secondary
-  secondary: "border border-gold text-gold hover:bg-gold hover:text-navy",
+  // Transparent with gold label + border — premium secondary (light-surface default)
+  secondary: "border border-gold-ink text-gold-ink hover:bg-gold-ink hover:text-white",
   // Navy outline on light surfaces
   ghost: "border border-navy text-navy hover:bg-navy hover:text-white",
   // Glassy outline for dark/photographic backgrounds

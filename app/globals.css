@@ -1,43 +1,44 @@
-/* Hallmark · macrostructure: Marquee Hero (system-managed) · tone: luxury-professional / architectural · anchor hue: navy + brass
- * Pre-emit critique: P5 H5 E4 S5 R5 V4
- * Locked design system: "Prestige Architectural Design" (Stitch source). Pages share this system.
+/* Hallmark · genre: modern-minimal · macrostructure: mixed (Split Studio / Feature Stack / Index-First / Letter / Conversational FAQ / Long Document, per page type — see design/DESIGN-TOKENS.md)
+ * theme: custom · vibe: "licensed real estate, restrained, branded navy, no gold-carpet luxury cliché" · paper: oklch(99% 0.004 90) · accent: oklch(70% 0.13 85)
+ * display: Inter Tight 600/700 · body: Inter 400/500/600 · axes: light / geometric-sans / warm
+ * nav: N9 edge-aligned minimal · footer: Ft2 inline + compliance row · studied: no · context: explicit redesign, 2026-07-08
+ * Pre-emit critique: P4 H4 E4 S4 R4 V4
  * All colour + font declarations reference named tokens below — no inline hex/oklch in components.
  */
 @import "tailwindcss";
-/* Material Symbols font is loaded via <link> in app/layout.tsx — a CSS @import is
-   dropped by the Tailwind v4 production build, which broke every icon. */
 
 @theme {
-  /* ---- Brand colour (navy + brass, light architectural surfaces) ---- */
-  --color-navy: #0a2540;            /* primary brand — deep authoritative navy */
+  /* ---- Brand colour: All Abode navy family + restrained brass accent ---- */
+  --color-navy: #0a2540;            /* primary brand navy — dark, but visibly blue */
   --color-navy-800: #0c2f52;
-  --color-navy-700: #0d518c;        /* brand blue — links, secondary navy */
+  --color-navy-700: #0d518c;        /* links / focus / secondary navy */
   --color-navy-600: #1a4d7c;
-  --color-gold: #b4975a;            /* brass accent — premium, dividers, secondary CTA */
-  --color-gold-bright: #c9a227;     /* brighter gold highlight */
-  --color-gold-soft: #e3c381;
+  --color-gold: oklch(69% 0.087 85);      /* true brand brass (#b4975a) — CTAs, on-dark text/icon use (navy bands, hero) */
+  --color-gold-bright: oklch(60% 0.10 85); /* deeper brass — hover/pressed state */
+  --color-gold-soft: oklch(85% 0.06 85);  /* light brass tint (badges on navy) */
+  --color-gold-ink: oklch(54% 0.087 85);  /* same brand hue/chroma, darkened only as far as needed for 4.5:1 on cream/surface — text/icon use on light backgrounds */
 
-  --color-ink: #16202c;             /* primary text on light */
+  --color-ink: #16202c;             /* primary text on light — separate from brand navy */
   --color-slate: #5b6573;           /* muted text / captions */
-  --color-slate-soft: #94a3b8;
-  --color-line: #e2e6ec;            /* hairline borders */
-  --color-line-strong: #cbd2dc;
+  --color-slate-soft: oklch(58% 0.015 250);
+  --color-line: oklch(90% 0.006 250);     /* hairline borders */
+  --color-line-strong: oklch(82% 0.01 250);
 
-  --color-cream: #f8f9fb;           /* page surface */
-  --color-surface: #ffffff;         /* cards / elevated */
-  --color-surface-gray: #f1f4f8;    /* alt section band */
+  --color-cream: oklch(99% 0.004 90);     /* page surface — near-white, barely warm */
+  --color-surface: oklch(99.5% 0.002 95); /* cards / elevated — allowed near-pure-white in modern-minimal */
+  --color-surface-gray: oklch(96% 0.006 90); /* alt section band */
 
   /* ---- shadcn/radix compatibility aliases (mapped to brand tokens) ---- */
-  --color-background:        #f8f9fb;  /* = cream */
-  --color-foreground:        #16202c;  /* = ink */
-  --color-accent:            #f1f4f8;  /* = surface-gray */
-  --color-accent-foreground: #0a2540;  /* = navy */
-  --color-popover:           #ffffff;  /* = surface */
-  --color-popover-foreground: #16202c; /* = ink */
-  --color-border:            #e2e6ec;  /* = line */
-  --color-ring:              #0d518c;  /* = navy-700 */
-  --color-muted:             #f1f4f8;  /* = surface-gray */
-  --color-muted-foreground:  #5b6573;  /* = slate */
+  --color-background:        oklch(99% 0.004 90);   /* = cream */
+  --color-foreground:        #16202c;                 /* = ink */
+  --color-accent:            oklch(96% 0.006 90);    /* = surface-gray */
+  --color-accent-foreground: #0a2540;                 /* = navy */
+  --color-popover:           oklch(99.5% 0.002 95);  /* = surface */
+  --color-popover-foreground: #16202c;                /* = ink */
+  --color-border:            oklch(90% 0.006 250);   /* = line */
+  --color-ring:              #0d518c;                 /* = navy-700 */
+  --color-muted:             oklch(96% 0.006 90);    /* = surface-gray */
+  --color-muted-foreground:  #5b6573;                 /* = slate */
 
   /* ---- Status ---- */
   --color-available: #10b981;
@@ -46,10 +47,10 @@
   --color-success: #0f9d58;
   --color-error: #ba1a1a;
   --color-error-bg: #fdecea;
-  --color-focus: #0d518c;
+  --color-focus: #0d518c;                 /* brand-blue focus ring */
 
   /* ---- Type ---- */
-  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   --text-display: 3.5rem;           /* 56 — hero */
@@ -185,20 +186,4 @@ button:not(:disabled):active {
   .press:active {
     transform: scale(0.98);
   }
-}
-
-/* Material Symbols base — defensive (the stylesheet <link> also defines this).
-   Guarantees the icon font resolves so ligature names never render as text. */
-.material-symbols-outlined {
-  font-family: "Material Symbols Outlined";
-  font-weight: normal;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: "liga";
-  -webkit-font-smoothing: antialiased;
 }

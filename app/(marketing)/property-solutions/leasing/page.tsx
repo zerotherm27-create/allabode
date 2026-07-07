@@ -34,7 +34,7 @@ const processSteps = [
   { n: "4", title: "Viewing Coordination", body: "We coordinate property viewings with prospective tenants." },
   { n: "5", title: "Tenant Screening Assistance", body: "We assist with basic tenant screening and document collection, subject to owner approval." },
   { n: "6", title: "Lease Coordination", body: "We assist with lease documents, payment terms, move-in requirements, and building requirements." },
-  { n: "7", title: "Turnover or Management", body: "After move-in, owners may choose to self-manage or continue with All Abode Property Management Solutions." },
+  { n: "7", title: "Turnover or Management", body: "After move-in, owners may choose to self-manage or continue with All Abode property management." },
 ];
 
 const faqs = [
@@ -63,15 +63,15 @@ export default async function LeasingPage() {
   return (
     <>
       <JsonLd data={serviceSchema({ name: "Property Leasing Services", description: "Residential, commercial, office, warehouse, parking, long-term, short-stay, and bedspace leasing assistance.", path: "/property-solutions/leasing" })} />
-      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Property Solutions", href: "/property-solutions" }, { label: "Leasing" }])} />
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Services", href: "/property-solutions" }, { label: "Leasing" }])} />
       <PageHero
-        eyebrow="Leasing Solutions"
-        title="Leasing Solutions"
+        eyebrow="Leasing"
+        title="Property Leasing"
         subtitle="All Abode helps property owners find tenants and helps tenants find the right space. We assist with leasing for residential, commercial, office, industrial, warehouse, bedspace, short-stay, and parking properties. Our goal is to make the leasing process clearer, smoother, and more organized for both property owners and tenants."
         image={s(settings, "page_leasing_image") || undefined}
         crumbs={[
           { label: "Home", href: "/" },
-          { label: "Property Solutions", href: "/property-solutions" },
+          { label: "Services", href: "/property-solutions" },
           { label: "Leasing" },
         ]}
       >
@@ -87,27 +87,30 @@ export default async function LeasingPage() {
         </div>
       </PageHero>
 
-      {/* Leasing services */}
+      {/* Leasing services — numbered list, not icon cards */}
       <section className="py-section">
-        <Container>
+        <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,18rem)_1fr]">
           <Reveal>
             <SectionHeading
+              align="left"
               eyebrow="What We Handle"
-              title="Leasing Services We Handle"
+              title="Leasing work we handle"
               lead="Whether you own a single condo or a growing portfolio, we structure the right leasing approach for your goals."
             />
           </Reveal>
-          <StaggerGroup className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-            {leasingServices.map((t) => (
-              <StaggerItem key={t.title}>
-                <div className="h-full bg-surface p-7">
-                  <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
-                    <Icon name={t.icon} size={24} />
+          <StaggerGroup as="ol" className="flex flex-col divide-y divide-line border-t border-line">
+            {leasingServices.map((t, i) => (
+              <StaggerItem as="li" key={t.title}>
+                <div className="grid grid-cols-[2.5rem_1fr] items-baseline gap-5 py-5 sm:grid-cols-[3rem_1fr]">
+                  <span className="font-display text-xl font-semibold text-line-strong">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-4 font-display text-base font-semibold text-navy">
-                    {t.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate">{t.body}</p>
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-navy">
+                      {t.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate">{t.body}</p>
+                  </div>
                 </div>
               </StaggerItem>
             ))}
@@ -119,7 +122,7 @@ export default async function LeasingPage() {
       <section className="bg-surface-gray py-section">
         <Container className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-2">
           <div className="bg-surface p-8 sm:p-10">
-            <span className="label-caps text-gold">For Property Owners</span>
+            <span className="label-caps text-gold-ink">For Property Owners</span>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy">
               Lease out your property with organized support
             </h2>
@@ -136,7 +139,7 @@ export default async function LeasingPage() {
           </div>
 
           <div className="bg-surface p-8 sm:p-10">
-            <span className="label-caps text-gold">For Tenants</span>
+            <span className="label-caps text-gold-ink">For Tenants</span>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy">
               Find the right rental, with real help
             </h2>

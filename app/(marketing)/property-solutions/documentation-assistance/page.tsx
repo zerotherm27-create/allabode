@@ -84,14 +84,14 @@ export default async function DocumentationAssistancePage() {
   return (
     <>
       <JsonLd data={serviceSchema({ name: "Property Documentation Assistance", description: "Title transfer coordination, tax payment assistance, notarial coordination, and property document processing.", path: "/property-solutions/documentation-assistance" })} />
-      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Property Solutions", href: "/property-solutions" }, { label: "Documentation Assistance" }])} />
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Services", href: "/property-solutions" }, { label: "Documentation Assistance" }])} />
       <PageHero
         eyebrow="Documentation Assistance"
         title="Documentation Assistance"
         subtitle="Property transactions often require documents, payments, coordination, and follow-ups with different offices. All Abode helps clients organize and coordinate property-related documentation requirements with a clearer process."
         crumbs={[
           { label: "Home", href: "/" },
-          { label: "Property Solutions", href: "/property-solutions" },
+          { label: "Services", href: "/property-solutions" },
           { label: "Documentation Assistance" },
         ]}
       >
@@ -100,34 +100,30 @@ export default async function DocumentationAssistancePage() {
         </Button>
       </PageHero>
 
-      {/* Services */}
+      {/* Services — numbered list, not icon cards */}
       <section className="py-section">
-        <Container>
+        <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,18rem)_1fr]">
           <Reveal>
             <SectionHeading
+              align="left"
               eyebrow="What We Can Assist With"
               title="Documentation support services"
               lead="The paperwork behind every property transaction, coordinated by a team that does it every week."
             />
           </Reveal>
-          <StaggerGroup className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerGroup as="ol" className="flex flex-col divide-y divide-line border-t border-line">
             {services.map((t, i) => (
-              <StaggerItem
-                key={t.title}
-                className={
-                  i === services.length - 1 && services.length % 2 === 1
-                    ? "sm:col-span-2 lg:col-span-1"
-                    : ""
-                }
-              >
-                <div className="h-full bg-surface p-8">
-                  <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
-                    <Icon name={t.icon} size={28} />
+              <StaggerItem as="li" key={t.title}>
+                <div className="grid grid-cols-[2.5rem_1fr] items-baseline gap-5 py-5 sm:grid-cols-[3rem_1fr]">
+                  <span className="font-display text-xl font-semibold text-line-strong">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-5 font-display text-lg font-semibold text-navy">
-                    {t.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate">{t.body}</p>
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-navy">
+                      {t.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate">{t.body}</p>
+                  </div>
                 </div>
               </StaggerItem>
             ))}
@@ -149,7 +145,7 @@ export default async function DocumentationAssistancePage() {
             {whoFor.map((w) => (
               <StaggerItem as="li" key={w}>
                 <div className="flex items-start gap-3 text-slate">
-                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold" fill={1} />
+                  <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold-ink" fill={1} />
                   <span>{w}</span>
                 </div>
               </StaggerItem>

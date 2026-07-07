@@ -96,7 +96,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
           <button
             type="button"
             onClick={reset}
-            className="min-h-[44px] px-2 text-sm text-gold hover:underline"
+            className="min-h-[44px] px-2 text-sm text-gold-ink hover:underline"
           >
             Clear
           </button>
@@ -227,7 +227,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
             <button
               type="button"
               onClick={reset}
-              className="label-caps mt-5 min-h-[44px] border-b-2 border-navy px-2 pb-0.5 text-navy hover:border-gold hover:text-gold"
+              className="label-caps mt-5 min-h-[44px] border-b-2 border-navy px-2 pb-0.5 text-navy hover:border-gold-ink hover:text-gold-ink"
             >
               Clear all filters
             </button>

@@ -32,7 +32,6 @@ export function PropertyCard({ listing }: { listing: Listing }) {
             className={`h-full w-full bg-gradient-to-br ${listing.gradient} transition-transform duration-700 group-hover:scale-105`}
           />
         )}
-        <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(120%_120%_at_80%_0%,rgba(180,151,90,0.35),transparent_55%)]" />
         <span
           className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[listing.status]}`}
         >
@@ -58,7 +57,7 @@ export function PropertyCard({ listing }: { listing: Listing }) {
           </Link>
         </h3>
         <p className="mt-1 flex items-center gap-1 text-sm text-slate">
-          <Icon name="location_on" size={16} className="text-gold" />
+          <Icon name="location_on" size={16} className="text-gold-ink" />
           {listing.location}
         </p>
         {(listing.listingType || listing.propertyType) && (
@@ -82,9 +81,10 @@ export function PropertyCard({ listing }: { listing: Listing }) {
           href={`/listings/${listing.id}`}
           aria-hidden="true"
           tabIndex={-1}
-          className="label-caps mt-6 flex min-h-[44px] w-full items-center justify-center border border-navy py-3 text-navy transition-all hover:bg-navy hover:text-white"
+          className="label-caps mt-6 flex min-h-[44px] items-center gap-2 text-navy transition-colors hover:text-gold-ink"
         >
           View Details
+          <Icon name="arrow_forward" size={16} />
         </Link>
       </div>
     </article>

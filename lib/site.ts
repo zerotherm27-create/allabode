@@ -2,7 +2,7 @@ export const site = {
   name: "All Abode Property Solutions",
   shortName: "All Abode",
   legalName: "All Abode Brokerage and Valuation OPC",
-  tagline: "Property Solutions",
+  tagline: "Real Estate Services",
   descriptor: "Brokerage | Valuation | Leasing | Property Management | Documentation",
   domain: "allabodeph.com",
   phone: "+63 2 8888 1234",
@@ -41,12 +41,12 @@ export function isDropdown(item: NavItem): item is NavDropdown {
 export const mainNav: readonly NavItem[] = [
   { label: "Home", href: "/" },
   {
-    label: "Property Solutions",
+    label: "Services",
     children: [
-      { label: "All Property Solutions", href: "/property-solutions" },
-      { label: "Brokerage Solutions", href: "/property-solutions/brokerage" },
-      { label: "Leasing Solutions", href: "/property-solutions/leasing" },
-      { label: "Property Management Solutions", href: "/property-solutions/property-management" },
+      { label: "All Services", href: "/property-solutions" },
+      { label: "Brokerage", href: "/property-solutions/brokerage" },
+      { label: "Leasing", href: "/property-solutions/leasing" },
+      { label: "Property Management", href: "/property-solutions/property-management" },
       { label: "Documentation Assistance", href: "/property-solutions/documentation-assistance" },
     ],
   },
@@ -69,12 +69,12 @@ export const mainNav: readonly NavItem[] = [
 ];
 
 export const footerNav = {
-  solutions: [
-    { label: "Brokerage Solutions", href: "/property-solutions/brokerage" },
-    { label: "Leasing Solutions", href: "/property-solutions/leasing" },
-    { label: "Property Management Solutions", href: "/property-solutions/property-management" },
+  services: [
+    { label: "Brokerage", href: "/property-solutions/brokerage" },
+    { label: "Leasing", href: "/property-solutions/leasing" },
+    { label: "Property Management", href: "/property-solutions/property-management" },
     { label: "Documentation Assistance", href: "/property-solutions/documentation-assistance" },
-    { label: "Valuation", href: "/valuation" },
+    { label: "Valuation & Appraisal", href: "/valuation" },
   ],
   listings: [
     { label: "For Rent", href: "/listings/for-rent" },

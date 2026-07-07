@@ -13,7 +13,7 @@ export const services: Service[] = [
   {
     slug: "brokerage",
     icon: "real_estate_agent",
-    title: "Brokerage Solutions",
+    title: "Brokerage",
     blurb:
       "Buy, sell, and market properties with support from licensed real estate professionals. We assist with resale units, house and lots, lots, condominiums, commercial spaces, offices, industrial properties, and parking slots.",
     href: "/property-solutions/brokerage",
@@ -22,7 +22,7 @@ export const services: Service[] = [
   {
     slug: "leasing",
     icon: "key",
-    title: "Leasing Solutions",
+    title: "Leasing",
     blurb:
       "Lease out your property or find a rental that fits your needs. We assist with residential leasing, long-term leases, short-stay coordination, bedspace leasing, commercial leases, office spaces, warehouses, and parking.",
     href: "/property-solutions/leasing",
@@ -31,7 +31,7 @@ export const services: Service[] = [
   {
     slug: "management",
     icon: "corporate_fare",
-    title: "Property Management Solutions",
+    title: "Property Management",
     blurb:
       "Keep your property cared for even when you are busy or away. We assist with rent collection, maintenance coordination, cleaning, furnishing, fit-out, turnover, and owner support.",
     href: "/property-solutions/property-management",
@@ -40,7 +40,7 @@ export const services: Service[] = [
   {
     slug: "valuation",
     icon: "verified",
-    title: "Valuation Solutions",
+    title: "Valuation & Appraisal",
     blurb:
       "Request professional valuation and appraisal support for residential, commercial, office, industrial, and investment properties.",
     href: "/valuation",

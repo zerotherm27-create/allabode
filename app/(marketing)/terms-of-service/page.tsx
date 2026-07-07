@@ -122,7 +122,7 @@ export default async function TermsOfServicePage() {
                 All Abode Brokerage and Valuation OPC
                 <br />
                 Email:{" "}
-                <a href={`mailto:${email}`} className="text-navy-700 underline underline-offset-2 hover:text-gold">
+                <a href={`mailto:${email}`} className="text-navy-700 underline underline-offset-2 hover:text-gold-ink">
                   {email}
                 </a>
                 <br />

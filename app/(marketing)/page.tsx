@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
@@ -9,51 +10,38 @@ import { services, trustPoints } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+export const metadata: Metadata = {
+  title: "All Abode Property Solutions Philippines",
+  description:
+    "All Abode provides licensed real estate brokerage, valuation, leasing, property management, and documentation assistance in the Philippines.",
+  alternates: { canonical: "/" },
+};
+
 const heroCtas = [
   { icon: "list_alt", label: "List My Property", href: "/list-your-property", variant: "primary" as const },
   { icon: "search", label: "Find a Property", href: "/listings", variant: "secondary" as const },
   { icon: "analytics", label: "Request Valuation", href: "/valuation", variant: "ghost-light" as const },
 ];
 
-const actionCards = [
-  {
-    icon: "sell",
-    title: "List My Property",
-    body: "Lease out or sell your property with licensed support from listing to closing.",
-    href: "/list-your-property",
-  },
-  {
-    icon: "search",
-    title: "Find a Property",
-    body: "Browse rentals, resale units, commercial spaces, offices, and parking.",
-    href: "/listings",
-  },
-  {
-    icon: "analytics",
-    title: "Request Valuation",
-    body: "Get professional valuation and appraisal support for better decisions.",
-    href: "/valuation",
-  },
-  {
-    icon: "corporate_fare",
-    title: "Get Property Management",
-    body: "Let a local team handle rent, maintenance, and day-to-day property care.",
-    href: "/property-solutions/property-management",
-  },
+const quickPaths = [
+  { icon: "sell", title: "List My Property", href: "/list-your-property" },
+  { icon: "search", title: "Find a Property", href: "/listings" },
+  { icon: "analytics", title: "Request Valuation", href: "/valuation" },
+  { icon: "corporate_fare", title: "Get Property Management", href: "/property-solutions/property-management" },
 ];
 
 const audiences = [
-  { icon: "home_work", title: "Property Owners", body: "Lease, manage, sell, value, or prepare your property with a team that can assist from listing to turnover." },
-  { icon: "search", title: "Buyers", body: "Find properties that match your needs, budget, and preferred location." },
-  { icon: "sell", title: "Sellers", body: "Market your property properly and work with licensed real estate professionals throughout the transaction." },
-  { icon: "key", title: "Tenants", body: "Find available rentals and get help with viewing, requirements, lease coordination, and move-in steps." },
-  { icon: "trending_up", title: "Investors", body: "Get support for leasing, valuation, management, and property-related decisions." },
+  { title: "Property Owners", body: "Lease, manage, sell, value, or prepare your property with a team that can assist from listing to turnover." },
+  { title: "Buyers", body: "Find properties that match your needs, budget, and preferred location." },
+  { title: "Sellers", body: "Market your property properly and work with licensed real estate professionals throughout the transaction." },
+  { title: "Tenants", body: "Find available rentals and get help with viewing, requirements, lease coordination, and move-in steps." },
+  { title: "Investors", body: "Get support for leasing, valuation, management, and property-related decisions." },
 ];
 
 const processSteps = [
   { n: "1", title: "Tell Us What You Need", body: "Choose whether you want to buy, sell, lease, manage, value, or request documentation assistance." },
   { n: "2", title: "Property or Requirement Review", body: "We review your property details, goals, location, documents, and preferred timeline." },
-  { n: "3", title: "Recommended Solution", body: "We recommend the right service path, whether it is brokerage, leasing, management, valuation, or documentation assistance." },
+  { n: "3", title: "Recommended Path", body: "We recommend the right service path, whether it is brokerage, leasing, management, valuation, or documentation assistance." },
   { n: "4", title: "Coordination and Updates", body: "We assist with the necessary steps, keep communication clear, and provide updates throughout the process." },
   { n: "5", title: "Completion and Next Steps", body: "We help close the loop with turnover, documentation, reports, or continued management support when needed." },
 ];
@@ -65,7 +53,7 @@ const homeFaqs = [
   },
   {
     q: "Is All Abode only a listing website?",
-    a: "No. Listings are part of the website, but All Abode is a complete real estate solutions company for owners, buyers, sellers, tenants, and investors.",
+    a: "No. Listings are part of the website, but All Abode is a full-service real estate company for owners, buyers, sellers, tenants, and investors.",
   },
   {
     q: "Can owners list properties for lease or sale?",
@@ -100,7 +88,7 @@ export default async function Home() {
           <div className="max-w-3xl">
             <Reveal y={16}>
               <span className="label-caps inline-block bg-gold/15 px-4 py-1.5 text-gold-soft ring-1 ring-gold/30">
-                Complete property solutions in the Philippines
+                Real estate services in the Philippines
               </span>
             </Reveal>
             <Reveal y={20} delay={0.06}>
@@ -130,27 +118,28 @@ export default async function Home() {
         </Container>
       </section>
 
-      {/* ---------- Action cards ---------- */}
+      {/* ---------- Quick paths — inline row, not a card grid ---------- */}
       <section className="border-b border-line bg-surface">
         <Container>
-          <StaggerGroup className="grid grid-cols-1 gap-px overflow-hidden bg-line sm:grid-cols-2 lg:grid-cols-4">
-            {actionCards.map((card) => (
-              <StaggerItem key={card.title}>
+          <StaggerGroup
+            as="ul"
+            className="flex flex-col divide-y divide-line sm:flex-row sm:divide-x sm:divide-y-0"
+          >
+            {quickPaths.map((card) => (
+              <StaggerItem as="li" key={card.title} className="flex-1">
                 <Link
                   href={card.href}
-                  className="group flex h-full flex-col bg-surface p-7 transition-colors hover:bg-surface-gray"
+                  className="group flex items-center gap-3 px-1 py-5 transition-colors hover:text-gold-ink sm:justify-center sm:px-4"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700 transition-colors group-hover:bg-gold/15 group-hover:text-gold-bright">
-                    <Icon name={card.icon} size={26} />
-                  </span>
-                  <h2 className="mt-4 font-display text-base font-bold text-navy">
+                  <Icon name={card.icon} size={18} className="shrink-0 text-gold-ink" />
+                  <span className="font-display text-sm font-semibold text-navy group-hover:text-gold-ink">
                     {card.title}
-                  </h2>
-                  <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate">{card.body}</p>
-                  <span className="label-caps mt-4 flex items-center gap-1 text-gold transition-all group-hover:gap-2">
-                    Get Started
-                    <Icon name="arrow_forward" size={16} />
                   </span>
+                  <Icon
+                    name="arrow_forward"
+                    size={14}
+                    className="shrink-0 text-slate-soft transition-transform group-hover:translate-x-0.5 group-hover:text-gold-ink"
+                  />
                 </Link>
               </StaggerItem>
             ))}
@@ -158,50 +147,44 @@ export default async function Home() {
         </Container>
       </section>
 
-      {/* ---------- What We Do ---------- */}
-      <section className="py-section">
-        <Container>
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="label-caps text-gold">What We Do</p>
+      {/* ---------- What We Do — a numbered list, not a card grid ---------- */}
+      <section className="py-section-lg">
+        <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,22rem)_1fr]">
+          <Reveal>
+            <p className="label-caps text-gold-ink">What We Do</p>
             <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
-              Complete Property Solutions in One Place
+              Real estate services in one place
             </h2>
             <p className="mt-4 text-slate">
               All Abode brings together the real estate services that property
-              owners and clients commonly need. We assist with brokerage,
-              leasing, valuation, property management, and documentation
-              support, so you can move forward with the right guidance and a
-              clearer process.
+              owners and clients commonly need, so you can move forward with
+              the right guidance and a clearer process.
             </p>
           </Reveal>
 
-          <StaggerGroup className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
+          <StaggerGroup as="ol" className="flex flex-col divide-y divide-line border-t border-line">
             {services.map((service, i) => (
-              <StaggerItem
-                key={service.slug}
-                className={
-                  i === services.length - 1 && services.length % 2 === 1
-                    ? "sm:col-span-2 lg:col-span-1"
-                    : ""
-                }
-              >
+              <StaggerItem as="li" key={service.slug}>
                 <Link
                   href={service.href}
-                  className="group flex h-full flex-col bg-surface p-8 transition-colors hover:bg-surface-gray"
+                  className="group grid grid-cols-[3rem_1fr_auto] items-center gap-5 py-6 transition-colors hover:bg-surface-gray sm:grid-cols-[3.5rem_1fr_auto]"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
-                    <Icon name={service.icon} size={28} />
+                  <span className="font-display text-2xl font-semibold text-line-strong">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-5 font-display text-lg font-semibold text-navy">
-                    {service.title}
-                  </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-slate">
-                    {service.blurb}
-                  </p>
-                  <span className="label-caps mt-5 flex items-center gap-1 text-gold transition-all group-hover:gap-2">
-                    {service.cta ?? "Learn more"}
-                    <Icon name="arrow_forward" size={16} />
+                  <span>
+                    <span className="font-display text-lg font-semibold text-navy sm:text-xl">
+                      {service.title}
+                    </span>
+                    <span className="mt-1 block max-w-2xl text-sm leading-relaxed text-slate">
+                      {service.blurb}
+                    </span>
                   </span>
+                  <Icon
+                    name="arrow_forward"
+                    size={20}
+                    className="hidden shrink-0 text-gold-ink transition-transform group-hover:translate-x-1 sm:block"
+                  />
                 </Link>
               </StaggerItem>
             ))}
@@ -209,39 +192,28 @@ export default async function Home() {
         </Container>
       </section>
 
-      {/* ---------- Who We Help ---------- */}
-      <section className="bg-surface-gray py-section">
+      {/* ---------- Who We Help — flowing typographic list, not icon cards ---------- */}
+      <section className="bg-navy py-section text-white">
         <Container>
-          <Reveal className="mx-auto max-w-2xl text-center">
+          <Reveal className="max-w-2xl">
             <p className="label-caps text-gold">Who We Help</p>
-            <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
-              Built for Owners, Buyers, Sellers, Tenants, and Investors
+            <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
+              Built for owners, buyers, sellers, tenants, and investors
             </h2>
-            <p className="mt-4 text-slate">
+            <p className="mt-4 text-white/70">
               Real estate decisions can involve many moving parts. All Abode
               helps different clients move through the process with less
               confusion and better support.
             </p>
           </Reveal>
-          <StaggerGroup className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
-            {audiences.map((a, i) => (
-              <StaggerItem
-                key={a.title}
-                className={
-                  i === audiences.length - 1 && audiences.length % 2 === 1
-                    ? "sm:col-span-2 lg:col-span-1"
-                    : ""
-                }
-              >
-                <div className="flex h-full flex-col bg-surface p-7">
-                  <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
-                    <Icon name={a.icon} size={24} />
-                  </span>
-                  <h3 className="mt-4 font-display text-base font-semibold text-navy">
-                    {a.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate">{a.body}</p>
-                </div>
+          <StaggerGroup
+            as="ul"
+            className="mt-12 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-5"
+          >
+            {audiences.map((a) => (
+              <StaggerItem as="li" key={a.title} className="border-t border-white/15 pt-5">
+                <h3 className="font-display text-lg font-semibold">{a.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/60">{a.body}</p>
               </StaggerItem>
             ))}
           </StaggerGroup>
@@ -253,9 +225,9 @@ export default async function Home() {
         <Container>
           <Reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="label-caps text-gold">Featured Properties</p>
+              <p className="label-caps text-gold-ink">Featured Properties</p>
               <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
-                Featured Properties
+                Featured properties
               </h2>
               <p className="mt-3 max-w-xl text-slate">
                 Explore selected properties for rent, sale, commercial use,
@@ -265,7 +237,7 @@ export default async function Home() {
             </div>
             <Link
               href="/listings"
-              className="label-caps flex items-center gap-2 border-b-2 border-navy pb-1 text-navy transition-colors hover:border-gold hover:text-gold"
+              className="label-caps flex items-center gap-2 border-b-2 border-navy pb-1 text-navy transition-colors hover:border-gold-ink hover:text-gold-ink"
             >
               View All Listings
               <Icon name="arrow_forward" size={18} />
@@ -283,14 +255,14 @@ export default async function Home() {
       </section>
 
       {/* ---------- Why Choose All Abode ---------- */}
-      <section className="bg-navy py-section text-white">
+      <section className="bg-surface-gray py-section">
         <Container className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <Reveal>
-            <span className="label-caps text-gold">Why Choose All Abode</span>
-            <h2 className="mt-4 font-display text-3xl font-bold leading-tight sm:text-4xl">
-              Why Work With All Abode
+            <span className="label-caps text-gold-ink">Why Choose All Abode</span>
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-navy sm:text-4xl">
+              Why work with All Abode
             </h2>
-            <p className="mt-6 max-w-xl text-white/70">
+            <p className="mt-6 max-w-xl text-slate">
               All Abode combines local property experience, licensed real
               estate practice, and practical day-to-day support. We help
               clients handle real estate matters with clear communication,
@@ -302,16 +274,16 @@ export default async function Home() {
             </Button>
           </Reveal>
 
-          <StaggerGroup className="grid gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
+          <StaggerGroup className="flex flex-col divide-y divide-line border-y border-line">
             {trustPoints.map((point) => (
               <StaggerItem key={point.title}>
-                <div className="flex h-full gap-5 bg-navy p-7">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-gold/15 text-gold">
-                    <Icon name={point.icon} size={24} />
+                <div className="flex gap-5 py-5">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-navy/5 text-navy-700">
+                    <Icon name={point.icon} size={22} />
                   </span>
                   <div>
-                    <h3 className="font-semibold">{point.title}</h3>
-                    <p className="mt-1.5 text-sm text-white/70">{point.body}</p>
+                    <h3 className="font-display text-base font-semibold text-navy">{point.title}</h3>
+                    <p className="mt-1.5 text-sm text-slate">{point.body}</p>
                   </div>
                 </div>
               </StaggerItem>
@@ -320,38 +292,27 @@ export default async function Home() {
         </Container>
       </section>
 
-      {/* ---------- How It Works ---------- */}
+      {/* ---------- How It Works — connected timeline, not a card grid ---------- */}
       <section className="py-section">
         <Container>
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="label-caps text-gold">Our Process</p>
+          <Reveal className="max-w-2xl">
+            <p className="label-caps text-gold-ink">Our Process</p>
             <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
-              How It Works
+              How it works
             </h2>
           </Reveal>
           <StaggerGroup
             as="ol"
-            className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-5"
+            className="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-5"
           >
-            {processSteps.map((step, i) => (
-              <StaggerItem
-                as="li"
-                key={step.n}
-                className={
-                  i === processSteps.length - 1 && processSteps.length % 2 === 1
-                    ? "sm:col-span-2 lg:col-span-1"
-                    : ""
-                }
-              >
-                <div className="h-full bg-surface p-7">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-navy text-sm font-bold text-white">
-                    {step.n}
-                  </span>
-                  <h3 className="mt-4 font-display text-base font-semibold text-navy">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate">{step.body}</p>
-                </div>
+            {processSteps.map((step) => (
+              <StaggerItem as="li" key={step.n} className="relative pl-9">
+                <span className="absolute left-0 top-0 font-display text-sm font-bold text-gold-ink">
+                  {step.n}
+                </span>
+                <span className="absolute left-1.5 top-6 bottom-[-2.5rem] hidden w-px bg-line lg:block" />
+                <h3 className="font-display text-base font-semibold text-navy">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate">{step.body}</p>
               </StaggerItem>
             ))}
           </StaggerGroup>
@@ -362,7 +323,7 @@ export default async function Home() {
       <section className="bg-surface-gray py-section">
         <Container>
           <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="label-caps text-gold">Questions</p>
+            <p className="label-caps text-gold-ink">Questions</p>
             <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
               Frequently asked questions
             </h2>
@@ -385,7 +346,7 @@ export default async function Home() {
           <Reveal className="mx-auto max-w-2xl text-center">
             <p className="label-caps text-gold">Get Started</p>
             <h2 className="mt-4 font-display text-3xl font-bold sm:text-4xl">
-              Ready to Get Help With Your Property?
+              Ready to get help with your property?
             </h2>
             <p className="mt-5 text-lg text-white/70">
               Tell us what you need and our team will guide you to the right

@@ -60,7 +60,7 @@ export function CategoryListingsPage({
             here?{" "}
             <a
               href="/list-your-property"
-              className="text-navy-700 underline underline-offset-2 hover:text-gold"
+              className="text-navy-700 underline underline-offset-2 hover:text-gold-ink"
             >
               List My Property
             </a>

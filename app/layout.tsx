@@ -50,6 +50,10 @@ export const metadata: Metadata = {
     title: "All Abode",
     statusBarStyle: "default",
   },
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

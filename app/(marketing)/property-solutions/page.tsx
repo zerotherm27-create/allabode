@@ -5,7 +5,7 @@ import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { services } from "@/lib/data";
-import { getSettings } from "@/lib/settings";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Real Estate Services by All Abode",
@@ -38,13 +38,14 @@ const sectionCopy: Record<string, { audience: string }> = {
 };
 
 export default async function PropertySolutionsPage() {
-  await getSettings();
+  const settings = await getSettings();
   return (
     <>
       <PageHero
         eyebrow="Services"
         title="Real Estate Services"
         subtitle="All Abode brings together the services you need to buy, sell, lease, manage, value, and process property-related documents. Whether you are a property owner, buyer, seller, tenant, investor, or business, we help you choose the right path and move through the process with confidence."
+        image={s(settings, "page_property_solutions_image") || undefined}
         crumbs={[{ label: "Home", href: "/" }, { label: "Services" }]}
       >
         <Button href="#services" size="lg" variant="ghost-light">

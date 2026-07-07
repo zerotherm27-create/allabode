@@ -26,6 +26,8 @@ export const settingsFallback: Settings = {
   page_listings_image:  "",
   page_listyour_image:  "",
   page_resources_image: "",
+  page_property_solutions_image: "",
+  page_documentation_image:      "",
 };
 
 export function s(settings: Settings, key: string): string {
@@ -89,6 +91,8 @@ export const settingsSchema = [
       { key: "page_listings_image",  label: "Listings — Background Image",            type: "image" },
       { key: "page_listyour_image",  label: "List Your Property — Background Image",  type: "image" },
       { key: "page_resources_image", label: "Resources — Background Image",           type: "image" },
+      { key: "page_property_solutions_image", label: "Property Solutions — Background Image", type: "image" },
+      { key: "page_documentation_image",      label: "Documentation Assistance — Background Image", type: "image" },
     ],
   },
 ] as const;

@@ -5,7 +5,7 @@ import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { Faq } from "@/components/faq";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
-import { getSettings } from "@/lib/settings";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Property Documentation Assistance Philippines",
@@ -80,7 +80,7 @@ const faqs = [
 ];
 
 export default async function DocumentationAssistancePage() {
-  await getSettings();
+  const settings = await getSettings();
   return (
     <>
       <JsonLd data={serviceSchema({ name: "Property Documentation Assistance", description: "Title transfer coordination, tax payment assistance, notarial coordination, and property document processing.", path: "/property-solutions/documentation-assistance" })} />
@@ -89,6 +89,7 @@ export default async function DocumentationAssistancePage() {
         eyebrow="Documentation Assistance"
         title="Documentation Assistance"
         subtitle="Property transactions often require documents, payments, coordination, and follow-ups with different offices. All Abode helps clients organize and coordinate property-related documentation requirements with a clearer process."
+        image={s(settings, "page_documentation_image") || undefined}
         crumbs={[
           { label: "Home", href: "/" },
           { label: "Services", href: "/property-solutions" },

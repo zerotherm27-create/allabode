@@ -104,11 +104,11 @@ export function AdminShell({
       >
         <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
           <Image
-            src="/logo/logo-white-icon.png"
+            src="/logo/logo-2-white.png"
             alt="All Abode Property Solutions"
-            width={120}
-            height={38}
-            className="h-8 w-auto"
+            width={180}
+            height={48}
+            className="h-10 w-auto"
           />
           <span className="label-caps ml-auto text-gold">Admin</span>
         </div>

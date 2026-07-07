@@ -40,7 +40,7 @@ export function ListingGallery({
   }
 
   return (
-    <div className="relative isolate h-[40vh] w-full overflow-hidden md:h-[56vh]">
+    <div className="relative isolate h-[40vh] w-full overflow-hidden bg-navy md:h-[56vh]">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={index}
@@ -56,7 +56,7 @@ export function ListingGallery({
             fill
             priority={index === 0}
             sizes="100vw"
-            className="object-cover"
+            className="object-contain"
           />
         </motion.div>
       </AnimatePresence>

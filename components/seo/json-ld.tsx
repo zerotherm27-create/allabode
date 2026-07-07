@@ -15,8 +15,17 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-/** Organization / LocalBusiness schema for the marketing layout. */
-export function organizationSchema() {
+/** Organization / LocalBusiness schema for the marketing layout.
+ *  Accepts settings-derived overrides so admin-edited contact info reaches
+ *  structured data too — defaults to the static `site` config for callers
+ *  that don't have settings on hand. */
+export function organizationSchema(overrides?: {
+  email?: string;
+  telephone?: string;
+  areaServed?: string;
+  addressLocality?: string;
+  sameAs?: string;
+}) {
   const base = getPublicSiteUrl();
   return {
     "@context": "https://schema.org",
@@ -25,15 +34,15 @@ export function organizationSchema() {
     alternateName: site.shortName,
     legalName: site.legalName,
     url: base,
-    email: site.email,
-    telephone: site.phone,
-    areaServed: site.serviceArea,
+    email: overrides?.email || site.email,
+    telephone: overrides?.telephone || site.phone,
+    areaServed: overrides?.areaServed || site.serviceArea,
     address: {
       "@type": "PostalAddress",
-      addressLocality: site.location,
+      addressLocality: overrides?.addressLocality || site.location,
       addressCountry: "PH",
     },
-    sameAs: [site.facebook],
+    sameAs: [overrides?.sameAs || site.facebook],
   };
 }
 

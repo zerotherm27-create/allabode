@@ -3,7 +3,6 @@ import { Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading } from "@/components/sections";
 import { ContactForm } from "@/components/forms/lead-forms";
-import { site } from "@/lib/site";
 import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
@@ -13,17 +12,27 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-const channels = [
-  { icon: "call", label: "Phone", value: site.phone, href: site.phoneHref },
-  { icon: "mail", label: "Email", value: site.email, href: site.emailHref },
-  { icon: "forum", label: "Facebook / Messenger", value: "Message us on Messenger", href: site.messenger },
-  { icon: "chat", label: "WhatsApp", value: site.phone, href: site.whatsapp },
-  { icon: "sms", label: "Viber", value: site.phone, href: site.viber },
-  { icon: "location_on", label: "Office", value: site.location, href: undefined },
-];
-
 export default async function ContactPage() {
   const settings = await getSettings();
+  const phone = s(settings, "contact_phone");
+  const email = s(settings, "contact_email");
+  const location = s(settings, "contact_location");
+  const serviceArea = s(settings, "contact_service_area");
+  const messenger = s(settings, "social_messenger");
+  const whatsapp = s(settings, "social_whatsapp");
+  const viber = s(settings, "social_viber");
+  const phoneHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
+  const emailHref = `mailto:${email}`;
+
+  const channels = [
+    { icon: "call", label: "Phone", value: phone, href: phoneHref },
+    { icon: "mail", label: "Email", value: email, href: emailHref },
+    { icon: "forum", label: "Facebook / Messenger", value: "Message us on Messenger", href: messenger },
+    { icon: "chat", label: "WhatsApp", value: phone, href: whatsapp },
+    { icon: "sms", label: "Viber", value: phone, href: viber },
+    { icon: "location_on", label: "Office", value: location, href: undefined },
+  ];
+
   return (
     <>
       <PageHero
@@ -68,14 +77,14 @@ export default async function ContactPage() {
 
             <div className="mt-8 rounded-md border border-line bg-surface-gray p-5">
               <p className="label-caps text-slate">Service Area</p>
-              <p className="mt-2 text-navy">{site.serviceArea}</p>
+              <p className="mt-2 text-navy">{serviceArea}</p>
             </div>
 
             {/* Map placeholder */}
             <div className="mt-6 flex aspect-[16/10] items-center justify-center rounded-lg border border-line bg-gradient-to-br from-navy via-navy-800 to-navy-700 text-white/70">
               <span className="flex flex-col items-center gap-2 text-sm">
                 <Icon name="map" size={32} className="text-gold" />
-                Map: {site.location}
+                Map: {location}
               </span>
             </div>
           </div>

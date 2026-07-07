@@ -25,7 +25,7 @@ export function ListingGallery({
   if (images.length === 0) {
     return (
       <div className="relative isolate">
-        <div className={`h-[40vh] w-full bg-gradient-to-br ${gradient} md:h-[56vh]`} />
+        <div className={`aspect-[4/3] max-h-[75vh] w-full bg-gradient-to-br ${gradient} sm:aspect-[3/2]`} />
         <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(120%_120%_at_80%_0%,rgba(180,151,90,0.35),transparent_55%)]" />
         {children}
       </div>
@@ -40,7 +40,7 @@ export function ListingGallery({
   }
 
   return (
-    <div className="relative isolate h-[40vh] w-full overflow-hidden bg-navy md:h-[56vh]">
+    <div className="relative isolate aspect-[4/3] max-h-[75vh] w-full overflow-hidden bg-navy sm:aspect-[3/2]">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={index}

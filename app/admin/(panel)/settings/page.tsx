@@ -6,6 +6,7 @@ import { Icon } from "@/components/icon";
 import { settingsSchema } from "@/lib/settings-schema";
 import { updateSettingsGroup } from "./actions";
 import { createClient } from "@/lib/supabase/client";
+import { optimizeImageFile } from "@/lib/image-optimize";
 
 type Settings = Record<string, string>;
 
@@ -175,10 +176,15 @@ function ImageField({ name, defaultValue }: { name: string; defaultValue: string
     setUploading(true);
     setUploadError("");
     try {
+      // Hero backgrounds render full-bleed viewport-width — optimize before
+      // upload so pages load fast even when someone drops in a straight-off-
+      // the-camera photo.
+      const blob = await optimizeImageFile(file, { maxDimension: 2400, quality: 0.85 });
       const supabase = createClient();
-      const ext = file.name.split(".").pop();
-      const path = `hero/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("site-assets").upload(path, file, { upsert: true });
+      const path = `hero/${Date.now()}.jpg`;
+      const { error } = await supabase.storage
+        .from("site-assets")
+        .upload(path, blob, { contentType: "image/jpeg", upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
       setUrl(data.publicUrl);

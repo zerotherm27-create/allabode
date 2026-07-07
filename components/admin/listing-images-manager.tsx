@@ -4,42 +4,11 @@ import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { FileUploadButton } from "@/components/forms/file-upload-button";
 import { deleteListingImage, reorderListingImages, uploadListingImages } from "@/app/admin/actions";
+import { optimizeImageFile } from "@/lib/image-optimize";
 
 export type ListingImage = { id: string; url: string; alt_text: string | null; sort_order: number };
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
-const MAX_DIMENSION = 1920;
-const JPEG_QUALITY = 0.82;
-
-function fileToResizedJpeg(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Could not read the file."));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error("Could not read the image."));
-      img.onload = () => {
-        const scale = Math.min(1, MAX_DIMENSION / img.width, MAX_DIMENSION / img.height);
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Canvas not supported."));
-          return;
-        }
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(
-          (blob) => (blob ? resolve(blob) : reject(new Error("Could not encode image."))),
-          "image/jpeg",
-          JPEG_QUALITY
-        );
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 export function ListingImagesManager({
   listingId,
@@ -69,7 +38,7 @@ export function ListingImagesManager({
     try {
       const fd = new FormData();
       for (const file of files) {
-        const blob = await fileToResizedJpeg(file);
+        const blob = await optimizeImageFile(file);
         fd.append("files", blob, file.name.replace(/\.\w+$/, ".jpg"));
       }
       await uploadListingImages(listingId, fd);

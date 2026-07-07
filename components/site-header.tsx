@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { mainNav, isDropdown } from "@/lib/site";
+import { mainNav, isDropdown, type NavDropdown } from "@/lib/site";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui";
 import { Logo } from "@/components/logo";
@@ -30,10 +30,8 @@ export function SiteHeader() {
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-  const isServicesActive = () =>
-    ["/leasing", "/buy-sell", "/property-management", "/appraisal"].some((h) =>
-      pathname.startsWith(h)
-    );
+  const isDropdownActive = (item: NavDropdown) =>
+    item.children.some((child) => isActive(child.href));
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-cream/95 backdrop-blur-md">
@@ -51,7 +49,7 @@ export function SiteHeader() {
                       <NavigationMenuTrigger
                         className={cn(
                           "bg-transparent text-sm font-medium hover:bg-surface-gray hover:text-navy data-[state=open]:bg-surface-gray",
-                          isServicesActive() ? "text-navy" : "text-slate"
+                          isDropdownActive(item) ? "text-navy" : "text-slate"
                         )}
                       >
                         {item.label}
@@ -106,8 +104,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button href="/list-your-property" variant="gold" className="hidden sm:inline-flex">
-            List Your Property
+          <Button href="/contact" variant="gold" className="hidden sm:inline-flex">
+            Contact All Abode
           </Button>
           <button
             type="button"
@@ -181,8 +179,8 @@ export function SiteHeader() {
               })}
             </nav>
             <div className="mt-auto border-t border-line p-5">
-              <Button href="/list-your-property" variant="gold" onClick={close} className="w-full">
-                List Your Property
+              <Button href="/contact" variant="gold" onClick={close} className="w-full">
+                Contact All Abode
               </Button>
             </div>
           </div>

@@ -1,8 +1,9 @@
 export const site = {
   name: "All Abode Property Solutions",
   shortName: "All Abode",
-  tagline: "Complete Property Services. One Trusted Partner.",
-  descriptor: "Brokerage | Leasing | Property Management | Appraisal",
+  legalName: "All Abode Brokerage and Valuation OPC",
+  tagline: "Property Solutions",
+  descriptor: "Brokerage | Valuation | Leasing | Property Management | Documentation",
   domain: "allabodeph.com",
   phone: "+63 2 8888 1234",
   phoneHref: "tel:+63288881234",
@@ -39,43 +40,52 @@ export function isDropdown(item: NavItem): item is NavDropdown {
 
 export const mainNav: readonly NavItem[] = [
   { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
   {
-    label: "Services",
+    label: "Property Solutions",
     children: [
-      { label: "Leasing", href: "/leasing" },
-      { label: "Buy / Sell", href: "/buy-sell" },
-      { label: "Property Management", href: "/property-management" },
-      { label: "Appraisal", href: "/appraisal" },
-      { label: "Documentation", href: "/documentation" },
+      { label: "All Property Solutions", href: "/property-solutions" },
+      { label: "Brokerage Solutions", href: "/property-solutions/brokerage" },
+      { label: "Leasing Solutions", href: "/property-solutions/leasing" },
+      { label: "Property Management Solutions", href: "/property-solutions/property-management" },
+      { label: "Documentation Assistance", href: "/property-solutions/documentation-assistance" },
     ],
   },
-  { label: "Listings", href: "/listings" },
-  { label: "Guides", href: "/resources" },
+  {
+    label: "Listings",
+    children: [
+      { label: "All Listings", href: "/listings" },
+      { label: "For Rent", href: "/listings/for-rent" },
+      { label: "For Sale", href: "/listings/for-sale" },
+      { label: "Commercial", href: "/listings/commercial" },
+      { label: "Office", href: "/listings/office" },
+      { label: "Industrial and Warehouse", href: "/listings/industrial-warehouse" },
+      { label: "Parking", href: "/listings/parking" },
+    ],
+  },
+  { label: "Valuation", href: "/valuation" },
+  { label: "About", href: "/about" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ];
 
 export const footerNav = {
-  services: [
-    { label: "Leasing", href: "/leasing" },
-    { label: "Buy / Sell", href: "/buy-sell" },
-    { label: "Property Management", href: "/property-management" },
-    { label: "Appraisal", href: "/appraisal" },
-    { label: "Documentation", href: "/documentation" },
-    { label: "Listings", href: "/listings" },
+  solutions: [
+    { label: "Brokerage Solutions", href: "/property-solutions/brokerage" },
+    { label: "Leasing Solutions", href: "/property-solutions/leasing" },
+    { label: "Property Management Solutions", href: "/property-solutions/property-management" },
+    { label: "Documentation Assistance", href: "/property-solutions/documentation-assistance" },
+    { label: "Valuation", href: "/valuation" },
   ],
-  clientActions: [
-    { label: "Find a Property", href: "/listings" },
-    { label: "List Your Property", href: "/list-your-property" },
-    { label: "Request an Appraisal", href: "/appraisal" },
-    { label: "Ask About Management", href: "/property-management" },
-    { label: "Contact Us", href: "/contact" },
+  listings: [
+    { label: "For Rent", href: "/listings/for-rent" },
+    { label: "For Sale", href: "/listings/for-sale" },
+    { label: "Commercial", href: "/listings/commercial" },
+    { label: "Office", href: "/listings/office" },
+    { label: "Industrial and Warehouse", href: "/listings/industrial-warehouse" },
+    { label: "Parking", href: "/listings/parking" },
   ],
-  resources: [
-    { label: "Property Guides", href: "/resources" },
-    { label: "Leasing Tips", href: "/resources" },
-    { label: "Appraisal Education", href: "/resources" },
-    { label: "Property Management Advice", href: "/resources" },
-    { label: "Buying and Selling Guidance", href: "/resources" },
+  compliance: [
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms of Service", href: "/terms-of-service" },
   ],
 } as const;

@@ -22,6 +22,16 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "12mb",
     },
   },
+  async redirects() {
+    // Old marketing URLs (indexed + linked externally) → the restructured IA.
+    return [
+      { source: "/buy-sell", destination: "/property-solutions/brokerage", permanent: true },
+      { source: "/leasing", destination: "/property-solutions/leasing", permanent: true },
+      { source: "/property-management", destination: "/property-solutions/property-management", permanent: true },
+      { source: "/documentation", destination: "/property-solutions/documentation-assistance", permanent: true },
+      { source: "/appraisal", destination: "/valuation", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

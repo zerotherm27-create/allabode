@@ -13,7 +13,6 @@ export async function SiteFooter() {
   const facebook    = s(settings, "social_facebook")     || site.facebook;
   const messenger   = s(settings, "social_messenger")    || site.messenger;
   const whatsapp    = s(settings, "social_whatsapp")     || site.whatsapp;
-  const descriptor  = s(settings, "brand_descriptor")    || site.descriptor;
 
   const socials = [
     { name: "Facebook",          href: facebook,  icon: "public" },
@@ -26,13 +25,13 @@ export async function SiteFooter() {
     <footer className="bg-navy text-white">
       <div className="container-site grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:py-20">
         {/* Brand */}
-        <div className="md:col-span-3">
+        <div className="md:col-span-4">
           <Logo variant="white" />
-          <p className="mt-3 text-xs tracking-wider text-gold/80">{descriptor}</p>
+          <p className="mt-3 text-xs tracking-wider text-gold/80">Property Solutions</p>
           <p className="mt-5 max-w-md text-sm leading-relaxed text-white/60">
-            {site.name} provides brokerage, leasing, property management, and
-            appraisal support for clients who need professional property
-            guidance in the Philippines.
+            {site.name} helps property owners, buyers, sellers, tenants, and
+            investors handle real estate with more confidence. Operated by{" "}
+            {site.legalName}.
           </p>
           <div className="mt-7 flex gap-3">
             {socials.map((s) => (
@@ -48,11 +47,11 @@ export async function SiteFooter() {
           </div>
         </div>
 
-        {/* Services */}
-        <div className="md:col-span-2">
-          <p className="label-caps text-white">Services</p>
+        {/* Property Solutions */}
+        <div className="md:col-span-3">
+          <p className="label-caps text-white">Property Solutions</p>
           <ul className="mt-6 space-y-3 text-sm text-white/60">
-            {footerNav.services.map((item) => (
+            {footerNav.solutions.map((item) => (
               <li key={item.label}>
                 <Link href={item.href} className="transition-colors hover:text-gold">
                   {item.label}
@@ -62,11 +61,11 @@ export async function SiteFooter() {
           </ul>
         </div>
 
-        {/* Client Actions */}
+        {/* Listings */}
         <div className="md:col-span-2">
-          <p className="label-caps text-white">Client Actions</p>
+          <p className="label-caps text-white">Listings</p>
           <ul className="mt-6 space-y-3 text-sm text-white/60">
-            {footerNav.clientActions.map((item) => (
+            {footerNav.listings.map((item) => (
               <li key={item.label}>
                 <Link href={item.href} className="transition-colors hover:text-gold">
                   {item.label}
@@ -76,21 +75,7 @@ export async function SiteFooter() {
           </ul>
         </div>
 
-        {/* Resources */}
-        <div className="md:col-span-2">
-          <p className="label-caps text-white">Guides</p>
-          <ul className="mt-6 space-y-3 text-sm text-white/60">
-            {footerNav.resources.map((item) => (
-              <li key={item.label}>
-                <Link href={item.href} className="transition-colors hover:text-gold">
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Contact */}
+        {/* Contact + Compliance */}
         <div className="md:col-span-3">
           <p className="label-caps text-white">Contact</p>
           <ul className="mt-6 space-y-4 text-sm text-white/60">
@@ -113,21 +98,38 @@ export async function SiteFooter() {
               <span>Service Area: {serviceArea}</span>
             </li>
           </ul>
+          <p className="label-caps mt-8 text-white">Compliance</p>
+          <ul className="mt-4 space-y-3 text-sm text-white/60">
+            {footerNav.compliance.map((item) => (
+              <li key={item.label}>
+                <Link href={item.href} className="transition-colors hover:text-gold">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="container-site flex flex-col gap-3 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <div className="container-site flex flex-col items-center gap-3 py-6 text-center text-xs text-white/40">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
             <Link href="/privacy-policy" className="transition-colors hover:text-white/60">
               Privacy Policy
             </Link>
+            <Link href="/terms-of-service" className="transition-colors hover:text-white/60">
+              Terms of Service
+            </Link>
           </div>
-          <p className="text-white/30">
-            {site.name} is operated and owned by All Abode Brokerage and Valuation OPC.
-            Property details, pricing, availability, and terms are subject to verification.
-            Formal appraisal services require professional review, documentation, and scope confirmation.
+          <p className="max-w-3xl text-white/30">
+            All Abode is operated by All Abode Brokerage and Valuation OPC, a
+            Philippine real estate service company providing brokerage,
+            valuation, leasing, property management, and documentation
+            assistance services. Brokerage and valuation services are performed
+            under the supervision of duly licensed real estate service
+            practitioners. Property details, pricing, availability, and terms
+            are subject to verification.
           </p>
         </div>
       </div>

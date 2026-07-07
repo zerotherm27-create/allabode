@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const listing = await getListing(id);
   if (!listing) return { title: "Listing not found" };
   return {
-    title: `${listing.title} — ${listing.price}`,
+    title: `${listing.title} | ${listing.price}`,
     description: `${listing.title} in ${listing.location}. ${listing.status}, ${listing.area}.`,
   };
 }
@@ -75,6 +75,19 @@ export default async function ListingDetailPage({ params }: Params) {
         <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_360px]">
           {/* Main */}
           <div>
+            <nav aria-label="Breadcrumb" className="mb-5">
+              <ol className="flex flex-wrap items-center gap-1.5 text-xs text-slate">
+                <li>
+                  <Link href="/" className="hover:text-gold">Home</Link>
+                </li>
+                <li aria-hidden="true"><Icon name="chevron_right" size={14} /></li>
+                <li>
+                  <Link href="/listings" className="hover:text-gold">Listings</Link>
+                </li>
+                <li aria-hidden="true"><Icon name="chevron_right" size={14} /></li>
+                <li aria-current="page" className="font-medium text-navy">{listing.title}</li>
+              </ol>
+            </nav>
             <div className="flex items-center justify-between gap-3">
               <span
                 className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[listing.status]}`}
@@ -184,7 +197,7 @@ export default async function ListingDetailPage({ params }: Params) {
               </p>
               <div className="mt-5 flex flex-col gap-3">
                 <Button href={listing.dbId ? "#schedule" : "#inquire"}>Schedule a Viewing</Button>
-                <Button href="/appraisal" variant="ghost">
+                <Button href="/valuation" variant="ghost">
                   Request Appraisal
                 </Button>
               </div>
@@ -234,7 +247,7 @@ export default async function ListingDetailPage({ params }: Params) {
             </p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-6 sm:p-8">
-            <InquiryForm listingTitle={`${listing.title} — ${listing.location}`} />
+            <InquiryForm listingTitle={`${listing.title}, ${listing.location}`} />
           </div>
         </Container>
       </section>
@@ -243,9 +256,11 @@ export default async function ListingDetailPage({ params }: Params) {
       <div className="border-t border-line bg-surface-gray">
         <Container className="py-5">
           <p className="text-sm text-slate">
-            <strong className="text-navy">Listing disclaimer:</strong> Property information,
-            pricing, availability, and terms are subject to verification and may change
-            without prior notice. Please confirm details with All Abode before making decisions.
+            <strong className="text-navy">Broker disclosure:</strong> This listing is
+            marketed by All Abode, operated by All Abode Brokerage and Valuation OPC.
+            Brokerage services are performed under the supervision of a duly licensed
+            real estate broker. Property details are subject to verification, owner
+            approval, and availability at the time of inquiry.
           </p>
         </Container>
       </div>

@@ -1,104 +1,133 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui";
 import { PageHero } from "@/components/sections";
+import { getSettings, s } from "@/lib/settings";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | All Abode Property Solutions",
+  title: "Privacy Policy | All Abode",
   description:
-    "Learn how All Abode Property Solutions collects, uses, and protects the information you submit through our website forms.",
+    "Read the All Abode Privacy Policy for information about how personal data is collected, used, stored, and protected.",
+  alternates: { canonical: "/privacy-policy" },
 };
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const settings = await getSettings();
+  const email = s(settings, "contact_email") || site.email;
+  const phone = s(settings, "contact_phone") || site.phone;
+
   return (
     <>
       <PageHero
         eyebrow="Legal"
         title="Privacy Policy"
-        subtitle="How All Abode Property Solutions collects and uses information submitted through this website."
+        subtitle="All Abode respects your privacy and is committed to protecting the personal information you share with us."
+        crumbs={[{ label: "Home", href: "/" }, { label: "Privacy Policy" }]}
       />
 
       <section className="py-section">
         <Container>
           <div className="mx-auto max-w-3xl space-y-10 text-slate leading-relaxed">
 
+            <p>
+              This Privacy Policy explains how All Abode, operated by All Abode
+              Brokerage and Valuation OPC, collects, uses, stores, and protects
+              personal information through our website, inquiry forms,
+              communications, and services.
+            </p>
+
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
-                What information we collect
+                Information We Collect
               </h2>
               <p className="mt-3">
-                All Abode Property Solutions collects information submitted through
-                website forms, including name, email address, mobile number, property
-                details, and the nature of your inquiry or request.
+                We may collect personal information such as your name, email
+                address, mobile number, property details, inquiry details,
+                identification documents, transaction documents, billing
+                information, and other information needed to respond to your
+                inquiry or provide our services.
               </p>
             </div>
 
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
-                How we use your information
+                How We Use Your Information
+              </h2>
+              <p className="mt-3">We may use your information to:</p>
+              <ul className="mt-3 list-disc space-y-1.5 pl-6">
+                <li>Respond to your inquiries</li>
+                <li>Coordinate property viewings</li>
+                <li>Assist with brokerage, leasing, valuation, property management, and documentation services</li>
+                <li>Verify property or client information</li>
+                <li>Coordinate with property owners, tenants, buyers, sellers, building administrators, service providers, and relevant offices</li>
+                <li>Prepare documents and service records</li>
+                <li>Comply with legal, regulatory, and professional requirements</li>
+                <li>Improve our services and website experience</li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="font-display text-xl font-bold text-navy">
+                Data Sharing
               </h2>
               <p className="mt-3">
-                Information submitted through this website is used to respond to
-                inquiries, coordinate property services, manage listing requests,
-                process appraisal requests, and handle related client communication.
-                Personal information is used only for legitimate service communication
-                and operational purposes.
+                We may share necessary information with property owners,
+                tenants, buyers, sellers, building administrators, service
+                providers, government offices, licensed professionals, and other
+                parties involved in the service you requested.
+              </p>
+              <p className="mt-3">
+                We only share information when needed for the service,
+                transaction, compliance requirement, or with your consent.
               </p>
             </div>
 
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
-                Data retention
+                Data Protection
               </h2>
               <p className="mt-3">
-                Inquiry records are retained as part of our client management process.
-                You may contact us to request access to, correction of, or deletion of
-                your submitted information.
+                We take reasonable steps to protect personal information against
+                unauthorized access, loss, misuse, alteration, or disclosure.
               </p>
             </div>
 
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
-                Sharing your information
+                Data Retention
               </h2>
               <p className="mt-3">
-                Your information will not be sold to third parties. All Abode Property
-                Solutions does not share personal information with unrelated parties
-                except where required to provide the service you requested or as required
-                by applicable law.
+                We retain personal information only as long as necessary for
+                service delivery, legal compliance, professional records,
+                dispute resolution, and legitimate business purposes.
               </p>
             </div>
 
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
-                Form consent notice
+                Your Rights
               </h2>
               <p className="mt-3">
-                By submitting any form on this website, you agree that All Abode Property
-                Solutions may collect and use your submitted information to respond to
-                your inquiry, coordinate property services, and manage related
-                communication. Your information will not be sold.
+                You may request access, correction, or deletion of your personal
+                information, subject to legal and operational limitations.
               </p>
             </div>
 
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
-                Contact us
+                Contact
               </h2>
+              <p className="mt-3">For privacy concerns, contact:</p>
               <p className="mt-3">
-                If you have questions about how your information is handled, please
-                contact All Abode Property Solutions through the{" "}
-                <a href="/contact" className="text-navy-700 underline underline-offset-2 hover:text-gold">
-                  Contact page
+                All Abode Brokerage and Valuation OPC
+                <br />
+                Email:{" "}
+                <a href={`mailto:${email}`} className="text-navy-700 underline underline-offset-2 hover:text-gold">
+                  {email}
                 </a>
-                .
+                <br />
+                Mobile: {phone}
               </p>
-            </div>
-
-            <div className="rounded-md border border-line bg-surface-gray p-5 text-sm text-slate">
-              <strong className="text-navy">Note:</strong> A full legal privacy policy
-              compliant with the Philippine Data Privacy Act of 2012 (Republic Act 10173)
-              and other applicable regulations should be prepared and reviewed by a qualified
-              legal professional before launch. This page is a summary placeholder.
             </div>
 
           </div>

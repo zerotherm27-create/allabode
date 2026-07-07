@@ -22,7 +22,7 @@ export type VehicleDetails = { makeModel?: string; plateNo?: string; color?: str
 export type ParkingScheduleRow = { dueDate: string; amount: string; bankBranch: string; coverage: string };
 
 export const DEFAULT_PARKING_BANK_DETAILS: ParkingBankDetails = {
-  name: "All Abode Property Management Corp.",
+  name: "All Abode Brokerage and Valuation OPC",
   bank: "Banco de Oro (BDO)",
   branch: "Makati Cinema Square",
   accountNumber: "004290181697",

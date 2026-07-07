@@ -12,7 +12,7 @@ export function Logo({
   return (
     <Link
       href="/"
-      aria-label="All Abode Property Solutions — home"
+      aria-label="All Abode Property Solutions home"
       className="inline-flex items-center"
     >
       <Image

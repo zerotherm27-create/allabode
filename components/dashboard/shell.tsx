@@ -73,7 +73,7 @@ export function DashboardShell({
 
         <div className="border-t border-white/10 p-3">
           <Link
-            href="/appraisal"
+            href="/valuation"
             className="label-caps flex items-center justify-center gap-2 bg-gold py-2.5 text-navy transition-colors hover:bg-gold-bright"
           >
             <Icon name="analytics" size={18} />

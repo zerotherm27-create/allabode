@@ -66,7 +66,8 @@ const COMMERCIAL = new Set(["Commercial", "Office", "Warehouse", "Lot"]);
 function uiStatus(row: Row): ListingStatus {
   if (row.status === "Reserved") return "Reserved";
   if (row.status === "Sold" || row.status === "Leased") return "Sold";
-  return row.listing_category; // "For Sale" | "For Lease"
+  // Display label only: the DB keeps "For Lease" as the listing_category value.
+  return row.listing_category === "For Lease" ? "For Rent" : "For Sale";
 }
 
 function fmtPrice(row: Row): string {

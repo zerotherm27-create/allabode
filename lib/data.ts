@@ -11,53 +11,53 @@ export type Service = {
 
 export const services: Service[] = [
   {
-    slug: "leasing",
-    icon: "key",
-    title: "Lease My Property",
-    blurb:
-      "Residential leasing for long-term, short stays / BnB, and bed space — plus commercial, office, industrial / warehouse, and parking leasing.",
-    href: "/leasing",
-    cta: "List for Leasing",
-  },
-  {
     slug: "brokerage",
     icon: "real_estate_agent",
-    title: "Buy & Sell",
+    title: "Brokerage Solutions",
     blurb:
-      "Brokerage for resale properties, lots and house & lots, condos, rent-to-own / lease-to-own, office, commercial, industrial, and parking.",
-    href: "/buy-sell",
-    cta: "Buy or Sell a Property",
+      "Buy, sell, and market properties with support from licensed real estate professionals. We assist with resale units, house and lots, lots, condominiums, commercial spaces, offices, industrial properties, and parking slots.",
+    href: "/property-solutions/brokerage",
+    cta: "Explore Brokerage",
+  },
+  {
+    slug: "leasing",
+    icon: "key",
+    title: "Leasing Solutions",
+    blurb:
+      "Lease out your property or find a rental that fits your needs. We assist with residential leasing, long-term leases, short-stay coordination, bedspace leasing, commercial leases, office spaces, warehouses, and parking.",
+    href: "/property-solutions/leasing",
+    cta: "Explore Leasing",
   },
   {
     slug: "management",
     icon: "corporate_fare",
-    title: "Manage My Property",
+    title: "Property Management Solutions",
     blurb:
-      "Full leasing & management, tenant hunting, vacant-unit care, furnishing, and owner assistance — tailored packages for busy owners, investors, and OFWs.",
-    href: "/property-management",
-    cta: "Get Management Support",
+      "Keep your property cared for even when you are busy or away. We assist with rent collection, maintenance coordination, cleaning, furnishing, fit-out, turnover, and owner support.",
+    href: "/property-solutions/property-management",
+    cta: "Get Property Management",
   },
   {
-    slug: "appraisal",
+    slug: "valuation",
     icon: "verified",
-    title: "Request an Appraisal",
+    title: "Valuation Solutions",
     blurb:
-      "Request formal appraisal support for residential, commercial, land, estate, legal, investment, or pre-sale purposes.",
-    href: "/appraisal",
-    cta: "Request an Appraisal",
+      "Request professional valuation and appraisal support for residential, commercial, office, industrial, and investment properties.",
+    href: "/valuation",
+    cta: "Request Valuation",
   },
   {
     slug: "documentation",
     icon: "history_edu",
-    title: "Documentation Support",
+    title: "Documentation Assistance",
     blurb:
-      "Title transfer, notarial services, and property tax payments — processed end-to-end so your paperwork never stalls a transaction.",
-    href: "/documentation",
+      "Get help coordinating title transfer, tax payment assistance, notarial coordination, and property-related document processing.",
+    href: "/property-solutions/documentation-assistance",
     cta: "Get Documentation Help",
   },
 ];
 
-export type ListingStatus = "For Sale" | "For Lease" | "Reserved" | "Sold";
+export type ListingStatus = "For Sale" | "For Rent" | "Reserved" | "Sold";
 
 export type Listing = {
   id: string;
@@ -122,7 +122,7 @@ export const listings: Listing[] = [
     title: "Executive Suite, The Proscenium",
     location: "Rockwell, Makati City",
     price: "₱ 120,000/mo",
-    status: "For Lease",
+    status: "For Rent",
     type: "Residential",
     propertyType: "Condo",
     listingType: "Long-term",
@@ -180,7 +180,7 @@ export const listings: Listing[] = [
     title: "Skyline Loft, Uptown BGC",
     location: "Bonifacio Global City, Taguig",
     price: "₱ 95,000/mo",
-    status: "For Lease",
+    status: "For Rent",
     type: "Residential",
     propertyType: "Condo",
     listingType: "Short-term",
@@ -218,7 +218,7 @@ export const listings: Listing[] = [
 
 export const statusStyles: Record<ListingStatus, string> = {
   "For Sale": "bg-available text-white",
-  "For Lease": "bg-navy text-white",
+  "For Rent": "bg-navy text-white",
   Reserved: "bg-reserved text-white",
   Sold: "bg-sold text-white",
 };
@@ -226,27 +226,27 @@ export const statusStyles: Record<ListingStatus, string> = {
 export const trustPoints = [
   {
     icon: "verified_user",
-    title: "Licensed Expertise",
-    body: "Licensed real estate professional support for brokerage, leasing, property management, and appraisal.",
+    title: "Licensed Real Estate Support",
+    body: "Brokerage and valuation services performed under the supervision of duly licensed real estate service practitioners.",
   },
   {
     icon: "hub",
-    title: "One Service Brand",
-    body: "Brokerage, leasing, management, and appraisal in one coordinated service partner.",
+    title: "Everything in One Place",
+    body: "Brokerage, valuation, leasing, property management, and documentation assistance from one coordinated team.",
   },
   {
-    icon: "chat",
-    title: "Clear Communication",
-    body: "Defined service scope, professional documentation, and responsive communication at every step.",
+    icon: "support_agent",
+    title: "Practical, Hands-On Support",
+    body: "Real help for property owners and tenants: viewings, coordination, follow-ups, and day-to-day property concerns.",
   },
   {
-    icon: "lightbulb",
-    title: "Practical Guidance",
-    body: "Straightforward advice for owners, tenants, buyers, sellers, and investors — no unnecessary complexity.",
+    icon: "route",
+    title: "Clear Process",
+    body: "A clear path from inquiry to completion, with organized documentation and updates at every step.",
   },
   {
-    icon: "devices",
-    title: "Client-Ready Systems",
-    body: "Purpose-built systems for inquiry management, lead tracking, and future client portal access.",
+    icon: "location_on",
+    title: "Local Coordination",
+    body: "On-the-ground coordination for property-related concerns, offices, buildings, and service providers.",
   },
 ];

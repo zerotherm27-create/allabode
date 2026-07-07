@@ -17,7 +17,7 @@ export type InventoryRow = { quantity: string; particulars: string; brand: strin
 export type TenancyBankDetails = { name: string; bank: string; branch: string; accountNumber: string };
 
 export const DEFAULT_BANK_DETAILS: TenancyBankDetails = {
-  name: "All Abode Property Management Corp.",
+  name: "All Abode Brokerage and Valuation OPC",
   bank: "Union Bank of the Philippines",
   branch: "JTKC Building, Pasong Tamo Branch",
   accountNumber: "0020 2003 7938",

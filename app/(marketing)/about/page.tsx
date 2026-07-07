@@ -2,21 +2,26 @@ import type { Metadata } from "next";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
+import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { trustPoints } from "@/lib/data";
 import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
-  title: "About All Abode Property Solutions | Licensed Real Estate Support",
+  title: "About All Abode Property Solutions",
   description:
-    "Learn about All Abode Property Solutions, a Philippine property services company for brokerage, leasing, property management, appraisal, and documentation.",
+    "Learn about All Abode, operated by All Abode Brokerage and Valuation OPC, providing brokerage, valuation, leasing, and property solutions.",
+  alternates: { canonical: "/about" },
 };
 
-const values = [
-  { icon: "verified_user", title: "Professional Integrity", body: "All Abode operates with professional integrity in every client engagement, from inquiry to completion." },
-  { icon: "lightbulb", title: "Client Clarity", body: "Clear communication, honest service scope, and straightforward process at every stage." },
-  { icon: "support_agent", title: "Responsive Support", body: "Inquiries are acknowledged promptly and clients are kept informed throughout the process." },
-  { icon: "insights", title: "Practical Expertise", body: "Licensed expertise applied to real property decisions — not generic advice or guesswork." },
-  { icon: "diversity_3", title: "Long-Term Trust", body: "Built on a commitment to professional service that clients can rely on over time." },
+const whoWeServe = [
+  "Property owners",
+  "Buyers",
+  "Sellers",
+  "Tenants",
+  "Investors",
+  "Businesses",
+  "OFWs and overseas property owners",
+  "Families managing property concerns",
 ];
 
 export default async function AboutPage() {
@@ -25,44 +30,43 @@ export default async function AboutPage() {
     <>
       <PageHero
         eyebrow="About All Abode"
-        title="Professional property support built on licensed expertise."
-        subtitle="All Abode Property Solutions was created for clients who need more than a simple property listing — providing professional support across brokerage, leasing, property management, appraisal, and documentation."
+        title="About All Abode"
+        subtitle="All Abode is a real estate service brand focused on practical property solutions for owners, buyers, sellers, tenants, investors, and businesses. All Abode is operated by All Abode Brokerage and Valuation OPC, a Philippine real estate service company providing brokerage, valuation, leasing, property management, and documentation assistance services."
         image={s(settings, "page_about_image") || undefined}
+        crumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
       />
 
-      {/* Story */}
+      {/* What we do + our approach */}
       <section className="py-section">
         <Container className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2">
-          <SectionHeading
-            align="left"
-            eyebrow="Our Story"
-            title="More than a listing — a complete property partner"
-          />
-          <div className="flex flex-col gap-5 text-slate leading-relaxed">
+          <Reveal>
+            <SectionHeading
+              align="left"
+              eyebrow="What We Do"
+              title="More than listings, a complete property partner"
+            />
+          </Reveal>
+          <Reveal className="flex flex-col gap-5 text-slate leading-relaxed">
             <p>
-              All Abode Property Solutions was created for clients who need more
-              than a simple property listing. The company provides brokerage,
-              leasing, property management, appraisal, and documentation
-              support for owners, investors, buyers, sellers, landlords,
-              tenants, and appraisal clients in the Philippines.
+              We help clients with real estate needs across different stages of
+              property ownership and transactions. Our services include
+              brokerage, leasing, valuation, property management, and
+              documentation assistance.
             </p>
             <p>
-              Led by a licensed Real Estate Broker and Real Estate Appraiser,
-              All Abode combines professional guidance, organized coordination,
-              and transparent service to help clients make better property
-              decisions. Building on the trusted foundation of{" "}
-              <strong className="text-navy">Properties by Chel</strong>, the
-              company serves clients who need complete, professional property
-              support in one place.
+              We believe real estate service should be clear, organized, and
+              responsive. Clients should understand what is happening, what
+              documents are needed, what the next step is, and who is
+              responsible for each part of the process.
             </p>
-          </div>
+          </Reveal>
         </Container>
       </section>
 
       {/* Properties by Chel — founder's personal brand */}
       <section className="bg-surface-gray py-section">
         <Container className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-16">
-          <div className="shrink-0">
+          <Reveal className="shrink-0">
             <div className="flex w-56 flex-col items-center gap-4 rounded-lg border border-line bg-surface p-6 text-center shadow-sm">
               <span className="flex h-14 w-14 items-center justify-center rounded-full bg-navy/5 text-navy-700">
                 <Icon name="home_work" size={28} />
@@ -78,94 +82,111 @@ export default async function AboutPage() {
               <div className="h-px w-full bg-line" />
               <p className="label-caps text-gold">Founded by Chel</p>
             </div>
-          </div>
-          <div className="max-w-xl">
+          </Reveal>
+          <Reveal className="max-w-xl">
             <p className="label-caps text-gold">About the Founder</p>
             <h2 className="mt-3 font-display text-2xl font-bold text-navy sm:text-3xl">
               Properties by Chel
             </h2>
             <p className="mt-4 leading-relaxed text-slate">
               Properties by Chel is the personal real estate advisory and
-              educational brand of Chel, founder of All Abode Property
-              Solutions. It shares educational content and professional insights
-              to help clients understand real estate topics — from leasing and
-              buying, to property management and appraisal.
+              educational brand of Chel, founder of All Abode. It shares
+              educational content and professional insights to help clients
+              understand real estate topics, from leasing and buying to
+              property management and valuation.
             </p>
             <p className="mt-3 leading-relaxed text-slate">
-              All Abode Property Solutions serves as the main operating company
-              for full-service property support: brokerage, leasing, property
-              management, appraisal, and documentation.
+              All Abode, operated by All Abode Brokerage and Valuation OPC,
+              serves as the main operating company for full-service property
+              support: brokerage, valuation, leasing, property management, and
+              documentation assistance.
             </p>
-          </div>
+          </Reveal>
         </Container>
       </section>
 
-      {/* Mission + credibility */}
+      {/* Licensed support + trust points */}
       <section className="bg-navy py-section text-white">
         <Container className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
-          <div>
-            <span className="label-caps text-gold">Our Mission</span>
+          <Reveal>
+            <span className="label-caps text-gold">Licensed Real Estate Support</span>
             <h2 className="mt-3 font-display text-3xl font-bold leading-tight sm:text-4xl">
-              Property decisions backed by licensed expertise
+              Property decisions backed by licensed practice
             </h2>
             <p className="mt-6 max-w-xl text-white/70">
-              We believe property decisions shouldn&apos;t be based on guesswork. Our
-              team consists of PRC-Licensed Real Estate Brokers and Appraisers,
-              ensuring every piece of advice we give is backed by legal compliance and
-              market data.
+              Brokerage and valuation services are performed under the
+              supervision of duly licensed real estate service practitioners.
+              Every piece of advice we give is grounded in professional
+              standards, legal compliance, and market data.
             </p>
             <Button href="/contact" variant="secondary" size="lg" className="mt-8">
               Work With Our Team
             </Button>
-          </div>
-          <div className="grid gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
+          </Reveal>
+          <StaggerGroup className="grid gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
             {trustPoints.map((point) => (
-              <div key={point.title} className="flex gap-5 bg-navy p-7">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-gold/15 text-gold">
-                  <Icon name={point.icon} size={24} />
-                </span>
-                <div>
-                  <h3 className="font-semibold">{point.title}</h3>
-                  <p className="mt-1.5 text-sm text-white/70">{point.body}</p>
+              <StaggerItem key={point.title}>
+                <div className="flex h-full gap-5 bg-navy p-7">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-gold/15 text-gold">
+                    <Icon name={point.icon} size={24} />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold">{point.title}</h3>
+                    <p className="mt-1.5 text-sm text-white/70">{point.body}</p>
+                  </div>
                 </div>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </Container>
       </section>
 
-      {/* Values */}
+      {/* Who we serve + why clients work with us */}
       <section className="py-section">
-        <Container>
-          <SectionHeading
-            eyebrow="What We Stand For"
-            title="Values that guide every engagement"
-          />
-          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
-            {values.map((v) => (
-              <div key={v.title} className="bg-surface p-8">
-                <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
-                  <Icon name={v.icon} size={28} />
-                </span>
-                <h3 className="mt-5 font-display text-lg font-semibold text-navy">
-                  {v.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate">{v.body}</p>
-              </div>
-            ))}
+        <Container className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2">
+          <div>
+            <Reveal>
+              <SectionHeading
+                align="left"
+                eyebrow="Who We Serve"
+                title="Support for every kind of client"
+              />
+            </Reveal>
+            <StaggerGroup as="ul" className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {whoWeServe.map((w) => (
+                <StaggerItem as="li" key={w}>
+                  <div className="flex items-start gap-3 text-sm text-slate">
+                    <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-gold" fill={1} />
+                    <span>{w}</span>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerGroup>
           </div>
+          <Reveal>
+            <SectionHeading
+              align="left"
+              eyebrow="Why Clients Work With Us"
+              title="Structure, not stress"
+            />
+            <p className="mt-6 leading-relaxed text-slate">
+              We provide more than listings. We help clients understand their
+              options, prepare requirements, coordinate next steps, and manage
+              property-related concerns with better structure.
+            </p>
+          </Reveal>
         </Container>
       </section>
 
       <CtaBand
-        title="Work with a professional property partner."
-        body="Whether you are leasing, selling, managing, buying, renting, or requesting appraisal, All Abode can guide you to the right next step."
+        title="Need help with your property?"
+        body="Whether you are leasing, selling, managing, buying, renting, or requesting valuation, All Abode can guide you to the right next step."
       >
         <Button href="/contact" size="lg">
-          Get in Touch
+          Contact All Abode
         </Button>
         <Button href="/list-your-property" variant="ghost" size="lg">
-          List Your Property
+          List My Property
         </Button>
       </CtaBand>
     </>

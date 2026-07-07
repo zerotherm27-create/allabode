@@ -96,12 +96,14 @@ function FormShell({
           className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded-sm border-line accent-navy"
         />
         <span>
-          By submitting this form, you agree that All Abode Property Solutions may collect
-          and use your submitted information to respond to your inquiry, coordinate property
-          services, and manage related communication.{" "}
+          I agree to allow All Abode to collect and process my information for
+          the purpose of responding to my inquiry, coordinating services, and
+          providing property-related assistance. I understand that my
+          information will be handled according to the{" "}
           <a href="/privacy-policy" className="text-navy-700 underline underline-offset-2 hover:text-gold">
-            Your information will not be sold.
+            Privacy Policy
           </a>
+          .
         </span>
       </label>
       <Button type="submit" size="lg" disabled={state === "submitting"} className="mt-1 w-full sm:w-auto">
@@ -136,7 +138,7 @@ export function InquiryForm({ listingTitle }: { listingTitle?: string }) {
       type="inquiry"
       submitLabel="Send Inquiry"
       successTitle="Inquiry received"
-      successBody="Thank you — a licensed agent will reach out within one business day to assist you."
+      successBody="Thank you. A licensed agent will reach out within one business day to assist you."
       build={(data) => {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
@@ -276,7 +278,7 @@ export function PropertyManagementForm() {
       type="property-management"
       submitLabel="Request a Proposal"
       successTitle="Request received"
-      successBody="Thank you — our property management team will prepare a tailored proposal and reach out shortly."
+      successBody="Thank you. Our property management team will prepare a tailored proposal and reach out shortly."
       build={(data) => {
         const errors: Record<string, string> = {};
         const ownerName = reqText(data, "name", "Name", errors);
@@ -360,9 +362,9 @@ export function ContactForm() {
   return (
     <FormShell
       type="contact"
-      submitLabel="Send Message"
-      successTitle="Message sent"
-      successBody="Thanks for reaching out — we'll get back to you within one business day."
+      submitLabel="Submit Inquiry"
+      successTitle="Inquiry sent"
+      successBody="Thanks for reaching out. We will get back to you within one business day."
       build={(data) => {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
@@ -373,8 +375,10 @@ export function ContactForm() {
             name,
             email,
             phone: data.get("phone"),
+            userType: data.get("userType"),
             helpWith: data.get("helpWith"),
             propertyLocation: data.get("propertyLocation"),
+            propertyType: data.get("propertyType"),
             message: data.get("message"),
           },
         };
@@ -394,16 +398,40 @@ export function ContactForm() {
             <Field label="Mobile / Viber / WhatsApp">
               <Input name="phone" type="tel" autoComplete="tel" placeholder="+63 9XX XXX XXXX" />
             </Field>
-            <Field label="I need help with">
-              <Select name="helpWith" defaultValue="Consultation">
-                <option>Leasing my property</option>
-                <option>Finding a rental</option>
-                <option>Selling a property</option>
-                <option>Buying a property</option>
-                <option>Property management</option>
-                <option>Appraisal</option>
-                <option>Documentation (title transfer / notarial / tax)</option>
-                <option>Consultation</option>
+            <Field label="I am a">
+              <Select name="userType" defaultValue="Property Owner">
+                <option>Property Owner</option>
+                <option>Buyer</option>
+                <option>Seller</option>
+                <option>Tenant</option>
+                <option>Investor</option>
+                <option>Business</option>
+                <option>Other</option>
+              </Select>
+            </Field>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Service needed">
+              <Select name="helpWith" defaultValue="General Inquiry">
+                <option>Brokerage</option>
+                <option>Leasing</option>
+                <option>Property Management</option>
+                <option>Valuation</option>
+                <option>Documentation Assistance</option>
+                <option>Listings Inquiry</option>
+                <option>General Inquiry</option>
+              </Select>
+            </Field>
+            <Field label="Property type">
+              <Select name="propertyType" defaultValue="Condominium">
+                <option>Condominium</option>
+                <option>House and Lot</option>
+                <option>Lot</option>
+                <option>Commercial</option>
+                <option>Office</option>
+                <option>Industrial / Warehouse</option>
+                <option>Parking</option>
+                <option>Other / Not applicable</option>
               </Select>
             </Field>
           </div>
@@ -426,7 +454,7 @@ export function ListPropertyForm() {
       type="list-property"
       submitLabel="Submit Property"
       successTitle="Property submitted"
-      successBody="Thank you — our team will review your property details and contact you to discuss next steps."
+      successBody="Thank you. Our team will review your property details and contact you to discuss next steps."
       build={(data) => {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
@@ -499,7 +527,7 @@ export function ListPropertyForm() {
               <Input name="floorArea" placeholder="120 sqm" />
             </Field>
             <Field label="Expected price / rent">
-              <Input name="price" placeholder="₱ —" />
+              <Input name="price" placeholder="₱" />
             </Field>
           </div>
           <Field label="Property description">

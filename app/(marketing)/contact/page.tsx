@@ -7,9 +7,10 @@ import { site } from "@/lib/site";
 import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
-  title: "Contact All Abode Property Solutions Philippines",
+  title: "Contact All Abode Property Solutions",
   description:
-    "Contact All Abode for brokerage, leasing, property management, appraisal, property listings, or general real estate consultation.",
+    "Contact All Abode for brokerage, leasing, valuation, property management, listings, and documentation assistance.",
+  alternates: { canonical: "/contact" },
 };
 
 const channels = [
@@ -27,9 +28,10 @@ export default async function ContactPage() {
     <>
       <PageHero
         eyebrow="Contact"
-        title="Contact All Abode Property Solutions."
-        subtitle="Tell us what property support you need. Whether you want to lease, sell, manage, buy, rent, or appraise property, All Abode will review your inquiry and guide you to the right next step."
+        title="Contact All Abode"
+        subtitle="Tell us what you need help with and our team will guide you to the right property solution. You may contact All Abode for property listings, leasing, sale, valuation, management, documentation assistance, and general real estate concerns."
         image={s(settings, "page_contact_image") || undefined}
+        crumbs={[{ label: "Home", href: "/" }, { label: "Contact" }]}
       />
 
       <section className="py-section">
@@ -73,7 +75,7 @@ export default async function ContactPage() {
             <div className="mt-6 flex aspect-[16/10] items-center justify-center rounded-lg border border-line bg-gradient-to-br from-navy via-navy-800 to-navy-700 text-white/70">
               <span className="flex flex-col items-center gap-2 text-sm">
                 <Icon name="map" size={32} className="text-gold" />
-                Map — {site.location}
+                Map: {site.location}
               </span>
             </div>
           </div>
@@ -84,7 +86,9 @@ export default async function ContactPage() {
               Send us a message
             </h2>
             <p className="mt-2 text-sm text-slate">
-              Fields marked with <span className="text-error">*</span> are required.
+              For faster assistance, please include the property location,
+              property type, and the service you need. Fields marked with{" "}
+              <span className="text-error">*</span> are required.
             </p>
             <div className="mt-6">
               <ContactForm />

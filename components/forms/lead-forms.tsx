@@ -338,11 +338,12 @@ export function PropertyManagementForm() {
             </Field>
           </div>
           <Field label="Service needed">
-            <Select name="neededService" defaultValue="Full Property Management">
-              <option>Basic Leasing Support</option>
-              <option>Standard Property Management</option>
-              <option>Full Property Management</option>
-              <option>Investor Portfolio Management</option>
+            <Select name="neededService" defaultValue="Full Leasing & Property Management">
+              <option>Full Leasing & Property Management</option>
+              <option>Tenant Hunting: We Lease, You Manage</option>
+              <option>Vacant Unit Management</option>
+              <option>Furnishing & Rental-Ready Setup</option>
+              <option>Owner Assistance Services</option>
             </Select>
           </Field>
           <Field label="Message">
@@ -401,6 +402,7 @@ export function ContactForm() {
                 <option>Buying a property</option>
                 <option>Property management</option>
                 <option>Appraisal</option>
+                <option>Documentation (title transfer / notarial / tax)</option>
                 <option>Consultation</option>
               </Select>
             </Field>

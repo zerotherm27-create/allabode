@@ -9,52 +9,110 @@ import { getSettings, s } from "@/lib/settings";
 export const metadata: Metadata = {
   title: "Property Management Philippines | Rental Property Owner Support",
   description:
-    "Property management support for owners, OFWs, and investors. Get help with tenant coordination, rent monitoring, maintenance coordination, and owner reports.",
+    "All Abode PH helps condo owners lease, maintain, and manage their units — Full Leasing & Property Management, Tenant Hunting, Vacant Unit Management, Furnishing & Rental-Ready Setup, and Owner Assistance packages.",
 };
 
-const handled = [
-  { icon: "apartment", title: "Property Onboarding", body: "Inspection, documentation, and listing setup to get your unit market-ready." },
-  { icon: "payments", title: "Rental Pricing Advice", body: "Data-driven rent recommendations based on current market comparables." },
-  { icon: "campaign", title: "Listing & Marketing", body: "Professional listings distributed across the channels that reach qualified tenants." },
-  { icon: "fact_check", title: "Tenant Screening", body: "Background, employment, and reference checks on every applicant." },
-  { icon: "handshake", title: "Lease Coordination", body: "Contract preparation, signing, and renewals handled for you." },
-  { icon: "account_balance_wallet", title: "Rent Monitoring", body: "Collection tracking with timely follow-up on arrears." },
-  { icon: "build", title: "Maintenance Coordination", body: "Vetted contractors dispatched and supervised for repairs and upkeep." },
-  { icon: "summarize", title: "Owner Reports", body: "Clear monthly statements on income, occupancy, and unit condition." },
+const whyChoose = [
+  { icon: "location_on", title: "Local, Hands-On Support", body: "On-the-ground assistance for property owners who need a reliable team to look after their unit." },
+  { icon: "hub", title: "Leasing & Management in One Place", body: "From finding a tenant to coordinating maintenance, we help simplify the entire ownership experience." },
+  { icon: "tune", title: "Personalized Owner Service", body: "Every property is different — we tailor our service to your unit, location, tenant type, and preferred level of involvement." },
+  { icon: "auto_awesome", title: "Better Rental Readiness", body: "We help owners prepare their units so they look presentable, functional, and competitive in the rental market." },
 ];
 
 const packages = [
   {
-    name: "Basic Leasing Support",
-    summary: "Placement-only for hands-on owners.",
-    features: ["Tenant screening", "Lease documentation", "Move-in coordination"],
-    featured: false,
-  },
-  {
-    name: "Standard Management",
-    summary: "Day-to-day management for a single unit.",
-    features: ["Everything in Basic", "Rent collection & monitoring", "Maintenance coordination", "Monthly owner reports"],
+    icon: "home_work",
+    name: "Full Leasing & Property Management",
+    summary: "For owners who want a hands-off property ownership experience.",
+    description: "Our full-service management package covers the leasing process and ongoing tenant coordination — ideal for owners based abroad, busy professionals, investors, or anyone who wants a reliable local team to manage the unit.",
+    features: [
+      "Property listing and marketing",
+      "Tenant inquiries and viewing coordination",
+      "Tenant screening assistance",
+      "Lease documentation coordination",
+      "Move-in and move-out assistance",
+      "Rent collection monitoring",
+      "Bills and association dues monitoring",
+      "Maintenance and repair coordination",
+      "Cleaning and pest control coordination",
+      "Owner updates and reporting",
+    ],
     featured: true,
   },
   {
-    name: "Full Management",
-    summary: "Complete, hands-off ownership.",
-    features: ["Everything in Standard", "Marketing & re-leasing", "Move-out documentation", "Priority support"],
+    icon: "search",
+    name: "Tenant Hunting: We Lease, You Manage",
+    summary: "For owners who only need help finding a tenant.",
+    description: "We market your property, handle inquiries, schedule viewings, assist with tenant screening, and coordinate the move-in process. Once the tenant is secured and moved in, you take over the ongoing management.",
+    features: [
+      "Rental pricing guidance",
+      "Property listing and promotion",
+      "Lead handling and viewing assistance",
+      "Tenant screening assistance",
+      "Lease coordination",
+      "Move-in documentation support",
+    ],
     featured: false,
   },
   {
-    name: "Investor Portfolio",
-    summary: "Multi-unit and OFW investors.",
-    features: ["Everything in Full", "Portfolio reporting", "Dedicated account manager", "CRM / client access"],
+    icon: "meeting_room",
+    name: "Vacant Unit Management",
+    summary: "For owners who want their empty unit monitored and maintained.",
+    description: "A vacant unit still needs care. We monitor your property while it's unoccupied, coordinate cleaning or repairs, check bill status, and keep the unit ready for future lease, sale, or owner use.",
+    features: [
+      "Periodic unit checks",
+      "Cleaning coordination",
+      "Utility and bill monitoring",
+      "Maintenance reporting",
+      "Key coordination",
+      "Preparation for future viewings",
+    ],
+    featured: false,
+  },
+  {
+    icon: "chair",
+    name: "Furnishing & Rental-Ready Setup",
+    summary: "For owners who want to improve the unit's rental appeal.",
+    description: "We assist with furniture sourcing, minor repairs, styling, and renovation coordination to help make your unit more attractive to potential tenants.",
+    features: [
+      "Furniture and appliance sourcing assistance",
+      "Minor repair coordination",
+      "Cleaning and turnover preparation",
+      "Renovation coordination",
+      "Rental-readiness recommendations",
+    ],
+    featured: false,
+  },
+  {
+    icon: "support_agent",
+    name: "Owner Assistance Services",
+    summary: "For owners who need help with property-related admin tasks.",
+    description: "We assist with selected owner errands and property-related payments — bills payment coordination, real property tax payment assistance, association dues monitoring, maintenance scheduling, and move-in/move-out documentation.",
+    features: [
+      "Bills payment coordination",
+      "Real property tax payment assistance",
+      "Association dues monitoring",
+      "Maintenance scheduling",
+      "Move-in / move-out documentation",
+    ],
     featured: false,
   },
 ];
 
+const process = [
+  { n: "1", title: "Property Assessment", body: "We review your unit, location, condition, target tenant, and rental goals, and identify what needs repair, cleaning, furnishing, or preparation before listing." },
+  { n: "2", title: "Rental Preparation", body: "We help prepare the property for listing through cleaning, maintenance coordination, furnishing recommendations, and photo-ready setup." },
+  { n: "3", title: "Listing & Marketing", body: "We create and promote your property listing across relevant rental channels to attract qualified tenant inquiries." },
+  { n: "4", title: "Viewings & Tenant Screening", body: "We coordinate viewing schedules, answer tenant questions, and assist with tenant screening before lease finalization." },
+  { n: "5", title: "Lease & Move-In Support", body: "We assist with lease coordination, move-in documentation, turnover checks, and building requirements." },
+  { n: "6", title: "Ongoing Management", body: "For full management clients, we continue to assist with rent monitoring, tenant concerns, maintenance coordination, bills tracking, and regular owner updates." },
+];
+
 const faqs = [
-  { q: "What does property management include?", a: "Onboarding, pricing, marketing, tenant screening, lease coordination, rent monitoring, maintenance, move-in/out documentation, and monthly owner reports — scaled to the package you choose." },
-  { q: "Do owners get reports?", a: "Yes. Every managed property receives transparent monthly statements covering rent collection, occupancy, and unit condition, with an owner portal planned for live access." },
+  { q: "What does property management include?", a: "It depends on the package: full leasing and ongoing management, tenant-hunting only, vacant-unit care, furnishing and rental-ready setup, or owner assistance with bills and documentation — scaled to how hands-on you want to be." },
+  { q: "Do owners get reports?", a: "Yes. Every managed property receives transparent owner updates covering rent collection, occupancy, and unit condition, with an owner portal planned for live access." },
   { q: "Can you manage units for OFWs?", a: "Absolutely — remote and overseas owners are a core focus. We handle everything on the ground and keep you updated wherever you are." },
-  { q: "Do you handle maintenance coordination?", a: "We dispatch and supervise vetted contractors for repairs and upkeep, with your approval on significant expenses." },
+  { q: "Do you handle maintenance coordination?", a: "We dispatch and supervise vetted contractors for repairs, cleaning, and pest control, with your approval on significant expenses." },
 ];
 
 export default async function PropertyManagementPage() {
@@ -63,8 +121,8 @@ export default async function PropertyManagementPage() {
     <>
       <PageHero
         eyebrow="Property Management"
-        title="Property management for owners who need reliable support."
-        subtitle="All Abode helps property owners manage rentals with leasing support, tenant coordination, rent monitoring, maintenance coordination, move-in and move-out documentation, owner reporting, and portfolio support."
+        title="Your property, managed with care."
+        subtitle="All Abode PH helps property owners lease, maintain, and manage their condominium units with less stress and more confidence — whether your unit is occupied, vacant, newly turned over, or ready for leasing."
         image={s(settings, "page_pm_image") || undefined}
       >
         <Button href="#proposal" size="lg" variant="ghost-light">
@@ -72,75 +130,55 @@ export default async function PropertyManagementPage() {
         </Button>
       </PageHero>
 
-      {/* Why management */}
+      {/* Why choose us */}
       <section className="py-section">
-        <Container className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2">
-          <SectionHeading
-            align="left"
-            eyebrow="Why Owners Choose Management"
-            title="Ownership without the operational burden"
-            lead="Vacancy, late rent, problem tenants, and maintenance headaches erode returns. Professional management turns your property into a genuinely passive asset — protected by licensed expertise and Philippine rental law."
-          />
-          <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
-            {[
-              { icon: "trending_up", stat: "Maximized", label: "occupancy & rental yield" },
-              { icon: "verified_user", stat: "Compliant", label: "with RESA & rental law" },
-              { icon: "schedule", stat: "Time", label: "back in your week" },
-              { icon: "shield", stat: "Protected", label: "asset & income" },
-            ].map((c) => (
-              <div key={c.label} className="bg-surface p-7">
-                <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
-                  <Icon name={c.icon} size={24} />
-                </span>
-                <p className="mt-4 font-display text-xl font-bold text-navy">{c.stat}</p>
-                <p className="mt-1 text-sm text-slate">{c.label}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* What we handle */}
-      <section className="bg-surface-gray py-section">
         <Container>
           <SectionHeading
-            eyebrow="What All Abode Handles"
-            title="Everything your property needs, managed"
+            eyebrow="Why Choose All Abode PH"
+            title="A local partner for your property, from lease to upkeep"
+            lead="From tenant sourcing and viewings to rent coordination, bills monitoring, maintenance, move-in support, and owner updates, we handle the details so you can focus on your investment."
           />
           <div className="mt-12 grid grid-cols-1 gap-x-12 gap-y-9 sm:grid-cols-2">
-            {handled.map((s) => (
-              <FeatureItem key={s.title} {...s} />
+            {whyChoose.map((w) => (
+              <FeatureItem key={w.title} {...w} />
             ))}
           </div>
         </Container>
       </section>
 
       {/* Packages */}
-      <section className="py-section">
+      <section className="bg-surface-gray py-section">
         <Container>
           <SectionHeading
-            eyebrow="Package Comparison"
-            title="Choose the level of management that fits"
-            lead="From placement-only support to full portfolio management — clear tiers, no surprises."
+            eyebrow="Our Property Management Packages"
+            title="Choose the level of support that fits your unit"
+            lead="Every property is different — pick the package that matches your unit, location, and how involved you want to be."
           />
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {packages.map((p) => (
+          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+            {packages.map((p, i) => (
               <div
                 key={p.name}
                 className={`flex flex-col border bg-surface p-7 ${
                   p.featured
                     ? "border-gold shadow-[var(--shadow-card)]"
                     : "border-line"
-                }`}
+                } ${i === packages.length - 1 && packages.length % 2 === 1 ? "md:col-span-2" : ""}`}
               >
-                {p.featured && (
-                  <span className="label-caps mb-4 self-start bg-gold/15 px-3 py-1 text-gold-bright">
-                    Most Popular
+                <div className="flex items-start justify-between gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-navy/5 text-navy-700">
+                    <Icon name={p.icon} size={24} />
                   </span>
-                )}
-                <h3 className="font-display text-lg font-bold text-navy">{p.name}</h3>
-                <p className="mt-2 text-sm text-slate">{p.summary}</p>
-                <ul className="mt-5 flex flex-1 flex-col gap-3 border-t border-line pt-5 text-sm text-slate">
+                  {p.featured && (
+                    <span className="label-caps bg-gold/15 px-3 py-1 text-gold-bright">
+                      Most Popular
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-4 font-display text-lg font-bold text-navy">{p.name}</h3>
+                <p className="mt-2 text-sm font-semibold text-gold-bright">{p.summary}</p>
+                <p className="mt-3 text-sm leading-relaxed text-slate">{p.description}</p>
+                <p className="label-caps mt-5 text-slate">Included Services</p>
+                <ul className="mt-3 flex flex-1 flex-col gap-2.5 border-t border-line pt-4 text-sm text-slate">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <Icon name="check" size={18} className="mt-0.5 shrink-0 text-gold" />
@@ -158,6 +196,29 @@ export default async function PropertyManagementPage() {
               </div>
             ))}
           </div>
+        </Container>
+      </section>
+
+      {/* Process */}
+      <section className="py-section">
+        <Container>
+          <SectionHeading
+            eyebrow="How Our Process Works"
+            title="From assessment to ongoing management"
+          />
+          <ol className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+            {process.map((step) => (
+              <li key={step.n} className="bg-surface p-7">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-navy text-sm font-bold text-white">
+                  {step.n}
+                </span>
+                <h3 className="mt-4 font-display text-base font-semibold text-navy">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate">{step.body}</p>
+              </li>
+            ))}
+          </ol>
         </Container>
       </section>
 
@@ -188,7 +249,7 @@ export default async function PropertyManagementPage() {
               ))}
             </ul>
             <p className="mt-6 text-sm text-white/50">
-              Owner portal access is included with Standard plans and above.
+              Owner portal access is included with Full Leasing & Property Management.
             </p>
           </div>
           {/* Dashboard teaser */}
@@ -244,7 +305,7 @@ export default async function PropertyManagementPage() {
             align="left"
             eyebrow="Request a Proposal"
             title="Tell us about your property"
-            lead="Share a few details and our team will prepare a tailored management proposal — including recommended rent and the right service tier."
+            lead="Share a few details and our team will prepare a tailored management proposal — including recommended rent and the right service package."
           />
           <div className="rounded-lg border border-line bg-surface p-6 sm:p-8">
             <PropertyManagementForm />

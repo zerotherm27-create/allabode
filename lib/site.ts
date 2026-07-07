@@ -47,6 +47,7 @@ export const mainNav: readonly NavItem[] = [
       { label: "Buy / Sell", href: "/buy-sell" },
       { label: "Property Management", href: "/property-management" },
       { label: "Appraisal", href: "/appraisal" },
+      { label: "Documentation", href: "/documentation" },
     ],
   },
   { label: "Listings", href: "/listings" },
@@ -60,6 +61,7 @@ export const footerNav = {
     { label: "Buy / Sell", href: "/buy-sell" },
     { label: "Property Management", href: "/property-management" },
     { label: "Appraisal", href: "/appraisal" },
+    { label: "Documentation", href: "/documentation" },
     { label: "Listings", href: "/listings" },
   ],
   clientActions: [

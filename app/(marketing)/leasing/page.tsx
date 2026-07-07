@@ -8,26 +8,49 @@ import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
-  title: "Leasing Services Philippines | Property and Condo Leasing Support",
+  title: "Leasing Services Philippines | Residential, Commercial & Office Leasing",
   description:
-    "Lease your condo, apartment, house, bed space, or commercial property with professional marketing, tenant screening, viewing coordination, and move-in support.",
+    "Lease your condo, house, bed space, commercial space, office, industrial warehouse, or parking slot with professional marketing, tenant screening, viewing coordination, and move-in support.",
 };
 
-const leaseTypes = [
+const residentialLeaseTypes = [
   {
     icon: "calendar_month",
-    title: "Long-Term Leasing",
-    body: "Stable, vetted tenancies for residential and corporate clients with full lease administration.",
+    title: "Long-Term Lease",
+    body: "Stable, vetted tenancies for condos, houses, and apartments with full lease administration.",
   },
   {
     icon: "weekend",
-    title: "Short-Term Leasing",
+    title: "Short Stays / BnB",
     body: "Flexible, fully-managed short stays for furnished condos and serviced units in prime districts.",
   },
   {
     icon: "bed",
-    title: "Bed Space & Dorms",
+    title: "Bed Space",
     body: "Compliant, well-managed bed-space arrangements for students and young professionals.",
+  },
+];
+
+const specialtyLeaseTypes = [
+  {
+    icon: "storefront",
+    title: "Commercial",
+    body: "Retail and commercial spaces leased to qualified operators with clear, enforceable terms.",
+  },
+  {
+    icon: "corporate_fare",
+    title: "Office",
+    body: "Office units and floors placed with vetted corporate tenants under proper fit-out terms.",
+  },
+  {
+    icon: "warehouse",
+    title: "Industrial / Warehouse",
+    body: "Warehouses and industrial facilities leased with usage, compliance, and access handled.",
+  },
+  {
+    icon: "local_parking",
+    title: "Parking",
+    body: "Parking slots leased under documented, e-signed rental agreements.",
   },
 ];
 
@@ -57,7 +80,7 @@ const ownerServices = [
 const faqs = [
   {
     q: "What types of leasing do you handle?",
-    a: "We manage long-term residential and corporate leases, short-term furnished rentals, and compliant bed-space arrangements — for individual owners and investors alike.",
+    a: "Residential leasing (long-term, short stays / BnB, and bed space) plus commercial, office, industrial / warehouse, and parking leasing — for individual owners and investors alike.",
   },
   {
     q: "Can you help screen tenants?",
@@ -105,8 +128,23 @@ export default async function LeasingPage() {
             title="Leasing built around how you live and invest"
             lead="Whether you own a single condo or a growing portfolio, we structure the right leasing approach for your goals."
           />
-          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line md:grid-cols-3">
-            {leaseTypes.map((t) => (
+          <p className="label-caps mt-12 text-slate">Residential</p>
+          <div className="mt-4 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line md:grid-cols-3">
+            {residentialLeaseTypes.map((t) => (
+              <div key={t.title} className="bg-surface p-8">
+                <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
+                  <Icon name={t.icon} size={28} />
+                </span>
+                <h3 className="mt-5 font-display text-lg font-semibold text-navy">
+                  {t.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate">{t.body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="label-caps mt-10 text-slate">Commercial & Specialty</p>
+          <div className="mt-4 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+            {specialtyLeaseTypes.map((t) => (
               <div key={t.title} className="bg-surface p-8">
                 <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
                   <Icon name={t.icon} size={28} />

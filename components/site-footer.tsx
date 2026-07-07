@@ -125,6 +125,7 @@ export async function SiteFooter() {
             </Link>
           </div>
           <p className="text-white/30">
+            {site.name} is operated and owned by All Abode Brokerage and Valuation OPC.
             Property details, pricing, availability, and terms are subject to verification.
             Formal appraisal services require professional review, documentation, and scope confirmation.
           </p>

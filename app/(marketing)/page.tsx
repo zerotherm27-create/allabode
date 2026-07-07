@@ -74,16 +74,19 @@ export default async function Home() {
             </h2>
             <p className="mt-4 text-slate">
               Complete property support, not just listings. One coordinated
-              service partner for brokerage, leasing, management, and appraisal.
+              service partner for brokerage, leasing, management, appraisal,
+              and documentation.
             </p>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-            {services.map((service) => (
+          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
+            {services.map((service, i) => (
               <Link
                 key={service.slug}
                 href={service.href}
-                className="group flex flex-col bg-surface p-8 transition-colors hover:bg-surface-gray"
+                className={`group flex flex-col bg-surface p-8 transition-colors hover:bg-surface-gray ${
+                  i === services.length - 1 && services.length % 2 === 1 ? "sm:col-span-2 lg:col-span-1" : ""
+                }`}
               >
                 <span className="flex h-12 w-12 items-center justify-center bg-navy/5 text-navy-700">
                   <Icon name={service.icon} size={28} />
@@ -188,16 +191,17 @@ export default async function Home() {
               Property support for owners, investors, and OFWs
             </h2>
             <p className="mt-4 text-slate">
-              If you need help managing tenants, rent updates, maintenance
-              coordination, or multiple properties, All Abode can provide
-              structured property management support based on your needs.
+              Whether your unit is occupied, vacant, or newly turned over, All
+              Abode PH offers tailored packages — from full leasing and
+              management to tenant hunting, vacant-unit care, furnishing, and
+              owner assistance.
             </p>
             <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { icon: "fact_check", label: "Tenant coordination" },
-                { icon: "account_balance_wallet", label: "Rent monitoring" },
-                { icon: "build", label: "Maintenance coordination" },
-                { icon: "summarize", label: "Owner reports" },
+                { icon: "location_on", label: "Local, hands-on support" },
+                { icon: "hub", label: "Leasing & management in one place" },
+                { icon: "tune", label: "Personalized owner service" },
+                { icon: "auto_awesome", label: "Better rental readiness" },
               ].map((f) => (
                 <li key={f.label} className="flex items-center gap-2 text-sm text-slate">
                   <Icon name={f.icon} size={20} className="text-gold" />
@@ -211,10 +215,10 @@ export default async function Home() {
           </div>
           <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
             {[
-              { icon: "apartment", title: "Property onboarding", label: "to listing-ready" },
-              { icon: "people", title: "Tenant coordination", label: "inquiries handled" },
-              { icon: "build", title: "Maintenance", label: "coordination support" },
-              { icon: "summarize", title: "Owner reporting", label: "regular updates" },
+              { icon: "home_work", title: "Full Leasing & Management", label: "hands-off ownership" },
+              { icon: "search", title: "Tenant Hunting", label: "we lease, you manage" },
+              { icon: "meeting_room", title: "Vacant Unit Care", label: "monitored & maintained" },
+              { icon: "chair", title: "Furnishing Setup", label: "rental-ready styling" },
             ].map((c) => (
               <div key={c.label} className="bg-surface p-7">
                 <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">

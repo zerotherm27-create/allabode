@@ -15,25 +15,25 @@ export const services: Service[] = [
     icon: "key",
     title: "Lease My Property",
     blurb:
-      "Get support with rental pricing guidance, listing preparation, tenant inquiries, viewing coordination, screening, and move-in support.",
+      "Residential leasing for long-term, short stays / BnB, and bed space — plus commercial, office, industrial / warehouse, and parking leasing.",
     href: "/leasing",
     cta: "List for Leasing",
   },
   {
     slug: "brokerage",
     icon: "real_estate_agent",
-    title: "Sell My Property",
+    title: "Buy & Sell",
     blurb:
-      "Prepare your property for sale with pricing guidance, marketing support, buyer inquiry handling, viewing coordination, and transaction support.",
+      "Brokerage for resale properties, lots and house & lots, condos, rent-to-own / lease-to-own, office, commercial, industrial, and parking.",
     href: "/buy-sell",
-    cta: "Sell My Property",
+    cta: "Buy or Sell a Property",
   },
   {
     slug: "management",
     icon: "corporate_fare",
     title: "Manage My Property",
     blurb:
-      "For busy owners, investors, and OFWs who need help with tenants, rent monitoring, maintenance coordination, and owner updates.",
+      "Full leasing & management, tenant hunting, vacant-unit care, furnishing, and owner assistance — tailored packages for busy owners, investors, and OFWs.",
     href: "/property-management",
     cta: "Get Management Support",
   },
@@ -45,6 +45,15 @@ export const services: Service[] = [
       "Request formal appraisal support for residential, commercial, land, estate, legal, investment, or pre-sale purposes.",
     href: "/appraisal",
     cta: "Request an Appraisal",
+  },
+  {
+    slug: "documentation",
+    icon: "history_edu",
+    title: "Documentation Support",
+    blurb:
+      "Title transfer, notarial services, and property tax payments — processed end-to-end so your paperwork never stalls a transaction.",
+    href: "/documentation",
+    cta: "Get Documentation Help",
   },
 ];
 

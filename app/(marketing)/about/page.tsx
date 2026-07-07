@@ -8,7 +8,7 @@ import { getSettings, s } from "@/lib/settings";
 export const metadata: Metadata = {
   title: "About All Abode Property Solutions | Licensed Real Estate Support",
   description:
-    "Learn about All Abode Property Solutions, a Philippine property services company for brokerage, leasing, property management, and appraisal.",
+    "Learn about All Abode Property Solutions, a Philippine property services company for brokerage, leasing, property management, appraisal, and documentation.",
 };
 
 const values = [
@@ -26,7 +26,7 @@ export default async function AboutPage() {
       <PageHero
         eyebrow="About All Abode"
         title="Professional property support built on licensed expertise."
-        subtitle="All Abode Property Solutions was created for clients who need more than a simple property listing — providing professional support across brokerage, leasing, property management, and appraisal."
+        subtitle="All Abode Property Solutions was created for clients who need more than a simple property listing — providing professional support across brokerage, leasing, property management, appraisal, and documentation."
         image={s(settings, "page_about_image") || undefined}
       />
 
@@ -42,9 +42,9 @@ export default async function AboutPage() {
             <p>
               All Abode Property Solutions was created for clients who need more
               than a simple property listing. The company provides brokerage,
-              leasing, property management, and appraisal support for owners,
-              investors, buyers, sellers, landlords, tenants, and appraisal
-              clients in the Philippines.
+              leasing, property management, appraisal, and documentation
+              support for owners, investors, buyers, sellers, landlords,
+              tenants, and appraisal clients in the Philippines.
             </p>
             <p>
               Led by a licensed Real Estate Broker and Real Estate Appraiser,
@@ -94,7 +94,7 @@ export default async function AboutPage() {
             <p className="mt-3 leading-relaxed text-slate">
               All Abode Property Solutions serves as the main operating company
               for full-service property support: brokerage, leasing, property
-              management, and appraisal.
+              management, appraisal, and documentation.
             </p>
           </div>
         </Container>

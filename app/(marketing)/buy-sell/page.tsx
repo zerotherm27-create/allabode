@@ -10,7 +10,7 @@ import { getSettings, s } from "@/lib/settings";
 export const metadata: Metadata = {
   title: "Buy and Sell Property Philippines | Real Estate Brokerage Support",
   description:
-    "Professional brokerage guidance for buying and selling property in the Philippines, including pricing, marketing, viewing coordination, and documentation support.",
+    "Brokerage for resale properties, lots and house & lots, condos, rent-to-own, office, commercial, industrial, and parking — with pricing, marketing, viewing coordination, and documentation support.",
 };
 
 const sellers = [
@@ -27,6 +27,17 @@ const buyers = [
   { icon: "fact_check", label: "Due diligence on title & property status" },
   { icon: "handshake", label: "Representation through negotiation" },
   { icon: "gavel", label: "Documentation & transfer assistance" },
+];
+
+const propertyTypes = [
+  { icon: "house", title: "Resale Properties", body: "Pre-owned homes and units marketed and closed at fair market value." },
+  { icon: "landscape", title: "Lots / House & Lots", body: "Vacant lots and house-and-lot packages, titled and verified." },
+  { icon: "apartment", title: "Condos", body: "Condominium units across Metro Manila, Cebu, and Davao." },
+  { icon: "real_estate_agent", title: "Rent-to-Own / Lease-to-Own", body: "Structured pathways to ownership with clear, documented terms." },
+  { icon: "corporate_fare", title: "Office", body: "Office units and floors for end-users and investors." },
+  { icon: "storefront", title: "Commercial", body: "Retail and commercial spaces with income and location analysis." },
+  { icon: "warehouse", title: "Industrial", body: "Warehouses and industrial facilities, sale-ready and compliant." },
+  { icon: "local_parking", title: "Parking", body: "Titled parking slots bought and sold as standalone assets." },
 ];
 
 const faqs = [
@@ -99,6 +110,30 @@ export default async function BuySellPage() {
             <Button href="/contact" variant="ghost" className="mt-8">
               Inquire as a Buyer
             </Button>
+          </div>
+        </Container>
+      </section>
+
+      {/* What we broker */}
+      <section className="pb-section">
+        <Container>
+          <SectionHeading
+            eyebrow="What We Broker"
+            title="Every property type, one licensed team"
+            lead="From a single parking slot to an industrial facility, we buy and sell across the full range of Philippine property."
+          />
+          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+            {propertyTypes.map((t) => (
+              <div key={t.title} className="bg-surface p-7">
+                <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
+                  <Icon name={t.icon} size={24} />
+                </span>
+                <h3 className="mt-4 font-display text-base font-semibold text-navy">
+                  {t.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate">{t.body}</p>
+              </div>
+            ))}
           </div>
         </Container>
       </section>

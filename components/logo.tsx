@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 export function Logo({
   variant = "color",
@@ -9,7 +10,6 @@ export function Logo({
   className?: string;
 }) {
   const src = variant === "white" ? "/logo/logo-2-white.png" : "/logo/logo-primary.png";
-  const sizeClass = variant === "white" ? "h-14" : "h-10";
   return (
     <Link
       href="/"
@@ -22,7 +22,7 @@ export function Logo({
         width={180}
         height={56}
         priority
-        className={`${sizeClass} w-auto ${className}`}
+        className={cn("h-10 w-auto", className)}
       />
     </Link>
   );

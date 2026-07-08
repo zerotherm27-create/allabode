@@ -187,3 +187,18 @@ button:not(:disabled):active {
     transform: scale(0.98);
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  body::before {
+    content: "Printing is disabled for All Abode website content.";
+    visibility: visible !important;
+    display: block;
+    padding: 2rem;
+    color: #0a2540;
+    font: 600 16px/1.4 Arial, sans-serif;
+  }
+}

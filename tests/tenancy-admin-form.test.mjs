@@ -27,6 +27,13 @@ test("admin tenancy form starts with one occupant slot", async () => {
   assert.deepEqual(adminOccupantsInitial(["Tenant", "", "Partner"]), ["Tenant", "Partner"]);
 });
 
+test("admin tenancy form can append a blank occupant slot", async () => {
+  const { appendAdminOccupantSlot } = await loadTenancyAdminFormModule();
+
+  assert.deepEqual(appendAdminOccupantSlot(["Tenant"]), ["Tenant", ""]);
+  assert.deepEqual(appendAdminOccupantSlot(["Tenant", ""]), ["Tenant", "", ""]);
+});
+
 test("admin tenancy form parses only filled inventory rows", async () => {
   const { parseInventoryJson } = await loadTenancyAdminFormModule();
 

@@ -8,7 +8,7 @@ import {
   DEFAULT_INVENTORY,
   type InventoryRow, type PaymentScheduleRow, type TenancyBankDetails,
 } from "@/lib/pm/tenancy-clauses";
-import { adminOccupantsInitial } from "@/lib/tenancy/admin-form";
+import { adminOccupantSlots, appendAdminOccupantSlot } from "@/lib/tenancy/admin-form";
 
 export type UnitOption = {
   id: string;
@@ -164,7 +164,7 @@ export function TenancyTermsForm({
   }
 
   function setOccupant(i: number, value: string) {
-    set({ occupants: adminOccupantsInitial(t.occupants).map((name, j) => (j === i ? value : name)) });
+    set({ occupants: adminOccupantSlots(t.occupants).map((name, j) => (j === i ? value : name)) });
   }
 
   function setInventoryRow(i: number, patch: Partial<InventoryRow>) {
@@ -200,7 +200,7 @@ export function TenancyTermsForm({
           Printed under clause 5. Start with the tenant, then add only approved additional occupants.
         </p>
         <div className="flex flex-col gap-2">
-          {adminOccupantsInitial(t.occupants).map((occupant, i) => (
+          {adminOccupantSlots(t.occupants).map((occupant, i) => (
             <div key={i} className="grid grid-cols-[1fr_2rem] gap-2">
               <input
                 aria-label={`Occupant ${i + 1}`}
@@ -212,7 +212,7 @@ export function TenancyTermsForm({
               <button
                 type="button"
                 aria-label="Remove occupant"
-                onClick={() => set({ occupants: adminOccupantsInitial(adminOccupantsInitial(t.occupants).filter((_, j) => j !== i)) })}
+                onClick={() => set({ occupants: adminOccupantSlots(adminOccupantSlots(t.occupants).filter((_, j) => j !== i)) })}
                 className="self-center text-sm font-semibold text-slate hover:text-error"
               >
                 ×
@@ -222,7 +222,7 @@ export function TenancyTermsForm({
         </div>
         <button
           type="button"
-          onClick={() => set({ occupants: [...adminOccupantsInitial(t.occupants), ""] })}
+          onClick={() => set({ occupants: appendAdminOccupantSlot(t.occupants) })}
           className="mt-3 text-xs font-semibold text-navy-700 underline"
         >
           Add occupant

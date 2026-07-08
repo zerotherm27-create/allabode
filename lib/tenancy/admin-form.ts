@@ -9,6 +9,15 @@ export function adminOccupantsInitial(occupants: string[] | null | undefined): s
   return filled.length > 0 ? filled : [""];
 }
 
+export function adminOccupantSlots(occupants: string[] | null | undefined): string[] {
+  const slots = (occupants ?? []).filter((name): name is string => typeof name === "string");
+  return slots.length > 0 ? slots : [""];
+}
+
+export function appendAdminOccupantSlot(occupants: string[] | null | undefined): string[] {
+  return [...adminOccupantSlots(occupants), ""];
+}
+
 export function normalizeInventoryRows(rows: unknown): InventoryRow[] {
   if (!Array.isArray(rows)) return [];
   return rows

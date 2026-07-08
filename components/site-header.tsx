@@ -21,7 +21,13 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [overLightSurface, setOverLightSurface] = useState(false);
-  const close = () => setOpen(false);
+  const [loginMenuOpen, setLoginMenuOpen] = useState(false);
+  const [mobileLoginOpen, setMobileLoginOpen] = useState(false);
+  const close = () => {
+    setOpen(false);
+    setLoginMenuOpen(false);
+    setMobileLoginOpen(false);
+  };
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -159,6 +165,9 @@ export function SiteHeader() {
           <div className="group relative hidden lg:block">
             <button
               type="button"
+              aria-expanded={loginMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setLoginMenuOpen((current) => !current)}
               className={cn(
                 "inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
                 overLightSurface
@@ -169,15 +178,25 @@ export function SiteHeader() {
               Login
               <Icon name="expand_more" size={18} />
             </button>
-            <div className="invisible absolute right-0 top-full z-50 mt-2 w-52 rounded-lg border border-line bg-surface p-1.5 opacity-0 shadow-[var(--shadow-lift)] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+            <div
+              role="menu"
+              className={cn(
+                "invisible absolute right-0 top-full z-50 mt-2 w-52 rounded-lg border border-line bg-surface p-1.5 opacity-0 shadow-[var(--shadow-lift)] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100",
+                loginMenuOpen && "visible opacity-100"
+              )}
+            >
               <Link
                 href="/portal/login"
+                role="menuitem"
+                onClick={() => setLoginMenuOpen(false)}
                 className="block rounded-md px-3 py-2.5 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
               >
                 Owner / Tenant Login
               </Link>
               <Link
                 href="/admin/login"
+                role="menuitem"
+                onClick={() => setLoginMenuOpen(false)}
                 className="block rounded-md px-3 py-2.5 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
               >
                 Admin Login
@@ -262,21 +281,41 @@ export function SiteHeader() {
               })}
             </nav>
             <div className="mt-auto border-t border-line p-5">
-              <div className="mb-4 grid grid-cols-1 gap-2">
-                <Link
-                  href="/portal/login"
-                  onClick={close}
-                  className="rounded-lg border border-line px-4 py-3 text-center text-sm font-semibold text-navy transition-colors hover:bg-surface-gray"
+              <div className="mb-4">
+                <button
+                  type="button"
+                  aria-expanded={mobileLoginOpen}
+                  aria-controls="mobile-login-menu"
+                  onClick={() => setMobileLoginOpen((current) => !current)}
+                  className="flex w-full items-center justify-between rounded-lg border border-line px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-surface-gray"
                 >
-                  Owner / Tenant Login
-                </Link>
-                <Link
-                  href="/admin/login"
-                  onClick={close}
-                  className="rounded-lg border border-line px-4 py-3 text-center text-sm font-semibold text-navy transition-colors hover:bg-surface-gray"
+                  Login
+                  <Icon name="expand_more" size={20} />
+                </button>
+                <div
+                  id="mobile-login-menu"
+                  className={cn(
+                    "grid overflow-hidden transition-[grid-template-rows,opacity] duration-200",
+                    mobileLoginOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  )}
                 >
-                  Admin Login
-                </Link>
+                  <div className="min-h-0 pt-2">
+                    <Link
+                      href="/portal/login"
+                      onClick={close}
+                      className="block rounded-lg px-4 py-3 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
+                    >
+                      Owner / Tenant Login
+                    </Link>
+                    <Link
+                      href="/admin/login"
+                      onClick={close}
+                      className="block rounded-lg px-4 py-3 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
+                    >
+                      Admin Login
+                    </Link>
+                  </div>
+                </div>
               </div>
               <Button href="/list-your-property" variant="gold" onClick={close} className="w-full rounded-full">
                 List My Property

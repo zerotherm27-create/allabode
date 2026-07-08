@@ -81,7 +81,7 @@ export function SiteHeader() {
             : "border-line/70 bg-cream/85 shadow-[0_8px_24px_-16px_rgba(15,20,30,0.25)]"
         )}
       >
-        <Logo variant={overLightSurface ? "white" : "color"} className={overLightSurface ? "h-10" : ""} />
+        <Logo variant={overLightSurface ? "white" : "color"} className="h-10" />
 
         {/* Desktop nav — Radix NavigationMenu */}
         <nav aria-label="Primary" className="hidden lg:flex">

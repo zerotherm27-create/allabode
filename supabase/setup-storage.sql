@@ -10,7 +10,7 @@ values
   ('site-assets',    'site-assets',    true ),
   ('documents',       'documents',      false),
   ('agreements',     'agreements',     false),
-  ('listing-images', 'listing-images', true )
+  ('listing-images', 'listing-images', false)
 on conflict (id) do nothing;
 
 -- ── 2. Drop existing policies (idempotent) ────────────────────────────────────
@@ -33,6 +33,7 @@ drop policy if exists "staff select agreements"    on storage.objects;
 drop policy if exists "staff update agreements"    on storage.objects;
 drop policy if exists "staff delete agreements"    on storage.objects;
 drop policy if exists "staff manage listing-images" on storage.objects;
+drop policy if exists "anon read listing-images" on storage.objects;
 
 -- ── 3. receipts (private — staff only) ───────────────────────────────────────
 create policy "staff insert receipts"
@@ -124,8 +125,16 @@ create policy "staff delete agreements"
   on storage.objects for delete to authenticated
   using (bucket_id = 'agreements' and public.is_staff());
 
--- ── 8. listing-images (public bucket — staff write, CDN handles public reads) ─
+-- ── 8. listing-images (private — staff full access; anon gets SELECT only,
+-- which is required for the Storage API to mint signed URLs, but does NOT
+-- allow constructing a working direct/public URL to the object, since the
+-- bucket's public flag is now false. Listing photos are served to visitors
+-- exclusively as short-lived signed URLs, resolved server-side.) ─────────────
 create policy "staff manage listing-images"
   on storage.objects for all to authenticated
   using     (bucket_id = 'listing-images' and public.is_staff())
   with check (bucket_id = 'listing-images' and public.is_staff());
+
+create policy "anon read listing-images"
+  on storage.objects for select to anon
+  using (bucket_id = 'listing-images');

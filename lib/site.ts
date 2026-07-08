@@ -5,17 +5,17 @@ export const site = {
   tagline: "Real Estate Services",
   descriptor: "Brokerage | Valuation | Leasing | Property Management | Documentation",
   domain: "allabodeph.com",
-  phone: "+63 2 8888 1234",
-  phoneHref: "tel:+63288881234",
-  email: "hello@allabodeph.com",
-  emailHref: "mailto:hello@allabodeph.com",
+  phone: "+63 917 159 6808",
+  phoneHref: "tel:+639171596808",
+  email: "info@allabodeph.com",
+  emailHref: "mailto:info@allabodeph.com",
   serviceArea: "Metro Manila · Cebu · Davao",
   location: "Makati City, Philippines",
   // Social / messaging — PLACEHOLDERS, confirm from the brand guide.
   facebook: "https://facebook.com/allabodeph",
   messenger: "https://m.me/allabodeph",
-  viber: "viber://chat?number=%2B63288881234",
-  whatsapp: "https://wa.me/63288881234",
+  viber: "viber://chat?number=%2B639171596808",
+  whatsapp: "https://wa.me/639171596808",
 } as const;
 
 /** Founder / licensed-professional credibility (brand guide §8.9 + §3.2).

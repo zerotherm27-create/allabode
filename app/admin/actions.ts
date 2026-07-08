@@ -4,15 +4,9 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { LISTING_IMAGES_BUCKET } from "@/lib/storage";
+import { LISTING_IMAGES_BUCKET, storagePathFromUrl } from "@/lib/storage";
 import { draftListingDescription, type ListingDescriptionInput } from "@/lib/ai/listing-description";
 import { refreshNearbyPlaces as runNearbyPlacesRefresh } from "@/lib/nearby-places";
-
-function listingImagePath(url: string): string | null {
-  const marker = `/${LISTING_IMAGES_BUCKET}/`;
-  const idx = url.indexOf(marker);
-  return idx === -1 ? null : url.slice(idx + marker.length);
-}
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -181,7 +175,7 @@ export async function deleteListingImage(imageId: string, listingId: string) {
     .select("url")
     .eq("id", imageId)
     .maybeSingle();
-  const path = img?.url ? listingImagePath(img.url) : null;
+  const path = img?.url ? storagePathFromUrl(LISTING_IMAGES_BUCKET, img.url) : null;
   if (path) await supabase.storage.from(LISTING_IMAGES_BUCKET).remove([path]);
   await supabase.from("listing_images").delete().eq("id", imageId);
   revalidatePath(`/admin/listings/${listingId}/edit`);

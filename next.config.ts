@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        // Listing photos are served as short-lived signed URLs, which use a
+        // different object path than the public bucket URLs above.
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/sign/**",
+      },
     ],
   },
   experimental: {

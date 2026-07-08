@@ -24,7 +24,7 @@ const INK = "#16202c";
 
 // Same house style as the tenancy/parking agreement PDFs: per-page logo
 // header + disclaimer/"PLEASE SIGN" footer, on every page.
-const PAGE_CONTACT = "M: +63 9171596808 | E: info@allabodeph.com | W: www.allabodeph.com";
+const PAGE_CONTACT = "M: +63 917 159 6808 | E: info@allabodeph.com | W: www.allabodeph.com";
 const PM_DISCLAIMER =
   "DISCLAIMER: This Property Management Agreement has been prepared by All Abode Brokerage and Valuation OPC for " +
   "submission to the Owner for review and approval. No representation or recommendation is made by the Company, " +

@@ -5,6 +5,7 @@ import {
   type ListingStatus,
 } from "@/lib/data";
 import type { NearbyPlace } from "@/lib/nearby-places";
+import { LISTING_IMAGES_BUCKET, storagePathFromUrl, signedUrlsForPaths } from "@/lib/storage";
 
 /**
  * Public, read-only listings access. Uses a plain anon client (no cookies) so it
@@ -107,6 +108,33 @@ function mapRow(row: Row): Listing {
   };
 }
 
+/** Listing photos live in a private bucket now — the stored `url` is really
+ *  just a path carrier. Batch-resolve every image across all given listings
+ *  to a short-lived signed URL in one request, instead of leaving the raw
+ *  (non-fetchable, private-bucket) URL in place. Falls back to the original
+ *  value per-image if signing fails, so a partial failure never blanks a
+ *  whole photo grid. */
+async function resolveImageUrls(listings: Listing[]): Promise<Listing[]> {
+  if (!db) return listings;
+  const allPaths = listings.flatMap((l) =>
+    (l.images ?? [])
+      .map((img) => storagePathFromUrl(LISTING_IMAGES_BUCKET, img.url))
+      .filter((p): p is string => p != null)
+  );
+  if (allPaths.length === 0) return listings;
+  const signed = await signedUrlsForPaths(db, LISTING_IMAGES_BUCKET, allPaths);
+  if (signed.size === 0) return listings;
+  for (const listing of listings) {
+    if (!listing.images) continue;
+    listing.images = listing.images.map((img) => {
+      const path = storagePathFromUrl(LISTING_IMAGES_BUCKET, img.url);
+      const url = path ? signed.get(path) : undefined;
+      return url ? { ...img, url } : img;
+    });
+  }
+  return listings;
+}
+
 export async function getListings(): Promise<Listing[]> {
   if (!db) return mockListings;
   const { data, error } = await db
@@ -116,7 +144,7 @@ export async function getListings(): Promise<Listing[]> {
     .order("created_at", { ascending: false })
     .order("sort_order", { referencedTable: "listing_images", ascending: true });
   if (error || !data || data.length === 0) return mockListings;
-  return (data as Row[]).map(mapRow);
+  return resolveImageUrls((data as Row[]).map(mapRow));
 }
 
 export async function getFeaturedListings(limit = 3): Promise<Listing[]> {
@@ -128,7 +156,7 @@ export async function getFeaturedListings(limit = 3): Promise<Listing[]> {
     .order("sort_order", { referencedTable: "listing_images", ascending: true })
     .limit(limit);
   if (error || !data || data.length === 0) return mockListings.slice(0, limit);
-  return (data as Row[]).map(mapRow);
+  return resolveImageUrls((data as Row[]).map(mapRow));
 }
 
 export async function getListing(slug: string): Promise<Listing | null> {
@@ -140,5 +168,6 @@ export async function getListing(slug: string): Promise<Listing | null> {
     .order("sort_order", { referencedTable: "listing_images", ascending: true })
     .maybeSingle();
   if (error || !data) return mockListings.find((l) => l.id === slug) ?? null;
-  return mapRow(data as Row);
+  const [listing] = await resolveImageUrls([mapRow(data as Row)]);
+  return listing;
 }

@@ -1,5 +1,5 @@
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
-const USER_AGENT = "AllAbodePropertySolutions/1.0 (hello@allabodeph.com)";
+const USER_AGENT = "AllAbodePropertySolutions/1.0 (info@allabodeph.com)";
 
 export type RawPoi = { name: string; category: string; distanceM: number };
 

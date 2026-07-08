@@ -1,5 +1,5 @@
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const USER_AGENT = "AllAbodePropertySolutions/1.0 (hello@allabodeph.com)";
+const USER_AGENT = "AllAbodePropertySolutions/1.0 (info@allabodeph.com)";
 
 export type GeocodeResult = { lat: number; lon: number };
 

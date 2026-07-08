@@ -48,7 +48,7 @@ export const DEFAULT_PAYMENT_PARTICULARS = [
   "12th month advance",
 ];
 
-export const TENANCY_HEADER_CONTACT = "M: +63 9171596808 | E: info@allabodeph.com | W: www.allabodeph.com";
+export const TENANCY_HEADER_CONTACT = "M: +63 917 159 6808 | E: info@allabodeph.com | W: www.allabodeph.com";
 
 export const TENANCY_DISCLAIMER =
   "DISCLAIMER: This Tenancy Agreement has been prepared by All Abode Brokerage and Valuation OPC for " +
@@ -63,7 +63,7 @@ export const TENANCY_REMINDERS = [
   "For bank transfer payments, please email your transfer slip via email at info@allabodeph.com with a Subject header: Rental Payment due (Month) – Bldg. & Unit Number – Date of Transfer",
   "Move out reminders: General Cleaning, Aircon Cleaning, Grease Trap Cleaning must be done on or after move out.",
   "Emergency cases such as electric outage in your unit, leakage, contact maintenance personnel for checking. Please let us know the update.",
-  "Any concerns or requests, please send via email. For urgent matter, please call or sms 09171596808",
+  "Any concerns or requests, please send via email. For urgent matter, please call or SMS +63 917 159 6808",
 ];
 
 // ── Date/blank helpers ──────────────────────────────────────────────────────

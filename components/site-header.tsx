@@ -20,12 +20,50 @@ import { cn } from "@/lib/utils";
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [overLightSurface, setOverLightSurface] = useState(false);
   const close = () => setOpen(false);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  useEffect(() => {
+    function isLightSurface(element: Element | null) {
+      let current: Element | null = element;
+      while (current && current !== document.documentElement) {
+        if (current instanceof HTMLElement) {
+          const classes = current.className.toString();
+          if (/\b(bg-navy|from-navy|via-navy|to-navy)\b/.test(classes)) return false;
+          if (/\b(bg-cream|bg-surface|bg-surface-gray|bg-white)\b/.test(classes)) return true;
+        }
+        current = current.parentElement;
+      }
+      return window.scrollY > 80;
+    }
+
+    let frame = 0;
+    function updateSurface() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const header = document.querySelector("[data-site-header]");
+        const bottom = header instanceof HTMLElement ? header.getBoundingClientRect().bottom : 72;
+        const y = Math.min(window.innerHeight - 1, Math.max(0, bottom + 8));
+        const element = document.elementFromPoint(window.innerWidth / 2, y);
+        setOverLightSurface(isLightSurface(element));
+      });
+    }
+
+    updateSurface();
+    window.addEventListener("scroll", updateSurface, { passive: true });
+    window.addEventListener("resize", updateSurface);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", updateSurface);
+      window.removeEventListener("resize", updateSurface);
+    };
+  }, [pathname]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -34,9 +72,16 @@ export function SiteHeader() {
     item.children.some((child) => isActive(child.href));
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4">
-      <div className="mx-auto flex max-w-[var(--container-site)] items-center justify-between gap-4 rounded-2xl border border-line/70 bg-cream/85 px-4 py-2.5 shadow-[0_8px_24px_-16px_rgba(15,20,30,0.25)] backdrop-blur-md sm:px-5">
-        <Logo />
+    <header data-site-header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4">
+      <div
+        className={cn(
+          "mx-auto flex max-w-[var(--container-site)] items-center justify-between gap-4 rounded-2xl border px-4 py-2.5 backdrop-blur-md transition-colors duration-300 sm:px-5",
+          overLightSurface
+            ? "border-white/10 bg-navy/95 shadow-[0_14px_34px_-18px_rgba(10,37,64,0.5)]"
+            : "border-line/70 bg-cream/85 shadow-[0_8px_24px_-16px_rgba(15,20,30,0.25)]"
+        )}
+      >
+        <Logo variant={overLightSurface ? "white" : "color"} className={overLightSurface ? "h-10" : ""} />
 
         {/* Desktop nav — Radix NavigationMenu */}
         <nav aria-label="Primary" className="hidden lg:flex">
@@ -48,8 +93,13 @@ export function SiteHeader() {
                     <NavigationMenuItem key={item.label} value={item.label.toLowerCase().replace(/\s+/g, "-")}>
                       <NavigationMenuTrigger
                         className={cn(
-                          "rounded-full bg-transparent text-sm font-medium hover:bg-surface-gray hover:text-navy data-[state=open]:bg-surface-gray",
-                          isDropdownActive(item) ? "text-navy" : "text-slate"
+                          "rounded-full bg-transparent text-sm font-medium transition-colors",
+                          overLightSurface
+                            ? "hover:bg-white/10 hover:text-white data-[state=open]:bg-white/10"
+                            : "hover:bg-surface-gray hover:text-navy data-[state=open]:bg-surface-gray",
+                          isDropdownActive(item)
+                            ? overLightSurface ? "text-white" : "text-navy"
+                            : overLightSurface ? "text-white/75" : "text-slate"
                         )}
                       >
                         {item.label}
@@ -86,8 +136,13 @@ export function SiteHeader() {
                         href={item.href}
                         aria-current={isActive(item.href) ? "page" : undefined}
                         className={cn(
-                          "inline-flex h-9 items-center rounded-full px-3.5 text-sm font-medium transition-colors hover:bg-surface-gray hover:text-navy",
-                          isActive(item.href) ? "text-navy" : "text-slate"
+                          "inline-flex h-9 items-center rounded-full px-3.5 text-sm font-medium transition-colors",
+                          overLightSurface
+                            ? "hover:bg-white/10 hover:text-white"
+                            : "hover:bg-surface-gray hover:text-navy",
+                          isActive(item.href)
+                            ? overLightSurface ? "text-white" : "text-navy"
+                            : overLightSurface ? "text-white/75" : "text-slate"
                         )}
                       >
                         {item.label}
@@ -109,7 +164,10 @@ export function SiteHeader() {
             aria-label="Open menu"
             aria-expanded={open}
             onClick={() => setOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-navy lg:hidden"
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full transition-colors lg:hidden",
+              overLightSurface ? "text-white hover:bg-white/10" : "text-navy hover:bg-surface-gray"
+            )}
           >
             <Icon name="menu" size={24} />
           </button>

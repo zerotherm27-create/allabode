@@ -57,10 +57,11 @@ const columns: Column<Row>[] = [
 
 export default async function AdminListingsPage() {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("listings")
     .select("id,title,slug,property_type,listing_category,status,is_featured,price")
     .order("created_at", { ascending: false });
+  if (error) console.error("[admin/listings] failed to load listings:", error);
   const rows = (data ?? []) as Row[];
 
   return (
@@ -74,6 +75,11 @@ export default async function AdminListingsPage() {
           <Icon name="add" size={20} /> Add listing
         </Link>
       </div>
+      {error && (
+        <p className="mt-4 rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-error">
+          Couldn&apos;t load listings: {error.message}
+        </p>
+      )}
       <div className="mt-6">
         <DataTable rows={rows} columns={columns} getKey={(r) => r.id} empty={<>No listings yet. <Link href="/admin/listings/new" className="text-navy-700 underline">Add the first one</Link>.</>} />
       </div>

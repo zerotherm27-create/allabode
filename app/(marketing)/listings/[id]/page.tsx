@@ -12,6 +12,7 @@ import { InquiryForm } from "@/components/forms/lead-forms";
 import { ViewingScheduler } from "@/components/forms/viewing-scheduler";
 import { formatBeds, statusStyles } from "@/lib/data";
 import { getListing, getListings } from "@/lib/listings";
+import { getSettings, s } from "@/lib/settings";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -43,8 +44,10 @@ const highlights = [
 
 export default async function ListingDetailPage({ params }: Params) {
   const { id } = await params;
-  const listing = await getListing(id);
+  const [listing, settings] = await Promise.all([getListing(id), getSettings()]);
   if (!listing) notFound();
+  const phone = s(settings, "contact_phone");
+  const phoneHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
 
   const specs = listing.specs ?? [
     ...(listing.beds != null
@@ -208,8 +211,8 @@ export default async function ListingDetailPage({ params }: Params) {
               <div className="mt-6 flex items-center gap-3 border-t border-line pt-5 text-sm text-slate">
                 <Icon name="support_agent" size={22} className="text-navy" />
                 Questions? Call{" "}
-                <a href="tel:+63288881234" className="font-medium text-navy">
-                  +63 2 8888 1234
+                <a href={phoneHref} className="font-medium text-navy">
+                  {phone}
                 </a>
               </div>
             </div>

@@ -38,7 +38,7 @@ export function ListingImagesManager({
     try {
       const fd = new FormData();
       for (const file of files) {
-        const blob = await optimizeImageFile(file);
+        const blob = await optimizeImageFile(file, { watermark: "ALL ABODE" });
         fd.append("files", blob, file.name.replace(/\.\w+$/, ".jpg"));
       }
       await uploadListingImages(listingId, fd);

@@ -22,14 +22,14 @@ create policy "staff manage settings"  on site_settings for all
 
 -- Seed defaults
 insert into site_settings (key, value, label, group_name, type, sort_order) values
-  ('contact_phone',        '+63 2 8888 1234',                              'Phone',                  'contact', 'tel',      1),
-  ('contact_email',        'hello@allabodeph.com',                         'Email',                  'contact', 'email',    2),
+  ('contact_phone',        '+63 917 159 6808',                             'Phone',                  'contact', 'tel',      1),
+  ('contact_email',        'info@allabodeph.com',                          'Email',                  'contact', 'email',    2),
   ('contact_location',     'Makati City, Philippines',                     'Location / Address',     'contact', 'text',     3),
   ('contact_service_area', 'Metro Manila · Cebu · Davao',                  'Service Area',           'contact', 'text',     4),
   ('social_facebook',      'https://facebook.com/allabodeph',              'Facebook URL',           'social',  'url',      1),
   ('social_messenger',     'https://m.me/allabodeph',                      'Messenger URL',          'social',  'url',      2),
-  ('social_whatsapp',      'https://wa.me/63288881234',                    'WhatsApp URL',           'social',  'url',      3),
-  ('social_viber',         'viber://chat?number=%2B63288881234',           'Viber URL',              'social',  'url',      4),
+  ('social_whatsapp',      'https://wa.me/639171596808',                   'WhatsApp URL',           'social',  'url',      3),
+  ('social_viber',         'viber://chat?number=%2B639171596808',          'Viber URL',              'social',  'url',      4),
   ('brand_tagline',        'Complete Property Services. One Trusted Partner.', 'Tagline',            'brand',   'text',     1),
   ('brand_descriptor',     'Brokerage | Leasing | Property Management | Appraisal', 'Descriptor',   'brand',   'text',     2),
   ('hero_heading',         'Your property, professionally taken care of.', 'Hero Heading',           'hero',    'text',     1),

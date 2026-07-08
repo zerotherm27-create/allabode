@@ -8,6 +8,7 @@ import { updateListing } from "@/app/admin/actions";
 import { createClient } from "@/lib/supabase/server";
 import { isAiConfigured } from "@/lib/ai/client";
 import { getListingUnitOptions } from "@/lib/admin/listing-units";
+import { LISTING_IMAGES_BUCKET, storagePathFromUrl, signedUrlsForPaths } from "@/lib/storage";
 
 export default async function EditListingPage({
   params,
@@ -27,6 +28,17 @@ export default async function EditListingPage({
   ]);
   if (!data) notFound();
 
+  const imageRows = images ?? [];
+  const paths = imageRows
+    .map((img) => storagePathFromUrl(LISTING_IMAGES_BUCKET, img.url))
+    .filter((p): p is string => p != null);
+  const signed = await signedUrlsForPaths(supabase, LISTING_IMAGES_BUCKET, paths);
+  const resolvedImages = imageRows.map((img) => {
+    const path = storagePathFromUrl(LISTING_IMAGES_BUCKET, img.url);
+    const url = path ? signed.get(path) : undefined;
+    return url ? { ...img, url } : img;
+  });
+
   const initial = data as ListingValues;
   const nearbyPlacesUpdatedAt = (data as { nearby_places_updated_at: string | null }).nearby_places_updated_at;
   const action = updateListing.bind(null, id);
@@ -43,7 +55,7 @@ export default async function EditListingPage({
       <h1 className="font-display text-2xl font-bold text-navy">Edit listing</h1>
       <p className="mt-1 text-sm text-slate">{initial.title}</p>
       <div className="mt-6">
-        <ListingImagesManager listingId={id} initialImages={images ?? []} />
+        <ListingImagesManager listingId={id} initialImages={resolvedImages} />
       </div>
       <div className="mt-6 rounded-lg border border-line bg-surface p-6">
         <h2 className="font-display text-sm font-semibold text-navy">Nearby places</h2>

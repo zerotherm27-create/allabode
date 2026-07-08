@@ -156,8 +156,36 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button href="/contact" variant="gold" className="!hidden rounded-full px-5 py-2 text-xs sm:!inline-flex">
-            Contact All Abode
+          <div className="group relative hidden lg:block">
+            <button
+              type="button"
+              className={cn(
+                "inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+                overLightSurface
+                  ? "text-white/80 hover:bg-white/10 hover:text-white"
+                  : "text-slate hover:bg-surface-gray hover:text-navy"
+              )}
+            >
+              Login
+              <Icon name="expand_more" size={18} />
+            </button>
+            <div className="invisible absolute right-0 top-full z-50 mt-2 w-52 rounded-lg border border-line bg-surface p-1.5 opacity-0 shadow-[var(--shadow-lift)] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              <Link
+                href="/portal/login"
+                className="block rounded-md px-3 py-2.5 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
+              >
+                Owner / Tenant Login
+              </Link>
+              <Link
+                href="/admin/login"
+                className="block rounded-md px-3 py-2.5 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
+              >
+                Admin Login
+              </Link>
+            </div>
+          </div>
+          <Button href="/list-your-property" variant="gold" className="!hidden rounded-full px-5 py-2 text-xs sm:!inline-flex">
+            List My Property
           </Button>
           <button
             type="button"
@@ -234,8 +262,24 @@ export function SiteHeader() {
               })}
             </nav>
             <div className="mt-auto border-t border-line p-5">
-              <Button href="/contact" variant="gold" onClick={close} className="w-full rounded-full">
-                Contact All Abode
+              <div className="mb-4 grid grid-cols-1 gap-2">
+                <Link
+                  href="/portal/login"
+                  onClick={close}
+                  className="rounded-lg border border-line px-4 py-3 text-center text-sm font-semibold text-navy transition-colors hover:bg-surface-gray"
+                >
+                  Owner / Tenant Login
+                </Link>
+                <Link
+                  href="/admin/login"
+                  onClick={close}
+                  className="rounded-lg border border-line px-4 py-3 text-center text-sm font-semibold text-navy transition-colors hover:bg-surface-gray"
+                >
+                  Admin Login
+                </Link>
+              </div>
+              <Button href="/list-your-property" variant="gold" onClick={close} className="w-full rounded-full">
+                List My Property
               </Button>
             </div>
           </div>

@@ -36,8 +36,8 @@ const brokerageServices = [
   { icon: "sell", title: "Sell a Property", body: "We assist property owners with pricing guidance, listing preparation, marketing, inquiries, viewings, buyer coordination, negotiation support, and transaction coordination." },
   { icon: "search", title: "Buy a Property", body: "We help buyers identify properties that fit their needs, budget, preferred location, and intended use." },
   { icon: "apartment", title: "Resale Condominiums", body: "We assist with resale condominium units, including listing, marketing, buyer coordination, documentation support, and turnover coordination." },
-  { icon: "landscape", title: "Lots, House and Lots", body: "We assist with residential lots, house and lots, and similar property transactions." },
-  { icon: "storefront", title: "Commercial Properties", body: "We assist clients looking to buy, sell, or lease commercial spaces." },
+  { icon: "landscape", title: "Lots, Houses, and House-and-Lot Properties", body: "We assist with residential lots, houses, house-and-lot properties, and similar real estate transactions." },
+  { icon: "storefront", title: "Commercial Properties", body: "We assist clients who want to buy, sell, or lease commercial spaces." },
   { icon: "corporate_fare", title: "Office Spaces", body: "We assist with office property transactions for businesses, professionals, and investors." },
   { icon: "warehouse", title: "Industrial and Warehouse", body: "We assist with industrial spaces, warehouses, and related real estate requirements." },
   { icon: "local_parking", title: "Parking Slots", body: "We assist with parking slot sales and leasing, subject to building rules and ownership requirements." },
@@ -55,11 +55,11 @@ const processSteps = [
 ];
 
 const bestFor = [
-  "Property owners who want to sell",
-  "Buyers looking for residential or investment properties",
-  "Investors looking for resale or income-generating assets",
-  "Businesses looking for commercial, office, or warehouse spaces",
-  "Owners with parking slots for sale or lease",
+  "Property owners preparing to sell a home, condominium, lot, or parking slot",
+  "Buyers looking for residential, resale, or investment properties",
+  "Investors comparing income-generating or resale opportunities",
+  "Businesses searching for commercial, office, industrial, or warehouse spaces",
+  "Clients who need licensed guidance from inquiry through closing",
 ];
 
 const faqs = [
@@ -210,8 +210,8 @@ export default async function BrokeragePage() {
           <Reveal>
             <SectionHeading
               align="left"
-              eyebrow="Best For"
-              title="Who brokerage is for"
+              eyebrow="Ideal Clients"
+              title="When brokerage support makes sense"
             />
           </Reveal>
           <StaggerGroup as="ul" className="flex flex-col gap-3">

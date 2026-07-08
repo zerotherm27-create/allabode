@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkAndIncrement, rateLimitKeyFromRequest } from "@/lib/chat/rate-limit";
 import { buildSystemPrompt } from "@/lib/chat/system-prompt";
 import { getListing } from "@/lib/listings";
+import { getSettings } from "@/lib/settings";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -101,9 +102,10 @@ export async function POST(req: NextRequest) {
 
   const history = body.messages.slice(-MAX_HISTORY_TURNS);
   const client = getOpenAI();
+  const settings = await getSettings();
 
   const messages: ChatCompletionMessageParam[] = [
-    { role: "system", content: buildSystemPrompt(body.listingSlug) },
+    { role: "system", content: buildSystemPrompt(body.listingSlug, settings) },
     ...history.map((m): ChatCompletionMessageParam => ({ role: m.role, content: m.content })),
   ];
 

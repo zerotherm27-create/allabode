@@ -5,6 +5,7 @@ import { Faq } from "@/components/faq";
 import { Reveal } from "@/components/motion";
 import { faqSections } from "@/lib/faq-data";
 import { JsonLd, faqPageSchema, breadcrumbSchema } from "@/components/seo/json-ld";
+import { getSettings, s } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "All Abode FAQ | Real Estate Services Philippines",
@@ -14,7 +15,8 @@ export const metadata: Metadata = {
 };
 
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const settings = await getSettings();
   return (
     <>
       <JsonLd data={faqPageSchema(faqSections)} />
@@ -23,6 +25,7 @@ export default function FaqPage() {
         eyebrow="FAQ"
         title="Frequently Asked Questions"
         subtitle="Find answers to common questions about All Abode services, including brokerage, leasing, property management, valuation, listings, and documentation assistance."
+        image={s(settings, "page_faq_image") || undefined}
         crumbs={[{ label: "Home", href: "/" }, { label: "FAQ" }]}
       />
 

@@ -22,6 +22,7 @@ export default async function PrivacyPolicyPage() {
         eyebrow="Legal"
         title="Privacy Policy"
         subtitle="All Abode respects your privacy and is committed to protecting the personal information you share with us."
+        image={s(settings, "page_privacy_image") || undefined}
         crumbs={[{ label: "Home", href: "/" }, { label: "Privacy Policy" }]}
       />
 

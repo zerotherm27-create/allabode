@@ -28,6 +28,9 @@ export const settingsFallback: Settings = {
   page_resources_image: "",
   page_property_solutions_image: "",
   page_documentation_image:      "",
+  page_faq_image:                "",
+  page_terms_image:              "",
+  page_privacy_image:            "",
 };
 
 export function s(settings: Settings, key: string): string {
@@ -93,6 +96,9 @@ export const settingsSchema = [
       { key: "page_resources_image", label: "Resources — Background Image",           type: "image" },
       { key: "page_property_solutions_image", label: "Property Solutions — Background Image", type: "image" },
       { key: "page_documentation_image",      label: "Documentation Assistance — Background Image", type: "image" },
+      { key: "page_faq_image",                label: "FAQ — Background Image", type: "image" },
+      { key: "page_terms_image",              label: "Terms of Service — Background Image", type: "image" },
+      { key: "page_privacy_image",            label: "Privacy Policy — Background Image", type: "image" },
     ],
   },
 ] as const;

@@ -29,7 +29,10 @@ async function downloadAsDataUri(
   storagePath: string | null
 ): Promise<{ dataUri: string | null; buffer: Buffer | null; mime: string }> {
   if (!storagePath) return { dataUri: null, buffer: null, mime: "image/jpeg" };
-  const { data: file } = await supabase.storage.from(AGREEMENTS_BUCKET).download(storagePath);
+  let { data: file } = await supabase.storage.from(AGREEMENTS_BUCKET).download(storagePath);
+  if (!file) {
+    ({ data: file } = await createAdminClient().storage.from(AGREEMENTS_BUCKET).download(storagePath));
+  }
   if (!file) return { dataUri: null, buffer: null, mime: "image/jpeg" };
   const buffer = Buffer.from(await file.arrayBuffer());
   const ext = storagePath.split(".").pop()?.toLowerCase();

@@ -36,7 +36,7 @@ function initialTenantForm(r: TenancyAgreementRecord): TenantForm {
 
 function initialOccupants(r: TenancyAgreementRecord): string[] {
   const list = (r.occupants ?? []).filter((o): o is string => typeof o === "string");
-  while (list.length < 4) list.push("");
+  while (list.length < 1) list.push("");
   return list;
 }
 

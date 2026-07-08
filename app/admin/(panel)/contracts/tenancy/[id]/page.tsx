@@ -12,7 +12,8 @@ import {
   finalizeTenancyAgreement, voidTenancyAgreement, deleteTenancyAgreement, getTenancyPdfSignedUrl,
 } from "@/app/admin/tenancy-actions";
 import { getPublicSiteUrl } from "@/lib/url";
-import { DEFAULT_BANK_DETAILS, type InventoryRow, type PaymentScheduleRow, type TenancyBankDetails } from "@/lib/pm/tenancy-clauses";
+import { DEFAULT_BANK_DETAILS, DEFAULT_INVENTORY, type InventoryRow, type PaymentScheduleRow, type TenancyBankDetails } from "@/lib/pm/tenancy-clauses";
+import { adminOccupantsInitial } from "@/lib/tenancy/admin-form";
 
 // Mirrors form-kit's inputCls — that module is "use client", so a server
 // component can't import its string constants directly.
@@ -108,6 +109,8 @@ function toTermsInitial(a: TenancyAgreement): TenancyTermsInitial {
     rentDueDay: a.rent_due_day !== null ? String(a.rent_due_day) : "",
     paymentSchedule: a.payment_schedule ?? [],
     bankDetails: { ...DEFAULT_BANK_DETAILS, ...(a.bank_details ?? {}) },
+    occupants: adminOccupantsInitial(a.occupants),
+    inventory: a.inventory?.length ? a.inventory : DEFAULT_INVENTORY.map((row) => ({ ...row })),
   };
 }
 
@@ -350,12 +353,12 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
         </div>
       )}
 
-      {a.status !== "voided" && a.status !== "completed" && (
+      {a.status === "tenant_signed" && (
         <div className="mt-6">
           <TenancyInventoryForm
             action={doUpdateInventory}
             initial={a.inventory}
-            warnTenantSigned={a.status === "tenant_signed"}
+            warnTenantSigned
           />
         </div>
       )}

@@ -5,8 +5,10 @@ import { F, Group, inputCls, SubmitButton } from "@/components/admin/form-kit";
 import { pesoAmountInWords, pesoAmountFigures } from "@/lib/pm/amount-words";
 import {
   DEFAULT_BANK_DETAILS, DEFAULT_PAYMENT_PARTICULARS,
-  type PaymentScheduleRow, type TenancyBankDetails,
+  DEFAULT_INVENTORY,
+  type InventoryRow, type PaymentScheduleRow, type TenancyBankDetails,
 } from "@/lib/pm/tenancy-clauses";
+import { adminOccupantsInitial } from "@/lib/tenancy/admin-form";
 
 export type UnitOption = {
   id: string;
@@ -41,6 +43,8 @@ export type TenancyTermsInitial = {
   rentDueDay: string;
   paymentSchedule: PaymentScheduleRow[];
   bankDetails: TenancyBankDetails;
+  occupants: string[];
+  inventory: InventoryRow[];
 };
 
 function emptyTenancyTerms(): TenancyTermsInitial {
@@ -56,6 +60,8 @@ function emptyTenancyTerms(): TenancyTermsInitial {
     rentDueDay: "",
     paymentSchedule: [],
     bankDetails: { ...DEFAULT_BANK_DETAILS },
+    occupants: [""],
+    inventory: DEFAULT_INVENTORY.map((row) => ({ ...row })),
   };
 }
 
@@ -157,9 +163,19 @@ export function TenancyTermsForm({
     set({ paymentSchedule: rows });
   }
 
+  function setOccupant(i: number, value: string) {
+    set({ occupants: adminOccupantsInitial(t.occupants).map((name, j) => (j === i ? value : name)) });
+  }
+
+  function setInventoryRow(i: number, patch: Partial<InventoryRow>) {
+    set({ inventory: t.inventory.map((r, j) => (j === i ? { ...r, ...patch } : r)) });
+  }
+
   return (
     <form action={action} className="flex flex-col gap-6">
       <input type="hidden" name="payment_schedule" value={JSON.stringify(t.paymentSchedule)} />
+      <input type="hidden" name="occupants" value={JSON.stringify(t.occupants.filter((o) => o.trim()))} />
+      <input type="hidden" name="inventory" value={JSON.stringify(t.inventory.filter((r) => r.particulars.trim()))} />
       <input type="hidden" name="unit_id" value={t.unitId} />
       {lockTenant && <input type="hidden" name="tenant_email" value={init.tenantEmail} />}
 
@@ -177,6 +193,41 @@ export function TenancyTermsForm({
           <input name="tenant_contact" defaultValue={init.tenantContact} className={inputCls} />
         </F>
       </Group>
+
+      <fieldset className="rounded-lg border border-line bg-surface p-6">
+        <legend className="px-2 font-display text-sm font-semibold text-navy">Occupants</legend>
+        <p className="mb-3 text-xs text-slate">
+          Printed under clause 5. Start with the tenant, then add only approved additional occupants.
+        </p>
+        <div className="flex flex-col gap-2">
+          {adminOccupantsInitial(t.occupants).map((occupant, i) => (
+            <div key={i} className="grid grid-cols-[1fr_2rem] gap-2">
+              <input
+                aria-label={`Occupant ${i + 1}`}
+                placeholder={`Occupant ${i + 1}${i === 0 ? " (tenant)" : ""}`}
+                value={occupant}
+                onChange={(e) => setOccupant(i, e.target.value)}
+                className={inputCls}
+              />
+              <button
+                type="button"
+                aria-label="Remove occupant"
+                onClick={() => set({ occupants: adminOccupantsInitial(adminOccupantsInitial(t.occupants).filter((_, j) => j !== i)) })}
+                className="self-center text-sm font-semibold text-slate hover:text-error"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => set({ occupants: [...adminOccupantsInitial(t.occupants), ""] })}
+          className="mt-3 text-xs font-semibold text-navy-700 underline"
+        >
+          Add occupant
+        </button>
+      </fieldset>
 
       <Group title="Landlord (property owner)">
         <F label="Landlord full name">
@@ -314,6 +365,41 @@ export function TenancyTermsForm({
           <input name="bank_account_number" defaultValue={init.bankDetails.accountNumber} className={inputCls} />
         </F>
       </Group>
+
+      <fieldset className="rounded-lg border border-line bg-surface p-6">
+        <legend className="px-2 font-display text-sm font-semibold text-navy">Inventory List</legend>
+        <p className="mb-3 text-xs text-slate">
+          Fill this before sending the agreement. These rows print as the INVENTORY LIST page the tenant reviews.
+        </p>
+        <div className="flex flex-col gap-2">
+          <div className="hidden grid-cols-[4.5rem_1.2fr_1fr_1.6fr_2rem] gap-2 text-xs font-semibold text-slate sm:grid">
+            <span>Qty</span><span>Particulars</span><span>Brand</span><span>Remarks</span><span />
+          </div>
+          {t.inventory.map((r, i) => (
+            <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-[4.5rem_1.2fr_1fr_1.6fr_2rem]">
+              <input aria-label="Quantity" value={r.quantity} onChange={(e) => setInventoryRow(i, { quantity: e.target.value })} className={inputCls} />
+              <input aria-label="Particulars" value={r.particulars} onChange={(e) => setInventoryRow(i, { particulars: e.target.value })} className={inputCls} />
+              <input aria-label="Brand" value={r.brand} onChange={(e) => setInventoryRow(i, { brand: e.target.value })} className={inputCls} />
+              <input aria-label="Remarks" value={r.remarks} onChange={(e) => setInventoryRow(i, { remarks: e.target.value })} className={inputCls} />
+              <button
+                type="button"
+                aria-label="Remove inventory row"
+                onClick={() => set({ inventory: t.inventory.filter((_, j) => j !== i) })}
+                className="self-center text-sm font-semibold text-slate hover:text-error"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => set({ inventory: [...t.inventory, { quantity: "", particulars: "", brand: "", remarks: "" }] })}
+          className="mt-3 text-xs font-semibold text-navy-700 underline"
+        >
+          Add row
+        </button>
+      </fieldset>
 
       <div>
         <SubmitButton label={submitLabel} />

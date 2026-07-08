@@ -12,6 +12,7 @@ import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeTenancyAgreement } from "@/lib/tenancy/complete";
 import type { PaymentScheduleRow, InventoryRow } from "@/lib/pm/tenancy-clauses";
 import { DEFAULT_BANK_DETAILS, DEFAULT_INVENTORY } from "@/lib/pm/tenancy-clauses";
+import { adminOccupantsInitial, parseInventoryJson } from "@/lib/tenancy/admin-form";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -55,11 +56,16 @@ function parseTerms(fd: FormData) {
   }
 
   let paymentSchedule: PaymentScheduleRow[] = [];
+  let occupants: string[] = [];
+  let inventory: InventoryRow[] = [];
   try {
     const raw = s(fd, "payment_schedule");
     if (raw) paymentSchedule = JSON.parse(raw) as PaymentScheduleRow[];
+    const rawOccupants = s(fd, "occupants");
+    if (rawOccupants) occupants = adminOccupantsInitial(JSON.parse(rawOccupants) as string[]);
+    inventory = parseInventoryJson(s(fd, "inventory"));
   } catch {
-    throw new Error("The payment schedule could not be read — please re-check the rows.");
+    throw new Error("The payment schedule, occupants, or inventory could not be read — please re-check the rows.");
   }
 
   return {
@@ -87,6 +93,8 @@ function parseTerms(fd: FormData) {
     deposit_amount_words: s(fd, "deposit_amount_words"),
     rent_due_day: rentDueDay,
     payment_schedule: paymentSchedule,
+    occupants,
+    inventory: inventory.length > 0 ? inventory : DEFAULT_INVENTORY,
     bank_details: {
       name: s(fd, "bank_name") ?? DEFAULT_BANK_DETAILS.name,
       bank: s(fd, "bank_bank") ?? DEFAULT_BANK_DETAILS.bank,
@@ -114,7 +122,6 @@ export async function createTenancyAgreement(fd: FormData) {
       tenant_name_hint: s(fd, "tenant_name_hint"),
       tenant_details: tenantDetailsFromForm(fd, tenantEmail),
       created_by: user?.id ?? null,
-      inventory: DEFAULT_INVENTORY,
       ...parseTerms(fd),
     })
     .select("id")

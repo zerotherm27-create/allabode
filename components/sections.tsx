@@ -91,7 +91,7 @@ export function PageHero({
         />
       )}
       <div className="absolute inset-0 -z-10 opacity-50 [background:radial-gradient(70%_60%_at_88%_10%,rgba(180,151,90,0.25),transparent_60%)]" />
-      <Container className="py-20 md:py-28">
+      <Container className="pb-20 pt-32 md:pb-28 md:pt-36">
         <div className="max-w-3xl">
           {crumbs && crumbs.length > 0 && (
             <nav

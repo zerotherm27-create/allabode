@@ -84,7 +84,7 @@ export default async function Home() {
         )}
         <div className="absolute inset-0 -z-10 opacity-60 [background:radial-gradient(80%_60%_at_85%_15%,rgba(180,151,90,0.28),transparent_60%)]" />
 
-        <Container className="flex min-h-[72vh] flex-col justify-center py-20">
+        <Container className="flex min-h-[72vh] flex-col justify-center pb-20 pt-32 md:pt-36">
           <div className="max-w-3xl">
             <Reveal y={16}>
               <span className="label-caps inline-block bg-gold/15 px-4 py-1.5 text-gold-soft ring-1 ring-gold/30">

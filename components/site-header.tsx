@@ -34,7 +34,7 @@ export function SiteHeader() {
     item.children.some((child) => isActive(child.href));
 
   return (
-    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4">
+    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4">
       <div className="mx-auto flex max-w-[var(--container-site)] items-center justify-between gap-4 rounded-2xl border border-line/70 bg-cream/85 px-4 py-2.5 shadow-[0_8px_24px_-16px_rgba(15,20,30,0.25)] backdrop-blur-md sm:px-5">
         <Logo />
 

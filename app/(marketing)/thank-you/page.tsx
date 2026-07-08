@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ThankYouPage() {
   return (
-    <section className="py-section-lg">
+    <section className="pb-section-lg pt-32 md:pt-36">
       <Container>
         <div className="mx-auto max-w-2xl text-center">
           <span className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-available/10 text-available">

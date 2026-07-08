@@ -13,7 +13,7 @@ export default function NotFound() {
     <>
       <SiteHeader />
       <main>
-        <section className="py-section-lg">
+        <section className="pb-section-lg pt-32 md:pt-36">
           <Container>
             <div className="mx-auto max-w-2xl text-center">
               <span className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-surface-gray text-slate">

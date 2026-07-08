@@ -25,6 +25,12 @@ function n(fd: FormData, k: string): number | null {
   const x = Number(v);
   return Number.isFinite(x) ? x : null;
 }
+function date(fd: FormData, k: string): string | null {
+  const v = s(fd, k);
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+  const parsed = new Date(`${v}T00:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) ? null : v;
+}
 function slugify(v: string) {
   return v
     .toLowerCase()
@@ -61,7 +67,7 @@ function listingRow(fd: FormData) {
     amenities,
     lease_terms: s(fd, "lease_terms"),
     sale_terms: s(fd, "sale_terms"),
-    availability_date: s(fd, "availability_date"),
+    availability_date: date(fd, "availability_date"),
     is_featured: fd.get("is_featured") === "on",
     owner_name: s(fd, "owner_name"),
     owner_contact: s(fd, "owner_contact"),

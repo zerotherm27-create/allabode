@@ -286,7 +286,9 @@ export function ListingForm({
             {["", "Fully furnished", "Semi-furnished", "Unfurnished"].map((o) => <option key={o} value={o}>{o || "—"}</option>)}
           </select>
         </F>
-        <F label="Availability date / note"><input name="availability_date" defaultValue={v.availability_date} className={inputCls} /></F>
+        <F label="Availability date" hint="Use a calendar date. Put notes like RFO in lease/sale terms or internal notes.">
+          <input name="availability_date" type="date" defaultValue={v.availability_date} className={inputCls} />
+        </F>
       </Group>
 
       <Group title="Terms & amenities">

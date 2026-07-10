@@ -25,7 +25,12 @@ const columns: Column<Row>[] = [
   ) },
 ];
 
-export default async function AdminPropertiesPage() {
+export default async function AdminPropertiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase.from("properties").select("id,name,city,property_type,status,owners(name)").order("created_at", { ascending: false });
   const rows = (data ?? []) as Row[];
@@ -41,6 +46,14 @@ export default async function AdminPropertiesPage() {
           <Icon name="add" size={20} /> Add property
         </Link>
       </div>
+      {error && (
+        <div className="mt-5 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-slate">
+          <div className="flex gap-2">
+            <Icon name="warning" size={18} className="mt-0.5 shrink-0 text-warning" />
+            <p>{decodeURIComponent(error)}</p>
+          </div>
+        </div>
+      )}
       <div className="mt-6">
         <DataTable rows={rows} columns={columns} getKey={(r) => r.id} empty={<>No properties yet. <Link href="/admin/properties/new" className="text-navy-700 underline">Add the first one</Link>.</>} />
       </div>

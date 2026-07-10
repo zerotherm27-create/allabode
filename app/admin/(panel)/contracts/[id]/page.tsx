@@ -13,6 +13,7 @@ import {
 } from "@/app/admin/agreement-actions";
 import { getPublicSiteUrl } from "@/lib/url";
 import { payoutScheduleLabel } from "@/lib/pm/agreement-labels";
+import { fetchApplianceBrandOptions } from "@/lib/pm/appliance-brand-catalog";
 
 type Agreement = {
   id: string;
@@ -65,10 +66,11 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
   if (!data) notFound();
   const a = data as Agreement;
 
-  const [{ data: staffRow }, { data: ownerRow }, pdfUrl] = await Promise.all([
+  const [{ data: staffRow }, { data: ownerRow }, pdfUrl, brandOptions] = await Promise.all([
     user ? supabase.from("users").select("is_signatory").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     supabase.from("owners").select("id,spa_authorization_received").ilike("email", a.owner_email).maybeSingle(),
     a.status === "completed" ? getAgreementPdfSignedUrl(id) : Promise.resolve(null),
+    fetchApplianceBrandOptions(supabase),
   ]);
 
   const isSignatory = !!staffRow?.is_signatory;
@@ -199,7 +201,7 @@ export default async function AdminContractDetailPage({ params }: { params: Prom
 
       {a.status !== "draft" && (
         <div className="mt-6">
-          <AnnexBForm action={doUpdateAnnexB} initial={a.annex_b as never} />
+          <AnnexBForm action={doUpdateAnnexB} initial={a.annex_b as never} brandOptions={brandOptions} />
         </div>
       )}
 

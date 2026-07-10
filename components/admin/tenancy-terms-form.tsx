@@ -8,7 +8,12 @@ import {
   DEFAULT_INVENTORY,
   type InventoryRow, type PaymentScheduleRow, type TenancyBankDetails,
 } from "@/lib/pm/tenancy-clauses";
-import { adminOccupantSlots, appendAdminOccupantSlot } from "@/lib/tenancy/admin-form";
+import {
+  applianceBrandOptionsForParticulars,
+  DEFAULT_APPLIANCE_BRAND_OPTIONS,
+  type ApplianceBrandOptions,
+} from "@/lib/pm/appliance-brand-catalog";
+import { adminOccupantSlots, appendAdminOccupantSlot, adminOccupantsForAgreement } from "@/lib/tenancy/admin-form";
 
 export type UnitOption = {
   id: string;
@@ -95,7 +100,7 @@ function humanDate(iso: string): string {
 }
 
 export function TenancyTermsForm({
-  action, units, initial = null, submitLabel, lockTenant = false,
+  action, units, initial = null, submitLabel, lockTenant = false, brandOptions = DEFAULT_APPLIANCE_BRAND_OPTIONS,
 }: {
   action: (fd: FormData) => Promise<void>;
   units: UnitOption[];
@@ -104,6 +109,7 @@ export function TenancyTermsForm({
   submitLabel: string;
   /** On the edit form the recipient can't change (the link is already out). */
   lockTenant?: boolean;
+  brandOptions?: ApplianceBrandOptions;
 }) {
   const [t, setT] = useState(initial ?? emptyTenancyTerms());
   // Mount-time snapshot for the uncontrolled (defaultValue) inputs.
@@ -174,7 +180,7 @@ export function TenancyTermsForm({
   return (
     <form action={action} className="flex flex-col gap-6">
       <input type="hidden" name="payment_schedule" value={JSON.stringify(t.paymentSchedule)} />
-      <input type="hidden" name="occupants" value={JSON.stringify(t.occupants.filter((o) => o.trim()))} />
+      <input type="hidden" name="occupants" value={JSON.stringify(adminOccupantsForAgreement(t.occupants))} />
       <input type="hidden" name="inventory" value={JSON.stringify(t.inventory.filter((r) => r.particulars.trim()))} />
       <input type="hidden" name="unit_id" value={t.unitId} />
       {lockTenant && <input type="hidden" name="tenant_email" value={init.tenantEmail} />}
@@ -222,7 +228,7 @@ export function TenancyTermsForm({
         </div>
         <button
           type="button"
-          onClick={() => set({ occupants: appendAdminOccupantSlot(t.occupants) })}
+          onClick={() => setT((prev) => ({ ...prev, occupants: appendAdminOccupantSlot(prev.occupants) }))}
           className="mt-3 text-xs font-semibold text-navy-700 underline"
         >
           Add occupant
@@ -379,7 +385,10 @@ export function TenancyTermsForm({
             <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-[4.5rem_1.2fr_1fr_1.6fr_2rem]">
               <input aria-label="Quantity" value={r.quantity} onChange={(e) => setInventoryRow(i, { quantity: e.target.value })} className={inputCls} />
               <input aria-label="Particulars" value={r.particulars} onChange={(e) => setInventoryRow(i, { particulars: e.target.value })} className={inputCls} />
-              <input aria-label="Brand" value={r.brand} onChange={(e) => setInventoryRow(i, { brand: e.target.value })} className={inputCls} />
+              <input aria-label="Brand" value={r.brand} onChange={(e) => setInventoryRow(i, { brand: e.target.value })} list={`tenancy_terms_brand_${i}`} className={inputCls} />
+              <datalist id={`tenancy_terms_brand_${i}`}>
+                {applianceBrandOptionsForParticulars(brandOptions, r.particulars).map((brand) => <option key={brand} value={brand} />)}
+              </datalist>
               <input aria-label="Remarks" value={r.remarks} onChange={(e) => setInventoryRow(i, { remarks: e.target.value })} className={inputCls} />
               <button
                 type="button"

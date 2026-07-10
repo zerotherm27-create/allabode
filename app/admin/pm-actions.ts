@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { unitIdsToResyncForLeaseChange } from "@/lib/pm/lease-occupancy";
+import { blockedDeleteMessage } from "@/lib/admin/delete-errors";
 
 // ---- field coercion helpers ----
 function s(fd: FormData, k: string): string | null {
@@ -39,8 +40,14 @@ async function updateRow(table: string, id: string, row: Record<string, unknown>
 async function deleteRow(table: string, id: string, listPath: string) {
   const supabase = await createClient();
   const { error } = await supabase.from(table).delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.code === "23503") {
+      redirect(`${listPath}?error=${encodeURIComponent(blockedDeleteMessage(table))}`);
+    }
+    throw new Error(error.message);
+  }
   revalidatePath(listPath);
+  redirect(listPath);
 }
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;

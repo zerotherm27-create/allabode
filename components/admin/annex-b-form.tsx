@@ -1,5 +1,10 @@
 import { inputCls } from "@/components/admin/form-kit";
 import { KEY_ITEMS, FURNITURE_ITEMS, APPLIANCE_ITEMS, FIXTURE_ITEMS, CONDITION_AREAS } from "@/lib/pm/annex-b-fields";
+import {
+  applianceBrandOptionsForCategory,
+  DEFAULT_APPLIANCE_BRAND_OPTIONS,
+  type ApplianceBrandOptions,
+} from "@/lib/pm/appliance-brand-catalog";
 
 type QtyCond = { qty?: string; condition?: string; remarks?: string; brand?: string };
 type AnnexBValue = {
@@ -11,29 +16,46 @@ type AnnexBValue = {
 } | null;
 
 function QtyCondRow({
-  prefix, id, label, fields, values,
+  prefix, id, label, fields, values, brandOptions,
 }: {
   prefix: string; id: string; label: string;
   fields: { key: string; placeholder: string }[];
   values?: QtyCond;
+  brandOptions?: string[];
 }) {
   return (
     <div className="grid grid-cols-[1fr_repeat(2,140px)] items-center gap-2 border-b border-line py-2 last:border-0">
       <span className="text-sm text-ink">{label}</span>
-      {fields.map((f) => (
-        <input
-          key={f.key}
-          name={`${prefix}_${id}_${f.key}`}
-          placeholder={f.placeholder}
-          defaultValue={values?.[f.key as keyof QtyCond]}
-          className={`${inputCls} h-9`}
-        />
-      ))}
+      {fields.map((f) => {
+        const listId = f.key === "brand" ? `${prefix}_${id}_brand_options` : undefined;
+        return (
+          <div key={f.key}>
+            <input
+              name={`${prefix}_${id}_${f.key}`}
+              placeholder={f.placeholder}
+              defaultValue={values?.[f.key as keyof QtyCond]}
+              list={listId}
+              className={`${inputCls} h-9`}
+            />
+            {listId && (
+              <datalist id={listId}>
+                {(brandOptions ?? []).map((brand) => <option key={brand} value={brand} />)}
+              </datalist>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-export function AnnexBForm({ action, initial }: { action: (fd: FormData) => void | Promise<void>; initial: AnnexBValue }) {
+export function AnnexBForm({
+  action, initial, brandOptions = DEFAULT_APPLIANCE_BRAND_OPTIONS,
+}: {
+  action: (fd: FormData) => void | Promise<void>;
+  initial: AnnexBValue;
+  brandOptions?: ApplianceBrandOptions;
+}) {
   return (
     <details className="rounded-lg border border-line bg-surface">
       <summary className="cursor-pointer select-none px-5 py-4 font-display text-sm font-semibold text-navy">
@@ -74,6 +96,7 @@ export function AnnexBForm({ action, initial }: { action: (fd: FormData) => void
             <QtyCondRow
               key={id} prefix="appliance" id={id} label={label} values={initial?.appliances?.[id]}
               fields={[{ key: "brand", placeholder: "Brand" }, { key: "condition", placeholder: "Condition" }]}
+              brandOptions={applianceBrandOptionsForCategory(brandOptions, id)}
             />
           ))}
         </div>

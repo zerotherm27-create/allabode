@@ -4,6 +4,114 @@ Production property management platform for **All Abode Property Solutions** (PR
 
 ---
 
+## Latest Handoff for Codex - 2026-07-10
+
+### Current branch and deployment
+
+- Workspace: `/Users/jojo/allabode`
+- Branch: `main`
+- Production alias currently used: https://allabodeph.com
+- Latest pushed/deployed commit:
+  - `ec185a6 support dual-market listings`
+- Latest Vercel production deployment from this session:
+  - Deployment id: `dpl_2jrgGfj5RR384PeFJmjrVSQVLhYA`
+  - URL: https://allabode-n4pb57ix6-zerotherm27-8336s-projects.vercel.app
+  - Aliased: https://allabodeph.com
+- Expected git state after this handoff update:
+  - uncommitted product fixes for owner/property deletes and tenancy occupants;
+  - `memory.md` and `CODEX_HANDOFF.md` modified by the handoff update;
+  - possibly `HANDOFF.md` unchanged/stale from an older redesign handoff.
+
+### Latest pushed/deployed work
+
+The last committed/pushed/deployed task was `ec185a6 support dual-market listings`.
+
+- Added combined listing category support for `For Sale and For Lease`.
+- New helper:
+  - `lib/listing-category.ts`
+- Sale/rent listing pages and brokerage/leasing pages now filter with `listingMarkets`.
+- Listing browser supports multiple listing type labels through `listingTypes`.
+- Admin listing form uses shared listing category options.
+- Home hero CTA layout was tightened and button variants were extended.
+- Verified before deployment:
+  - `node --test tests/listing-category.test.mjs`
+  - `npm run lint` passed with existing warnings only
+  - `NODE_OPTIONS=--max-old-space-size=6144 npm run build`
+
+### Uncommitted fix: owner/property delete dead page
+
+The user reported that deleting an owner or property landed on a dead page.
+
+Root cause:
+
+- `app/admin/pm-actions.ts` shared `deleteRow()` did not redirect after successful delete.
+- FK-blocked deletes threw raw Supabase errors instead of returning to the list with a usable message.
+
+Implemented but not yet committed at handoff time:
+
+- `deleteRow()` redirects back to the list after successful delete.
+- FK error `23503` redirects back with a friendly message.
+- `/admin/owners` and `/admin/properties` render that warning message.
+- New helper:
+  - `lib/admin/delete-errors.ts`
+- New tests:
+  - `tests/admin-delete-errors.test.mjs`
+
+User-facing behavior:
+
+- Owners can only be deleted after related properties, documents, statements, or other records are removed/reassigned.
+- Properties can only be deleted after related units, leases, documents, tickets, or financial records are removed/reassigned.
+
+### Uncommitted fix: tenancy agreement occupants
+
+The user reported that the tenancy agreement Add occupant button was not working and the rendered PDF still showed four default occupant slots.
+
+Root cause:
+
+- `buildTenancyClausesAfterTables()` in `lib/pm/tenancy-clauses.ts` padded clause 5 occupants to four lines regardless of named occupants.
+
+Implemented but not yet committed at handoff time:
+
+- Clause 5 renders only named occupants.
+- If no occupant names are present, clause 5 renders one blank line.
+- Added shared normalizer:
+  - `adminOccupantsForAgreement()` in `lib/tenancy/admin-form.ts`
+- Admin and tenant signing Add occupant buttons use functional state updates.
+- Blank occupant rows remain UI-only and are not saved/rendered unless named.
+- New/updated tests:
+  - `tests/tenancy-admin-form.test.mjs`
+  - `tests/tenancy-occupants.test.mjs`
+
+Touched product files:
+
+- `components/admin/tenancy-terms-form.tsx`
+- `app/sign/tenancy/[token]/wizard.tsx`
+- `app/admin/tenancy-actions.ts`
+- `lib/tenancy/admin-form.ts`
+- `lib/pm/tenancy-clauses.ts`
+
+### Verification already done for current uncommitted fixes
+
+- `node --test tests/*.test.mjs` passed: 15/15.
+- `npm run lint` passed with existing warnings only:
+  - unused vars in `app/admin/(panel)/setup/page.tsx`;
+  - unused SOA imports/functions in `app/admin/soa-actions.ts`;
+  - missing alt warning in `lib/pdf/payment-receipt.tsx`;
+  - duplicate warnings from `.claude/worktrees/practical-bassi-461675`.
+- `NODE_OPTIONS=--max-old-space-size=6144 npm run build` passed.
+- In-app Browser plugin was available, but live click-through of the tenancy Add occupant flow was not completed because it requires a real signing token or authenticated admin agreement data.
+
+### Next steps
+
+1. Run `git status -sb` and inspect the diff before staging.
+2. If the user asks to ship the current fixes, stage only the intended product/test/docs files, rerun verification, commit, push `main`, and deploy/inspect Vercel production.
+3. Use the larger heap for local production builds:
+   - `NODE_OPTIONS=--max-old-space-size=6144 npm run build`
+4. Follow `AGENTS.md` before app-code edits: read the relevant Next.js guide under `node_modules/next/dist/docs/`.
+5. Keep `.env.local` secrets out of handoff notes, logs, and commits.
+
+---
+
 ## Latest Handoff for Claude Code - 2026-07-05
 
 ### Current branch and deployment

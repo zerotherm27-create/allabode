@@ -22,6 +22,7 @@ import {
   normalizeOccupantIdUploads,
   tenantContactPrefill,
 } from "@/lib/signing/form-helpers";
+import { adminOccupantsForAgreement } from "@/lib/tenancy/admin-form";
 import { FullTenancyPreview } from "./full-tenancy-preview";
 
 type TenantForm = { name: string; address: string; contact: string; email: string };
@@ -76,7 +77,7 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
     try {
       const { error: err } = await saveTenancyDraft(token, {
         tenantDetails: { ...tenant, additionalOccupantIds: occupantIdUploads },
-        occupants: occupants.filter((o) => o.trim()),
+        occupants: adminOccupantsForAgreement(occupants),
         tenantIdType: idType,
         tenantIdNumber: idNumber || null,
         tenantIdIssuedDate: idIssuedDate || null,
@@ -173,7 +174,7 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
       setOccupantIdUploads(nextUploads);
       await saveTenancyDraft(token, {
         tenantDetails: { ...tenant, additionalOccupantIds: nextUploads },
-        occupants: occupants.filter((o) => o.trim()),
+        occupants: adminOccupantsForAgreement(occupants),
         tenantIdType: idType,
         tenantIdNumber: idNumber || null,
         tenantIdIssuedDate: idIssuedDate || null,
@@ -274,7 +275,7 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
             </div>
             <button
               type="button"
-              onClick={() => setOccupants([...occupants, ""])}
+              onClick={() => setOccupants((prev) => [...prev, ""])}
               className="mt-2 text-xs font-semibold text-navy-700 underline"
             >
               Add another occupant

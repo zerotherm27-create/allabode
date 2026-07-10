@@ -14,6 +14,7 @@ import {
 import { getPublicSiteUrl } from "@/lib/url";
 import { DEFAULT_BANK_DETAILS, DEFAULT_INVENTORY, type InventoryRow, type PaymentScheduleRow, type TenancyBankDetails } from "@/lib/pm/tenancy-clauses";
 import { adminOccupantsInitial } from "@/lib/tenancy/admin-form";
+import { fetchApplianceBrandOptions } from "@/lib/pm/appliance-brand-catalog";
 
 // Mirrors form-kit's inputCls — that module is "use client", so a server
 // component can't import its string constants directly.
@@ -126,12 +127,13 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
   const a = data as TenancyAgreement;
 
   const termsEditable = a.status === "draft" || a.status === "sent";
-  const [{ data: staffRow }, pdfUrl, unitsResult] = await Promise.all([
+  const [{ data: staffRow }, pdfUrl, unitsResult, brandOptions] = await Promise.all([
     user ? supabase.from("users").select("is_signatory").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     a.status === "completed" ? getTenancyPdfSignedUrl(id) : Promise.resolve(null),
     termsEditable
       ? supabase.from("units").select("id,unit_label,base_rent,properties(name,address)").order("unit_label")
       : Promise.resolve({ data: null }),
+    fetchApplianceBrandOptions(supabase),
   ]);
 
   type UnitRow = { id: string; unit_label: string; base_rent: number | null; properties: { name: string; address: string | null } | null };
@@ -235,6 +237,7 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
                 initial={toTermsInitial(a)}
                 submitLabel="Save terms"
                 lockTenant
+                brandOptions={brandOptions}
               />
             </div>
           </details>
@@ -359,6 +362,7 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
             action={doUpdateInventory}
             initial={a.inventory}
             warnTenantSigned
+            brandOptions={brandOptions}
           />
         </div>
       )}

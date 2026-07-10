@@ -12,7 +12,7 @@ import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeTenancyAgreement } from "@/lib/tenancy/complete";
 import type { PaymentScheduleRow, InventoryRow } from "@/lib/pm/tenancy-clauses";
 import { DEFAULT_BANK_DETAILS, DEFAULT_INVENTORY } from "@/lib/pm/tenancy-clauses";
-import { adminOccupantsInitial, parseInventoryJson } from "@/lib/tenancy/admin-form";
+import { adminOccupantsForAgreement, parseInventoryJson } from "@/lib/tenancy/admin-form";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -62,7 +62,7 @@ function parseTerms(fd: FormData) {
     const raw = s(fd, "payment_schedule");
     if (raw) paymentSchedule = JSON.parse(raw) as PaymentScheduleRow[];
     const rawOccupants = s(fd, "occupants");
-    if (rawOccupants) occupants = adminOccupantsInitial(JSON.parse(rawOccupants) as string[]);
+    if (rawOccupants) occupants = adminOccupantsForAgreement(JSON.parse(rawOccupants) as string[]);
     inventory = parseInventoryJson(s(fd, "inventory"));
   } catch {
     throw new Error("The payment schedule, occupants, or inventory could not be read — please re-check the rows.");

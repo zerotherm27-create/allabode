@@ -6,6 +6,7 @@ import {
   LEASE_TERM_LABEL, PET_LABEL, SMOKING_LABEL, YN_LABEL, FURNISHING_LABEL,
   COMMS_LABEL, RESPONSE_LABEL, payoutScheduleLabel,
 } from "@/lib/pm/agreement-labels";
+import { COMPANY_SIGNATORY } from "@/lib/pm/company-signatory";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -200,6 +201,10 @@ export type AgreementPdfInput = {
   ownerIdNumber: string;
   ownerIdIssuedDate?: string | null;
   ownerIdImageDataUri: string | null;
+  managerIdTypeLabel: string;
+  managerIdNumber: string;
+  managerIdIssuedDate: string;
+  managerIdImageDataUri: string | null;
   ownerTypedName: string;
   ownerSignatureDataUri: string;
   ownerSignedAtManila: string;
@@ -251,7 +256,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Text style={styles.p}>
           <Text style={styles.bold}>ALL ABODE BROKERAGE AND VALUATION OPC.</Text>, a One Person Corporation duly organized under
           Philippine law, with principal office at 2216 Chino Roces Ave., Makati, Laureano Di Trevi Towers, Tower 2 #2804,
-          represented by its <Text style={styles.bold}>Property Manager, Aremchel M. Cruzado</Text>; hereinafter referred to as the{" "}
+          represented by its <Text style={styles.bold}>Chief Executive Officer (CEO), Aremchel M. Cruzado</Text>; hereinafter referred to as the{" "}
           <Text style={styles.bold}>&#x201C;Manager.&#x201D;</Text>
         </Text>
         <Hr />
@@ -340,7 +345,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Hr />
 
         <Text style={styles.h1}>VIII. SECURITY DEPOSIT</Text>
-        <Text style={styles.p}>The security deposit belongs to the Owner and serves as security for the Tenant&#x2019;s obligations. The Manager administers it until completion of move-out inspection and final accounting. It may be applied to unpaid rent, utilities, association dues chargeable to the Tenant, damage beyond normal wear and tear, missing items, excess cleaning costs, and other Tenant obligations under the Lease Agreement. Any remaining balance shall be returned to the Tenant after deducting all lawful charges, per the timeline in the Lease Agreement.</Text>
+        <Text style={styles.p}>The Tenant&#x2019;s security deposit shall be held solely as security for the Tenant&#x2019;s obligations and shall not be treated as income. Unless otherwise stated in the Lease Agreement, the Owner shall hold an amount equivalent to one (1) month&#x2019;s gross rent and the Manager shall hold an amount equivalent to one (1) month&#x2019;s gross rent. The security deposit may be applied to unpaid rent, utilities, association dues chargeable to the Tenant, damage beyond normal wear and tear, missing items, excess cleaning costs, and other Tenant obligations under the Lease Agreement. Any remaining balance shall be returned to the Tenant after completion of move-out inspection, final accounting, and deduction of all lawful charges, per the timeline in the Lease Agreement.</Text>
         <Hr />
 
         <Text style={styles.h1}>IX. REPAIRS AND MAINTENANCE</Text>
@@ -401,7 +406,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
               // eslint-disable-next-line jsx-a11y/alt-text
               ? <Image src={input.managerSignatureDataUri} style={styles.sigImg} />
               : <View style={styles.sigLine} />}
-            <Text>Aremchel M. Cruzado &#x2014; Property Manager</Text>
+            <Text>Aremchel M. Cruzado &#x2014; Chief Executive Officer (CEO)</Text>
             <Text style={{ fontSize: 8, color: SLATE }}>Signed: {input.managerSignedAtManila}</Text>
           </View>
         </View>
@@ -423,9 +428,9 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
             <Text style={styles.tdCellLast}>{input.ownerIdIssuedDate || "____________________"}</Text>
           </View>
           <View style={styles.trowLast}>
-            <Text style={styles.tdCell}>Aremchel M. Cruzado</Text>
-            <Text style={styles.tdCell}>____________________</Text>
-            <Text style={styles.tdCellLast}>____________________</Text>
+            <Text style={styles.tdCell}>{COMPANY_SIGNATORY.name}</Text>
+            <Text style={styles.tdCell}>{input.managerIdTypeLabel} No. {input.managerIdNumber}</Text>
+            <Text style={styles.tdCellLast}>{input.managerIdIssuedDate}</Text>
           </View>
         </View>
         <Text style={styles.p}>
@@ -450,8 +455,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
             <Text style={styles.tdCellLast}>Fee</Text>
           </View>
           {[
-            ["Long-Term Lease (6 months and above)", "One (1) month’s gross rent per new lease"],
-            ["Monthly Property Management", "Five Percent (5%) of monthly gross rent, exclusive of applicable taxes"],
+            ["Full Property Management", "One (1) month’s gross rent, or a pro-rated amount based on gross rent, plus a management fee of five percent (5%) of monthly gross rent, exclusive of applicable taxes"],
             ["Tenant Hunting Only", "One (1) month’s gross rent or as otherwise agreed"],
             ["Short-Term / Monthly Leasing", "Facilitation fee and/or prorated commission as agreed"],
             ["Condotel Management", "Twenty Percent (20%) to Thirty Percent (30%) of gross booking revenue"],
@@ -622,12 +626,30 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Field label="Authentication Method:" value="Signed via secure, single-use access link sent to verified email address; signature captured via electronic signature pad" />
 
         <Text style={styles.h2}>Signer 2 &#x2014; Manager (All Abode Brokerage and Valuation OPC)</Text>
-        <Field label="Name:" value="Aremchel M. Cruzado" />
-        <Field label="Title:" value="Property Manager" />
+        <Field label="Name:" value={COMPANY_SIGNATORY.name} />
+        <Field label="Title:" value={COMPANY_SIGNATORY.title} />
         <Field label="Account Email:" value={input.managerSignerEmail} />
         <Field label="Date/Time Signed:" value={`${input.managerSignedAtManila} (Asia/Manila)`} />
         <Field label="IP Address:" value={input.managerSignedIp} />
         <Field label="Authentication Method:" value="Signed by an authenticated, designated company signatory via the admin dashboard; signature captured via electronic signature pad" />
+        <Footer />
+      </Page>
+
+      {/* ── Attachment: Manager Government ID ── */}
+      <Page size="LETTER" style={styles.page}>
+        <PageHeader />
+        <Text style={styles.annexTitle}>ATTACHMENT &#x2014; COMPANY SIGNATORY GOVERNMENT ID</Text>
+        <Field label="Name:" value={COMPANY_SIGNATORY.name} />
+        <Field label="Title:" value={COMPANY_SIGNATORY.title} />
+        <Field label="ID Type:" value={input.managerIdTypeLabel} />
+        <Field label="ID Number:" value={input.managerIdNumber} />
+        <Field label="Date Issued:" value={input.managerIdIssuedDate} />
+        {input.managerIdImageDataUri ? (
+          // eslint-disable-next-line jsx-a11y/alt-text
+          <Image src={input.managerIdImageDataUri} style={{ width: "100%", marginTop: 12, objectFit: "contain" }} />
+        ) : (
+          <Text style={[styles.p, { marginTop: 12, color: SLATE }]}>ID image unavailable.</Text>
+        )}
         <Footer />
       </Page>
 

@@ -1,4 +1,55 @@
-# Handoff: Hallmark redesign (modern-minimal) — All Abode marketing site
+# Current Handoff - 2026-07-10
+
+This file previously described an older Hallmark redesign pass. Current continuation notes are now:
+
+- `memory.md` — local project memory with latest task details.
+- `CODEX_HANDOFF.md` — main tracked Codex handoff.
+
+## Current Repo State
+
+- Workspace: `/Users/jojo/allabode`
+- Branch: `main`
+- Latest pushed/deployed commit:
+  - `ec185a6 support dual-market listings`
+- Production alias:
+  - https://allabodeph.com
+- Latest production deployment:
+  - `dpl_2jrgGfj5RR384PeFJmjrVSQVLhYA`
+  - https://allabode-n4pb57ix6-zerotherm27-8336s-projects.vercel.app
+
+## Current Uncommitted Work
+
+Owner/property delete fix:
+
+- `app/admin/pm-actions.ts` now redirects after shared deletes and handles FK-blocked deletes with a friendly list-page warning.
+- `/admin/owners` and `/admin/properties` render those warnings.
+- Added `lib/admin/delete-errors.ts`.
+- Added `tests/admin-delete-errors.test.mjs`.
+
+Tenancy agreement occupant fix:
+
+- `lib/pm/tenancy-clauses.ts` no longer pads clause 5 occupants to four PDF lines.
+- Occupant clause renders only named occupants, or one blank line when none are named.
+- `lib/tenancy/admin-form.ts` adds `adminOccupantsForAgreement()`.
+- Admin and tenant signing Add occupant buttons now use functional state updates.
+- Added/updated `tests/tenancy-admin-form.test.mjs` and `tests/tenancy-occupants.test.mjs`.
+
+## Verification Already Run
+
+- `node --test tests/*.test.mjs` — 15/15 passed.
+- `npm run lint` — passed with existing warnings only.
+- `NODE_OPTIONS=--max-old-space-size=6144 npm run build` — passed.
+
+## Next Steps
+
+1. Run `git status -sb` before staging.
+2. If shipping current fixes, stage the intended product/test/docs files only, rerun verification, commit, push `main`, then deploy/inspect Vercel production.
+3. Do not print or commit `.env.local` secrets.
+4. If editing Next.js app code, follow `AGENTS.md` and read the relevant docs under `node_modules/next/dist/docs/`.
+
+---
+
+# Historical Handoff: Hallmark redesign (modern-minimal) — All Abode marketing site
 
 Written for continuation in Codex. Read this first, then `CLAUDE.md` and `AGENTS.md`
 at the repo root for standing project conventions (those still apply unchanged).

@@ -230,8 +230,8 @@ export function buildTenancyClausesBeforeTables(t: TenancyTermsInput): TenancyCl
 
 /** Clause 3.5 and clauses 4-30, printed after the bank/schedule tables. */
 export function buildTenancyClausesAfterTables(t: TenancyTermsInput): TenancyClause[] {
-  const occupantLines = [...(t.occupants ?? [])];
-  while (occupantLines.length < 4) occupantLines.push("");
+  const occupantLines = (t.occupants ?? []).map((name) => name.trim()).filter(Boolean);
+  const renderedOccupantLines = occupantLines.length > 0 ? occupantLines : [""];
 
   return [
     {
@@ -274,7 +274,7 @@ export function buildTenancyClausesAfterTables(t: TenancyTermsInput): TenancyCla
           text:
             "Only the following persons are permitted to occupy the said premises, and provided that such occupancy " +
             "is for the purpose stated in this Tenancy Agreement:-",
-          numbered: occupantLines.map((name, i) => ({ marker: `${i + 1})`, text: name || BLANK })),
+          numbered: renderedOccupantLines.map((name, i) => ({ marker: `${i + 1})`, text: name || BLANK })),
         },
       ],
     },

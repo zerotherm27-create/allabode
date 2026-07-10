@@ -5,7 +5,7 @@ function text(value: unknown): string {
 }
 
 export function adminOccupantsInitial(occupants: string[] | null | undefined): string[] {
-  const filled = (occupants ?? []).filter((name): name is string => typeof name === "string" && name.trim().length > 0);
+  const filled = adminOccupantsForAgreement(occupants);
   return filled.length > 0 ? filled : [""];
 }
 
@@ -16,6 +16,12 @@ export function adminOccupantSlots(occupants: string[] | null | undefined): stri
 
 export function appendAdminOccupantSlot(occupants: string[] | null | undefined): string[] {
   return [...adminOccupantSlots(occupants), ""];
+}
+
+export function adminOccupantsForAgreement(occupants: string[] | null | undefined): string[] {
+  return (occupants ?? [])
+    .map((name) => text(name))
+    .filter((name) => name.length > 0);
 }
 
 export function normalizeInventoryRows(rows: unknown): InventoryRow[] {

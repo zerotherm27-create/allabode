@@ -81,7 +81,7 @@ export function FullAgreementPreview({
       <P>
         <strong>ALL ABODE BROKERAGE AND VALUATION OPC.</strong>, a One Person Corporation duly organized under Philippine law,
         with principal office at 2216 Chino Roces Ave., Makati, Laureano Di Trevi Towers, Tower 2 #2804, represented by
-        its <strong>Property Manager, Aremchel M. Cruzado</strong>; hereinafter referred to as the <strong>&#x201C;Manager.&#x201D;</strong>
+        its <strong>Chief Executive Officer (CEO), Aremchel M. Cruzado</strong>; hereinafter referred to as the <strong>&#x201C;Manager.&#x201D;</strong>
       </P>
 
       <H1>I. PROPERTY</H1>
@@ -160,7 +160,7 @@ export function FullAgreementPreview({
       <P>Each Party bears government taxes for which it is legally responsible under Philippine law unless otherwise agreed in writing.</P>
 
       <H1>VIII. SECURITY DEPOSIT</H1>
-      <P>The security deposit belongs to the Owner and serves as security for the Tenant&#x2019;s obligations. The Manager administers it until completion of move-out inspection and final accounting. It may be applied to unpaid rent, utilities, association dues chargeable to the Tenant, damage beyond normal wear and tear, missing items, excess cleaning costs, and other Tenant obligations under the Lease Agreement. Any remaining balance shall be returned to the Tenant after deducting all lawful charges, per the timeline in the Lease Agreement.</P>
+      <P>The Tenant&#x2019;s security deposit shall be held solely as security for the Tenant&#x2019;s obligations and shall not be treated as income. Unless otherwise stated in the Lease Agreement, the Owner shall hold an amount equivalent to one (1) month&#x2019;s gross rent and the Manager shall hold an amount equivalent to one (1) month&#x2019;s gross rent. The security deposit may be applied to unpaid rent, utilities, association dues chargeable to the Tenant, damage beyond normal wear and tear, missing items, excess cleaning costs, and other Tenant obligations under the Lease Agreement. Any remaining balance shall be returned to the Tenant after completion of move-out inspection, final accounting, and deduction of all lawful charges, per the timeline in the Lease Agreement.</P>
 
       <H1>IX. REPAIRS AND MAINTENANCE</H1>
       <P>The Owner bears the cost of repairs from ordinary wear and tear, structural defects, building systems failures, appliance replacement due to age or normal use, hidden defects, and capital improvements. The Tenant is responsible for damage caused by negligence, misuse, abuse, or lease violations. No non-emergency repair exceeding the Owner&#x2019;s approved spending limit (Annex &#x201C;C&#x201D;) shall proceed without prior Owner approval.</P>
@@ -215,8 +215,7 @@ export function FullAgreementPreview({
         </thead>
         <tbody>
           {[
-            ["Long-Term Lease (6 months and above)", "One (1) month’s gross rent per new lease"],
-            ["Monthly Property Management", "Five Percent (5%) of monthly gross rent, exclusive of applicable taxes"],
+            ["Full Property Management", "One (1) month’s gross rent, or a pro-rated amount based on gross rent, plus a management fee of five percent (5%) of monthly gross rent, exclusive of applicable taxes"],
             ["Tenant Hunting Only", "One (1) month’s gross rent or as otherwise agreed"],
             ["Short-Term / Monthly Leasing", "Facilitation fee and/or prorated commission as agreed"],
             ["Condotel Management", "Twenty Percent (20%) to Thirty Percent (30%) of gross booking revenue"],

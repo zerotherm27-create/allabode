@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { inputCls, SubmitButton } from "@/components/admin/form-kit";
 import { DEFAULT_INVENTORY, type InventoryRow } from "@/lib/pm/tenancy-clauses";
+import {
+  applianceBrandOptionsForParticulars,
+  DEFAULT_APPLIANCE_BRAND_OPTIONS,
+  type ApplianceBrandOptions,
+} from "@/lib/pm/appliance-brand-catalog";
 
 /**
  * Staff-only pre-fill of the INVENTORY LIST annex (quantity / particulars /
@@ -10,11 +15,12 @@ import { DEFAULT_INVENTORY, type InventoryRow } from "@/lib/pm/tenancy-clauses";
  * print as blank lines like the paper form.
  */
 export function TenancyInventoryForm({
-  action, initial, warnTenantSigned,
+  action, initial, warnTenantSigned, brandOptions = DEFAULT_APPLIANCE_BRAND_OPTIONS,
 }: {
   action: (fd: FormData) => Promise<void>;
   initial: InventoryRow[] | null;
   warnTenantSigned?: boolean;
+  brandOptions?: ApplianceBrandOptions;
 }) {
   const [rows, setRows] = useState<InventoryRow[]>(initial?.length ? initial : DEFAULT_INVENTORY.map((r) => ({ ...r })));
 
@@ -47,7 +53,10 @@ export function TenancyInventoryForm({
             <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-[4.5rem_1.2fr_1fr_1.6fr_2rem]">
               <input aria-label="Quantity" value={r.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })} className={inputCls} />
               <input aria-label="Particulars" value={r.particulars} onChange={(e) => setRow(i, { particulars: e.target.value })} className={inputCls} />
-              <input aria-label="Brand" value={r.brand} onChange={(e) => setRow(i, { brand: e.target.value })} className={inputCls} />
+              <input aria-label="Brand" value={r.brand} onChange={(e) => setRow(i, { brand: e.target.value })} list={`tenancy_inventory_brand_${i}`} className={inputCls} />
+              <datalist id={`tenancy_inventory_brand_${i}`}>
+                {applianceBrandOptionsForParticulars(brandOptions, r.particulars).map((brand) => <option key={brand} value={brand} />)}
+              </datalist>
               <input aria-label="Remarks" value={r.remarks} onChange={(e) => setRow(i, { remarks: e.target.value })} className={inputCls} />
               <button
                 type="button"

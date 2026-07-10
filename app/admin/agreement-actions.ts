@@ -12,6 +12,7 @@ import { logAudit } from "@/lib/audit";
 import { signedUrl, AGREEMENTS_BUCKET, DOCUMENTS_BUCKET } from "@/lib/storage";
 import { renderAgreementPdf, type AgreementPdfInput } from "@/lib/pdf/agreement";
 import { ownerIdTypeLabel } from "@/lib/pm/agreement-labels";
+import { COMPANY_SIGNATORY, loadCompanySignatoryIdImage } from "@/lib/pm/company-signatory";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -283,6 +284,7 @@ async function completeAgreement(id: string) {
   }
 
   const { data: signatoryRow } = await supabase.from("users").select("email").eq("id", a.signatory_user_id ?? "").maybeSingle();
+  const managerIdImage = await loadCompanySignatoryIdImage(supabase);
 
   const pdfInput: AgreementPdfInput = {
     id: a.id,
@@ -298,6 +300,10 @@ async function completeAgreement(id: string) {
     ownerIdNumber: a.owner_id_number ?? "",
     ownerIdIssuedDate: a.owner_id_issued_date,
     ownerIdImageDataUri,
+    managerIdTypeLabel: COMPANY_SIGNATORY.idTypeLabel,
+    managerIdNumber: COMPANY_SIGNATORY.idNumber,
+    managerIdIssuedDate: COMPANY_SIGNATORY.idIssuedDate,
+    managerIdImageDataUri: managerIdImage.dataUri,
     ownerTypedName: a.owner_typed_name ?? "",
     ownerSignatureDataUri: a.owner_signature_data ?? "",
     ownerSignedAtManila: manilaTime(a.owner_signed_at),

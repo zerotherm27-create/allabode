@@ -1,5 +1,7 @@
 /** Shared content used across the homepage and listing/service pages. */
 
+import type { ListingMarket } from "@/lib/listing-category";
+
 export type Service = {
   slug: string;
   icon: string;
@@ -57,7 +59,7 @@ export const services: Service[] = [
   },
 ];
 
-export type ListingStatus = "For Sale" | "For Rent" | "Reserved" | "Sold";
+export type ListingStatus = "For Sale" | "For Rent" | "For Sale & For Rent" | "Reserved" | "Sold";
 
 export type Listing = {
   id: string;
@@ -80,6 +82,8 @@ export type Listing = {
   /* ---- Detail fields (from the DB; optional so mock rows still type-check) ---- */
   propertyType?: string;
   listingType?: string;
+  listingTypes?: string[];
+  listingMarkets?: ListingMarket[];
   furnishing?: string;
   parking?: number;
   lotArea?: string;
@@ -219,6 +223,7 @@ export const listings: Listing[] = [
 export const statusStyles: Record<ListingStatus, string> = {
   "For Sale": "bg-available text-white",
   "For Rent": "bg-navy text-white",
+  "For Sale & For Rent": "bg-gold text-navy",
   Reserved: "bg-reserved text-white",
   Sold: "bg-sold text-white",
 };

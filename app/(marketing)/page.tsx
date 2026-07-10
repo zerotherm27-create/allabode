@@ -18,9 +18,24 @@ export const metadata: Metadata = {
 };
 
 const heroCtas = [
-  { icon: "list_alt", label: "List My Property", href: "/list-your-property", variant: "primary" as const },
-  { icon: "search", label: "Find a Property", href: "/listings", variant: "secondary" as const },
-  { icon: "analytics", label: "Request Valuation", href: "/valuation", variant: "ghost-light" as const },
+  {
+    icon: "list_alt",
+    label: "List My Property",
+    href: "/list-your-property",
+    variant: "gold" as const,
+  },
+  {
+    icon: "search",
+    label: "Find a Property",
+    href: "/listings",
+    variant: "white" as const,
+  },
+  {
+    icon: "analytics",
+    label: "Request Valuation",
+    href: "/valuation",
+    variant: "navy-glass" as const,
+  },
 ];
 
 const quickPaths = [
@@ -92,24 +107,30 @@ export default async function Home() {
               </span>
             </Reveal>
             <Reveal y={20} delay={0.06}>
-              <h1 className="mt-6 font-display text-[2.5rem] font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
+              <h1 className="mt-6 font-display text-[2.25rem] font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
                 {s(settings, "hero_heading")}
               </h1>
             </Reveal>
             <Reveal y={20} delay={0.12}>
-              <p className="mt-4 max-w-2xl font-display text-xl text-gold/90">
+              <p className="mt-4 max-w-2xl font-display text-lg text-gold/90 sm:text-xl">
                 {s(settings, "hero_subheading")}
               </p>
-              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/75">
+              <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
                 {s(settings, "hero_body")}
               </p>
             </Reveal>
             <Reveal y={16} delay={0.18}>
-              <div className="mt-10 flex flex-wrap gap-3">
+              <div className="mt-7 grid w-full max-w-xl grid-cols-1 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3">
                 {heroCtas.map((cta) => (
-                  <Button key={cta.label} href={cta.href} variant={cta.variant} size="lg">
+                  <Button
+                    key={cta.label}
+                    href={cta.href}
+                    variant={cta.variant}
+                    size="lg"
+                    className="min-h-12 w-full px-4 text-[0.72rem] shadow-lg sm:min-h-14 sm:px-3"
+                  >
                     <Icon name={cta.icon} size={20} />
-                    {cta.label}
+                    <span className="whitespace-nowrap">{cta.label}</span>
                   </Button>
                 ))}
               </div>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function ForRentListingsPage() {
   const [all, settings] = await Promise.all([getListings(), getSettings()]);
-  const rentals = all.filter((l) => l.status === "For Rent");
+  const rentals = all.filter((l) => l.listingMarkets?.includes("For Rent") ?? l.status === "For Rent");
   return (
     <CategoryListingsPage
       eyebrow="For Rent"

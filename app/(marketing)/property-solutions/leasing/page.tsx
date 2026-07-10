@@ -58,7 +58,7 @@ const faqs = [
 
 export default async function LeasingPage() {
   const [all, settings] = await Promise.all([getListings(), getSettings()]);
-  const rentals = all.filter((l) => l.status === "For Rent");
+  const rentals = all.filter((l) => l.listingMarkets?.includes("For Rent") ?? l.status === "For Rent");
 
   return (
     <>

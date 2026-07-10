@@ -71,7 +71,7 @@ const faqs = [
 
 export default async function BrokeragePage() {
   const [all, settings] = await Promise.all([getListings(), getSettings()]);
-  const forSale = all.filter((l) => l.status === "For Sale");
+  const forSale = all.filter((l) => l.listingMarkets?.includes("For Sale") ?? l.status === "For Sale");
 
   return (
     <>

@@ -17,7 +17,7 @@ export function Container({
 }
 
 /* ---- Button: brand variants, renders <Link> when href is set ---- */
-type Variant = "primary" | "secondary" | "ghost" | "ghost-light" | "gold";
+type Variant = "primary" | "secondary" | "ghost" | "ghost-light" | "gold" | "white" | "navy-glass";
 type Size = "md" | "lg";
 
 const base =
@@ -34,6 +34,10 @@ const variants: Record<Variant, string> = {
   "ghost-light": "border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20",
   // Warm gold fill — for highest-priority CTAs (List Your Property)
   gold: "bg-gold text-navy hover:bg-gold-bright",
+  // Solid white for photographic/dark hero backgrounds
+  white: "border border-white/80 bg-white text-navy shadow-lg shadow-navy/25 hover:bg-white/90",
+  // Stronger glass treatment where a plain outline is too faint
+  "navy-glass": "border border-white/60 bg-navy/65 text-white shadow-lg shadow-navy/25 backdrop-blur-md hover:border-white hover:bg-navy/80",
 };
 
 const sizes: Record<Size, string> = {

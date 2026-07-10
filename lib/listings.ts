@@ -6,6 +6,7 @@ import {
 } from "@/lib/data";
 import type { NearbyPlace } from "@/lib/nearby-places";
 import { LISTING_IMAGES_BUCKET, storagePathFromUrl, signedUrlsForPaths } from "@/lib/storage";
+import { listingMarkets, listingStatusLabel, listingTypeLabels, type ListingCategory } from "@/lib/listing-category";
 
 /**
  * Public, read-only listings access. Uses a plain anon client (no cookies) so it
@@ -28,7 +29,7 @@ type Row = {
   location: string | null;
   price: number | null;
   price_label: string | null;
-  listing_category: "For Sale" | "For Lease";
+  listing_category: ListingCategory;
   lease_type: string | null;
   property_type: string;
   status: string;
@@ -67,8 +68,7 @@ const COMMERCIAL = new Set(["Commercial", "Office", "Warehouse", "Lot"]);
 function uiStatus(row: Row): ListingStatus {
   if (row.status === "Reserved") return "Reserved";
   if (row.status === "Sold" || row.status === "Leased") return "Sold";
-  // Display label only: the DB keeps "For Lease" as the listing_category value.
-  return row.listing_category === "For Lease" ? "For Rent" : "For Sale";
+  return listingStatusLabel(row.listing_category);
 }
 
 function fmtPrice(row: Row): string {
@@ -96,7 +96,9 @@ function mapRow(row: Row): Listing {
     gradient: gradientFor(row.slug),
     images,
     propertyType: row.property_type,
-    listingType: row.lease_type ?? row.listing_category,
+    listingType: listingTypeLabels(row.listing_category, row.lease_type).join(" · "),
+    listingTypes: listingTypeLabels(row.listing_category, row.lease_type),
+    listingMarkets: listingMarkets(row.listing_category),
     furnishing: row.furnishing ?? undefined,
     parking: row.parking ?? undefined,
     lotArea: row.lot_area != null ? `${Math.round(Number(row.lot_area))} sqm` : undefined,

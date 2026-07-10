@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Icon } from "@/components/icon";
 import { generateListingDescription } from "@/app/admin/actions";
+import { LISTING_CATEGORIES } from "@/lib/listing-category";
 
 export type ListingValues = {
   id?: string;
@@ -53,7 +54,6 @@ export type UnitOption = {
   baseRent: number | null;
 };
 
-const CATEGORIES = ["For Sale", "For Lease"];
 const LEASE_TYPES = ["", "Short-term", "Long-term", "Bed space"];
 const PROPERTY_TYPES = [
   "Condo", "House and Lot", "Apartment", "Townhouse", "Dorm / Bed Space",
@@ -238,7 +238,7 @@ export function ListingForm({
       <Group title="Classification">
         <F label="Listing category">
           <select ref={listingCategoryRef} name="listing_category" defaultValue={v.listing_category ?? "For Sale"} className={inputCls}>
-            {CATEGORIES.map((o) => <option key={o}>{o}</option>)}
+            {LISTING_CATEGORIES.map((o) => <option key={o}>{o}</option>)}
           </select>
         </F>
         <F label="Lease type" hint="For rentals only">

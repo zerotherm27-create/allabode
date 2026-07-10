@@ -18,6 +18,11 @@ function availabilityOf(l: Listing): "Available" | "Reserved" | "Sold" {
   return "Available";
 }
 
+function listingTypeOptions(l: Listing): string[] {
+  if (l.listingTypes?.length) return l.listingTypes;
+  return l.listingType ? [l.listingType] : [];
+}
+
 const FURNISHING = ["Fully furnished", "Semi-furnished", "Unfurnished"];
 
 export function ListingsBrowser({ listings }: { listings: Listing[] }) {
@@ -34,7 +39,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
 
   // Option lists derived from the data so they stay in sync with the catalogue.
   const listingTypes = useMemo(
-    () => ["All", ...Array.from(new Set(listings.map((l) => l.listingType).filter(Boolean) as string[]))],
+    () => ["All", ...Array.from(new Set(listings.flatMap(listingTypeOptions)))],
     [listings]
   );
   const propertyTypes = useMemo(
@@ -58,7 +63,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
     const min = minPrice ? Number(minPrice) : null;
     const max = maxPrice ? Number(maxPrice) : null;
     let r = listings.filter((l) => {
-      if (listingType !== "All" && l.listingType !== listingType) return false;
+      if (listingType !== "All" && !listingTypeOptions(l).includes(listingType)) return false;
       if (propertyType !== "All" && l.propertyType !== propertyType) return false;
       if (availability !== "All" && availabilityOf(l) !== availability) return false;
       if (minBeds === 0 && (l.beds ?? -1) !== 0) return false;

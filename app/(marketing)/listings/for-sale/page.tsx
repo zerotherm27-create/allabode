@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function ForSaleListingsPage() {
   const [all, settings] = await Promise.all([getListings(), getSettings()]);
-  const forSale = all.filter((l) => l.status === "For Sale");
+  const forSale = all.filter((l) => l.listingMarkets?.includes("For Sale") ?? l.status === "For Sale");
   return (
     <CategoryListingsPage
       eyebrow="For Sale"

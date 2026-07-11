@@ -135,10 +135,6 @@ export default async function ListingDetailPage({ params }: Params) {
               </p>
             </div>
 
-            <ListingMap location={listing.location} />
-
-            {listing.nearbyPlaces && <ListingNearbyPlaces places={listing.nearbyPlaces} />}
-
             {/* Property details (brief: listing/property type, furnishing, parking,
                 lot area, lease/sale terms, availability) */}
             <div className="mt-8">
@@ -172,6 +168,10 @@ export default async function ListingDetailPage({ params }: Params) {
                   ))}
               </dl>
             </div>
+
+            <ListingMap location={listing.location} />
+
+            {listing.nearbyPlaces && <ListingNearbyPlaces places={listing.nearbyPlaces} />}
 
             <div className="mt-8">
               <h2 className="font-display text-xl font-semibold text-navy">

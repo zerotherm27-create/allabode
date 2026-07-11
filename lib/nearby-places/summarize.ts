@@ -27,20 +27,34 @@ const SCHEMA = {
 
 const SYSTEM_PROMPT =
   "You are given a JSON array of real nearby places (name, category, distance in meters) near a " +
-  "property listing. Your only job is to group/relabel categories sensibly and add a short " +
-  "one-line blurb per place. You must NOT add, remove, or rename any place — every `name` in " +
-  "your output must exactly match a `name` from the input, and `distanceM` must be copied " +
-  "unchanged. Return valid JSON matching the schema.";
+  "property listing. Curate this down to only the important, well-known, or notable places — for " +
+  "each category, keep roughly the 2-3 most recognizable or significant entries (major malls, " +
+  "major hospitals, established schools, main transit stops) and leave out small, generic, or " +
+  "obscure ones. Add a short one-line blurb per place you keep. You must NOT invent, rename, or " +
+  "alter any place you keep — every `name` and `distanceM` you return must exactly match an entry " +
+  "from the input, copied unchanged. It is expected and correct to omit most input places. Return " +
+  "valid JSON matching the schema.";
 
+/** Deterministic non-AI curation: closest 3 per category, distance-sorted overall. */
 function plainList(pois: RawPoi[]): NearbyPlace[] {
-  return pois.map((p) => ({ name: p.name, category: p.category, distanceM: p.distanceM }));
+  const byCategory = new Map<string, RawPoi[]>();
+  for (const p of pois) {
+    const list = byCategory.get(p.category) ?? [];
+    list.push(p);
+    byCategory.set(p.category, list);
+  }
+  return Array.from(byCategory.values())
+    .flatMap((list) => list.slice().sort((a, b) => a.distanceM - b.distanceM).slice(0, 3))
+    .sort((a, b) => a.distanceM - b.distanceM)
+    .map((p) => ({ name: p.name, category: p.category, distanceM: p.distanceM }));
 }
 
 /**
- * Groups/blurbs real OSM results via AI — never invents places. Post-validates
- * the AI's output by rejecting any item whose name doesn't exactly match an
- * input POI, falling back to the plain grouped list if AI is unavailable,
- * errors, or fails validation entirely.
+ * Curates real OSM results down to the important/notable few via AI — never
+ * invents places, only selects a subset and blurbs it. Post-validates the
+ * AI's output by rejecting any item whose name doesn't exactly match an
+ * input POI, falling back to a deterministic closest-3-per-category list if
+ * AI is unavailable, errors, or fails validation entirely.
  */
 export async function summarizeNearbyPlaces(pois: RawPoi[]): Promise<NearbyPlace[]> {
   if (pois.length === 0) return [];

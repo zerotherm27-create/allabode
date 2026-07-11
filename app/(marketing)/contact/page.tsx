@@ -80,13 +80,17 @@ export default async function ContactPage() {
               <p className="mt-2 text-navy">{serviceArea}</p>
             </div>
 
-            {/* Map placeholder */}
-            <div className="mt-6 flex aspect-[16/10] items-center justify-center rounded-lg border border-line bg-gradient-to-br from-navy via-navy-800 to-navy-700 text-white/70">
-              <span className="flex flex-col items-center gap-2 text-sm">
-                <Icon name="map" size={32} className="text-gold" />
-                Map: {location}
-              </span>
-            </div>
+            {location && (
+              <div className="mt-6 aspect-[16/10] overflow-hidden rounded-lg border border-line">
+                <iframe
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(location)}&output=embed`}
+                  className="h-full w-full"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title={`Map showing ${location}`}
+                />
+              </div>
+            )}
           </div>
 
           {/* Form */}

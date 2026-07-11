@@ -181,13 +181,13 @@ export default async function BrokeragePage() {
           </Reveal>
           <StaggerGroup
             as="ol"
-            className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-4"
+            className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-3"
           >
             {processSteps.map((step, i) => (
               <StaggerItem
                 as="li"
                 key={step.n}
-                className={i === processSteps.length - 1 ? "sm:col-span-2 lg:col-span-1" : ""}
+                className={i === processSteps.length - 1 ? "sm:col-span-2 lg:col-span-3" : ""}
               >
                 <div className="h-full bg-surface p-7">
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-navy text-sm font-bold text-white">

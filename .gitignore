@@ -41,3 +41,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 memory.md
+
+# claude-flow local tooling state (not part of the app)
+.claude-flow/
+.swarm/
+ruvector.db
+.claude/.proven-config-version
+.claude/agents/
+.claude/commands/
+.claude/helpers/
+.claude/memory.db
+.claude/proven-config.json
+.claude/settings.json
+.claude/skills/

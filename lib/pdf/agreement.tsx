@@ -7,6 +7,7 @@ import {
   COMMS_LABEL, RESPONSE_LABEL, payoutScheduleLabel,
 } from "@/lib/pm/agreement-labels";
 import { COMPANY_SIGNATORY } from "@/lib/pm/company-signatory";
+import { PageContactRow } from "@/lib/pdf/contact-icons";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -25,7 +26,6 @@ const INK = "#16202c";
 
 // Same house style as the tenancy/parking agreement PDFs: per-page logo
 // header + disclaimer/"PLEASE SIGN" footer, on every page.
-const PAGE_CONTACT = "M: +63 917 159 6808 | E: info@allabodeph.com | W: www.allabodeph.com";
 const PM_DISCLAIMER =
   "DISCLAIMER: This Property Management Agreement has been prepared by All Abode Brokerage and Valuation OPC for " +
   "submission to the Owner for review and approval. No representation or recommendation is made by the Company, " +
@@ -39,7 +39,6 @@ const styles = StyleSheet.create({
   // matching the tenancy/parking agreement PDFs.
   page: { paddingTop: 92, paddingBottom: 118, paddingHorizontal: 44, fontSize: 9.5, color: INK, fontFamily: "Helvetica", lineHeight: 1.4 },
   header: { position: "absolute", top: 22, left: 44, right: 44, alignItems: "center" },
-  headerContact: { fontSize: 7, color: SLATE, marginTop: 3 },
   footer: { position: "absolute", top: 700, left: 44, right: 44, height: 70, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   footerLeft: { flex: 1, paddingRight: 10 },
   footerDisclaimer: { fontSize: 6, color: SLATE, lineHeight: 1.25 },
@@ -88,7 +87,7 @@ function PageHeader() {
         // eslint-disable-next-line jsx-a11y/alt-text
         <Image src={logo} style={{ width: 118, height: 34, objectFit: "contain" }} />
       )}
-      <Text style={styles.headerContact}>{PAGE_CONTACT}</Text>
+      <PageContactRow phone="+63 917 159 6808" email="info@allabodeph.com" website="www.allabodeph.com" color={SLATE} fontSize={7} />
     </View>
   );
 }

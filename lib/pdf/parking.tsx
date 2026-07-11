@@ -1,7 +1,7 @@
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import fs from "fs";
 import path from "path";
-import { recitalDateParts, BLANK, TENANCY_HEADER_CONTACT, type ClauseParagraph } from "@/lib/pm/tenancy-clauses";
+import { recitalDateParts, BLANK, type ClauseParagraph } from "@/lib/pm/tenancy-clauses";
 import {
   buildParkingClausesBeforeTables, parkingClause5Intro, buildParkingClausesAfterTables,
   parkingRecital, landlordProse, parkingWhereas,
@@ -10,6 +10,7 @@ import {
   type ParkingLandlordDetails, type ParkingTenantDetails,
   type ParkingScheduleRow, type ParkingBankDetails,
 } from "@/lib/pm/parking-clauses";
+import { PageContactRow } from "@/lib/pdf/contact-icons";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -30,7 +31,6 @@ const styles = StyleSheet.create({
   // disclaimer + "PLEASE SIGN" initials footer on every page.
   page: { paddingTop: 92, paddingBottom: 118, paddingHorizontal: 44, fontSize: 9.5, color: INK, fontFamily: "Helvetica", lineHeight: 1.4 },
   header: { position: "absolute", top: 22, left: 44, right: 44, alignItems: "center" },
-  headerContact: { fontSize: 7, color: SLATE, marginTop: 3 },
   footer: { position: "absolute", top: 700, left: 44, right: 44, height: 70, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   footerLeft: { flex: 1, paddingRight: 10 },
   footerDisclaimer: { fontSize: 6, color: SLATE, lineHeight: 1.25 },
@@ -74,7 +74,7 @@ function PageHeader() {
         // eslint-disable-next-line jsx-a11y/alt-text
         <Image src={logo} style={{ width: 118, height: 34, objectFit: "contain" }} />
       )}
-      <Text style={styles.headerContact}>{TENANCY_HEADER_CONTACT}</Text>
+      <PageContactRow phone="+63 917 159 6808" email="info@allabodeph.com" website="www.allabodeph.com" color={SLATE} fontSize={7} />
     </View>
   );
 }

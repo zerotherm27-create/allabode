@@ -4,12 +4,13 @@ import path from "path";
 import {
   buildTenancyClausesBeforeTables, buildTenancyClausesAfterTables,
   recitalDateParts, BLANK,
-  TENANCY_HEADER_CONTACT, TENANCY_DISCLAIMER,
+  TENANCY_DISCLAIMER,
   TENANCY_REMINDERS, TENANCY_INTERPRETATION, DEFAULT_PAYMENT_PARTICULARS,
   type TenancyClause, type ClauseParagraph, type TenancyTermsInput,
   type TenancyLandlordDetails, type TenancyTenantDetails,
   type PaymentScheduleRow, type InventoryRow, type TenancyBankDetails,
 } from "@/lib/pm/tenancy-clauses";
+import { PageContactRow } from "@/lib/pdf/contact-icons";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -31,7 +32,6 @@ const styles = StyleSheet.create({
   // reference document.
   page: { paddingTop: 92, paddingBottom: 118, paddingHorizontal: 44, fontSize: 9.5, color: INK, fontFamily: "Helvetica", lineHeight: 1.4 },
   header: { position: "absolute", top: 22, left: 44, right: 44, alignItems: "center" },
-  headerContact: { fontSize: 7, color: SLATE, marginTop: 3 },
   footer: { position: "absolute", top: 700, left: 44, right: 44, height: 70, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   footerLeft: { flex: 1, paddingRight: 10 },
   footerDisclaimer: { fontSize: 6, color: SLATE, lineHeight: 1.25 },
@@ -80,7 +80,7 @@ function PageHeader() {
         // eslint-disable-next-line jsx-a11y/alt-text
         <Image src={logo} style={{ width: 118, height: 34, objectFit: "contain" }} />
       )}
-      <Text style={styles.headerContact}>{TENANCY_HEADER_CONTACT}</Text>
+      <PageContactRow phone="+63 917 159 6808" email="info@allabodeph.com" website="www.allabodeph.com" color={SLATE} fontSize={7} />
     </View>
   );
 }
@@ -371,11 +371,11 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             <Image src={input.landlordIdImageDataUri} style={{ width: 320, maxHeight: 220, objectFit: "contain", marginTop: 6, alignSelf: "flex-start" }} />
           </>
         ) : (
-          <View style={{ height: 200 }}>
-            {input.landlordSignedVia === "countersign" ? (
-              <Text style={styles.meta}>Signed by an authorized All Abode signatory — landlord ID on file.</Text>
-            ) : null}
-          </View>
+          <Text style={styles.meta}>
+            {input.landlordSignedVia === "countersign"
+              ? "Signed by an authorized All Abode signatory — landlord ID on file."
+              : "ID image unavailable."}
+          </Text>
         )}
 
         <Text style={[styles.idSectionLabel, { marginTop: 24 }]}>TENANTS</Text>

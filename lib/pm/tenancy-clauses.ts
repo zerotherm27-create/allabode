@@ -48,8 +48,6 @@ export const DEFAULT_PAYMENT_PARTICULARS = [
   "12th month advance",
 ];
 
-export const TENANCY_HEADER_CONTACT = "M: +63 917 159 6808 | E: info@allabodeph.com | W: www.allabodeph.com";
-
 export const TENANCY_DISCLAIMER =
   "DISCLAIMER: This Tenancy Agreement has been prepared by All Abode Brokerage and Valuation OPC for " +
   "submission to the Landlord and to the Tenant for review and approval. No representation or recommendation " +

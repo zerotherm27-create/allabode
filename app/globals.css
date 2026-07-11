@@ -57,6 +57,10 @@
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.02em;
   --text-display--font-weight: 700;
+  --text-display-sm: 2.25rem;       /* 36 — hero/PageHero mobile base, below the sm breakpoint */
+  --text-display-sm--line-height: 1.05;
+  --text-display-sm--letter-spacing: -0.02em;
+  --text-display-sm--font-weight: 700;
   --text-h1: 3rem;                  /* 48 */
   --text-h1--line-height: 1.1;
   --text-h1--letter-spacing: -0.02em;

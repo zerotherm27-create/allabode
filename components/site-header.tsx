@@ -212,7 +212,7 @@ export function SiteHeader() {
             aria-expanded={open}
             onClick={() => setOpen(true)}
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full transition-colors lg:hidden",
+              "flex h-11 w-11 items-center justify-center rounded-full transition-colors lg:hidden",
               overLightSurface ? "text-white hover:bg-white/10" : "text-navy hover:bg-surface-gray"
             )}
           >

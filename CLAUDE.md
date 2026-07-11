@@ -44,6 +44,15 @@ not diversify. All design assets and the token reference live in `design/`:
 - Motion: `--ease-out/-in/-in-out`, `--dur-fast/-mid`. Animate transform/opacity only.
   `prefers-reduced-motion` handled globally in `globals.css`.
 
+## Design Context
+
+Strategic and visual design context now lives in root `PRODUCT.md` (register,
+users, positioning, brand personality, anti-references, design principles,
+accessibility target) and `DESIGN.md` (colors, typography, elevation, components —
+`/impeccable`-format spec, mirrors `design/DESIGN-TOKENS.md`). Register: `brand`
+(marketing site is the default; dashboards/portals confirm `product` register
+per-task). Read both before any `/impeccable` design command.
+
 ## Conventions
 
 - **Layout primitives:** `Container` + `Button` from `@/components/ui` (the `Button` is

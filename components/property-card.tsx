@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { SaveListingButton } from "@/components/save-listing-button";
 import { type Listing, formatBeds, statusStyles } from "@/lib/data";
 
 export function PropertyCard({ listing }: { listing: Listing }) {
@@ -33,17 +34,11 @@ export function PropertyCard({ listing }: { listing: Listing }) {
           />
         )}
         <span
-          className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[listing.status]}`}
+          className={`absolute left-4 top-4 rounded-full px-3 py-1 text-caps font-bold uppercase ${statusStyles[listing.status]}`}
         >
           {listing.status}
         </span>
-        <button
-          type="button"
-          aria-label="Save listing"
-          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-navy/70 text-white backdrop-blur-md transition-colors hover:bg-navy-700"
-        >
-          <Icon name="favorite" size={18} />
-        </button>
+        <SaveListingButton listingId={listing.id} title={listing.title} />
       </div>
 
       {/* Body */}

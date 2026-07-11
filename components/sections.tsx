@@ -115,7 +115,7 @@ export function PageHero({
           <span className="label-caps inline-block bg-gold/15 px-4 py-1.5 text-gold-soft ring-1 ring-gold/30">
             {eyebrow}
           </span>
-          <h1 className="mt-6 font-display text-[2.25rem] font-bold leading-[1.08] tracking-tight sm:text-5xl">
+          <h1 className="mt-6 font-display text-display-sm font-bold leading-[1.08] tracking-tight sm:text-5xl">
             {title}
           </h1>
           {body && (

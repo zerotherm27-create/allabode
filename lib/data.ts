@@ -26,7 +26,7 @@ export const services: Service[] = [
     icon: "key",
     title: "Leasing",
     blurb:
-      "Lease out your property or find a rental that fits your needs. We assist with residential leasing, long-term leases, short-stay coordination, bedspace leasing, commercial leases, office spaces, warehouses, and parking.",
+      "Lease out your property or find a rental that fits your needs. We assist with residential leasing, long-term leases, short-stay coordination, bedspace leasing (shared-room rentals), commercial leases, office spaces, warehouses, and parking.",
     href: "/property-solutions/leasing",
     cta: "Explore Leasing",
   },
@@ -253,5 +253,33 @@ export const trustPoints = [
     icon: "location_on",
     title: "Local Coordination",
     body: "On-the-ground coordination for property-related concerns, offices, buildings, and service providers.",
+  },
+];
+
+/** Legal/regulatory credentials, displayed near trust-building content. Leave a credential out entirely (don't placeholder it) until the real number is confirmed. */
+export const credentials = [
+  { label: "SEC Registration No.", value: "202607025713305" },
+  { label: "PRC Real Estate Broker License No.", value: "0035712" },
+  { label: "PRC Real Estate Appraiser License No.", value: "0012992" },
+  { label: "PTR No.", value: "2948777" },
+];
+
+export type Testimonial = {
+  name: string;
+  role: string;
+  quote: string;
+};
+
+export const testimonials: Testimonial[] = [
+  {
+    name: "Paul David",
+    role: "OFW, Property Owner",
+    quote:
+      "I am very demanding with how I want my properties to be managed. All Abode seemed to intuitively understand my needs before I even mention it. They are very proactive and responsive. Together with MVRX Designs, they turned our humble abode into a haven in the middle of the city, making our unit one of the most sought-after. Thank you!",
+  },
+  {
+    name: "Paula Lee Nacionales",
+    role: "OFW, Property Owner",
+    quote: "Management service is great and very prompt on monthly reports.",
   },
 ];

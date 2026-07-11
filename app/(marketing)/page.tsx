@@ -6,7 +6,7 @@ import { PropertyCard } from "@/components/property-card";
 import { Faq } from "@/components/faq";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 
-import { services, trustPoints } from "@/lib/data";
+import { services, trustPoints, credentials, testimonials } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
@@ -17,32 +17,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const heroCtas = [
-  {
-    icon: "list_alt",
-    label: "List My Property",
-    href: "/list-your-property",
-    variant: "gold" as const,
-  },
-  {
-    icon: "search",
-    label: "Find a Property",
-    href: "/listings",
-    variant: "white" as const,
-  },
-  {
-    icon: "analytics",
-    label: "Request Valuation",
-    href: "/valuation",
-    variant: "navy-glass" as const,
-  },
+const heroPrimaryCta = {
+  icon: "list_alt",
+  label: "List My Property",
+  href: "/list-your-property",
+};
+
+const heroSecondaryLinks = [
+  { icon: "search", label: "Find a Property", href: "/listings" },
+  { icon: "analytics", label: "Request Valuation", href: "/valuation" },
 ];
 
 const quickPaths = [
-  { icon: "sell", title: "List My Property", href: "/list-your-property" },
-  { icon: "search", title: "Find a Property", href: "/listings" },
-  { icon: "analytics", title: "Request Valuation", href: "/valuation" },
   { icon: "corporate_fare", title: "Get Property Management", href: "/property-solutions/property-management" },
+  { icon: "history_edu", title: "Get Documentation Help", href: "/property-solutions/documentation-assistance" },
 ];
 
 const audiences = [
@@ -98,6 +86,9 @@ export default async function Home() {
           />
         )}
         <div className="absolute inset-0 -z-10 opacity-60 [background:radial-gradient(80%_60%_at_85%_15%,rgba(180,151,90,0.28),transparent_60%)]" />
+        {heroImage && (
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy/70 via-navy/35 to-transparent sm:from-navy/60 sm:via-navy/20 sm:to-transparent" />
+        )}
 
         <Container className="flex min-h-[72vh] flex-col justify-center pb-20 pt-32 md:pt-36">
           <div className="max-w-3xl">
@@ -107,7 +98,7 @@ export default async function Home() {
               </span>
             </Reveal>
             <Reveal y={20} delay={0.06}>
-              <h1 className="mt-6 font-display text-[2.25rem] font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
+              <h1 className="mt-6 font-display text-display-sm font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-display">
                 {s(settings, "hero_heading")}
               </h1>
             </Reveal>
@@ -120,19 +111,33 @@ export default async function Home() {
               </p>
             </Reveal>
             <Reveal y={16} delay={0.18}>
-              <div className="mt-7 grid w-full max-w-xl grid-cols-1 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3">
-                {heroCtas.map((cta) => (
-                  <Button
-                    key={cta.label}
-                    href={cta.href}
-                    variant={cta.variant}
-                    size="lg"
-                    className="min-h-12 w-full px-4 text-[0.72rem] shadow-lg sm:min-h-14 sm:px-3"
-                  >
-                    <Icon name={cta.icon} size={20} />
-                    <span className="whitespace-nowrap">{cta.label}</span>
-                  </Button>
-                ))}
+              <div className="mt-7 flex flex-col items-start gap-5 sm:mt-10">
+                <Button
+                  href={heroPrimaryCta.href}
+                  variant="white"
+                  size="lg"
+                  className="min-h-12 w-full px-6 shadow-lg sm:w-auto sm:min-h-14"
+                >
+                  <Icon name={heroPrimaryCta.icon} size={20} />
+                  <span className="whitespace-nowrap">{heroPrimaryCta.label}</span>
+                </Button>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+                  {heroSecondaryLinks.map((link) => (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className="group flex min-h-[44px] items-center gap-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
+                    >
+                      <Icon name={link.icon} size={16} />
+                      {link.label}
+                      <Icon
+                        name="arrow_forward"
+                        size={14}
+                        className="transition-transform group-hover:translate-x-0.5"
+                      />
+                    </Link>
+                  ))}
+                </div>
               </div>
             </Reveal>
           </div>
@@ -183,15 +188,15 @@ export default async function Home() {
             </p>
           </Reveal>
 
-          <StaggerGroup as="ol" className="flex flex-col divide-y divide-line border-t border-line">
-            {services.map((service, i) => (
+          <StaggerGroup as="ul" className="flex flex-col divide-y divide-line border-t border-line">
+            {services.map((service) => (
               <StaggerItem as="li" key={service.slug}>
                 <Link
                   href={service.href}
                   className="group grid grid-cols-[3rem_1fr_auto] items-center gap-5 py-6 transition-colors hover:bg-surface-gray sm:grid-cols-[3.5rem_1fr_auto]"
                 >
-                  <span className="font-display text-2xl font-semibold text-line-strong">
-                    {String(i + 1).padStart(2, "0")}
+                  <span className="flex h-11 w-11 items-center justify-center bg-navy/5 text-navy-700">
+                    <Icon name={service.icon} size={22} />
                   </span>
                   <span>
                     <span className="font-display text-lg font-semibold text-navy sm:text-xl">
@@ -217,8 +222,7 @@ export default async function Home() {
       <section className="bg-navy py-section text-white">
         <Container>
           <Reveal className="max-w-2xl">
-            <p className="label-caps text-gold">Who We Help</p>
-            <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">
               Built for owners, buyers, sellers, tenants, and investors
             </h2>
             <p className="mt-4 text-white/70">
@@ -246,8 +250,7 @@ export default async function Home() {
         <Container>
           <Reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="label-caps text-gold-ink">Featured Properties</p>
-              <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
+              <h2 className="font-display text-3xl font-bold text-navy sm:text-4xl">
                 Featured properties
               </h2>
               <p className="mt-3 max-w-xl text-slate">
@@ -279,8 +282,7 @@ export default async function Home() {
       <section className="bg-surface-gray py-section">
         <Container className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <Reveal>
-            <span className="label-caps text-gold-ink">Why Choose All Abode</span>
-            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-navy sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold leading-tight text-navy sm:text-4xl">
               Why work with All Abode
             </h2>
             <p className="mt-6 max-w-xl text-slate">
@@ -307,6 +309,43 @@ export default async function Home() {
                     <p className="mt-1.5 text-sm text-slate">{point.body}</p>
                   </div>
                 </div>
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+        </Container>
+      </section>
+
+      {/* ---------- Licensed & Trusted — credentials + testimonials ---------- */}
+      <section className="py-section">
+        <Container>
+          <Reveal className="max-w-2xl">
+            <h2 className="font-display text-3xl font-bold text-navy sm:text-4xl">
+              Licensed and trusted
+            </h2>
+          </Reveal>
+
+          <StaggerGroup
+            as="ul"
+            className="mt-8 flex flex-wrap gap-x-8 gap-y-2 border-y border-line py-5 text-sm text-slate"
+          >
+            {credentials.map((c) => (
+              <StaggerItem as="li" key={c.label}>
+                <span className="font-semibold text-navy">{c.label}:</span> {c.value}
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+
+          <StaggerGroup
+            as="ul"
+            className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-x-12 sm:divide-x sm:divide-line"
+          >
+            {testimonials.map((t) => (
+              <StaggerItem as="li" key={t.name} className="sm:first:pr-12 sm:last:pl-12">
+                <Icon name="format_quote" size={28} className="text-gold-ink" />
+                <p className="mt-3 text-lg leading-relaxed text-navy">{t.quote}</p>
+                <p className="label-caps mt-4 text-slate">
+                  {t.name}, {t.role}
+                </p>
               </StaggerItem>
             ))}
           </StaggerGroup>
@@ -344,8 +383,7 @@ export default async function Home() {
       <section className="bg-surface-gray py-section">
         <Container>
           <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="label-caps text-gold-ink">Questions</p>
-            <h2 className="mt-3 font-display text-3xl font-bold text-navy sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold text-navy sm:text-4xl">
               Frequently asked questions
             </h2>
           </Reveal>
@@ -365,8 +403,7 @@ export default async function Home() {
       <section className="bg-navy py-section text-white">
         <Container>
           <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="label-caps text-gold">Get Started</p>
-            <h2 className="mt-4 font-display text-3xl font-bold sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">
               Ready to get help with your property?
             </h2>
             <p className="mt-5 text-lg text-white/70">
@@ -374,11 +411,11 @@ export default async function Home() {
               service.
             </p>
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-              <Button href="/contact" size="lg" variant="gold">
-                Contact All Abode
-              </Button>
-              <Button href="/list-your-property" size="lg" variant="ghost-light">
+              <Button href="/list-your-property" size="lg" variant="gold">
                 List My Property
+              </Button>
+              <Button href="/contact" size="lg" variant="ghost-light">
+                Contact All Abode
               </Button>
               <Button href="/valuation" size="lg" variant="ghost-light">
                 Request Valuation

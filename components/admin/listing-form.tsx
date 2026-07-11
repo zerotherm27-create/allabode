@@ -18,6 +18,8 @@ export type ListingValues = {
   private_address?: string;
   price?: number | null;
   price_label?: string;
+  rent_price?: number | null;
+  rent_price_label?: string;
   listing_category?: string;
   lease_type?: string;
   property_type?: string;
@@ -132,11 +134,13 @@ export function ListingForm({
   const floorAreaRef = useRef<HTMLInputElement>(null);
   const [genPending, setGenPending] = useState(false);
   const [genError, setGenError] = useState("");
+  const [category, setCategory] = useState(v.listing_category ?? "For Sale");
 
   function handleUnitPick(unitId: string) {
     const u = units.find((x) => x.id === unitId);
     if (!u) return;
     if (listingCategoryRef.current) listingCategoryRef.current.value = "For Lease";
+    setCategory("For Lease");
     if (u.propertyType && propertyTypeRef.current) propertyTypeRef.current.value = u.propertyType;
     if (locationRef.current) locationRef.current.value = [u.propertyName, u.city].filter(Boolean).join(", ");
     if (cityRef.current && u.city) cityRef.current.value = u.city;
@@ -237,7 +241,13 @@ export function ListingForm({
 
       <Group title="Classification">
         <F label="Listing category">
-          <select ref={listingCategoryRef} name="listing_category" defaultValue={v.listing_category ?? "For Sale"} className={inputCls}>
+          <select
+            ref={listingCategoryRef}
+            name="listing_category"
+            defaultValue={v.listing_category ?? "For Sale"}
+            onChange={(e) => setCategory(e.target.value)}
+            className={inputCls}
+          >
             {LISTING_CATEGORIES.map((o) => <option key={o}>{o}</option>)}
           </select>
         </F>
@@ -276,6 +286,16 @@ export function ListingForm({
         <F label="Price label" hint="e.g. per month, total contract price">
           <input ref={priceLabelRef} name="price_label" defaultValue={v.price_label} className={inputCls} />
         </F>
+        {category === "For Sale and For Lease" && (
+          <>
+            <F label="Rent price (₱)" hint="Monthly rent — shown alongside the sale price above">
+              <input name="rent_price" type="number" step="0.01" defaultValue={v.rent_price ?? undefined} className={inputCls} />
+            </F>
+            <F label="Rent price label" hint="e.g. per month">
+              <input name="rent_price_label" defaultValue={v.rent_price_label} className={inputCls} />
+            </F>
+          </>
+        )}
         <F label="Bedrooms" hint="0 = Studio"><input ref={bedroomsRef} name="bedrooms" type="number" min={0} defaultValue={v.bedrooms ?? undefined} className={inputCls} /></F>
         <F label="Bathrooms"><input ref={bathroomsRef} name="bathrooms" type="number" defaultValue={v.bathrooms ?? undefined} className={inputCls} /></F>
         <F label="Floor area (sqm)"><input ref={floorAreaRef} name="floor_area" type="number" step="0.01" defaultValue={v.floor_area ?? undefined} className={inputCls} /></F>

@@ -25,7 +25,14 @@ function listingTypeOptions(l: Listing): string[] {
 
 const FURNISHING = ["Fully furnished", "Semi-furnished", "Unfurnished"];
 
-export function ListingsBrowser({ listings }: { listings: Listing[] }) {
+export function ListingsBrowser({
+  listings,
+  priceContext,
+}: {
+  listings: Listing[];
+  /** Force a single market's price on cards, even for dual-market listings (used on /listings/for-sale and /listings/for-rent). */
+  priceContext?: "sale" | "rent";
+}) {
   const [query, setQuery] = useState("");
   const [listingType, setListingType] = useState("All");
   const [propertyType, setPropertyType] = useState("All");
@@ -217,7 +224,7 @@ export function ListingsBrowser({ listings }: { listings: Listing[] }) {
         {results.length > 0 ? (
           <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3">
             {results.map((listing) => (
-              <PropertyCard key={listing.id} listing={listing} />
+              <PropertyCard key={listing.id} listing={listing} priceContext={priceContext} />
             ))}
           </div>
         ) : (

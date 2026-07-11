@@ -4,7 +4,20 @@ import { Icon } from "@/components/icon";
 import { SaveListingButton } from "@/components/save-listing-button";
 import { type Listing, formatBeds, statusStyles } from "@/lib/data";
 
-export function PropertyCard({ listing }: { listing: Listing }) {
+export function PropertyCard({
+  listing,
+  priceContext,
+}: {
+  listing: Listing;
+  /** Force a single market's price on a category browse page, even for dual-market listings. */
+  priceContext?: "sale" | "rent";
+}) {
+  const showBothPrices = !priceContext && !!listing.salePrice && !!listing.rentPrice;
+  const singlePrice =
+    priceContext === "sale" ? listing.salePrice ?? listing.price
+    : priceContext === "rent" ? listing.rentPrice ?? listing.price
+    : listing.price;
+
   const specs: { icon: string; label: string }[] =
     listing.specs ?? [
       ...(listing.beds != null
@@ -43,9 +56,22 @@ export function PropertyCard({ listing }: { listing: Listing }) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-6">
-        <p className="font-display text-xl font-bold text-navy-700">
-          {listing.price}
-        </p>
+        {showBothPrices ? (
+          <div className="flex flex-col gap-0.5">
+            <p className="font-display text-xl font-bold text-navy-700">
+              <span className="label-caps mr-1.5 text-xs font-semibold text-slate">For Sale</span>
+              {listing.salePrice}
+            </p>
+            <p className="font-display text-xl font-bold text-navy-700">
+              <span className="label-caps mr-1.5 text-xs font-semibold text-slate">For Rent</span>
+              {listing.rentPrice}
+            </p>
+          </div>
+        ) : (
+          <p className="font-display text-xl font-bold text-navy-700">
+            {singlePrice}
+          </p>
+        )}
         <h3 className="mt-1 font-display text-lg font-semibold leading-tight text-navy">
           <Link href={`/listings/${listing.id}`} className="hover:text-navy-700 focus-visible:underline">
             {listing.title}

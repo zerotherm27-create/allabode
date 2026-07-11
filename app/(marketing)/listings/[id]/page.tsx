@@ -194,10 +194,29 @@ export default async function ListingDetailPage({ params }: Params) {
           {/* Sticky enquiry card */}
           <aside className="h-fit lg:sticky lg:top-24">
             <div className="border border-line bg-surface p-7">
-              <p className="label-caps text-slate">Guide price</p>
-              <p className="mt-1 font-display text-3xl font-bold text-navy-700">
-                {listing.price}
-              </p>
+              {listing.salePrice && listing.rentPrice ? (
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <p className="label-caps text-slate">For Sale</p>
+                    <p className="mt-1 font-display text-3xl font-bold text-navy-700">
+                      {listing.salePrice}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="label-caps text-slate">For Rent</p>
+                    <p className="mt-1 font-display text-3xl font-bold text-navy-700">
+                      {listing.rentPrice}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="label-caps text-slate">Guide price</p>
+                  <p className="mt-1 font-display text-3xl font-bold text-navy-700">
+                    {listing.price}
+                  </p>
+                </>
+              )}
               <div className="my-6 h-px w-full bg-gold/30" />
               <p className="text-sm text-slate">
                 Speak with the licensed broker handling this property.

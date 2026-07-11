@@ -68,6 +68,10 @@ export type Listing = {
   title: string;
   location: string;
   price: string;
+  /** Sale-side price, formatted — set for "For Sale" and dual-market listings. */
+  salePrice?: string;
+  /** Rent-side price, formatted with "/mo" — set for "For Lease" and dual-market listings. */
+  rentPrice?: string;
   status: ListingStatus;
   type: "Residential" | "Commercial";
   beds?: number;

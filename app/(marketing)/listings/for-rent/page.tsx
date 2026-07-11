@@ -23,6 +23,7 @@ export default async function ForRentListingsPage() {
       cta={{ label: "Schedule a Viewing", href: "/contact" }}
       listings={rentals}
       heroImage={s(settings, "page_listings_image") || undefined}
+      priceContext="rent"
     />
   );
 }

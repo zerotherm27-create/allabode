@@ -48,6 +48,8 @@ function listingRow(fd: FormData) {
     private_address: s(fd, "private_address"),
     price: n(fd, "price"),
     price_label: s(fd, "price_label"),
+    rent_price: n(fd, "rent_price"),
+    rent_price_label: s(fd, "rent_price_label"),
     listing_category: s(fd, "listing_category") ?? "For Sale",
     lease_type: s(fd, "lease_type"),
     property_type: s(fd, "property_type") ?? "Condo",

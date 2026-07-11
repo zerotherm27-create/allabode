@@ -22,6 +22,7 @@ export default async function ForSaleListingsPage() {
       cta={{ label: "Inquire About a Property", href: "/contact" }}
       listings={forSale}
       heroImage={s(settings, "page_listings_image") || undefined}
+      priceContext="sale"
     />
   );
 }

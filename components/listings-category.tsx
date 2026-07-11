@@ -13,6 +13,8 @@ type Props = {
   cta?: { label: string; href: string };
   listings: Listing[];
   heroImage?: string;
+  /** Force a single market's price on cards, even for dual-market listings. */
+  priceContext?: "sale" | "rent";
 };
 
 /** Shared layout for the /listings/<category> pages: hero + intro + pre-filtered browser. */
@@ -25,6 +27,7 @@ export function CategoryListingsPage({
   cta,
   listings,
   heroImage,
+  priceContext,
 }: Props) {
   return (
     <>
@@ -53,7 +56,7 @@ export function CategoryListingsPage({
               {intro}
             </p>
           )}
-          <ListingsBrowser listings={listings} />
+          <ListingsBrowser listings={listings} priceContext={priceContext} />
           <p className="mx-auto mt-12 max-w-3xl text-center text-sm text-slate">
             All listings are subject to availability, owner approval, and
             verification at the time of inquiry. Want your property listed

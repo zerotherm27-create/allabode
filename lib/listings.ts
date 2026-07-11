@@ -20,7 +20,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const db = url && key ? createClient(url, key) : null;
 
 const COLS =
-  "id,slug,title,location,price,price_label,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at,nearby_places,nearby_places_updated_at,listing_images(url,alt_text,sort_order)";
+  "id,slug,title,location,price,price_label,rent_price,rent_price_label,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at,nearby_places,nearby_places_updated_at,listing_images(url,alt_text,sort_order)";
 
 type Row = {
   id: string;
@@ -29,6 +29,8 @@ type Row = {
   location: string | null;
   price: number | null;
   price_label: string | null;
+  rent_price: number | null;
+  rent_price_label: string | null;
   listing_category: ListingCategory;
   lease_type: string | null;
   property_type: string;
@@ -71,10 +73,35 @@ function uiStatus(row: Row): ListingStatus {
   return listingStatusLabel(row.listing_category);
 }
 
+function fmtPeso(value: number): string {
+  return `₱ ${Math.round(value).toLocaleString("en-PH")}`;
+}
+
+/** Sale-side price — set for "For Sale" and dual-market listings. */
+function fmtSalePrice(row: Row): string | undefined {
+  if (row.listing_category === "For Lease") return undefined;
+  if (row.price == null) return undefined;
+  return fmtPeso(Number(row.price));
+}
+
+/** Rent-side price — from `price` for plain "For Lease" (unchanged behavior),
+ *  or from the new `rent_price` for dual-market listings. */
+function fmtRentPrice(row: Row): string | undefined {
+  if (row.listing_category === "For Lease") {
+    if (row.price == null) return undefined;
+    return `${fmtPeso(Number(row.price))}/mo`;
+  }
+  if (row.listing_category === "For Sale and For Lease") {
+    if (row.rent_price == null) return undefined;
+    return `${fmtPeso(Number(row.rent_price))}/mo`;
+  }
+  return undefined;
+}
+
 function fmtPrice(row: Row): string {
-  if (row.price == null) return "Price on request";
-  const base = `₱ ${Math.round(Number(row.price)).toLocaleString("en-PH")}`;
-  return row.listing_category === "For Lease" ? `${base}/mo` : base;
+  // Primary/single-price string, kept for contexts that only want one value
+  // (price sort/filter, AI description generator, non-dual-market listings).
+  return fmtSalePrice(row) ?? fmtRentPrice(row) ?? "Price on request";
 }
 
 function mapRow(row: Row): Listing {
@@ -88,6 +115,8 @@ function mapRow(row: Row): Listing {
     title: row.title,
     location: row.location ?? "",
     price: fmtPrice(row),
+    salePrice: fmtSalePrice(row),
+    rentPrice: fmtRentPrice(row),
     status: uiStatus(row),
     type: COMMERCIAL.has(row.property_type) ? "Commercial" : "Residential",
     beds: row.bedrooms ?? undefined,

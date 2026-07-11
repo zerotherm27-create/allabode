@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LISTING_IMAGES_BUCKET, storagePathFromUrl } from "@/lib/storage";
 import { draftListingDescription, type ListingDescriptionInput } from "@/lib/ai/listing-description";
+import { draftListingSeo, type ListingSeoResult } from "@/lib/ai/listing-seo";
 import { refreshNearbyPlaces as runNearbyPlacesRefresh } from "@/lib/nearby-places";
 
 function s(fd: FormData, k: string): string | null {
@@ -42,6 +43,7 @@ function listingRow(fd: FormData) {
     title,
     slug: s(fd, "slug") ?? slugify(title),
     description: s(fd, "description"),
+    seo_description: s(fd, "seo_description"),
     location: s(fd, "location"),
     city: s(fd, "city"),
     province: s(fd, "province"),
@@ -112,6 +114,10 @@ export async function toggleFeatured(id: string, value: boolean) {
 
 export async function generateListingDescription(input: ListingDescriptionInput): Promise<string | null> {
   return draftListingDescription(input);
+}
+
+export async function generateListingSeo(input: ListingDescriptionInput): Promise<ListingSeoResult | null> {
+  return draftListingSeo(input);
 }
 
 export async function refreshNearbyPlaces(listingId: string): Promise<{ ok: true } | { ok: false; error: string }> {

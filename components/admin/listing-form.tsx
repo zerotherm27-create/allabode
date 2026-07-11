@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Icon } from "@/components/icon";
-import { generateListingDescription } from "@/app/admin/actions";
+import { generateListingDescription, generateListingSeo } from "@/app/admin/actions";
 import { LISTING_CATEGORIES } from "@/lib/listing-category";
 
 export type ListingValues = {
@@ -12,6 +12,7 @@ export type ListingValues = {
   title?: string;
   slug?: string;
   description?: string;
+  seo_description?: string;
   location?: string;
   city?: string;
   province?: string;
@@ -120,7 +121,9 @@ export function ListingForm({
 }) {
   const v = initial;
   const formRef = useRef<HTMLFormElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const seoDescriptionRef = useRef<HTMLTextAreaElement>(null);
   const listingCategoryRef = useRef<HTMLSelectElement>(null);
   const propertyTypeRef = useRef<HTMLSelectElement>(null);
   const locationRef = useRef<HTMLInputElement>(null);
@@ -134,6 +137,8 @@ export function ListingForm({
   const floorAreaRef = useRef<HTMLInputElement>(null);
   const [genPending, setGenPending] = useState(false);
   const [genError, setGenError] = useState("");
+  const [seoPending, setSeoPending] = useState(false);
+  const [seoError, setSeoError] = useState("");
   const [category, setCategory] = useState(v.listing_category ?? "For Sale");
 
   function handleUnitPick(unitId: string) {
@@ -193,6 +198,43 @@ export function ListingForm({
     }
   }
 
+  async function handleGenerateSeo() {
+    if (!formRef.current) return;
+    setSeoError("");
+    setSeoPending(true);
+    try {
+      const fd = new FormData(formRef.current);
+      const num = (key: string) => (fd.get(key) ? Number(fd.get(key)) : null);
+      const result = await generateListingSeo({
+        title: String(fd.get("title") ?? ""),
+        location: String(fd.get("location") ?? ""),
+        city: String(fd.get("city") ?? ""),
+        province: String(fd.get("province") ?? ""),
+        listingCategory: String(fd.get("listing_category") ?? ""),
+        leaseType: String(fd.get("lease_type") ?? ""),
+        propertyType: String(fd.get("property_type") ?? ""),
+        bedrooms: num("bedrooms"),
+        bathrooms: num("bathrooms"),
+        floorArea: num("floor_area"),
+        lotArea: num("lot_area"),
+        furnishing: String(fd.get("furnishing") ?? ""),
+        price: num("price"),
+        priceLabel: String(fd.get("price_label") ?? ""),
+        amenities: String(fd.get("amenities") ?? "").split(",").map((a) => a.trim()).filter(Boolean),
+      });
+      if (!result) {
+        setSeoError("Couldn't optimize for SEO right now — please try again.");
+        return;
+      }
+      if (titleRef.current) titleRef.current.value = result.title;
+      if (seoDescriptionRef.current) seoDescriptionRef.current.value = result.metaDescription;
+    } catch {
+      setSeoError("Couldn't optimize for SEO right now — please try again.");
+    } finally {
+      setSeoPending(false);
+    }
+  }
+
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-6">
       {units.length > 0 && (
@@ -216,7 +258,23 @@ export function ListingForm({
       )}
 
       <Group title="Basics">
-        <F label="Title"><input name="title" defaultValue={v.title} required className={inputCls} /></F>
+        <F label="Title">
+          <input ref={titleRef} name="title" defaultValue={v.title} required className={inputCls} />
+          {aiEnabled && (
+            <div className="mt-1.5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleGenerateSeo}
+                disabled={seoPending}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-navy-700 hover:text-navy disabled:opacity-50"
+              >
+                <Icon name={seoPending ? "progress_activity" : "auto_awesome"} size={16} className={seoPending ? "animate-spin" : ""} />
+                {seoPending ? "Optimizing…" : "Optimize for SEO"}
+              </button>
+              {seoError && <span role="alert" className="text-xs text-error">{seoError}</span>}
+            </div>
+          )}
+        </F>
         <F label="Slug" hint="Auto-generated from title if left blank">
           <input name="slug" defaultValue={v.slug} className={inputCls} />
         </F>
@@ -236,6 +294,9 @@ export function ListingForm({
               {genError && <span role="alert" className="text-xs text-error">{genError}</span>}
             </div>
           )}
+        </F>
+        <F label="Meta description" hint="Shown in Google search results — click Optimize for SEO above to fill this in" span>
+          <textarea ref={seoDescriptionRef} name="seo_description" defaultValue={v.seo_description} rows={2} className={`${inputCls} h-auto py-2`} />
         </F>
       </Group>
 

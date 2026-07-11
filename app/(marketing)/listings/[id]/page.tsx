@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     };
   return {
     title: `${listing.title} | ${listing.price}`,
-    description: `${listing.title} in ${listing.location}. ${listing.status}, ${listing.area}.`,
+    description: listing.seoDescription ?? `${listing.title} in ${listing.location}. ${listing.status}, ${listing.area}.`,
   };
 }
 

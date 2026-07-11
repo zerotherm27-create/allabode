@@ -72,6 +72,8 @@ export type Listing = {
   salePrice?: string;
   /** Rent-side price, formatted with "/mo" — set for "For Lease" and dual-market listings. */
   rentPrice?: string;
+  /** Curated search-result description — falls back to an auto-built sentence when absent. */
+  seoDescription?: string;
   status: ListingStatus;
   type: "Residential" | "Commercial";
   beds?: number;

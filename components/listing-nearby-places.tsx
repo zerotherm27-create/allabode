@@ -2,9 +2,9 @@ import { Icon } from "@/components/icon";
 import type { NearbyPlace } from "@/lib/nearby-places";
 
 const CATEGORY_ICONS: Record<string, string> = {
-  School: "school",
-  Mall: "storefront",
-  Market: "shopping_cart",
+  Education: "school",
+  "Shopping Mall": "storefront",
+  Supermarket: "shopping_cart",
   Hospital: "local_hospital",
   Transit: "directions_bus",
 };
@@ -16,26 +16,39 @@ function formatDistance(m: number): string {
 export function ListingNearbyPlaces({ places }: { places: NearbyPlace[] }) {
   if (places.length === 0) return null;
 
+  const groups = new Map<string, NearbyPlace[]>();
+  for (const p of places) {
+    const list = groups.get(p.category) ?? [];
+    list.push(p);
+    groups.set(p.category, list);
+  }
+
   return (
     <div className="mt-8">
       <h2 className="font-display text-xl font-semibold text-navy">What&#x2019;s nearby</h2>
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {places.map((item) => (
-          <div
-            key={`${item.category}:${item.name}`}
-            className="flex items-start justify-between gap-3 border border-line bg-surface px-4 py-3"
-          >
-            <div>
-              <p className="label-caps flex items-center gap-1.5 text-slate">
-                <Icon name={CATEGORY_ICONS[item.category] ?? "place"} size={14} className="text-gold-ink" />
-                {item.category}
-              </p>
-              <p className="mt-1 font-medium text-navy">{item.name}</p>
-              {item.blurb && <p className="mt-0.5 text-xs text-slate">{item.blurb}</p>}
-            </div>
-            <span className="whitespace-nowrap text-xs font-medium text-slate">
-              {formatDistance(item.distanceM)}
-            </span>
+      <div className="mt-4 flex flex-col gap-6">
+        {Array.from(groups.entries()).map(([category, items]) => (
+          <div key={category}>
+            <p className="label-caps flex items-center gap-2 text-slate">
+              <Icon name={CATEGORY_ICONS[category] ?? "place"} size={18} className="text-gold-ink" />
+              {category}
+            </p>
+            <ul className="mt-2 flex flex-col gap-2">
+              {items.map((item) => (
+                <li
+                  key={item.name}
+                  className="flex items-start justify-between gap-3 border-b border-line/60 pb-2 text-sm"
+                >
+                  <div>
+                    <p className="font-medium text-navy">{item.name}</p>
+                    {item.blurb && <p className="text-xs text-slate">{item.blurb}</p>}
+                  </div>
+                  <span className="whitespace-nowrap text-xs font-medium text-slate">
+                    {formatDistance(item.distanceM)}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>

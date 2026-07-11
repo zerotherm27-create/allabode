@@ -4,9 +4,9 @@ const USER_AGENT = "AllAbodePropertySolutions/1.0 (info@allabodeph.com)";
 export type RawPoi = { name: string; category: string; distanceM: number };
 
 const CATEGORY_TAGS: { category: string; tags: [string, string][] }[] = [
-  { category: "School", tags: [["amenity", "school"], ["amenity", "university"], ["amenity", "college"]] },
-  { category: "Mall", tags: [["shop", "mall"]] },
-  { category: "Market", tags: [["amenity", "marketplace"], ["shop", "supermarket"]] },
+  { category: "Education", tags: [["amenity", "school"], ["amenity", "university"], ["amenity", "college"]] },
+  { category: "Shopping Mall", tags: [["shop", "mall"]] },
+  { category: "Supermarket", tags: [["amenity", "marketplace"], ["shop", "supermarket"]] },
   { category: "Hospital", tags: [["amenity", "hospital"], ["amenity", "clinic"]] },
   { category: "Transit", tags: [["railway", "station"], ["highway", "bus_stop"]] },
 ];

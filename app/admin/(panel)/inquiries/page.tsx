@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { StatusForm } from "@/components/admin/status-form";
-import { updateInquiry } from "@/app/admin/actions";
+import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
+import { Icon } from "@/components/icon";
+import { updateInquiry, deleteInquiry } from "@/app/admin/actions";
 
 const STATUSES = ["New", "Contacted", "Scheduled", "In progress", "Closed", "Spam"];
 
@@ -57,6 +59,18 @@ export default async function AdminInquiriesPage() {
                 <span className="rounded-full bg-navy/5 px-2.5 py-1 text-xs font-medium text-navy-700">
                   {r.status}
                 </span>
+                <ConfirmActionForm
+                  action={deleteInquiry.bind(null, r.id)}
+                  message={`Delete this inquiry from ${r.name}? This can't be undone.`}
+                >
+                  <button
+                    type="submit"
+                    aria-label="Delete inquiry"
+                    className="flex h-9 w-9 items-center justify-center rounded-md text-error hover:bg-error-bg press"
+                  >
+                    <Icon name="delete" size={18} />
+                  </button>
+                </ConfirmActionForm>
               </div>
             </div>
             {r.message && <p className="mt-3 text-sm text-slate">{r.message}</p>}

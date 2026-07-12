@@ -217,6 +217,11 @@ export async function updateInquiry(id: string, fd: FormData) {
     "/admin/inquiries"
   );
 }
+export async function deleteInquiry(id: string) {
+  const supabase = await createClient();
+  await supabase.from("inquiries").delete().eq("id", id);
+  revalidatePath("/admin/inquiries");
+}
 export async function updateAppraisal(id: string, fd: FormData) {
   await updateLead(
     "appraisal_requests",

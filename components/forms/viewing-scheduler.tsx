@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Field, Input } from "@/components/forms/fields";
 import { fetchAvailableSlots, submitViewingBooking } from "@/app/booking-actions";
@@ -26,7 +26,7 @@ function timeLabel(iso: string): string {
   });
 }
 
-export function ViewingScheduler({ listingId, listingTitle }: { listingId: string; listingTitle: string }) {
+export function ViewingScheduler({ listingId }: { listingId: string }) {
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -34,9 +34,14 @@ export function ViewingScheduler({ listingId, listingTitle }: { listingId: strin
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const mountedAt = useRef<number | null>(null);
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,12 +87,13 @@ export function ViewingScheduler({ listingId, listingTitle }: { listingId: strin
     try {
       const result = await submitViewingBooking({
         listingId,
-        listingTitle,
         name,
         email,
         phone: phone || undefined,
         slotStart: selectedSlot.slotStart,
         slotEnd: selectedSlot.slotEnd,
+        website,
+        elapsedMs: mountedAt.current == null ? undefined : Date.now() - mountedAt.current,
       });
       if (!result.ok) {
         setError(result.error);
@@ -181,6 +187,16 @@ export function ViewingScheduler({ listingId, listingTitle }: { listingId: strin
               <Field label="Mobile / Viber / WhatsApp">
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
               </Field>
+              <input
+                type="text"
+                name="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute -left-[9999px] h-0 w-0 opacity-0"
+              />
             </div>
           )}
 

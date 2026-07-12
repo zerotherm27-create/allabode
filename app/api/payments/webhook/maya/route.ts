@@ -9,10 +9,18 @@ export async function POST(req: NextRequest) {
   if (!secretKey) return new NextResponse("Not configured", { status: 503 });
 
   const rawBody = await req.text();
+  const headers: Record<string, string | null> = {
+    authorization: req.headers.get("authorization"),
+  };
+
+  const provider = new MayaProvider(secretKey);
+  if (!provider.verifyWebhookSignature(rawBody, headers)) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
   let body: unknown;
   try { body = JSON.parse(rawBody); } catch { return new NextResponse("Bad JSON", { status: 400 }); }
 
-  const provider = new MayaProvider(secretKey);
   const { referenceId, status } = provider.parseWebhookPayment(body);
 
   return handleWebhook(rawBody, referenceId, status, "maya");

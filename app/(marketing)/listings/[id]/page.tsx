@@ -253,7 +253,7 @@ export default async function ListingDetailPage({ params }: Params) {
                 <strong className="text-navy">{listing.title}</strong>.
               </p>
             </div>
-            <ViewingScheduler listingId={listing.dbId} listingTitle={listing.title} />
+            <ViewingScheduler listingId={listing.dbId} />
           </Container>
         </section>
       )}

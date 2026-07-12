@@ -1,4 +1,5 @@
 import type { PaymentProvider, CheckoutResult } from "./types";
+import { timingSafeEqual } from "crypto";
 
 export class MayaProvider implements PaymentProvider {
   private readonly secretKey: string;
@@ -31,9 +32,23 @@ export class MayaProvider implements PaymentProvider {
     return { checkoutId: data.checkoutId, checkoutUrl: data.redirectUrl };
   }
 
-  verifyWebhookSignature(): boolean {
-    // Maya uses basic-auth on the webhook endpoint — caller must verify the Authorization header
-    return true;
+  verifyWebhookSignature(_rawBody: string, headers: Record<string, string | null>): boolean {
+    // Maya has no signature scheme — webhook auth is HTTP Basic Auth, configured by
+    // embedding credentials in the callback URL registered in the Maya dashboard
+    // (https://user:pass@yourdomain.com/api/payments/webhook/maya). Fails open (same
+    // posture as XenditProvider's optional webhook token) until both env vars are set,
+    // so this doesn't block webhooks before the dashboard side is configured.
+    const username = process.env.MAYA_WEBHOOK_USERNAME;
+    const password = process.env.MAYA_WEBHOOK_PASSWORD;
+    if (!username || !password) return true;
+
+    const expected = "Basic " + Buffer.from(`${username}:${password}`).toString("base64");
+    const actual = headers["authorization"] ?? "";
+    try {
+      return timingSafeEqual(Buffer.from(actual), Buffer.from(expected));
+    } catch {
+      return false;
+    }
   }
 
   parseWebhookPayment(body: unknown) {

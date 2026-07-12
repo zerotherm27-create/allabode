@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import Script from "next/script";
 import { Field, Input, Textarea, Select } from "@/components/forms/fields";
 import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
+import { LEAD_HONEYPOT_FIELD } from "@/lib/leads/constants";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 type State = "idle" | "submitting" | "success" | "error";
 
@@ -31,6 +35,10 @@ function FormShell({
   const [state, setState] = useState<State>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string>("");
+  const mountedAt = useRef<number | null>(null);
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,7 +61,14 @@ function FormShell({
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, ...payload }),
+        body: JSON.stringify({
+          type,
+          consent: true,
+          [LEAD_HONEYPOT_FIELD]: data.get(LEAD_HONEYPOT_FIELD),
+          elapsedMs: mountedAt.current == null ? undefined : Date.now() - mountedAt.current,
+          turnstileToken: data.get("cf-turnstile-response") || undefined,
+          ...payload,
+        }),
       });
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
@@ -82,7 +97,22 @@ function FormShell({
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+      <input
+        type="text"
+        name={LEAD_HONEYPOT_FIELD}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute -left-[9999px] h-0 w-0 opacity-0"
+        defaultValue=""
+      />
       {children(errors)}
+      {TURNSTILE_SITE_KEY && (
+        <>
+          <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+          <div className="cf-turnstile" data-sitekey={TURNSTILE_SITE_KEY} />
+        </>
+      )}
       {formError && (
         <p role="alert" className="flex items-center gap-1.5 text-sm text-error">
           <Icon name="error" size={18} />

@@ -125,9 +125,9 @@ function PageHeader() {
 function PageFooter() {
   return (
     <View style={styles.footer} fixed>
-      <Text style={styles.footerTitle}>All Abode Property Solutions</Text>
+      <Text style={styles.footerTitle}>All Abode Brokerage and Valuation OPC</Text>
       <PageContactRow phone="+63 917 159 6808" email="info@allabodeph.com" website="www.allabodeph.com" color="rgba(255,255,255,0.65)" fontSize={6.5} />
-      <Text style={styles.footerText}>This quotation is proprietary to All Abode Property Solutions and the named recipient.</Text>
+      <Text style={styles.footerText}>This quotation is proprietary to All Abode Brokerage and Valuation OPC and the named recipient.</Text>
       <Text style={styles.footerPage} render={({ pageNumber }) => `Page ${pageNumber}`} fixed />
     </View>
   );
@@ -234,7 +234,7 @@ export async function renderQuotationPdf(input: QuotationPdfInput): Promise<Buff
   ] as const;
 
   const doc = (
-    <Document title={`Quotation ${input.quotationNumber}`} author="All Abode Property Solutions">
+    <Document title={`Quotation ${input.quotationNumber}`} author="All Abode Brokerage and Valuation OPC">
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
         <PageFooter />

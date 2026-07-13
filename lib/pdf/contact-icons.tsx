@@ -10,7 +10,9 @@ function ContactItem({ path, label, color, fontSize }: { path: string; label: st
   const iconSize = fontSize + 1;
   return (
     <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 5 }}>
-      <Svg viewBox="0 0 24 24" style={{ width: iconSize, height: iconSize, marginRight: 3 }}>
+      {/* @react-pdf renders an <Svg> a couple points below the text baseline
+          it's centered against — the marginTop nudges it back up level. */}
+      <Svg viewBox="0 0 24 24" style={{ width: iconSize, height: iconSize, marginRight: 3, marginTop: -2 }}>
         <Path d={path} fill={color} />
       </Svg>
       <Text style={{ fontSize, color }}>{label}</Text>

@@ -65,7 +65,7 @@ export function QuotationRecipientSign({ token, initial }: { token: string; init
         setError(result.error);
         return;
       }
-      setDone({ completed: false });
+      setDone({ completed: !!result.completed });
     } catch {
       setError("Couldn't submit your signature — please check your connection and try again.");
     } finally {
@@ -91,7 +91,7 @@ export function QuotationRecipientSign({ token, initial }: { token: string; init
           <p className="mt-3 max-w-md text-slate">
             {done.completed || initial.status === "completed"
               ? "Both parties have signed. Your copy is ready to download below."
-              : "Your signature has been recorded. All Abode is finalizing the document — you'll be able to download it from this link once the company representative signs."}
+              : "Your signature has been recorded. All Abode is finalizing the document — refresh this page shortly to download your copy."}
           </p>
           {(done.completed || initial.status === "completed") && (
             <a

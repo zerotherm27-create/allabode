@@ -2,13 +2,15 @@
 
 import { useRef, useState } from "react";
 import { Icon } from "@/components/icon";
-import { countersignQuotation } from "@/app/admin/quotations-actions";
+import { countersignQuotationAsCompany } from "@/app/admin/quotations-actions";
 import { SignatureInput, type SignatureInputHandle } from "@/components/forms/signature-input";
 
 /**
- * Staff fallback for the company representative's signature (designated
- * signatory only) — used when the company rep signs in the admin dashboard
- * instead of via their own remote link.
+ * In-dashboard company signature (designated signatory only) — used when the
+ * preparer is themselves a signatory and wants to sign immediately while
+ * preparing the quotation, instead of sending a remote pre-sign link to a
+ * colleague. This is the first signature in the flow; it does not complete
+ * the quotation (the recipient signs last).
  */
 export function QuotationCountersignForm({ quotationId }: { quotationId: string }) {
   const padRef = useRef<SignatureInputHandle>(null);
@@ -28,18 +30,18 @@ export function QuotationCountersignForm({ quotationId }: { quotationId: string 
     }
     setPending(true);
     try {
-      await countersignQuotation(quotationId, dataUrl);
+      await countersignQuotationAsCompany(quotationId, dataUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to countersign.");
+      setError(err instanceof Error ? err.message : "Failed to sign.");
       setPending(false);
     }
   }
 
   return (
     <div className="rounded-lg border border-line bg-surface p-5">
-      <h2 className="mb-1 font-display text-sm font-semibold text-navy">Countersign as Company Representative</h2>
+      <h2 className="mb-1 font-display text-sm font-semibold text-navy">Sign now as Company Representative</h2>
       <p className="mb-3 text-xs text-slate">
-        Fallback when the company rep won&#x2019;t sign remotely — completes the quotation immediately.
+        Signs immediately in the dashboard — the quotation can then be sent to the recipient for their signature.
       </p>
       <SignatureInput ref={padRef} />
       {error && <p role="alert" className="mt-2 text-sm text-error">{error}</p>}
@@ -50,7 +52,7 @@ export function QuotationCountersignForm({ quotationId }: { quotationId: string 
         className="mt-3 inline-flex items-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50"
       >
         {pending ? <Icon name="progress_activity" size={18} className="animate-spin" /> : <Icon name="verified" size={18} />}
-        {pending ? "Signing…" : "Countersign & complete"}
+        {pending ? "Signing…" : "Sign & continue"}
       </button>
     </div>
   );

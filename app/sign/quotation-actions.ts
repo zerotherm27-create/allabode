@@ -19,15 +19,20 @@ export type QuotationRecord = {
   property_reference: string | null;
   line_items: QuotationLineItem[] | null;
   scope_of_work: string | null;
+  notes: string | null;
   payment_terms_type: "cash" | "progress_billing" | null;
   payment_terms_notes: string | null;
   progress_milestones: ProgressMilestone[] | null;
-  recipient_typed_name: string | null;
-  recipient_signature_data: string | null;
-  recipient_signed_at: string | null;
+  terms_payment: string | null;
+  terms_completion: string | null;
+  terms_warranty: string | null;
+  terms_validity: string | null;
   company_typed_name: string | null;
   company_signature_data: string | null;
   company_signed_at: string | null;
+  recipient_typed_name: string | null;
+  recipient_signature_data: string | null;
+  recipient_signed_at: string | null;
   pdf_path: string | null;
 };
 
@@ -42,7 +47,33 @@ export type SubmitSignatureInput = {
 };
 
 // ============================================================
-// Recipient side
+// Company-rep side (first signer, pre-send) — records the signature only,
+// never triggers completion (nothing exists yet for the recipient to sign).
+// ============================================================
+
+export async function loadQuotationForCompany(token: string): Promise<QuotationRecord | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_quotation_by_company_token", { p_token: token });
+  if (error || !data) return null;
+  return data as QuotationRecord;
+}
+
+export async function submitQuotationCompanySignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const ip = await clientIp();
+  const { error } = await supabase.rpc("submit_quotation_company_signature", {
+    p_token: token,
+    p_typed_name: input.typedName,
+    p_signature_data: input.signatureDataUrl,
+    p_ip: ip,
+  });
+  if (error) return { error: error.message };
+  return {};
+}
+
+// ============================================================
+// Recipient side (last signer) — their signature completes the quotation,
+// so it's fetched via the anonymous admin client best-effort right after.
 // ============================================================
 
 export async function loadQuotation(token: string): Promise<QuotationRecord | null> {
@@ -65,7 +96,7 @@ export async function saveQuotationRecipientDetails(
   return {};
 }
 
-export async function submitQuotationRecipientSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
+export async function submitQuotationRecipientSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
   const supabase = await createClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_quotation_recipient_signature", {
@@ -75,36 +106,12 @@ export async function submitQuotationRecipientSignature(token: string, input: Su
     p_ip: ip,
   });
   if (error) return { error: error.message };
-  return {};
-}
-
-// ============================================================
-// Company-rep side (separate token; issued after the recipient signs)
-// ============================================================
-
-export async function loadQuotationForCompany(token: string): Promise<QuotationRecord | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_quotation_by_company_token", { p_token: token });
-  if (error || !data) return null;
-  return data as QuotationRecord;
-}
-
-export async function submitQuotationCompanySignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
-  const supabase = await createClient();
-  const ip = await clientIp();
-  const { error } = await supabase.rpc("submit_quotation_company_signature", {
-    p_token: token,
-    p_typed_name: input.typedName,
-    p_signature_data: input.signatureDataUrl,
-    p_ip: ip,
-  });
-  if (error) return { error: error.message };
 
   // The signature is durable at this point. Completion (PDF render + upload)
   // runs best-effort — if it fails, staff retry from the admin "Finalize"
-  // button, so we never surface an error that would make the company rep
+  // button, so we never surface an error that would make the recipient
   // think their signature didn't register.
-  const { data } = await supabase.rpc("get_quotation_by_company_token", { p_token: token });
+  const { data } = await supabase.rpc("get_quotation_by_token", { p_token: token });
   const record = data as QuotationRecord | null;
   if (record?.id) {
     try {
@@ -115,7 +122,7 @@ export async function submitQuotationCompanySignature(token: string, input: Subm
       await completeQuotation(record.id, createAdminClient());
       return { completed: true };
     } catch (err) {
-      console.warn("[quotation] completion after company signature failed:", err);
+      console.warn("[quotation] completion after recipient signature failed:", err);
     }
   }
   return { completed: false };

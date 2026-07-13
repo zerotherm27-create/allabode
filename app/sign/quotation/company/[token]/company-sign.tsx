@@ -13,10 +13,8 @@ import { QuotationPreview } from "../../[token]/quotation-preview";
 const inputCls = "h-9";
 
 export function QuotationCompanySign({ token, initial }: { token: string; initial: QuotationRecord }) {
-  const alreadySigned = !!initial.company_signature_data || initial.status === "completed";
-  const [done, setDone] = useState<null | { completed: boolean }>(
-    alreadySigned ? { completed: initial.status === "completed" } : null
-  );
+  const alreadySigned = !!initial.company_signature_data || initial.status !== "draft";
+  const [done, setDone] = useState(alreadySigned);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,13 +48,15 @@ export function QuotationCompanySign({ token, initial }: { token: string; initia
         setError(result.error);
         return;
       }
-      setDone({ completed: !!result.completed });
+      setDone(true);
     } catch {
       setError("Couldn't submit your signature — please check your connection and try again.");
     } finally {
       setSaving(false);
     }
   }
+
+  const fullyExecuted = initial.status === "completed";
 
   return (
     <div className="w-full max-w-2xl rounded-lg border border-line bg-surface p-6 sm:p-8">
@@ -71,14 +71,14 @@ export function QuotationCompanySign({ token, initial }: { token: string; initia
             <Icon name="check_circle" size={36} fill={1} />
           </span>
           <h3 className="mt-5 font-display text-2xl font-bold text-navy">
-            {done.completed ? "Quotation fully executed" : "Signature received"}
+            {fullyExecuted ? "Quotation fully executed" : "Signature received"}
           </h3>
           <p className="mt-3 max-w-md text-slate">
-            {done.completed
+            {fullyExecuted
               ? "Both parties have signed. Your copy is ready to download below."
-              : "Your signature has been recorded. All Abode is finalizing the document — you'll be able to download the executed copy from this link shortly."}
+              : "Thanks — this quotation will now be sent to the recipient for their signature."}
           </p>
-          {done.completed && (
+          {fullyExecuted && (
             <a
               href={`/api/sign/quotation/${token}/pdf`}
               className="mt-5 inline-flex items-center gap-2 rounded-md bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-800"
@@ -90,9 +90,8 @@ export function QuotationCompanySign({ token, initial }: { token: string; initia
       ) : (
         <div className="flex flex-col gap-6">
           <p className="rounded-md bg-surface-gray px-4 py-3 text-xs text-slate">
-            {(initial.recipient_details?.name || "The recipient")} signed this quotation
-            {initial.recipient_signed_at ? ` on ${new Date(initial.recipient_signed_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", dateStyle: "long" })}` : ""}.
-            Please review and sign below as company representative.
+            Please review this quotation and sign as company representative. Once you sign, All Abode will send it to
+            the recipient for their signature.
           </p>
 
           <div className="max-h-[45vh] overflow-y-auto rounded-md border border-line bg-surface-gray p-5">

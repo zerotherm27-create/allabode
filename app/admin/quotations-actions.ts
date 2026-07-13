@@ -10,6 +10,7 @@ import { sendEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit";
 import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeQuotation } from "@/lib/quotation/complete";
+import { draftQuotationScope, type QuotationScopeInput } from "@/lib/ai/quotation-scope";
 import type { QuotationLineItem, ProgressMilestone } from "@/lib/quotation/totals";
 
 function s(fd: FormData, k: string): string | null {
@@ -66,14 +67,19 @@ function parseTerms(fd: FormData) {
     unit_id: s(fd, "unit_id"),
     line_items: lineItems,
     scope_of_work: s(fd, "scope_of_work"),
+    notes: s(fd, "notes"),
     payment_terms_type: paymentTermsType,
     payment_terms_notes: s(fd, "payment_terms_notes"),
     progress_milestones: progressMilestones,
+    terms_payment: s(fd, "terms_payment"),
+    terms_completion: s(fd, "terms_completion"),
+    terms_warranty: s(fd, "terms_warranty"),
+    terms_validity: s(fd, "terms_validity"),
   };
 }
 
 // ============================================================
-// Create + send links
+// Create + sign-as-company + send links
 // ============================================================
 
 export async function createQuotation(fd: FormData) {
@@ -104,12 +110,70 @@ export async function createQuotation(fd: FormData) {
 
   const id = data.id as string;
   await logAudit(supabase, { action: "quotation.created", entityType: "quotation", entityId: id, actorId: user?.id });
-  await sendQuotationRecipientLink(id);
 
+  // Stays at 'draft' — no email goes out until staff sign as company (in-dashboard
+  // or via a remote pre-sign link) and then explicitly send the recipient link.
   revalidatePath("/admin/quotations");
   redirect(`/admin/quotations/${id}`);
 }
 
+/**
+ * Issues (or re-issues) the remote pre-signing link sent to a colleague
+ * signatory. Each send refreshes the link's validity window. Only usable
+ * while the quotation is still a draft — the company signature must land
+ * before the recipient is ever sent anything.
+ */
+export async function sendQuotationCompanyLink(id: string, fd: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: q, error } = await supabase
+    .from("quotations")
+    .select("status,company_access_token,company_email,company_name_hint,company_signature_data,title")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!q) throw new Error("Quotation not found.");
+  if (q.status !== "draft") {
+    throw new Error("The pre-signing link can only be sent while the quotation is still a draft.");
+  }
+  if (q.company_signature_data) {
+    throw new Error("The company signature is already in place.");
+  }
+
+  const companyEmail = s(fd, "company_email") ?? q.company_email;
+  if (!companyEmail) throw new Error("Enter the signatory's email address first.");
+  const companyNameHint = s(fd, "company_name_hint") ?? q.company_name_hint;
+
+  const expiresAt = new Date(Date.now() + COMPANY_LINK_VALIDITY_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const { error: upErr } = await supabase.from("quotations").update({
+    company_token_expires_at: expiresAt,
+    company_email: companyEmail,
+    company_name_hint: companyNameHint,
+  }).eq("id", id);
+  if (upErr) throw new Error(upErr.message);
+
+  const link = `${getPublicSiteUrl()}/sign/quotation/company/${q.company_access_token}`;
+  await sendEmail({
+    to: companyEmail,
+    subject: `Quotation${q.title ? ` — ${q.title}` : ""} ready for your signature`,
+    html: `
+      <p>Hi ${companyNameHint ?? "there"},</p>
+      <p>A quotation${q.title ? ` (${q.title})` : ""} is ready for your review and signature as company representative, before it goes out to the client.</p>
+      <p><a href="${link}">Review and sign the quotation</a></p>
+      <p>This link is valid for ${COMPANY_LINK_VALIDITY_DAYS} days.</p>
+    `,
+  });
+
+  await logAudit(supabase, { action: "quotation.company_link_sent", entityType: "quotation", entityId: id, actorId: user?.id });
+  revalidatePath(`/admin/quotations/${id}`);
+}
+
+/**
+ * Sends the recipient (client) their signing link. Only usable once the
+ * company representative has signed. Their signature completes the
+ * quotation immediately, so this is always the last link sent.
+ */
 export async function sendQuotationRecipientLink(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -121,13 +185,18 @@ export async function sendQuotationRecipientLink(id: string) {
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!q) throw new Error("Quotation not found.");
-  if (q.status === "voided" || q.status === "completed") {
-    throw new Error("This quotation can no longer be sent.");
+  if (q.status !== "company_signed") {
+    throw new Error("The quotation must be signed by the company representative before it can be sent to the recipient.");
   }
 
-  const link = `${getPublicSiteUrl()}/sign/quotation/${q.access_token}`;
-  await supabase.from("quotations").update({ status: "sent" }).eq("id", id).eq("status", "draft");
+  const token = q.access_token ?? randomUUID();
+  const { error: upErr } = await supabase.from("quotations").update({
+    access_token: token,
+    status: "sent",
+  }).eq("id", id).eq("status", "company_signed");
+  if (upErr) throw new Error(upErr.message);
 
+  const link = `${getPublicSiteUrl()}/sign/quotation/${token}`;
   await sendEmail({
     to: q.recipient_email,
     subject: `Your All Abode Quotation${q.title ? ` — ${q.title}` : ""} is ready to review`,
@@ -142,60 +211,8 @@ export async function sendQuotationRecipientLink(id: string) {
   revalidatePath(`/admin/quotations/${id}`);
 }
 
-/**
- * Issues (or re-issues) the company representative's own signing link once
- * the recipient has signed. Each send extends the link's validity window.
- */
-export async function sendQuotationCompanyLink(id: string, fd: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const { data: q, error } = await supabase
-    .from("quotations")
-    .select("status,company_access_token,company_email,company_name_hint,recipient_details,company_signed_via")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!q) throw new Error("Quotation not found.");
-  if (q.status !== "recipient_signed") {
-    throw new Error("The company link becomes available once the recipient has signed.");
-  }
-  if (q.company_signed_via) {
-    throw new Error("The company signature is already in place.");
-  }
-
-  const companyEmail = s(fd, "company_email") ?? q.company_email;
-  if (!companyEmail) throw new Error("Enter the company representative's email address first.");
-
-  const token = q.company_access_token ?? randomUUID();
-  const expiresAt = new Date(Date.now() + COMPANY_LINK_VALIDITY_DAYS * 24 * 60 * 60 * 1000).toISOString();
-  const { error: upErr } = await supabase.from("quotations").update({
-    company_access_token: token,
-    company_token_expires_at: expiresAt,
-    company_email: companyEmail,
-    company_name_hint: s(fd, "company_name_hint") ?? q.company_name_hint,
-  }).eq("id", id);
-  if (upErr) throw new Error(upErr.message);
-
-  const rd = (q.recipient_details ?? {}) as { name?: string };
-  const link = `${getPublicSiteUrl()}/sign/quotation/company/${token}`;
-  await sendEmail({
-    to: companyEmail,
-    subject: "Quotation ready for your signature",
-    html: `
-      <p>Hi ${s(fd, "company_name_hint") ?? q.company_name_hint ?? "there"},</p>
-      <p>${rd.name ?? "The recipient"} has signed the quotation. It's now ready for your signature as company representative.</p>
-      <p><a href="${link}">Review and sign the quotation</a></p>
-      <p>This link is valid for ${COMPANY_LINK_VALIDITY_DAYS} days.</p>
-    `,
-  });
-
-  await logAudit(supabase, { action: "quotation.company_link_sent", entityType: "quotation", entityId: id, actorId: user?.id });
-  revalidatePath(`/admin/quotations/${id}`);
-}
-
 // ============================================================
-// Staff edits (terms lock once the recipient signs)
+// Staff edits (terms lock once the company representative signs)
 // ============================================================
 
 export async function updateQuotationTerms(id: string, fd: FormData) {
@@ -204,8 +221,8 @@ export async function updateQuotationTerms(id: string, fd: FormData) {
 
   const { data: q } = await supabase.from("quotations").select("status,recipient_details").eq("id", id).maybeSingle();
   if (!q) throw new Error("Quotation not found.");
-  if (q.status !== "draft" && q.status !== "sent") {
-    throw new Error("Terms are locked once the recipient has signed against them.");
+  if (q.status !== "draft") {
+    throw new Error("Terms are locked once the company representative has signed against them.");
   }
 
   const recipientEmail = s(fd, "recipient_email");
@@ -224,30 +241,30 @@ export async function updateQuotationTerms(id: string, fd: FormData) {
 }
 
 // ============================================================
-// Company countersign fallback (designated signatory) -> completion
+// In-dashboard company signature (designated signatory) — signs first
 // ============================================================
 
-export async function countersignQuotation(id: string, signatureDataUrl: string) {
+export async function countersignQuotationAsCompany(id: string, signatureDataUrl: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in.");
 
   const { data: staffRow } = await supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle();
   if (!staffRow?.is_signatory) {
-    throw new Error("Only a designated signatory account can countersign this quotation.");
+    throw new Error("Only a designated signatory account can sign as company representative.");
   }
 
   const { data: q } = await supabase
     .from("quotations")
-    .select("status,company_signed_via,company_signature_data")
+    .select("status,company_signature_data")
     .eq("id", id)
     .maybeSingle();
   if (!q) throw new Error("Quotation not found.");
-  if (q.status !== "recipient_signed") {
-    throw new Error("This quotation is not ready for the company signature yet.");
+  if (q.status !== "draft") {
+    throw new Error("This quotation is not ready to be signed.");
   }
-  if (q.company_signed_via === "remote" || q.company_signature_data) {
-    throw new Error("The company representative has already signed via their signing link.");
+  if (q.company_signature_data) {
+    throw new Error("The company representative has already signed.");
   }
 
   const ip = await clientIp();
@@ -258,36 +275,43 @@ export async function countersignQuotation(id: string, signatureDataUrl: string)
     company_signed_ip: ip,
     company_signed_via: "countersign",
     signatory_user_id: user.id,
+    status: "company_signed",
   }).eq("id", id).is("company_signature_data", null);
   if (error) throw new Error(error.message);
 
-  await logAudit(supabase, { action: "quotation.countersigned", entityType: "quotation", entityId: id, actorId: user.id });
-
-  await completeQuotation(id, supabase);
+  await logAudit(supabase, { action: "quotation.company_signed", entityType: "quotation", entityId: id, actorId: user.id });
   revalidatePath(`/admin/quotations/${id}`);
 }
 
 /**
- * Retry button for the case where the company rep's remote signature landed
+ * Retry button for the case where the recipient's remote signature landed
  * but the completion pipeline failed afterwards (the signature is durable;
- * the status stays 'recipient_signed' until this succeeds).
+ * the status stays 'sent' until this succeeds).
  */
 export async function finalizeQuotation(id: string) {
   const supabase = await createClient();
 
   const { data: q } = await supabase
     .from("quotations")
-    .select("status,company_signature_data")
+    .select("status,recipient_signature_data")
     .eq("id", id)
     .maybeSingle();
   if (!q) throw new Error("Quotation not found.");
   if (q.status === "completed") return;
-  if (q.status !== "recipient_signed" || !q.company_signature_data) {
-    throw new Error("Both signatures are required before the quotation can be finalized.");
+  if (q.status !== "sent" || !q.recipient_signature_data) {
+    throw new Error("The recipient's signature is required before the quotation can be finalized.");
   }
 
   await completeQuotation(id, supabase);
   revalidatePath(`/admin/quotations/${id}`);
+}
+
+// ============================================================
+// AI: generate scope of work from the current draft's line items
+// ============================================================
+
+export async function generateQuotationScope(input: QuotationScopeInput): Promise<string | null> {
+  return draftQuotationScope(input);
 }
 
 // ============================================================
@@ -316,8 +340,8 @@ export async function deleteQuotation(id: string) {
 
   const { data: q } = await supabase.from("quotations").select("status,pdf_path").eq("id", id).maybeSingle();
   if (!q) throw new Error("Quotation not found.");
-  if (q.status === "completed") {
-    throw new Error("A fully executed quotation can't be deleted — void it instead to preserve the signed record.");
+  if (q.status !== "draft") {
+    throw new Error("A quotation with a signature on file can't be deleted — void it instead to preserve the record.");
   }
 
   if (q.pdf_path) {

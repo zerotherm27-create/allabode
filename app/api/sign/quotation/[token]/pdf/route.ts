@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
+import { slugify } from "@/lib/quotation/totals";
 
 /**
  * Token-gated download for the fully-signed quotation PDF. One route serves
@@ -19,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
   }
   if (!quotation) return new NextResponse("Not found", { status: 404 });
 
-  const record = quotation as { status: string; pdf_path: string | null };
+  const record = quotation as { status: string; pdf_path: string | null; title: string | null; quotation_number: string };
   if (record.status !== "completed" || !record.pdf_path) {
     return new NextResponse("Not yet available", { status: 404 });
   }
@@ -33,10 +34,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
   const pdf = await fetch(signed.signedUrl);
   if (!pdf.ok) return new NextResponse("Unavailable", { status: 404 });
 
+  const filename = slugify(record.title || record.quotation_number);
+
   return new NextResponse(await pdf.arrayBuffer(), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="quotation.pdf"`,
+      "Content-Disposition": `attachment; filename="${filename}.pdf"`,
       "Cache-Control": "private, no-store",
     },
   });

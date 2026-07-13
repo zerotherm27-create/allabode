@@ -8,6 +8,12 @@ export function QuotationPreview({ record }: { record: QuotationRecord }) {
   const categoryTotals = computeCategoryTotals(lineItems);
   const grandTotal = computeGrandTotal(lineItems);
   const rd = record.recipient_details ?? {};
+  const tcRows = [
+    ["Payment terms", record.terms_payment],
+    ["Completion timeline", record.terms_completion],
+    ["Warranty", record.terms_warranty],
+    ["Quotation validity", record.terms_validity],
+  ] as const;
 
   return (
     <div className="flex flex-col gap-4 text-sm text-ink">
@@ -38,7 +44,9 @@ export function QuotationPreview({ record }: { record: QuotationRecord }) {
             <div className="mt-1 flex flex-col gap-1">
               {rows.map((r, i) => (
                 <div key={i} className="flex justify-between gap-2 border-b border-line pb-1">
-                  <span className="text-slate">{r.description || "—"} ({r.quantity} {r.unit})</span>
+                  <span className="text-slate">
+                    {r.description || "—"} ({r.pricingMode === "lump_sum" ? "lump sum" : `${r.quantity} ${r.unit}`})
+                  </span>
                   <span className="font-medium">{formatPeso(r.amount)}</span>
                 </div>
               ))}
@@ -75,6 +83,27 @@ export function QuotationPreview({ record }: { record: QuotationRecord }) {
           <p className="whitespace-pre-wrap text-slate">{record.payment_terms_notes || "Cash payment."}</p>
         )}
       </div>
+
+      {tcRows.some(([, text]) => !!text) && (
+        <div>
+          <p className="font-semibold text-navy">Terms &amp; Conditions</p>
+          <div className="mt-1 flex flex-col gap-1.5">
+            {tcRows.map(([label, text]) => text ? (
+              <div key={label}>
+                <span className="font-medium text-navy">{label}: </span>
+                <span className="text-slate">{text}</span>
+              </div>
+            ) : null)}
+          </div>
+        </div>
+      )}
+
+      {record.notes && (
+        <div>
+          <p className="font-semibold text-navy">Notes</p>
+          <p className="whitespace-pre-wrap text-slate">{record.notes}</p>
+        </div>
+      )}
     </div>
   );
 }

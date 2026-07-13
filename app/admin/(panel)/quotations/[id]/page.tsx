@@ -11,6 +11,7 @@ import {
   finalizeQuotation, voidQuotation, deleteQuotation, getQuotationPdfSignedUrl,
 } from "@/app/admin/quotations-actions";
 import { getPublicSiteUrl } from "@/lib/url";
+import { isAiConfigured } from "@/lib/ai/client";
 import {
   computeCategoryTotals, computeGrandTotal, formatPeso, LINE_ITEM_CATEGORY_LABEL,
   type QuotationLineItem, type ProgressMilestone,
@@ -23,8 +24,8 @@ const inputCls =
 
 type Quotation = {
   id: string;
-  access_token: string;
-  company_access_token: string | null;
+  access_token: string | null;
+  company_access_token: string;
   company_token_expires_at: string | null;
   status: string;
   quotation_number: string;
@@ -41,29 +42,35 @@ type Quotation = {
   property_reference: string | null;
   line_items: QuotationLineItem[] | null;
   scope_of_work: string | null;
+  notes: string | null;
   payment_terms_type: "cash" | "progress_billing" | null;
   payment_terms_notes: string | null;
   progress_milestones: ProgressMilestone[] | null;
-  recipient_typed_name: string | null;
-  recipient_signed_at: string | null;
+  terms_payment: string | null;
+  terms_completion: string | null;
+  terms_warranty: string | null;
+  terms_validity: string | null;
   company_typed_name: string | null;
   company_signed_at: string | null;
   company_signed_via: string | null;
   company_signature_data: string | null;
+  recipient_typed_name: string | null;
+  recipient_signed_at: string | null;
+  recipient_signature_data: string | null;
   created_at: string;
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: "Draft",
+  draft: "Draft — awaiting company signature",
+  company_signed: "Company signed — ready to send",
   sent: "Sent — awaiting recipient",
-  recipient_signed: "Recipient signed — awaiting company",
   completed: "Fully executed",
   voided: "Voided",
 };
 const STATUS_COLOR: Record<string, string> = {
   draft: "bg-surface-gray text-slate",
+  company_signed: "bg-reserved/15 text-reserved",
   sent: "bg-gold/15 text-gold-bright",
-  recipient_signed: "bg-reserved/15 text-reserved",
   completed: "bg-available/15 text-available",
   voided: "bg-error/10 text-error",
 };
@@ -81,9 +88,14 @@ function toTermsInitial(q: Quotation): QuotationTermsInitial {
     propertyReference: q.property_reference ?? "",
     lineItems: q.line_items ?? [],
     scopeOfWork: q.scope_of_work ?? "",
+    notes: q.notes ?? "",
     paymentTermsType: q.payment_terms_type ?? "cash",
     paymentTermsNotes: q.payment_terms_notes ?? "",
     progressMilestones: q.progress_milestones ?? [],
+    termsPayment: q.terms_payment ?? "",
+    termsCompletion: q.terms_completion ?? "",
+    termsWarranty: q.terms_warranty ?? "",
+    termsValidity: q.terms_validity ?? "",
   };
 }
 
@@ -104,7 +116,7 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
   ]);
 
   const isSignatory = !!staffRow?.is_signatory;
-  const termsEditable = q.status === "draft" || q.status === "sent";
+  const termsEditable = q.status === "draft";
   const rd = q.recipient_details ?? {};
   const lineItems = q.line_items ?? [];
   const categoryTotals = computeCategoryTotals(lineItems);
@@ -117,10 +129,17 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
   const doVoid = voidQuotation.bind(null, id);
   const doDelete = deleteQuotation.bind(null, id);
 
-  const recipientLink = `${getPublicSiteUrl()}/sign/quotation/${q.access_token}`;
-  const companyLink = q.company_access_token ? `${getPublicSiteUrl()}/sign/quotation/company/${q.company_access_token}` : null;
+  const recipientLink = q.access_token ? `${getPublicSiteUrl()}/sign/quotation/${q.access_token}` : null;
+  const companyLink = `${getPublicSiteUrl()}/sign/quotation/company/${q.company_access_token}`;
   const companyLinkExpired = !!q.company_token_expires_at && new Date(q.company_token_expires_at) < new Date();
-  const awaitingFinalize = q.status === "recipient_signed" && !!q.company_signature_data;
+  const awaitingFinalize = q.status === "sent" && !!q.recipient_signature_data;
+
+  const tcRows = [
+    ["Payment terms", q.terms_payment],
+    ["Completion timeline", q.terms_completion],
+    ["Warranty", q.terms_warranty],
+    ["Quotation validity", q.terms_validity],
+  ] as const;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -142,25 +161,87 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
       </div>
 
       {q.status === "draft" && (
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {isSignatory ? (
+            <QuotationCountersignForm quotationId={id} />
+          ) : (
+            <div className="rounded-lg border border-line bg-surface-gray p-5 text-sm text-slate">
+              You&#x2019;re not a designated signatory — send the pre-signing link to a colleague who is, instead.
+            </div>
+          )}
+          <div className="rounded-lg border border-line bg-surface p-5">
+            <h2 className="mb-1 font-display text-sm font-semibold text-navy">Send pre-signing link to a colleague</h2>
+            <p className="mb-3 text-xs text-slate">
+              A designated signatory reviews and signs remotely, before this ever reaches the recipient.
+            </p>
+            <form action={doSendCompanyLink} className="flex flex-col gap-2">
+              <input
+                name="company_name_hint"
+                defaultValue={q.company_name_hint ?? ""}
+                placeholder="Signatory name"
+                className={inputCls}
+              />
+              <input
+                name="company_email"
+                type="email"
+                defaultValue={q.company_email ?? ""}
+                placeholder="signatory@allabodeph.com"
+                className={inputCls}
+              />
+              <button type="submit" className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+                {q.company_token_expires_at ? "Resend pre-signing link" : "Send pre-signing link"}
+              </button>
+            </form>
+            {q.company_token_expires_at && (
+              <div className="mt-3">
+                <CopyLink link={companyLink} ownerName={q.company_name_hint ?? undefined} />
+                <p className={`mt-2 text-xs ${companyLinkExpired ? "text-error" : "text-slate"}`}>
+                  {companyLinkExpired
+                    ? "This link has expired — resend to issue a fresh validity window."
+                    : `Valid until ${new Date(q.company_token_expires_at).toLocaleDateString("en-PH")}.`}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {q.status === "company_signed" && (
         <div className="mt-4 rounded-lg border border-line bg-surface p-5">
-          <p className="text-sm text-slate">This quotation hasn&#x2019;t been sent to the recipient yet.</p>
+          <p className="text-sm text-slate">Signed by the company representative — ready to send to the recipient.</p>
           <form action={doSendRecipientLink} className="mt-3">
             <button type="submit" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
               Send signing link to recipient
             </button>
           </form>
-          <p className="mt-3 text-xs text-slate">Or copy the link below to share it directly:</p>
-          <CopyLink link={recipientLink} ownerName={rd.name || q.recipient_name_hint || undefined} />
         </div>
       )}
 
-      {q.status === "sent" && (
+      {q.status === "sent" && recipientLink && (
         <div className="mt-4 rounded-lg border border-line bg-surface p-5">
           <p className="text-sm text-slate">Awaiting the recipient to review and sign.</p>
           <CopyLink link={recipientLink} ownerName={rd.name || q.recipient_name_hint || undefined} />
           <form action={doSendRecipientLink} className="mt-3">
             <button type="submit" className="text-sm font-medium text-navy-700 underline">Resend email</button>
           </form>
+        </div>
+      )}
+
+      {(q.status === "company_signed" || q.status === "sent" || q.status === "completed") && (
+        <div className="mt-6 rounded-lg border border-line bg-surface p-5">
+          <h2 className="mb-3 font-display text-sm font-semibold text-navy">Company representative&#x2019;s signature</h2>
+          <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            {[
+              ["Typed name", q.company_typed_name],
+              ["Signed via", q.company_signed_via === "remote" ? "Remote signing link" : q.company_signed_via === "countersign" ? "In-dashboard" : null],
+              ["Signed at", q.company_signed_at ? new Date(q.company_signed_at).toLocaleString("en-PH", { timeZone: "Asia/Manila" }) : null],
+            ].map(([k, v]) => (
+              <div key={k as string} className="flex justify-between gap-2 border-b border-line pb-2">
+                <dt className="text-slate">{k}</dt>
+                <dd className="text-right font-medium text-navy">{v || "—"}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       )}
 
@@ -190,7 +271,8 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
               {lineItems.map((item, i) => (
                 <div key={i} className="flex justify-between gap-2 border-b border-line pb-1">
                   <span className="text-slate">
-                    {LINE_ITEM_CATEGORY_LABEL[item.category]} — {item.description || "—"} ({item.quantity} {item.unit})
+                    {LINE_ITEM_CATEGORY_LABEL[item.category]} — {item.description || "—"}{" "}
+                    ({item.pricingMode === "lump_sum" ? "lump sum" : `${item.quantity} ${item.unit}`})
                   </span>
                   <span className="font-medium text-navy">{formatPeso(item.amount)}</span>
                 </div>
@@ -238,23 +320,45 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
           </div>
         )}
 
+        {tcRows.some(([, v]) => !!v) && (
+          <div className="mt-4">
+            <h3 className="mb-1 text-sm font-semibold text-navy">Terms &amp; Conditions</h3>
+            <div className="flex flex-col gap-2">
+              {tcRows.map(([label, text]) => text ? (
+                <div key={label} className="text-sm">
+                  <span className="font-medium text-navy">{label}: </span>
+                  <span className="text-slate">{text}</span>
+                </div>
+              ) : null)}
+            </div>
+          </div>
+        )}
+
+        {q.notes && (
+          <div className="mt-4">
+            <h3 className="mb-1 text-sm font-semibold text-navy">Notes</h3>
+            <p className="whitespace-pre-wrap text-sm text-slate">{q.notes}</p>
+          </div>
+        )}
+
         {termsEditable && (
           <details className="mt-4">
             <summary className="cursor-pointer text-sm font-semibold text-navy-700">Edit terms</summary>
-            <p className="mt-2 text-xs text-slate">Terms lock automatically once the recipient signs.</p>
+            <p className="mt-2 text-xs text-slate">Terms lock automatically once the company representative signs.</p>
             <div className="mt-4">
               <QuotationTermsForm
                 action={doUpdateTerms}
                 initial={toTermsInitial(q)}
                 submitLabel="Save terms"
                 lockRecipient
+                aiEnabled={isAiConfigured()}
               />
             </div>
           </details>
         )}
       </div>
 
-      {(q.status === "recipient_signed" || q.status === "completed") && (
+      {(q.status === "sent" || q.status === "completed") && (
         <div className="mt-6 rounded-lg border border-line bg-surface p-5">
           <h2 className="mb-3 font-display text-sm font-semibold text-navy">Recipient&#x2019;s submitted details</h2>
           <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
@@ -275,61 +379,13 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
       {awaitingFinalize && (
         <div className="mt-6 rounded-lg border border-gold/40 bg-gold/5 p-5">
           <p className="text-sm font-medium text-navy">
-            The company representative has signed, but finalization didn&#x2019;t finish (PDF generation).
+            The recipient has signed, but finalization didn&#x2019;t finish (PDF generation).
           </p>
           <form action={doFinalize} className="mt-3">
             <button type="submit" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
               Finalize quotation
             </button>
           </form>
-        </div>
-      )}
-
-      {q.status === "recipient_signed" && !awaitingFinalize && (
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-lg border border-line bg-surface p-5">
-            <h2 className="mb-1 font-display text-sm font-semibold text-navy">Send to the company representative</h2>
-            <p className="mb-3 text-xs text-slate">
-              The company rep reviews the signed quotation and signs on their own secure link.
-            </p>
-            <form action={doSendCompanyLink} className="flex flex-col gap-2">
-              <input
-                name="company_name_hint"
-                defaultValue={q.company_name_hint ?? ""}
-                placeholder="Representative name"
-                className={inputCls}
-              />
-              <input
-                name="company_email"
-                type="email"
-                defaultValue={q.company_email ?? ""}
-                placeholder="rep@allabodeph.com"
-                className={inputCls}
-              />
-              <button type="submit" className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-                {q.company_access_token ? "Resend company link" : "Send company link"}
-              </button>
-            </form>
-            {companyLink && (
-              <div className="mt-3">
-                <CopyLink link={companyLink} ownerName={q.company_name_hint ?? undefined} />
-                <p className={`mt-2 text-xs ${companyLinkExpired ? "text-error" : "text-slate"}`}>
-                  {companyLinkExpired
-                    ? "This link has expired — resend to issue a fresh validity window."
-                    : q.company_token_expires_at
-                      ? `Valid until ${new Date(q.company_token_expires_at).toLocaleDateString("en-PH")}.`
-                      : null}
-                </p>
-              </div>
-            )}
-          </div>
-          {isSignatory ? (
-            <QuotationCountersignForm quotationId={id} />
-          ) : (
-            <div className="rounded-lg border border-line bg-surface-gray p-5 text-sm text-slate">
-              Only a designated signatory account can countersign as company representative. Send the company link instead.
-            </div>
-          )}
         </div>
       )}
 
@@ -343,7 +399,6 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
         <div className="mt-6 rounded-lg border border-available/30 bg-available/5 p-5">
           <p className="flex items-center gap-2 text-sm font-medium text-available">
             <Icon name="verified" size={18} fill={1} /> Fully executed
-            {q.company_signed_via ? ` — company rep signed via ${q.company_signed_via === "remote" ? "their signing link" : "staff countersign"}` : ""}
           </p>
           {pdfUrl && (
             <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-navy-700 underline">
@@ -365,9 +420,9 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
                 Void quotation
               </button>
             </ConfirmActionForm>
-            {q.status === "completed" ? (
+            {q.status !== "draft" ? (
               <p className="flex items-center text-xs text-slate">
-                Fully executed quotations can&#x2019;t be deleted — void it instead to invalidate it while keeping the signed record.
+                A quotation with a signature on file can&#x2019;t be deleted — void it instead to preserve the record.
               </p>
             ) : (
               <ConfirmActionForm

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { F, Group, inputCls, SubmitButton } from "@/components/admin/form-kit";
+import { Icon } from "@/components/icon";
 import { FURNITURE_ITEMS, APPLIANCE_ITEMS, FIXTURE_ITEMS } from "@/lib/pm/annex-b-fields";
+import { generateQuotationScope } from "@/app/admin/quotations-actions";
 import {
   LINE_ITEM_CATEGORIES, computeCategoryTotals, computeGrandTotal, formatPeso,
-  type QuotationLineItem, type ProgressMilestone, type LineItemCategory,
+  type QuotationLineItem, type ProgressMilestone, type LineItemCategory, type LineItemPricingMode,
 } from "@/lib/quotation/totals";
 
 export type QuotationTermsInitial = {
@@ -19,9 +21,14 @@ export type QuotationTermsInitial = {
   propertyReference: string;
   lineItems: QuotationLineItem[];
   scopeOfWork: string;
+  notes: string;
   paymentTermsType: "cash" | "progress_billing" | "";
   paymentTermsNotes: string;
   progressMilestones: ProgressMilestone[];
+  termsPayment: string;
+  termsCompletion: string;
+  termsWarranty: string;
+  termsValidity: string;
 };
 
 function emptyQuotationTerms(): QuotationTermsInitial {
@@ -31,18 +38,29 @@ function emptyQuotationTerms(): QuotationTermsInitial {
     title: "", propertyReference: "",
     lineItems: [],
     scopeOfWork: "",
+    notes: "",
     paymentTermsType: "cash",
     paymentTermsNotes: "",
     progressMilestones: [],
+    termsPayment: "Payment shall be made in accordance with the Payment Terms specified above.",
+    termsCompletion: "Work shall commence within [X] days of downpayment and be completed within [Y] calendar days, subject to material availability.",
+    termsWarranty: "Labor is warranted for 30 days from completion date. Materials are covered under the applicable manufacturer's warranty.",
+    termsValidity: "This quotation is valid for 30 days from the date issued, or until the date indicated above, whichever comes first.",
   };
 }
 
 const emptyLineItem = (category: LineItemCategory): QuotationLineItem => ({
-  category, description: "", quantity: 1, unit: "pc", unitPrice: 0, amount: 0, notes: "",
+  category, pricingMode: "unit", description: "", quantity: 1, unit: "pc", unitPrice: 0, amount: 0, notes: "",
 });
 
+const FURNISHING_PICKER_GROUPS: { label: string; items: readonly [string, string][] }[] = [
+  { label: "Furniture", items: FURNITURE_ITEMS },
+  { label: "Appliances", items: APPLIANCE_ITEMS },
+  { label: "Fixtures", items: FIXTURE_ITEMS },
+];
+
 export function QuotationTermsForm({
-  action, initial = null, submitLabel, lockRecipient = false,
+  action, initial = null, submitLabel, lockRecipient = false, aiEnabled = false,
 }: {
   action: (fd: FormData) => Promise<void>;
   /** null = blank create form (server components can't call client helpers). */
@@ -50,38 +68,68 @@ export function QuotationTermsForm({
   submitLabel: string;
   /** On the edit form the recipient email can't change (the link is already out). */
   lockRecipient?: boolean;
+  /** Whether OPENAI_API_KEY is configured server-side — hides the AI-generate button otherwise. */
+  aiEnabled?: boolean;
 }) {
   const [t, setT] = useState(initial ?? emptyQuotationTerms());
   const [init] = useState(t);
   const set = (patch: Partial<QuotationTermsInitial>) => setT((prev) => ({ ...prev, ...patch }));
+
+  const [furnishingPick, setFurnishingPick] = useState("");
+  const scopeRef = useRef<HTMLTextAreaElement>(null);
+  const [genPending, setGenPending] = useState(false);
+  const [genError, setGenError] = useState("");
 
   function setLineItem(i: number, patch: Partial<QuotationLineItem>) {
     setT((prev) => {
       const lineItems = prev.lineItems.map((r, j) => {
         if (j !== i) return r;
         const next = { ...r, ...patch };
-        next.amount = Math.round(next.quantity * next.unitPrice * 100) / 100;
+        if (next.pricingMode === "unit") {
+          next.amount = Math.round(next.quantity * next.unitPrice * 100) / 100;
+        }
         return next;
       });
       return { ...prev, lineItems };
     });
   }
 
-  function addLineItem(category: LineItemCategory) {
-    set({ lineItems: [...t.lineItems, emptyLineItem(category)] });
+  function addLineItem(category: LineItemCategory, description = "") {
+    set({ lineItems: [...t.lineItems, { ...emptyLineItem(category), description }] });
   }
 
-  function addSuggested(category: LineItemCategory, items: readonly [string, string][]) {
-    set({
-      lineItems: [
-        ...t.lineItems,
-        ...items.map(([, label]) => ({ ...emptyLineItem(category), description: label })),
-      ],
-    });
+  function addPickedFurnishing() {
+    if (!furnishingPick) return;
+    addLineItem("furnishing", furnishingPick);
+    setFurnishingPick("");
   }
 
   function setMilestone(i: number, patch: Partial<ProgressMilestone>) {
     set({ progressMilestones: t.progressMilestones.map((r, j) => (j === i ? { ...r, ...patch } : r)) });
+  }
+
+  async function handleGenerateScope() {
+    setGenError("");
+    setGenPending(true);
+    try {
+      const result = await generateQuotationScope({
+        title: t.title || undefined,
+        propertyReference: t.propertyReference || undefined,
+        paymentTermsType: t.paymentTermsType || undefined,
+        lineItems: t.lineItems.map((li) => ({
+          category: li.category, description: li.description, quantity: li.quantity, unit: li.unit,
+        })),
+      });
+      if (!result) {
+        setGenError("Couldn't generate a scope of work right now — please try again.");
+        return;
+      }
+      if (scopeRef.current) scopeRef.current.value = result;
+    } catch {
+      setGenError("Couldn't generate a scope of work right now — please try again.");
+    } finally {
+      setGenPending(false);
+    }
   }
 
   const categoryTotals = computeCategoryTotals(t.lineItems);
@@ -134,19 +182,33 @@ export function QuotationTermsForm({
             <div key={value} className="mb-6">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-navy">{label}</h3>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   {value === "furnishing" && (
-                    <>
-                      <button type="button" onClick={() => addSuggested("furnishing", FURNITURE_ITEMS)} className="text-xs font-semibold text-navy-700 underline">
-                        + Furniture
+                    <div className="flex items-center gap-2">
+                      <select
+                        aria-label="Pick a suggested furnishing item"
+                        value={furnishingPick}
+                        onChange={(e) => setFurnishingPick(e.target.value)}
+                        className={`${inputCls} h-9 w-48`}
+                      >
+                        <option value="">Select an item…</option>
+                        {FURNISHING_PICKER_GROUPS.map((group) => (
+                          <optgroup key={group.label} label={group.label}>
+                            {group.items.map(([key, itemLabel]) => (
+                              <option key={key} value={itemLabel}>{itemLabel}</option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={addPickedFurnishing}
+                        disabled={!furnishingPick}
+                        className="text-xs font-semibold text-navy-700 underline disabled:opacity-40"
+                      >
+                        Add item
                       </button>
-                      <button type="button" onClick={() => addSuggested("furnishing", APPLIANCE_ITEMS)} className="text-xs font-semibold text-navy-700 underline">
-                        + Appliances
-                      </button>
-                      <button type="button" onClick={() => addSuggested("furnishing", FIXTURE_ITEMS)} className="text-xs font-semibold text-navy-700 underline">
-                        + Fixtures
-                      </button>
-                    </>
+                    </div>
                   )}
                   <button type="button" onClick={() => addLineItem(value)} className="text-xs font-semibold text-navy-700 underline">
                     Add row
@@ -157,26 +219,62 @@ export function QuotationTermsForm({
                 <p className="text-sm text-slate">No items yet.</p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <div className="hidden grid-cols-[2fr_0.6fr_0.8fr_1fr_1fr_2rem] gap-2 text-xs font-semibold text-slate sm:grid">
-                    <span>Description</span><span>Qty</span><span>Unit</span><span>Unit price</span><span>Amount</span><span />
+                  <div className="hidden grid-cols-[2fr_0.8fr_0.6fr_0.7fr_0.9fr_0.9fr_2rem] gap-2 text-xs font-semibold text-slate sm:grid">
+                    <span>Description</span><span>Pricing</span><span>Qty</span><span>Unit</span><span>Unit price</span><span>Amount</span><span />
                   </div>
-                  {rows.map(({ r, i }) => (
-                    <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-[2fr_0.6fr_0.8fr_1fr_1fr_2rem]">
-                      <input aria-label="Description" value={r.description} onChange={(e) => setLineItem(i, { description: e.target.value })} className={inputCls} />
-                      <input aria-label="Quantity" type="number" min={0} value={r.quantity} onChange={(e) => setLineItem(i, { quantity: Number(e.target.value) || 0 })} className={inputCls} />
-                      <input aria-label="Unit" value={r.unit} onChange={(e) => setLineItem(i, { unit: e.target.value })} className={inputCls} />
-                      <input aria-label="Unit price" type="number" min={0} step="0.01" value={r.unitPrice} onChange={(e) => setLineItem(i, { unitPrice: Number(e.target.value) || 0 })} className={inputCls} />
-                      <input aria-label="Amount" readOnly value={formatPeso(r.amount)} className={`${inputCls} bg-surface-gray`} />
-                      <button
-                        type="button"
-                        aria-label="Remove row"
-                        onClick={() => set({ lineItems: t.lineItems.filter((_, j) => j !== i) })}
-                        className="self-center text-sm font-semibold text-slate hover:text-error"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                  {rows.map(({ r, i }) => {
+                    const lumpSum = r.pricingMode === "lump_sum";
+                    return (
+                      <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-[2fr_0.8fr_0.6fr_0.7fr_0.9fr_0.9fr_2rem]">
+                        <input aria-label="Description" value={r.description} onChange={(e) => setLineItem(i, { description: e.target.value })} className={inputCls} />
+                        <select
+                          aria-label="Pricing mode"
+                          value={r.pricingMode}
+                          onChange={(e) => setLineItem(i, { pricingMode: e.target.value as LineItemPricingMode })}
+                          className={inputCls}
+                        >
+                          <option value="unit">Per unit</option>
+                          <option value="lump_sum">Lump sum</option>
+                        </select>
+                        <input
+                          aria-label="Quantity" type="number" min={0} disabled={lumpSum}
+                          value={lumpSum ? "" : r.quantity}
+                          onChange={(e) => setLineItem(i, { quantity: Number(e.target.value) || 0 })}
+                          className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
+                        />
+                        <input
+                          aria-label="Unit" disabled={lumpSum}
+                          value={lumpSum ? "" : r.unit}
+                          onChange={(e) => setLineItem(i, { unit: e.target.value })}
+                          className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
+                        />
+                        <input
+                          aria-label="Unit price" type="number" min={0} step="0.01" disabled={lumpSum}
+                          value={lumpSum ? "" : r.unitPrice}
+                          onChange={(e) => setLineItem(i, { unitPrice: Number(e.target.value) || 0 })}
+                          className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
+                        />
+                        {lumpSum ? (
+                          <input
+                            aria-label="Amount" type="number" min={0} step="0.01"
+                            value={r.amount}
+                            onChange={(e) => setLineItem(i, { amount: Number(e.target.value) || 0 })}
+                            className={inputCls}
+                          />
+                        ) : (
+                          <input aria-label="Amount" readOnly value={formatPeso(r.amount)} className={`${inputCls} bg-surface-gray`} />
+                        )}
+                        <button
+                          type="button"
+                          aria-label="Remove row"
+                          onClick={() => set({ lineItems: t.lineItems.filter((_, j) => j !== i) })}
+                          className="self-center text-sm font-semibold text-slate hover:text-error"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <p className="mt-2 text-right text-sm text-slate">
@@ -193,14 +291,30 @@ export function QuotationTermsForm({
       </fieldset>
 
       <Group title="Scope of work">
-        <F label="Describe the overall scope of work" span>
+        <div className="sm:col-span-2">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-sm font-medium text-navy">Describe the overall scope of work</span>
+            {aiEnabled && (
+              <button
+                type="button"
+                onClick={handleGenerateScope}
+                disabled={genPending}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-navy-700 hover:text-navy disabled:opacity-50"
+              >
+                <Icon name={genPending ? "progress_activity" : "auto_awesome"} size={16} className={genPending ? "animate-spin" : ""} />
+                {genPending ? "Generating…" : "Generate with AI"}
+              </button>
+            )}
+          </div>
           <textarea
+            ref={scopeRef}
             name="scope_of_work"
             rows={5}
             defaultValue={init.scopeOfWork}
             className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
           />
-        </F>
+          {genError && <p role="alert" className="mt-1 text-xs text-error">{genError}</p>}
+        </div>
       </Group>
 
       <fieldset className="rounded-lg border border-line bg-surface p-6">
@@ -273,6 +387,42 @@ export function QuotationTermsForm({
           </div>
         )}
       </fieldset>
+
+      <Group title="Terms & Conditions">
+        <F label="Payment terms" span>
+          <textarea
+            name="terms_payment" rows={2} defaultValue={init.termsPayment}
+            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+          />
+        </F>
+        <F label="Completion timeline" span>
+          <textarea
+            name="terms_completion" rows={2} defaultValue={init.termsCompletion}
+            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+          />
+        </F>
+        <F label="Warranty" span>
+          <textarea
+            name="terms_warranty" rows={2} defaultValue={init.termsWarranty}
+            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+          />
+        </F>
+        <F label="Quotation validity" span>
+          <textarea
+            name="terms_validity" rows={2} defaultValue={init.termsValidity}
+            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+          />
+        </F>
+      </Group>
+
+      <Group title="Notes">
+        <F label="Additional notes" hint="Printed on the quotation, visible to the recipient" span>
+          <textarea
+            name="notes" rows={3} defaultValue={init.notes}
+            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+          />
+        </F>
+      </Group>
 
       <div>
         <SubmitButton label={submitLabel} />

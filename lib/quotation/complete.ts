@@ -14,15 +14,16 @@ function manilaTime(iso: string | null) {
 }
 
 /**
- * Completion pipeline for a quotation whose company signature has just
- * landed (remote link or staff countersign): render + store the PDF, email
- * both parties, and mark completed. No tenant/owner upsert, no portal
- * account, no ID handling — a quotation is a commercial price proposal, not
- * a notarized legal contract.
+ * Completion pipeline for a quotation whose recipient signature has just
+ * landed — the last of the two signatures (company representative signs
+ * first, during preparation): render + store the PDF, email both parties,
+ * and mark completed. No tenant/owner upsert, no portal account, no ID
+ * handling — a quotation is a commercial price proposal, not a notarized
+ * legal contract.
  *
  * Takes the Supabase client as a parameter because the two callers run under
- * different trust models: the staff countersign action passes the normal
- * RLS-scoped staff client, while the remote company-rep path is anonymous
+ * different trust models: the staff "Finalize" retry passes the normal
+ * RLS-scoped staff client, while the remote recipient-sign path is anonymous
  * (token-authenticated by the RPC) and passes the service-role admin client.
  */
 export async function completeQuotation(id: string, supabase: SupabaseClient): Promise<void> {
@@ -46,24 +47,24 @@ export async function completeQuotation(id: string, supabase: SupabaseClient): P
     recipientEmail: q.recipient_email,
     lineItems: (q.line_items ?? []) as QuotationLineItem[],
     scopeOfWork: q.scope_of_work,
+    notes: q.notes,
     paymentTermsType: q.payment_terms_type,
     paymentTermsNotes: q.payment_terms_notes,
     progressMilestones: (q.progress_milestones ?? []) as ProgressMilestone[],
-    recipientTypedName: q.recipient_typed_name ?? "",
-    recipientSignatureDataUri: q.recipient_signature_data ?? "",
-    recipientSignedAtManila: manilaTime(q.recipient_signed_at),
-    recipientSignedIp: q.recipient_signed_ip ?? "unknown",
+    termsPayment: q.terms_payment,
+    termsCompletion: q.terms_completion,
+    termsWarranty: q.terms_warranty,
+    termsValidity: q.terms_validity,
     companyTypedName: q.company_typed_name ?? "",
     companySignatureDataUri: q.company_signature_data ?? "",
     companySignedAtManila: manilaTime(q.company_signed_at),
     companySignedIp: q.company_signed_ip ?? "unknown",
     companySignedVia: (q.company_signed_via ?? "countersign") as "remote" | "countersign",
-    countersignerEmail: null,
+    recipientTypedName: q.recipient_typed_name ?? "",
+    recipientSignatureDataUri: q.recipient_signature_data ?? "",
+    recipientSignedAtManila: manilaTime(q.recipient_signed_at),
+    recipientSignedIp: q.recipient_signed_ip ?? "unknown",
   };
-  if (q.signatory_user_id) {
-    const { data: signatoryRow } = await supabase.from("users").select("email").eq("id", q.signatory_user_id).maybeSingle();
-    pdfInput.countersignerEmail = signatoryRow?.email ?? null;
-  }
   const pdfBuffer = await renderQuotationPdf(pdfInput);
 
   const pdfPath = `quotations/${q.id}/quotation-${Date.now()}.pdf`;
@@ -89,11 +90,13 @@ export async function completeQuotation(id: string, supabase: SupabaseClient): P
   });
 
   if (q.company_signed_via !== "countersign" && q.company_email) {
-    const companyLink = q.company_access_token ? `${getPublicSiteUrl()}/sign/quotation/company/${q.company_access_token}` : null;
+    // The company token stays valid post-completion (see the RPC), so this
+    // link keeps working for the signatory to revisit and download later.
+    const companyLink = `${getPublicSiteUrl()}/sign/quotation/company/${q.company_access_token}`;
     await sendEmail({
       to: q.company_email,
       subject: "Quotation fully executed",
-      html: `<p>Hi ${q.company_name_hint ?? "there"},</p><p>The quotation with ${rd.name ?? q.recipient_email} has been fully executed.${companyLink ? ` You can download your copy from your signing link.</p><p><a href="${companyLink}">View and download</a></p>` : "</p>"}`,
+      html: `<p>Hi ${q.company_name_hint ?? "there"},</p><p>The quotation with ${rd.name ?? q.recipient_email} has been fully executed. You can download your copy from your signing link.</p><p><a href="${companyLink}">View and download</a></p>`,
     });
   }
   if (q.created_by) {

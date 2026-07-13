@@ -16,16 +16,16 @@ type Row = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: "Draft",
+  draft: "Draft — awaiting company signature",
+  company_signed: "Company signed — ready to send",
   sent: "Sent — awaiting recipient",
-  recipient_signed: "Recipient signed — awaiting company",
   completed: "Fully executed",
   voided: "Voided",
 };
 const STATUS_COLOR: Record<string, string> = {
   draft: "bg-surface-gray text-slate",
+  company_signed: "bg-reserved/15 text-reserved",
   sent: "bg-gold/15 text-gold-bright",
-  recipient_signed: "bg-reserved/15 text-reserved",
   completed: "bg-available/15 text-available",
   voided: "bg-error/10 text-error",
 };

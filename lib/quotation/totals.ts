@@ -1,7 +1,9 @@
 export type LineItemCategory = "furnishing" | "repairs" | "others";
+export type LineItemPricingMode = "unit" | "lump_sum";
 
 export type QuotationLineItem = {
   category: LineItemCategory;
+  pricingMode: LineItemPricingMode;
   description: string;
   quantity: number;
   unit: string;
@@ -43,4 +45,13 @@ export function computeGrandTotal(lineItems: QuotationLineItem[]): number {
 
 export function formatPeso(amount: number): string {
   return `₱${amount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** URL/filename-safe slug — lowercased, non-alphanumerics collapsed to single hyphens. */
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "quotation";
 }

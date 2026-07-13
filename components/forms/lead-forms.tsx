@@ -173,12 +173,13 @@ export function InquiryForm({ listingTitle }: { listingTitle?: string }) {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
         const email = reqEmail(data, errors);
+        const phone = reqText(data, "phone", "Phone number", errors);
         if (Object.keys(errors).length) return { errors };
         return {
           payload: {
             name,
             email,
-            phone: data.get("phone"),
+            phone,
             message: data.get("message"),
             preferredViewingDate: data.get("preferredViewingDate"),
             preferredContactMethod: data.get("preferredContactMethod"),
@@ -198,14 +199,14 @@ export function InquiryForm({ listingTitle }: { listingTitle?: string }) {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Mobile / Viber / WhatsApp" hint="So we can reach you quickly">
+            <Field label="Mobile / Viber / WhatsApp" required error={e.phone}>
               <Input name="phone" type="tel" autoComplete="tel" placeholder="+63 9XX XXX XXXX" />
             </Field>
             <Field label="Preferred viewing date">
               <Input name="preferredViewingDate" type="date" />
             </Field>
           </div>
-          <Field label="Preferred contact method">
+          <Field label="Preferred contact method" required>
             <Select name="preferredContactMethod" defaultValue="Email">
               <option>Email</option>
               <option>Phone call</option>
@@ -234,13 +235,14 @@ export function AppraisalForm() {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
         const email = reqEmail(data, errors);
+        const phone = reqText(data, "phone", "Phone number", errors);
         reqText(data, "propertyLocation", "Property location", errors);
         if (Object.keys(errors).length) return { errors };
         return {
           payload: {
             name,
             email,
-            phone: data.get("phone"),
+            phone,
             propertyLocation: data.get("propertyLocation"),
             propertyType: data.get("propertyType"),
             appraisalPurpose: data.get("appraisalPurpose"),
@@ -261,7 +263,7 @@ export function AppraisalForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Mobile">
+            <Field label="Mobile" required error={e.phone}>
               <Input name="phone" type="tel" autoComplete="tel" placeholder="+63 9XX XXX XXXX" />
             </Field>
             <Field label="Property location" required error={e.propertyLocation}>
@@ -269,7 +271,7 @@ export function AppraisalForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Property type">
+            <Field label="Property type" required>
               <Select name="propertyType" defaultValue="Condominium">
                 <option>Condominium</option>
                 <option>House and Lot</option>
@@ -279,7 +281,7 @@ export function AppraisalForm() {
                 <option>Agricultural</option>
               </Select>
             </Field>
-            <Field label="Purpose of appraisal">
+            <Field label="Purpose of appraisal" required>
               <Select name="appraisalPurpose" defaultValue="Pre-sale valuation">
                 <option>Pre-sale valuation</option>
                 <option>Bank loan / collateral</option>
@@ -313,13 +315,14 @@ export function PropertyManagementForm() {
         const errors: Record<string, string> = {};
         const ownerName = reqText(data, "name", "Name", errors);
         const email = reqEmail(data, errors);
+        const phone = reqText(data, "phone", "Phone number", errors);
         reqText(data, "propertyLocation", "Property location", errors);
         if (Object.keys(errors).length) return { errors };
         return {
           payload: {
             name: ownerName,
             email,
-            phone: data.get("phone"),
+            phone,
             propertyLocation: data.get("propertyLocation"),
             propertyType: data.get("propertyType"),
             numberOfUnits: data.get("numberOfUnits"),
@@ -341,7 +344,7 @@ export function PropertyManagementForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Mobile">
+            <Field label="Mobile" required error={e.phone}>
               <Input name="phone" type="tel" autoComplete="tel" placeholder="+63 9XX XXX XXXX" />
             </Field>
             <Field label="Property location" required error={e.propertyLocation}>
@@ -349,7 +352,7 @@ export function PropertyManagementForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-3">
-            <Field label="Property type">
+            <Field label="Property type" required>
               <Select name="propertyType" defaultValue="Condominium">
                 <option>Condominium</option>
                 <option>House and Lot</option>
@@ -361,7 +364,7 @@ export function PropertyManagementForm() {
             <Field label="No. of units">
               <Input name="numberOfUnits" type="number" min={1} placeholder="1" />
             </Field>
-            <Field label="Occupancy">
+            <Field label="Occupancy" required>
               <Select name="occupancyStatus" defaultValue="Vacant">
                 <option>Vacant</option>
                 <option>Partially occupied</option>
@@ -369,7 +372,7 @@ export function PropertyManagementForm() {
               </Select>
             </Field>
           </div>
-          <Field label="Service needed">
+          <Field label="Service needed" required>
             <Select name="neededService" defaultValue="Full Leasing & Property Management">
               <option>Full Leasing & Property Management</option>
               <option>Tenant Hunting: We Lease, You Manage</option>
@@ -399,15 +402,17 @@ export function ContactForm() {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
         const email = reqEmail(data, errors);
+        const phone = reqText(data, "phone", "Phone number", errors);
+        const propertyLocation = reqText(data, "propertyLocation", "Property location", errors);
         if (Object.keys(errors).length) return { errors };
         return {
           payload: {
             name,
             email,
-            phone: data.get("phone"),
+            phone,
             userType: data.get("userType"),
             helpWith: data.get("helpWith"),
-            propertyLocation: data.get("propertyLocation"),
+            propertyLocation,
             propertyType: data.get("propertyType"),
             message: data.get("message"),
           },
@@ -425,10 +430,10 @@ export function ContactForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Mobile / Viber / WhatsApp">
+            <Field label="Mobile / Viber / WhatsApp" required error={e.phone}>
               <Input name="phone" type="tel" autoComplete="tel" placeholder="+63 9XX XXX XXXX" />
             </Field>
-            <Field label="I am a">
+            <Field label="I am a" required>
               <Select name="userType" defaultValue="Property Owner">
                 <option>Property Owner</option>
                 <option>Buyer</option>
@@ -441,7 +446,7 @@ export function ContactForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Service needed">
+            <Field label="Service needed" required>
               <Select name="helpWith" defaultValue="General Inquiry">
                 <option>Brokerage</option>
                 <option>Leasing</option>
@@ -452,7 +457,7 @@ export function ContactForm() {
                 <option>General Inquiry</option>
               </Select>
             </Field>
-            <Field label="Property type">
+            <Field label="Property type" required>
               <Select name="propertyType" defaultValue="Condominium">
                 <option>Condominium</option>
                 <option>House and Lot</option>
@@ -465,8 +470,8 @@ export function ContactForm() {
               </Select>
             </Field>
           </div>
-          <Field label="Property location">
-            <Input name="propertyLocation" placeholder="City / district (optional)" />
+          <Field label="Property location" required error={e.propertyLocation}>
+            <Input name="propertyLocation" placeholder="City / district" />
           </Field>
           <Field label="Message">
             <Textarea name="message" placeholder="How can we help?" />
@@ -489,13 +494,14 @@ export function ListPropertyForm() {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
         const email = reqEmail(data, errors);
+        const phone = reqText(data, "phone", "Phone number", errors);
         reqText(data, "propertyLocation", "Property location", errors);
         if (Object.keys(errors).length) return { errors };
         return {
           payload: {
             name,
             email,
-            phone: data.get("phone"),
+            phone,
             propertyLocation: data.get("propertyLocation"),
             propertyType: data.get("propertyType"),
             intendedService: data.get("intendedService"),
@@ -519,7 +525,7 @@ export function ListPropertyForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Mobile">
+            <Field label="Mobile" required error={e.phone}>
               <Input name="phone" type="tel" autoComplete="tel" placeholder="+63 9XX XXX XXXX" />
             </Field>
             <Field label="Property location" required error={e.propertyLocation}>
@@ -527,7 +533,7 @@ export function ListPropertyForm() {
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Property type">
+            <Field label="Property type" required>
               <Select name="propertyType" defaultValue="Condominium">
                 <option>Condominium</option>
                 <option>House and Lot</option>
@@ -537,7 +543,7 @@ export function ListPropertyForm() {
                 <option>Lot</option>
               </Select>
             </Field>
-            <Field label="Intended service">
+            <Field label="Intended service" required>
               <Select name="intendedService" defaultValue="Lease my property">
                 <option>Lease my property</option>
                 <option>Sell my property</option>

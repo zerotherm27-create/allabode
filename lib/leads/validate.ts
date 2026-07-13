@@ -146,6 +146,7 @@ export function validateAndBuildRow(type: LeadType, body: Record<string, unknown
   }
   const email = body.email.trim();
   const phone = capLen(body.phone, PHONE_MAX);
+  if (!phone) return fail(422, "Phone number is required.");
   const message = capLen(body.message, MESSAGE_MAX);
 
   switch (type) {
@@ -222,6 +223,8 @@ export function validateAndBuildRow(type: LeadType, body: Record<string, unknown
       if (!helpWith.ok) return fail(422, "Invalid selection.");
       const propertyType = enumOrReject(body.propertyType, PROPERTY_TYPES_BY_TYPE.contact);
       if (!propertyType.ok) return fail(422, "Invalid property type.");
+      const propertyLocation = capLen(body.propertyLocation, LOCATION_MAX);
+      if (!propertyLocation) return fail(422, "Property location is required.");
       return {
         ok: true,
         table: "inquiries",
@@ -234,7 +237,7 @@ export function validateAndBuildRow(type: LeadType, body: Record<string, unknown
           details: {
             userType: userType.value,
             helpWith: helpWith.value,
-            propertyLocation: capLen(body.propertyLocation, LOCATION_MAX),
+            propertyLocation,
             propertyType: propertyType.value,
           },
         },

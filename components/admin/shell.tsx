@@ -38,6 +38,7 @@ const navGroups = [
     group: "Agreements",
     items: [
       { label: "Contracts", icon: "history_edu", href: "/admin/contracts" },
+      { label: "Quotations", icon: "price_check", href: "/admin/quotations" },
     ],
   },
   {

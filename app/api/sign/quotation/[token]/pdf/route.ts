@@ -1,0 +1,43 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { AGREEMENTS_BUCKET } from "@/lib/storage";
+
+/**
+ * Token-gated download for the fully-signed quotation PDF. One route serves
+ * both parties: the token is tried as the recipient's credential first, then
+ * as the company representative's (each SECURITY DEFINER RPC only matches
+ * its own token column). Only serves the file once status = 'completed'.
+ */
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  const supabase = await createClient();
+
+  let { data: quotation } = await supabase.rpc("get_quotation_by_token", { p_token: token });
+  if (!quotation) {
+    ({ data: quotation } = await supabase.rpc("get_quotation_by_company_token", { p_token: token }));
+  }
+  if (!quotation) return new NextResponse("Not found", { status: 404 });
+
+  const record = quotation as { status: string; pdf_path: string | null };
+  if (record.status !== "completed" || !record.pdf_path) {
+    return new NextResponse("Not yet available", { status: 404 });
+  }
+
+  // Anonymous caller — generating a signed URL for a private bucket requires
+  // the service-role client (no anon RLS policy exists on this bucket).
+  const admin = createAdminClient();
+  const { data: signed } = await admin.storage.from(AGREEMENTS_BUCKET).createSignedUrl(record.pdf_path, 120);
+  if (!signed?.signedUrl) return new NextResponse("Unavailable", { status: 404 });
+
+  const pdf = await fetch(signed.signedUrl);
+  if (!pdf.ok) return new NextResponse("Unavailable", { status: 404 });
+
+  return new NextResponse(await pdf.arrayBuffer(), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="quotation.pdf"`,
+      "Cache-Control": "private, no-store",
+    },
+  });
+}

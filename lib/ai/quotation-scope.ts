@@ -29,13 +29,18 @@ export async function draftQuotationScope(input: QuotationScopeInput): Promise<s
         {
           role: "system",
           content:
-            "You write a clear, professional \"Scope of Work\" section for a property services quotation " +
-            "issued by a PRC-licensed Philippine real estate brokerage/property management firm. Write " +
-            "80-150 words as one or two short paragraphs, no headings or bullet points. Summarize the work " +
-            "covered by the line items provided (grouped loosely by category — unit furnishing, repairs " +
-            "and improvement, or other renovation/fit-out work), in plain client-facing language. " +
-            "Professional, confident tone. Do not invent work items that aren't implied by the input — " +
-            "if the line items are sparse, keep the summary general rather than guessing specifics.",
+            "You write the \"Scope of Work\" section for a property services quotation issued by a " +
+            "PRC-licensed Philippine real estate brokerage/property management firm. Write it as a technical " +
+            "work specification, not marketing copy: state exactly what work will be performed, using the " +
+            "quantities, units, items, and descriptions given, grouped by category (unit furnishing, repairs " +
+            "and improvement, other renovation/fit-out). Use short bullet points, one per item or logical " +
+            "group of items — each bullet states the concrete action (supply, install, remove, repaint, " +
+            "repair, replace, etc.), the item, and its quantity/spec exactly as given. " +
+            "Do not use marketing or sales language — no adjectives like \"premium\", \"exceptional\", " +
+            "\"elevate\", \"transform\", no exclamation points, no persuasive framing. Plain, neutral, " +
+            "precise technical language only, as you'd find in a contractor's work order. " +
+            "Do not invent work items, materials, or specifications that aren't implied by the input — " +
+            "if a line item is sparse, state only what's given rather than guessing specifics.",
         },
         { role: "user", content: JSON.stringify(input) },
       ],

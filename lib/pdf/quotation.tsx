@@ -89,6 +89,9 @@ const styles = StyleSheet.create({
   grandTotalValue: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 18, marginTop: 2 },
 
   paragraph: { fontSize: 9.5, color: INK, lineHeight: 1.5, textAlign: "justify" },
+  // Scope of Work is now AI-drafted as short technical bullet lines rather
+  // than a flowing paragraph — justify would stretch short lines awkwardly.
+  scopeText: { fontSize: 9.5, color: INK, lineHeight: 1.5, textAlign: "left" },
 
   // ── Terms & Conditions ──
   tcRow: { marginBottom: 9 },
@@ -275,7 +278,7 @@ export async function renderQuotationPdf(input: QuotationPdfInput): Promise<Buff
           {input.scopeOfWork && (
             <View wrap={false}>
               <Text style={styles.sectionLabel}>Scope of Work</Text>
-              <Text style={styles.paragraph}>{input.scopeOfWork}</Text>
+              <Text style={styles.scopeText}>{input.scopeOfWork}</Text>
             </View>
           )}
 

@@ -262,10 +262,10 @@ export function QuotationTermsForm({
                             className={`${inputCls} col-span-2 sm:col-span-1`}
                           />
                           <input
-                            aria-label="Quantity" type="number" min={0} disabled={lumpSum}
-                            value={lumpSum ? "" : r.quantity}
+                            aria-label="Quantity" type="number" min={0}
+                            value={r.quantity}
                             onChange={(e) => setLineItem(i, { quantity: Number(e.target.value) || 0 })}
-                            className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
+                            className={inputCls}
                           />
                           <input
                             aria-label="Unit" disabled={lumpSum}

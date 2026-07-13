@@ -254,13 +254,15 @@ export async function updateQuotationTerms(id: string, fd: FormData) {
 // send a pre-signing link instead if they want someone else to sign it).
 // ============================================================
 
-export async function countersignQuotationAsCompany(id: string, signatureDataUrl: string) {
+export async function countersignQuotationAsCompany(id: string, signatureDataUrl: string, typedName: string) {
+  if (!typedName.trim()) throw new Error("Please enter your name.");
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in.");
 
   const [{ data: staffRow }, { data: q }] = await Promise.all([
-    supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle(),
+    supabase.from("users").select("is_signatory").eq("id", user.id).maybeSingle(),
     supabase.from("quotations").select("status,company_signature_data,created_by").eq("id", id).maybeSingle(),
   ]);
   if (!q) throw new Error("Quotation not found.");
@@ -278,7 +280,7 @@ export async function countersignQuotationAsCompany(id: string, signatureDataUrl
 
   const ip = await clientIp();
   const { error } = await supabase.from("quotations").update({
-    company_typed_name: staffRow?.name ?? "",
+    company_typed_name: typedName.trim(),
     company_signature_data: signatureDataUrl,
     company_signed_at: new Date().toISOString(),
     company_signed_ip: ip,

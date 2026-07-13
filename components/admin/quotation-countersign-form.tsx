@@ -12,13 +12,18 @@ import { SignatureInput, type SignatureInputHandle } from "@/components/forms/si
  * colleague. This is the first signature in the flow; it does not complete
  * the quotation (the recipient signs last).
  */
-export function QuotationCountersignForm({ quotationId }: { quotationId: string }) {
+export function QuotationCountersignForm({ quotationId, defaultName = "" }: { quotationId: string; defaultName?: string }) {
   const padRef = useRef<SignatureInputHandle>(null);
+  const [typedName, setTypedName] = useState(defaultName);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
   async function submit() {
     setError("");
+    if (!typedName.trim()) {
+      setError("Please enter your name as it should appear on the quotation.");
+      return;
+    }
     if (!padRef.current || padRef.current.isEmpty()) {
       setError("Please draw or upload the signature first.");
       return;
@@ -30,7 +35,7 @@ export function QuotationCountersignForm({ quotationId }: { quotationId: string 
     }
     setPending(true);
     try {
-      await countersignQuotationAsCompany(quotationId, dataUrl);
+      await countersignQuotationAsCompany(quotationId, dataUrl, typedName.trim());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sign.");
       setPending(false);
@@ -43,6 +48,15 @@ export function QuotationCountersignForm({ quotationId }: { quotationId: string 
       <p className="mb-3 text-xs text-slate">
         Signs immediately in the dashboard — the quotation can then be sent to the recipient for their signature.
       </p>
+      <label className="mb-3 block text-sm">
+        <span className="mb-1 block font-medium text-navy">Your name</span>
+        <span className="block text-xs text-slate">Printed on the quotation as the signatory (e.g. &#x201c;Prepared by&#x201d;)</span>
+        <input
+          value={typedName}
+          onChange={(e) => setTypedName(e.target.value)}
+          className="mt-1.5 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+        />
+      </label>
       <SignatureInput ref={padRef} />
       {error && <p role="alert" className="mt-2 text-sm text-error">{error}</p>}
       <button

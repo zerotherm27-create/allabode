@@ -74,8 +74,9 @@ const styles = StyleSheet.create({
   theadRow: { flexDirection: "row", backgroundColor: TABLE_HEAD_TINT, borderBottomWidth: 1, borderBottomColor: LINE },
   trow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: LINE },
   trowLast: { flexDirection: "row" },
-  thCell: { padding: 5, fontFamily: "Helvetica-Bold", fontSize: 7.5, color: SLATE, textTransform: "uppercase", letterSpacing: 0.5 },
-  tdCell: { padding: 5, fontSize: 9 },
+  thCell: { padding: 5, fontFamily: "Helvetica-Bold", fontSize: 7.5, color: SLATE, textTransform: "uppercase", letterSpacing: 0.5, borderRightWidth: 1, borderRightColor: LINE },
+  tdCell: { padding: 5, fontSize: 9, borderRightWidth: 1, borderRightColor: LINE },
+  cellNoDivider: { borderRightWidth: 0 },
 
   subtotalRow: { flexDirection: "row", justifyContent: "flex-end", paddingVertical: 4, paddingHorizontal: 2 },
   subtotalLabel: { fontSize: 8.5, color: SLATE, marginRight: 8, textTransform: "uppercase", letterSpacing: 0.5 },
@@ -144,9 +145,9 @@ function LineItemsTable({ category, items, hidePricing }: { category: QuotationL
           <Text style={[styles.thCell, { flex: 1.1 }]}>Item</Text>
           <Text style={[styles.thCell, { flex: 1.6 }]}>Description</Text>
           <Text style={[styles.thCell, { width: 40 }]}>Qty</Text>
-          <Text style={[styles.thCell, { width: 55 }]}>Unit</Text>
+          <Text style={[styles.thCell, { width: 55, borderRightWidth: hidePricing ? 0 : 1 }]}>Unit</Text>
           {!hidePricing && <Text style={[styles.thCell, { width: 75 }]}>Unit Price</Text>}
-          {!hidePricing && <Text style={[styles.thCell, { width: 75 }]}>Amount</Text>}
+          {!hidePricing && <Text style={[styles.thCell, { width: 75, borderRightWidth: 0 }]}>Amount</Text>}
         </View>
         {rows.map((r, i) => {
           const lumpSum = r.pricingMode === "lump_sum";
@@ -154,10 +155,10 @@ function LineItemsTable({ category, items, hidePricing }: { category: QuotationL
             <View key={i} style={i === rows.length - 1 ? styles.trowLast : styles.trow}>
               <Text style={[styles.tdCell, { flex: 1.1, fontFamily: "Helvetica-Bold" }]}>{r.item || " "}</Text>
               <Text style={[styles.tdCell, { flex: 1.6 }]}>{r.description || " "}</Text>
-              <Text style={[styles.tdCell, { width: 40 }]}>{lumpSum ? "" : r.quantity}</Text>
-              <Text style={[styles.tdCell, { width: 55 }]}>{lumpSum ? "Lump sum" : r.unit || " "}</Text>
+              <Text style={[styles.tdCell, { width: 40 }]}>{r.quantity}</Text>
+              <Text style={[styles.tdCell, { width: 55, borderRightWidth: hidePricing ? 0 : 1 }]}>{lumpSum ? " " : r.unit || " "}</Text>
               {!hidePricing && <Text style={[styles.tdCell, { width: 75 }]}>{lumpSum ? "" : peso(r.unitPrice)}</Text>}
-              {!hidePricing && <Text style={[styles.tdCell, { width: 75, fontFamily: "Helvetica-Bold", color: NAVY }]}>{peso(r.amount)}</Text>}
+              {!hidePricing && <Text style={[styles.tdCell, { width: 75, borderRightWidth: 0, fontFamily: "Helvetica-Bold", color: NAVY }]}>{peso(r.amount)}</Text>}
             </View>
           );
         })}
@@ -179,13 +180,13 @@ function MilestonesTable({ milestones }: { milestones: ProgressMilestone[] }) {
       <View style={styles.theadRow}>
         <Text style={[styles.thCell, { flex: 2 }]}>Milestone</Text>
         <Text style={[styles.thCell, { width: 90 }]}>% or Amount</Text>
-        <Text style={[styles.thCell, { flex: 1.5 }]}>Trigger Condition</Text>
+        <Text style={[styles.thCell, styles.cellNoDivider, { flex: 1.5 }]}>Trigger Condition</Text>
       </View>
       {milestones.map((m, i) => (
         <View key={i} style={i === milestones.length - 1 ? styles.trowLast : styles.trow}>
           <Text style={[styles.tdCell, { flex: 2 }]}>{m.description || " "}</Text>
           <Text style={[styles.tdCell, { width: 90 }]}>{m.percentageOrAmount || " "}</Text>
-          <Text style={[styles.tdCell, { flex: 1.5 }]}>{m.triggerCondition || " "}</Text>
+          <Text style={[styles.tdCell, styles.cellNoDivider, { flex: 1.5 }]}>{m.triggerCondition || " "}</Text>
         </View>
       ))}
     </View>

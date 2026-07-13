@@ -114,7 +114,7 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
   const q = data as Quotation;
 
   const [{ data: staffRow }, pdfUrl] = await Promise.all([
-    user ? supabase.from("users").select("is_signatory").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
+    user ? supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     q.status === "completed" ? getQuotationPdfSignedUrl(id) : Promise.resolve(null),
   ]);
 
@@ -169,7 +169,7 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
       {q.status === "draft" && (
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           {canSignNow ? (
-            <QuotationCountersignForm quotationId={id} />
+            <QuotationCountersignForm quotationId={id} defaultName={staffRow?.name ?? ""} />
           ) : (
             <div className="rounded-lg border border-line bg-surface-gray p-5 text-sm text-slate">
               Only the quotation&#x2019;s preparer or a designated signatory can sign here — send the pre-signing link to one instead.

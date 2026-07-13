@@ -158,6 +158,7 @@ export type OwnerSoaLineExtended = SoaLine & {
   receipt_path?: string | null;
   billing_note?: string | null;
   commission_id?: string | null;
+  deposit_id?: string | null;
 };
 
 export type OwnerSoaByLeaseMeta = {
@@ -265,14 +266,20 @@ export async function computeOwnerSoaByLease(
     });
   }
 
-  // 8a. Held security deposits for this lease (informational — never affect payout math)
+  // 8a. Held deposits for this lease not yet applied to any SOA. Security
+  // deposits fund the lease's first owner remittance (real income, minus
+  // commission/expenses); advance rent is held by AllAbode and shown only
+  // as a note — soa_id gates each deposit to ever fund a payout once.
   const { data: depositData } = await supabase
     .from("security_deposits")
     .select("id,amount_held,deposit_type")
     .eq("lease_id", leaseId)
-    .eq("status", "held");
+    .eq("status", "held")
+    .is("soa_id", null);
   type DepositRow = { id: string; amount_held: number; deposit_type: string };
   const heldDeposits = (depositData ?? []) as DepositRow[];
+  const securityDeposits = heldDeposits.filter((d) => d.deposit_type !== "advance");
+  const advanceDeposits = heldDeposits.filter((d) => d.deposit_type === "advance");
 
   // 8b. Prior carried-forward SOA balances for this lease (auto-deducted from next payout)
   const { data: cfData } = await supabase
@@ -286,42 +293,46 @@ export async function computeOwnerSoaByLease(
   const cfTotal = sum(cfRows.map((r) => Number(r.closing_balance)));
 
   // 9. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
+  // (so an SOA can still be generated before a payment is logged for the month). Skip that
+  // pre-fill when a not-yet-applied security deposit is funding this SOA instead — the
+  // lease's first remittance comes from the deposit, not a phantom "Monthly Rent" line on
+  // top of it (the deposit already covers the first period; commission/expenses net it down
+  // below).
   const incomeType = incomeTypeForLeaseType(leaseType);
-  const incomeLines: OwnerSoaLineExtended[] = payments.length > 0
+  const rentIncomeLines: OwnerSoaLineExtended[] = payments.length > 0
     ? payments.map((p, i) => ({
         line_type: incomeType,
         description: p.notes?.trim() || incomeDescriptionForLeaseType(leaseType, true),
         amount: Number(p.amount),
         sort_order: i,
       }))
+    : securityDeposits.length > 0
+    ? []
     : [{
         line_type: incomeType,
         description: incomeDescriptionForLeaseType(leaseType, false),
         amount: Number(lease.rent_amount),
         sort_order: 0,
       }];
+  const depositIncomeLines: OwnerSoaLineExtended[] = securityDeposits.map((d, i) => ({
+    line_type:   "income_other",
+    description: "Security Deposit Applied to First Remittance",
+    amount:      Number(d.amount_held),
+    sort_order:  10 + i,
+    deposit_id:  d.id,
+  }));
+  const incomeLines: OwnerSoaLineExtended[] = [...rentIncomeLines, ...depositIncomeLines];
   const totalIncome = sum(incomeLines.map((l) => l.amount));
 
-  // Informational lines — excluded from totals; sort_order 15+ so they sort after income.
-  // Commission is taken from the security deposit by AllAbode, not from the owner's remittance.
-  const infoLines: OwnerSoaLineExtended[] = [
-    ...heldDeposits.map((d, i) => ({
-      line_type:   "info_security_deposit",
-      description: "Security Deposit – 1 Month Held by AllAbode",
-      amount:      Number(d.amount_held),
-      sort_order:  15 + i,
-    })),
-    ...commissions.map((c, i) => ({
-      line_type:    "info_commission",
-      description:  c.description ?? (
-        c.commission_type === "new_lease" ? "New Lease Commission – 1 Month (from Security Deposit)" :
-        c.commission_type === "renewal"   ? "Renewal Commission (from Security Deposit)"              : "Commission (from Security Deposit)"
-      ),
-      amount:       Number(c.amount),
-      sort_order:   20 + i,
-      commission_id: c.id,
-    })),
-  ];
+  // Informational lines — excluded from totals. Advance rent is held by
+  // AllAbode and never enters the owner's payout math; it's shown here
+  // purely as a disclosure note. sort_order 15+ so it sorts after income.
+  const infoLines: OwnerSoaLineExtended[] = advanceDeposits.map((d, i) => ({
+    line_type:   "info_advance_rent",
+    description: "Advance Rent Held by AllAbode",
+    amount:      Number(d.amount_held),
+    sort_order:  15 + i,
+  }));
 
   // 9. De-duplicate templates against expense records (by name)
   const expNames = new Set(expenses.map((e) => (e.description ?? "").toLowerCase().trim()));
@@ -349,8 +360,18 @@ export async function computeOwnerSoaByLease(
       amount:      cfTotal,
       sort_order:  45,
     }] : []),
-    // Commission is NOT deducted here — AllAbode takes it from the security deposit.
-    // It appears as an info_commission line instead (see infoLines above).
+    // Commission is a real deduction from the deposit-funded remittance —
+    // sort_order 50+ so it sorts right after any carry-forward balance.
+    ...commissions.map((c, i) => ({
+      line_type:    "deduction_commission",
+      description:  c.description ?? (
+        c.commission_type === "new_lease" ? "New Lease Commission" :
+        c.commission_type === "renewal"   ? "Renewal Commission"    : "Commission"
+      ),
+      amount:       -Number(c.amount),
+      sort_order:   50 + i,
+      commission_id: c.id,
+    })),
     { line_type: "deduction_mgmt_fee", description: `Management Fee (${mgmtFeePct}%)`, amount: -mgmtFeeAmt, sort_order: 100 },
     { line_type: "deduction_vat",      description: `VAT (${vatPct}%)`,                amount: -vatAmt,    sort_order: 101 },
     ...expenses.map((e, i) => ({

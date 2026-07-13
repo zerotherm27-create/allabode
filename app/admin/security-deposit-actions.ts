@@ -22,6 +22,7 @@ export async function recordDeposit(leaseId: string, formData: FormData) {
   const receivedAt  = str(formData, "received_at");
   const method      = str(formData, "payment_method");
   const notes       = str(formData, "notes");
+  const depositType = str(formData, "deposit_type") === "advance" ? "advance" : "security";
   if (!receivedAt || isNaN(amountHeld) || amountHeld <= 0) throw new Error("Amount and date are required.");
 
   // Resolve tenant_id, owner_id, unit_id from the lease
@@ -45,6 +46,7 @@ export async function recordDeposit(leaseId: string, formData: FormData) {
       tenant_id: tenantId,
       owner_id: ownerId,
       unit_id: unitId,
+      deposit_type: depositType,
       months_held: monthsHeld,
       amount_held: amountHeld,
       received_at: receivedAt,
@@ -62,7 +64,7 @@ export async function recordDeposit(leaseId: string, formData: FormData) {
     entityType: "security_deposit",
     entityId: (dep as { id: string }).id,
     actorId: user?.id,
-    metadata: { leaseId, amountHeld, monthsHeld },
+    metadata: { leaseId, amountHeld, monthsHeld, depositType },
   });
 
   revalidatePath(`/admin/leases/${leaseId}/edit`);
@@ -221,10 +223,11 @@ export async function updateDeposit(depositId: string, leaseId: string, formData
   const receivedAt = str(formData, "received_at");
   const method     = str(formData, "payment_method");
   const notes      = str(formData, "notes");
+  const depositType = str(formData, "deposit_type") === "advance" ? "advance" : "security";
   if (!receivedAt || isNaN(amountHeld) || amountHeld <= 0) throw new Error("Amount and date are required.");
 
   await supabase.from("security_deposits").update({
-    amount_held: amountHeld, months_held: monthsHeld,
+    amount_held: amountHeld, months_held: monthsHeld, deposit_type: depositType,
     received_at: receivedAt, payment_method: method, notes,
   }).eq("id", depositId).eq("status", "held");
 

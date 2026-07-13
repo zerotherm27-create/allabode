@@ -243,6 +243,22 @@ export async function runSoaPublishPipeline(
         .in("id", commIds);
     }
 
+    // Mark security deposits applied — so a deposit's value only ever
+    // funds one owner payout, not every future SOA regenerated for the lease.
+    const { data: depositLines } = await supabase
+      .from("soa_lines")
+      .select("deposit_id")
+      .eq("statement_id", soaId)
+      .eq("line_type", "income_other")
+      .not("deposit_id", "is", null);
+    const depositIds = ((depositLines ?? []) as { deposit_id: string | null }[])
+      .map((l) => l.deposit_id).filter(Boolean) as string[];
+    if (depositIds.length) {
+      await supabase.from("security_deposits")
+        .update({ soa_id: soaId, applied_at: new Date().toISOString() })
+        .in("id", depositIds);
+    }
+
     await logAudit(supabase, {
       action: "soa.published",
       entityType: "statement",

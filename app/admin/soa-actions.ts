@@ -293,6 +293,7 @@ export async function generateOwnerSoaByLease(formData: FormData) {
         receipt_path:  (l as { receipt_path?: string | null }).receipt_path ?? null,
         billing_note:  (l as { billing_note?: string | null }).billing_note ?? null,
         commission_id: (l as { commission_id?: string | null }).commission_id ?? null,
+        deposit_id:    (l as { deposit_id?: string | null }).deposit_id ?? null,
       }))
     );
   }
@@ -336,6 +337,7 @@ export async function regenerateSoaLines(id: string) {
         receipt_path:  l.receipt_path ?? null,
         billing_note:  l.billing_note ?? null,
         commission_id: l.commission_id ?? null,
+        deposit_id:    l.deposit_id ?? null,
       }))
     );
   }

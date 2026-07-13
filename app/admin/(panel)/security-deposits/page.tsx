@@ -5,6 +5,7 @@ import { DataTable, type Column } from "@/components/admin/data-table";
 
 type DepositRow = {
   id: string;
+  deposit_type: string;
   months_held: number;
   amount_held: number;
   received_at: string;
@@ -66,6 +67,14 @@ const depositCols: Column<DepositRow>[] = [
         </span>
       );
     },
+  },
+  {
+    header: "Type",
+    cell: (r) => (
+      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${r.deposit_type === "advance" ? "bg-gold/10 text-gold-bright" : "bg-navy/5 text-navy-700"}`}>
+        {r.deposit_type === "advance" ? "Advance Rent" : "Security Deposit"}
+      </span>
+    ),
   },
   {
     header: "Months",
@@ -137,7 +146,7 @@ export default async function SecurityDepositsPage() {
   const [{ data: depData }, { data: commData }] = await Promise.all([
     supabase
       .from("security_deposits")
-      .select("id,months_held,amount_held,received_at,status,returned_amount,forfeited_amount,tenants(name),units(unit_label,properties(name))")
+      .select("id,deposit_type,months_held,amount_held,received_at,status,returned_amount,forfeited_amount,tenants(name),units(unit_label,properties(name))")
       .order("received_at", { ascending: false }),
     supabase
       .from("lease_commissions")
@@ -156,7 +165,8 @@ export default async function SecurityDepositsPage() {
       <div>
         <h1 className="font-display text-2xl font-bold text-navy">Security Deposits &amp; Commissions</h1>
         <p className="mt-1 text-sm text-slate">
-          Deposits are held by AllAbode as a liability — not owner income. Commissions auto-deduct from the next owner SOA.
+          Security Deposits fund the lease&#x2019;s first owner remittance (minus commission and other expenses);
+          Advance Rent is held and shown only as a note. Commissions auto-deduct from the owner SOA.
         </p>
       </div>
 

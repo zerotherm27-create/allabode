@@ -31,6 +31,7 @@ export default async function DepositDetailPage({ params }: { params: Promise<{ 
 
   type Dep = {
     id: string; lease_id: string; tenant_id: string | null; owner_id: string | null; unit_id: string | null;
+    deposit_type: string;
     months_held: number; amount_held: number; received_at: string; payment_method: string | null;
     status: string; returned_amount: number | null; return_deductions: Deduction[] | null;
     returned_at: string | null; return_notes: string | null;
@@ -64,7 +65,7 @@ export default async function DepositDetailPage({ params }: { params: Promise<{ 
       <div className="rounded-xl border border-line bg-surface p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="label-caps text-gold">Security Deposit</p>
+            <p className="label-caps text-gold">{d.deposit_type === "advance" ? "Advance Rent" : "Security Deposit"}</p>
             <h1 className="mt-1 font-display text-2xl font-bold text-navy">{tenant?.name ?? "—"}</h1>
             {(tenant?.email || tenant?.phone) && (
               <p className="mt-1 text-sm text-slate">{tenant.email}{tenant.email && tenant.phone ? " · " : ""}{tenant.phone}</p>
@@ -160,6 +161,13 @@ export default async function DepositDetailPage({ params }: { params: Promise<{ 
           </summary>
           <form action={updateDeposit.bind(null, id, d.lease_id)}
             className="grid grid-cols-2 gap-3 border-t border-line p-5 md:grid-cols-4">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate">Type</label>
+              <select name="deposit_type" defaultValue={d.deposit_type} className={inputCls}>
+                <option value="security">Security Deposit</option>
+                <option value="advance">Advance Rent</option>
+              </select>
+            </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate">Months</label>
               <input name="months_held" type="number" step="0.5" min="1" defaultValue={d.months_held} required className={inputCls} />

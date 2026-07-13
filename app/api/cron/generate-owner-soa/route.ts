@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
             receipt_path:  l.receipt_path ?? null,
             billing_note:  l.billing_note ?? null,
             commission_id: l.commission_id ?? null,  // Bug fix: was missing
+            deposit_id:    l.deposit_id ?? null,
           }))
         );
         if (lineErr) errors.push(`lease ${lease.id} lines: ${lineErr.message}`);

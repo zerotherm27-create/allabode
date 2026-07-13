@@ -239,7 +239,7 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
             {incBnb.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
           </>
         )}
-        {incLT.length === 0 && incST.length === 0 && incBnb.length === 0 && (
+        {incLT.length === 0 && incST.length === 0 && incBnb.length === 0 && incOth.length === 0 && (
           <LineRow desc={input.leaseType === "long_term" ? "Long term — no payments recorded" : input.leaseType === "bnb" ? "BNB / daily platform — no payouts recorded" : "Short-term rental — no payments recorded"} amt={0} />
         )}
         {incOth.length > 0 && (
@@ -250,15 +250,15 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
         )}
         <TotalRow label="Total Income" amt={totalIncome} bg={BLUE_BG} />
 
-        {/* ── SECURITY DEPOSIT & COMMISSION (informational — not in remittance) ── */}
+        {/* ── ADVANCE RENT (informational — held by AllAbode, not in remittance) ── */}
         {infoLines.length > 0 && (
           <>
             <View style={[ownerStyles.sectionHdr, { backgroundColor: "#f3f4f6", color: "#5b6573" }]}>
-              <Text>Security Deposit &amp; Commission</Text>
+              <Text>Advance Rent (Held by AllAbode)</Text>
             </View>
             {infoLines.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
             <View style={{ paddingHorizontal: 6, paddingBottom: 4 }}>
-              <Text style={{ fontSize: 7, color: SLATE }}>Tenant paid 2 months deposit: 1 month held as security, 1 month taken as AllAbode commission — not deducted from owner remittance</Text>
+              <Text style={{ fontSize: 7, color: SLATE }}>Advance rent is held by AllAbode and is not part of the remittance computation on this Statement of Account.</Text>
             </View>
           </>
         )}
@@ -273,6 +273,14 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
           <Text style={ownerStyles.subHdr}>Prior Balance</Text>
         )}
         {cfPdfLines.map((l, i) => (
+          <LineRow key={i} desc={l.description} amt={Math.abs(l.amount)} />
+        ))}
+
+        {/* Commission — deducted from the security deposit-funded remittance */}
+        {lines.filter((l) => l.line_type === "deduction_commission").length > 0 && (
+          <Text style={ownerStyles.subHdr}>Commission</Text>
+        )}
+        {lines.filter((l) => l.line_type === "deduction_commission").map((l, i) => (
           <LineRow key={i} desc={l.description} amt={Math.abs(l.amount)} />
         ))}
 

@@ -209,10 +209,10 @@ export default async function StatementDetailPage({ params }: { params: Promise<
             </table>
           </div>
 
-          {/* Security Deposit & Commission — informational, not counted in remittance */}
-          {(infoLines.length > 0 || commLines.length > 0) && (
+          {/* Advance Rent — informational, held by AllAbode, not counted in remittance */}
+          {infoLines.length > 0 && (
             <div className="overflow-hidden rounded-lg border border-line bg-surface">
-              <div className="border-b border-line bg-surface-gray px-4 py-2.5 text-sm font-semibold text-slate">Security Deposit &amp; Commission (Informational)</div>
+              <div className="border-b border-line bg-surface-gray px-4 py-2.5 text-sm font-semibold text-slate">Advance Rent (Held by AllAbode)</div>
               <table className="w-full text-left text-sm">
                 <tbody className="divide-y divide-line">
                   {infoLines.map((l) => (
@@ -222,16 +222,9 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                       <td className="w-36 px-4 py-2.5 text-right text-slate">{peso(l.amount)}</td>
                     </tr>
                   ))}
-                  {commLines.map((l) => (
-                    <tr key={l.id} className="bg-surface-gray/30">
-                      <td className="px-4 py-2.5 text-ink">{l.description}</td>
-                      <td className="px-4 py-2.5 text-xs text-slate">from deposit</td>
-                      <td className="w-36 px-4 py-2.5 text-right text-slate">{peso(Math.abs(l.amount))}</td>
-                    </tr>
-                  ))}
                 </tbody>
               </table>
-              <p className="px-4 py-2 text-xs text-slate">Tenant paid 2 months deposit: 1 month held as security, 1 month taken as AllAbode commission — not deducted from owner remittance</p>
+              <p className="px-4 py-2 text-xs text-slate">Advance rent is held by AllAbode and is not part of this remittance computation.</p>
             </div>
           )}
 
@@ -248,6 +241,17 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                   <tr key={l.id} className="bg-surface-gray/20">
                     <td className="px-4 py-2.5 text-ink">{l.description}</td>
                     <td className="px-4 py-2.5 text-xs italic text-slate">prior period balance</td>
+                    <td className="w-36 px-4 py-2.5 text-right font-medium text-navy">{peso(Math.abs(l.amount))}</td>
+                  </tr>
+                ))}
+                {/* Commission — deducted from the security deposit-funded remittance */}
+                {commLines.length > 0 && (
+                  <tr><td colSpan={3} className="bg-surface-gray px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate">Commission</td></tr>
+                )}
+                {commLines.map((l) => (
+                  <tr key={l.id} className="bg-surface-gray/20">
+                    <td className="px-4 py-2.5 text-ink">{l.description}</td>
+                    <td className="px-4 py-2.5 text-xs italic text-slate">from security deposit</td>
                     <td className="w-36 px-4 py-2.5 text-right font-medium text-navy">{peso(Math.abs(l.amount))}</td>
                   </tr>
                 ))}

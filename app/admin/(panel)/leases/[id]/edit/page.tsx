@@ -60,7 +60,7 @@ export default async function EditLeasePage({
         .select("id,amount,method,reference,received_at,status,notes")
         .eq("lease_id", id).order("received_at", { ascending: false }),
       supabase.from("security_deposits")
-        .select("id,months_held,amount_held,received_at,status,returned_amount,forfeited_amount,payment_method")
+        .select("id,deposit_type,months_held,amount_held,received_at,status,returned_amount,forfeited_amount,payment_method")
         .eq("lease_id", id).order("created_at", { ascending: false }),
       supabase.from("lease_commissions")
         .select("id,commission_type,description,amount,status,applied_at")
@@ -69,7 +69,7 @@ export default async function EditLeasePage({
 
   if (!row) notFound();
 
-  type DepositRow = { id: string; months_held: number; amount_held: number; received_at: string; status: string; returned_amount: number | null; forfeited_amount: number | null; payment_method: string | null };
+  type DepositRow = { id: string; deposit_type: string; months_held: number; amount_held: number; received_at: string; status: string; returned_amount: number | null; forfeited_amount: number | null; payment_method: string | null };
   type CommissionRow = { id: string; commission_type: string; description: string | null; amount: number; status: string; applied_at: string | null };
 
   const initial    = row as LeaseValues;
@@ -300,12 +300,16 @@ export default async function EditLeasePage({
           </table>
         )}
       </div>
-      {/* ── Security Deposit ── */}
+      {/* ── Security Deposit / Advance Rent ── */}
       <div className="rounded-lg border border-line bg-surface">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div>
-            <h2 className="font-display text-base font-semibold text-navy">Security Deposit</h2>
-            <p className="mt-0.5 text-xs text-slate">Held by AllAbode — not owner income. Manage return/forfeit from the deposit record.</p>
+            <h2 className="font-display text-base font-semibold text-navy">Security Deposit &amp; Advance Rent</h2>
+            <p className="mt-0.5 text-xs text-slate">
+              Held by AllAbode at lease signing. The Security Deposit funds the lease&#x2019;s first owner
+              remittance (minus commission and other expenses); the Advance Rent is held and shown only as a
+              note — it never enters the owner&#x2019;s payout math.
+            </p>
           </div>
           {deposits.length > 0 && (
             <Link href={`/admin/security-deposits/${deposits[0].id}`}
@@ -315,52 +319,58 @@ export default async function EditLeasePage({
           )}
         </div>
 
-        {/* Record form — only if no deposit recorded yet */}
-        {deposits.length === 0 && (
-          <form action={recordDeposit.bind(null, id)}
-            className="grid grid-cols-2 gap-3 border-b border-line p-5 md:grid-cols-4">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate">Months</label>
-              <input name="months_held" type="number" step="0.5" min="1" defaultValue="2" required className={inputCls} />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate">Total amount (₱)</label>
-              <input name="amount_held" type="number" step="0.01" min="0"
-                defaultValue={Number(row.rent_amount) * 2} required className={inputCls} />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate">Received date</label>
-              <input name="received_at" type="date" defaultValue={today} required className={inputCls} />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate">Method</label>
-              <select name="payment_method" className={inputCls}>
-                <option value="cash">Cash</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="gcash">GCash</option>
-                <option value="maya">Maya</option>
-                <option value="check">Check</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div className="col-span-2 md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-slate">Notes</label>
-              <input name="notes" type="text" className={inputCls} placeholder="Optional" />
-            </div>
-            <div className="flex items-end">
-              <button type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-                <Icon name="add" size={16} /> Record
-              </button>
-            </div>
-          </form>
-        )}
+        {/* Record form — record one entry per amount (security deposit, then advance rent) */}
+        <form action={recordDeposit.bind(null, id)}
+          className="grid grid-cols-2 gap-3 border-b border-line p-5 md:grid-cols-4">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate">Type</label>
+            <select name="deposit_type" className={inputCls}>
+              <option value="security">Security Deposit</option>
+              <option value="advance">Advance Rent</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate">Months</label>
+            <input name="months_held" type="number" step="0.5" min="1" defaultValue="2" required className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate">Total amount (₱)</label>
+            <input name="amount_held" type="number" step="0.01" min="0"
+              defaultValue={Number(row.rent_amount) * 2} required className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate">Received date</label>
+            <input name="received_at" type="date" defaultValue={today} required className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate">Method</label>
+            <select name="payment_method" className={inputCls}>
+              <option value="cash">Cash</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="gcash">GCash</option>
+              <option value="maya">Maya</option>
+              <option value="check">Check</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="col-span-2 md:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-slate">Notes</label>
+            <input name="notes" type="text" className={inputCls} placeholder="Optional" />
+          </div>
+          <div className="flex items-end">
+            <button type="submit"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
+              <Icon name="add" size={16} /> Record
+            </button>
+          </div>
+        </form>
 
         {/* Existing deposits */}
         {deposits.length > 0 ? (
           <table className="w-full text-left text-sm">
             <thead className="border-b border-line bg-surface-gray">
               <tr>
+                <th className="px-4 py-2.5 font-medium text-slate">Type</th>
                 <th className="px-4 py-2.5 font-medium text-slate">Received</th>
                 <th className="px-4 py-2.5 font-medium text-slate text-right">Amount held</th>
                 <th className="px-4 py-2.5 font-medium text-slate">Months</th>
@@ -371,6 +381,11 @@ export default async function EditLeasePage({
             <tbody className="divide-y divide-line">
               {deposits.map((dep) => (
                 <tr key={dep.id}>
+                  <td className="px-4 py-3 text-slate">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${dep.deposit_type === "advance" ? "bg-gold/10 text-gold-bright" : "bg-navy/5 text-navy-700"}`}>
+                      {dep.deposit_type === "advance" ? "Advance Rent" : "Security Deposit"}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-slate">{dep.received_at}</td>
                   <td className="px-4 py-3 text-right font-semibold text-navy">
                     ₱{Math.round(dep.amount_held).toLocaleString("en-PH")}

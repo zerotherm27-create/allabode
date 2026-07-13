@@ -138,7 +138,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
 
           {infoLines.length > 0 && (
             <section>
-              <div className="bg-surface-gray px-5 py-2.5 text-sm font-semibold text-slate">Security Deposits Held</div>
+              <div className="bg-surface-gray px-5 py-2.5 text-sm font-semibold text-slate">Advance Rent (Held by AllAbode)</div>
               <table className="w-full text-left text-sm">
                 <tbody className="divide-y divide-line">
                   {infoLines.map((line) => (
@@ -150,7 +150,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
                 </tbody>
               </table>
               <p className="border-t border-line px-5 py-2.5 text-xs text-slate">
-                Tenant paid 2 months deposit: 1 month held as security, 1 month taken as AllAbode commission. These are not part of your remittance.
+                Advance rent is held by AllAbode and is not part of your remittance.
               </p>
             </section>
           )}

@@ -4,12 +4,14 @@ export type LineItemPricingMode = "unit" | "lump_sum";
 export type QuotationLineItem = {
   category: LineItemCategory;
   pricingMode: LineItemPricingMode;
+  /** The kind of item, e.g. "Sofa", "Refrigerator", "Electrical rewiring" — from the suggested picker or typed directly. */
+  item: string;
+  /** Admin's custom free text — brand, model, color, specifics. */
   description: string;
   quantity: number;
   unit: string;
   unitPrice: number;
   amount: number;
-  notes: string;
 };
 
 export type ProgressMilestone = {

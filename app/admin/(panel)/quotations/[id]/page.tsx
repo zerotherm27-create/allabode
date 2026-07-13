@@ -277,7 +277,7 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
               {lineItems.map((item, i) => (
                 <div key={i} className="flex justify-between gap-2 border-b border-line pb-1">
                   <span className="text-slate">
-                    {LINE_ITEM_CATEGORY_LABEL[item.category]} — {item.description || "—"}{" "}
+                    {LINE_ITEM_CATEGORY_LABEL[item.category]} — {item.item || "—"}{item.description ? ` — ${item.description}` : ""}{" "}
                     ({item.pricingMode === "lump_sum" ? "lump sum" : `${item.quantity} ${item.unit}`})
                   </span>
                   <span className="font-medium text-navy">{formatPeso(item.amount)}</span>

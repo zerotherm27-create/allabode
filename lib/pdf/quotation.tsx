@@ -17,7 +17,7 @@ let _logoWhite: string | null = null;
 function getLogoWhite(): string | null {
   if (_logoWhite !== null) return _logoWhite;
   try {
-    const buf = fs.readFileSync(path.join(process.cwd(), "public/logo/logo-white-icon.png"));
+    const buf = fs.readFileSync(path.join(process.cwd(), "public/logo/logo-2-white.png"));
     _logoWhite = `data:image/png;base64,${buf.toString("base64")}`;
   } catch { _logoWhite = ""; }
   return _logoWhite || null;
@@ -28,7 +28,6 @@ const GOLD = "#b4975a";
 const SLATE = "#5b6573";
 const INK = "#16202c";
 const LINE = "#e2e6ec";
-const CREAM = "#f8f6f1";
 const WHITE = "#ffffff";
 const TABLE_HEAD_TINT = "#f1f4f8";
 
@@ -47,10 +46,7 @@ const styles = StyleSheet.create({
     backgroundColor: NAVY, paddingHorizontal: 32,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
-  logoWrap: { flexDirection: "row", alignItems: "center", gap: 10 },
-  logo: { width: 30, height: 30 },
-  companyName: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 11 },
-  companyTagline: { color: "rgba(255,255,255,0.55)", fontSize: 7.5, marginTop: 2 },
+  logo: { width: 150, height: 40, objectFit: "contain" },
   docTitle: { color: GOLD, fontFamily: "Helvetica-Bold", fontSize: 15, letterSpacing: 1.5, textTransform: "uppercase" },
 
   // ── Footer band (fixed, repeats every page) — explicit height, see header comment above. ──
@@ -59,18 +55,17 @@ const styles = StyleSheet.create({
   footerText: { color: "rgba(255,255,255,0.55)", fontSize: 6.5, textAlign: "center", marginTop: 2 },
   footerPage: { color: "rgba(255,255,255,0.75)", fontSize: 6.5, marginTop: 3 },
 
-  // ── Meta bar (normal flow, page 1 only) ──
-  metaBar: { backgroundColor: CREAM, flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 32, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: LINE },
-  metaLabel: { color: SLATE, fontSize: 7, textTransform: "uppercase", letterSpacing: 1 },
-  metaValue: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 10, marginTop: 2 },
-
   body: { paddingHorizontal: 32, paddingTop: 20 },
 
-  // ── Recipient block ──
-  toBox: { borderLeftWidth: 3, borderLeftColor: GOLD, paddingLeft: 14, paddingVertical: 4, marginBottom: 20 },
+  // ── Recipient block + quotation meta, side by side ──
+  topRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
+  toBox: { borderLeftWidth: 3, borderLeftColor: GOLD, paddingLeft: 14, paddingVertical: 4, flex: 1 },
   toLabel: { color: SLATE, fontSize: 7, textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 },
   toName: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 14 },
   toDetail: { color: SLATE, fontSize: 9, marginTop: 2 },
+  metaBlock: { alignItems: "flex-end", marginLeft: 20 },
+  metaLabel: { color: SLATE, fontSize: 7, textTransform: "uppercase", letterSpacing: 1 },
+  metaValue: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 10, marginTop: 2, marginBottom: 8 },
 
   sectionLabel: { color: SLATE, fontSize: 8, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 1, marginTop: 18, marginBottom: 8 },
 
@@ -104,10 +99,10 @@ const styles = StyleSheet.create({
   // ── Signatures ──
   sigRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 28 },
   sigBlock: { width: "44%" },
+  sigBlockLabel: { color: SLATE, fontSize: 7.5, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 },
   sigImg: { width: 150, height: 44, objectFit: "contain" },
   sigLine: { borderBottomWidth: 1, borderBottomColor: NAVY, marginTop: 4, marginBottom: 5 },
   sigName: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 10 },
-  sigRole: { color: SLATE, fontSize: 8 },
   sigMeta: { color: SLATE, fontSize: 7.5, marginTop: 1 },
 
   eSignNote: { fontSize: 7, color: SLATE, marginTop: 20, lineHeight: 1.4 },
@@ -117,16 +112,10 @@ function PageHeader() {
   const logo = getLogoWhite();
   return (
     <View style={styles.header} fixed>
-      <View style={styles.logoWrap}>
-        {logo && (
-          // eslint-disable-next-line jsx-a11y/alt-text
-          <Image src={logo} style={styles.logo} />
-        )}
-        <View>
-          <Text style={styles.companyName}>All Abode Property Solutions</Text>
-          <Text style={styles.companyTagline}>PRC Licensed Real Estate Firm</Text>
-        </View>
-      </View>
+      {logo && (
+        // eslint-disable-next-line jsx-a11y/alt-text
+        <Image src={logo} style={styles.logo} />
+      )}
       <Text style={styles.docTitle}>Quotation</Text>
     </View>
   );
@@ -143,7 +132,7 @@ function PageFooter() {
   );
 }
 
-function LineItemsTable({ category, items }: { category: QuotationLineItem["category"]; items: QuotationLineItem[] }) {
+function LineItemsTable({ category, items, hidePricing }: { category: QuotationLineItem["category"]; items: QuotationLineItem[]; hidePricing: boolean }) {
   const rows = items.filter((r) => r.category === category);
   if (rows.length === 0) return null;
   const subtotal = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
@@ -152,29 +141,33 @@ function LineItemsTable({ category, items }: { category: QuotationLineItem["cate
       <Text style={styles.sectionLabel}>{LINE_ITEM_CATEGORY_LABEL[category]}</Text>
       <View style={styles.table}>
         <View style={styles.theadRow}>
-          <Text style={[styles.thCell, { flex: 2 }]}>Description</Text>
+          <Text style={[styles.thCell, { flex: 1.1 }]}>Item</Text>
+          <Text style={[styles.thCell, { flex: 1.6 }]}>Description</Text>
           <Text style={[styles.thCell, { width: 40 }]}>Qty</Text>
           <Text style={[styles.thCell, { width: 55 }]}>Unit</Text>
-          <Text style={[styles.thCell, { width: 75 }]}>Unit Price</Text>
-          <Text style={[styles.thCell, { width: 75 }]}>Amount</Text>
+          {!hidePricing && <Text style={[styles.thCell, { width: 75 }]}>Unit Price</Text>}
+          {!hidePricing && <Text style={[styles.thCell, { width: 75 }]}>Amount</Text>}
         </View>
         {rows.map((r, i) => {
           const lumpSum = r.pricingMode === "lump_sum";
           return (
             <View key={i} style={i === rows.length - 1 ? styles.trowLast : styles.trow}>
-              <Text style={[styles.tdCell, { flex: 2 }]}>{r.description || " "}</Text>
+              <Text style={[styles.tdCell, { flex: 1.1, fontFamily: "Helvetica-Bold" }]}>{r.item || " "}</Text>
+              <Text style={[styles.tdCell, { flex: 1.6 }]}>{r.description || " "}</Text>
               <Text style={[styles.tdCell, { width: 40 }]}>{lumpSum ? "" : r.quantity}</Text>
               <Text style={[styles.tdCell, { width: 55 }]}>{lumpSum ? "Lump sum" : r.unit || " "}</Text>
-              <Text style={[styles.tdCell, { width: 75 }]}>{lumpSum ? "" : peso(r.unitPrice)}</Text>
-              <Text style={[styles.tdCell, { width: 75, fontFamily: "Helvetica-Bold", color: NAVY }]}>{peso(r.amount)}</Text>
+              {!hidePricing && <Text style={[styles.tdCell, { width: 75 }]}>{lumpSum ? "" : peso(r.unitPrice)}</Text>}
+              {!hidePricing && <Text style={[styles.tdCell, { width: 75, fontFamily: "Helvetica-Bold", color: NAVY }]}>{peso(r.amount)}</Text>}
             </View>
           );
         })}
       </View>
-      <View style={styles.subtotalRow}>
-        <Text style={styles.subtotalLabel}>Subtotal</Text>
-        <Text style={styles.subtotalValue}>{peso(subtotal)}</Text>
-      </View>
+      {!hidePricing && (
+        <View style={styles.subtotalRow}>
+          <Text style={styles.subtotalLabel}>Subtotal</Text>
+          <Text style={styles.subtotalValue}>{peso(subtotal)}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -245,34 +238,29 @@ export async function renderQuotationPdf(input: QuotationPdfInput): Promise<Buff
         <PageHeader />
         <PageFooter />
 
-        <View style={styles.metaBar}>
-          <View>
-            <Text style={styles.metaLabel}>Quotation No.</Text>
-            <Text style={styles.metaValue}>{input.quotationNumber}</Text>
-          </View>
-          <View>
-            <Text style={styles.metaLabel}>Date</Text>
-            <Text style={styles.metaValue}>{input.quotationDate || "—"}</Text>
-          </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <Text style={styles.metaLabel}>Valid Until</Text>
-            <Text style={styles.metaValue}>{input.validUntil || "—"}</Text>
-          </View>
-        </View>
-
         <View style={styles.body}>
-          <View style={styles.toBox}>
-            <Text style={styles.toLabel}>To</Text>
-            <Text style={styles.toName}>{rd.name || input.recipientEmail}</Text>
-            {rd.address && <Text style={styles.toDetail}>{rd.address}</Text>}
-            {rd.phone && <Text style={styles.toDetail}>{rd.phone}</Text>}
-            <Text style={styles.toDetail}>{rd.email || input.recipientEmail}</Text>
-            {input.title && <Text style={[styles.toDetail, { marginTop: 6, fontFamily: "Helvetica-Bold", color: NAVY }]}>RE: {input.title}</Text>}
-            {input.propertyReference && <Text style={styles.toDetail}>{input.propertyReference}</Text>}
+          <View style={styles.topRow}>
+            <View style={styles.toBox}>
+              <Text style={styles.toLabel}>To</Text>
+              <Text style={styles.toName}>{rd.name || input.recipientEmail}</Text>
+              {rd.address && <Text style={styles.toDetail}>{rd.address}</Text>}
+              {rd.phone && <Text style={styles.toDetail}>{rd.phone}</Text>}
+              <Text style={styles.toDetail}>{rd.email || input.recipientEmail}</Text>
+              {input.title && <Text style={[styles.toDetail, { marginTop: 6, fontFamily: "Helvetica-Bold", color: NAVY }]}>RE: {input.title}</Text>}
+              {input.propertyReference && <Text style={styles.toDetail}>{input.propertyReference}</Text>}
+            </View>
+            <View style={styles.metaBlock}>
+              <Text style={styles.metaLabel}>Quotation No.</Text>
+              <Text style={styles.metaValue}>{input.quotationNumber}</Text>
+              <Text style={styles.metaLabel}>Date</Text>
+              <Text style={styles.metaValue}>{input.quotationDate || "—"}</Text>
+              <Text style={styles.metaLabel}>Valid Until</Text>
+              <Text style={[styles.metaValue, { marginBottom: 0 }]}>{input.validUntil || "—"}</Text>
+            </View>
           </View>
 
           {LINE_ITEM_CATEGORIES.map(({ value }) => (
-            <LineItemsTable key={value} category={value} items={input.lineItems} />
+            <LineItemsTable key={value} category={value} items={input.lineItems} hidePricing={input.grandTotalOverride != null} />
           ))}
 
           <View style={styles.grandTotalWrap}>
@@ -323,23 +311,23 @@ export async function renderQuotationPdf(input: QuotationPdfInput): Promise<Buff
 
           <View style={styles.sigRow} wrap={false}>
             <View style={styles.sigBlock}>
+              <Text style={styles.sigBlockLabel}>Prepared By</Text>
               {input.companySignatureDataUri
                 // eslint-disable-next-line jsx-a11y/alt-text
                 ? <Image src={input.companySignatureDataUri} style={styles.sigImg} />
                 : <View style={{ height: 44 }} />}
               <View style={styles.sigLine} />
               <Text style={styles.sigName}>{input.companyTypedName || "COMPANY REPRESENTATIVE"}</Text>
-              <Text style={styles.sigRole}>For All Abode Property Solutions</Text>
               {input.companySignedAtManila ? <Text style={styles.sigMeta}>Signed: {input.companySignedAtManila}</Text> : null}
             </View>
             <View style={styles.sigBlock}>
+              <Text style={styles.sigBlockLabel}>Accepted By</Text>
               {input.recipientSignatureDataUri
                 // eslint-disable-next-line jsx-a11y/alt-text
                 ? <Image src={input.recipientSignatureDataUri} style={styles.sigImg} />
                 : <View style={{ height: 44 }} />}
               <View style={styles.sigLine} />
               <Text style={styles.sigName}>{input.recipientTypedName || "RECIPIENT"}</Text>
-              <Text style={styles.sigRole}>Accepted by</Text>
               {input.recipientSignedAtManila ? <Text style={styles.sigMeta}>Signed: {input.recipientSignedAtManila}</Text> : null}
             </View>
           </View>

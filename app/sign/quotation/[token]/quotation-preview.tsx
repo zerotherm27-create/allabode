@@ -45,7 +45,8 @@ export function QuotationPreview({ record }: { record: QuotationRecord }) {
               {rows.map((r, i) => (
                 <div key={i} className="flex justify-between gap-2 border-b border-line pb-1">
                   <span className="text-slate">
-                    {r.description || "—"} ({r.pricingMode === "lump_sum" ? "lump sum" : `${r.quantity} ${r.unit}`})
+                    {r.item || "—"}{r.description ? ` — ${r.description}` : ""}{" "}
+                    ({r.pricingMode === "lump_sum" ? "lump sum" : `${r.quantity} ${r.unit}`})
                   </span>
                   <span className="font-medium">{formatPeso(r.amount)}</span>
                 </div>

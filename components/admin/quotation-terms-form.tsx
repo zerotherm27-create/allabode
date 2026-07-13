@@ -52,7 +52,7 @@ function emptyQuotationTerms(): QuotationTermsInitial {
 }
 
 const emptyLineItem = (category: LineItemCategory): QuotationLineItem => ({
-  category, pricingMode: "unit", description: "", quantity: 1, unit: "pc", unitPrice: 0, amount: 0, notes: "",
+  category, pricingMode: "unit", item: "", description: "", quantity: 1, unit: "pc", unitPrice: 0, amount: 0,
 });
 
 const FURNISHING_PICKER_GROUPS: { label: string; items: readonly [string, string][] }[] = [
@@ -96,8 +96,8 @@ export function QuotationTermsForm({
     });
   }
 
-  function addLineItem(category: LineItemCategory, description = "") {
-    set({ lineItems: [...t.lineItems, { ...emptyLineItem(category), description }] });
+  function addLineItem(category: LineItemCategory, item = "") {
+    set({ lineItems: [...t.lineItems, { ...emptyLineItem(category), item }] });
   }
 
   function addPickedFurnishing() {
@@ -119,7 +119,7 @@ export function QuotationTermsForm({
         propertyReference: t.propertyReference || undefined,
         paymentTermsType: t.paymentTermsType || undefined,
         lineItems: t.lineItems.map((li) => ({
-          category: li.category, description: li.description, quantity: li.quantity, unit: li.unit,
+          category: li.category, item: li.item, description: li.description, quantity: li.quantity, unit: li.unit,
         })),
       });
       if (!result) {
@@ -222,60 +222,74 @@ export function QuotationTermsForm({
               {rows.length === 0 ? (
                 <p className="text-sm text-slate">No items yet.</p>
               ) : (
-                <div className="flex flex-col gap-2">
-                  <div className="hidden grid-cols-[2fr_0.8fr_0.6fr_0.7fr_0.9fr_0.9fr_2rem] gap-2 text-xs font-semibold text-slate sm:grid">
-                    <span>Description</span><span>Pricing</span><span>Qty</span><span>Unit</span><span>Unit price</span><span>Amount</span><span />
-                  </div>
+                <div className="flex flex-col gap-3">
                   {rows.map(({ r, i }) => {
                     const lumpSum = r.pricingMode === "lump_sum";
                     return (
-                      <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-[2fr_0.8fr_0.6fr_0.7fr_0.9fr_0.9fr_2rem]">
-                        <input aria-label="Description" value={r.description} onChange={(e) => setLineItem(i, { description: e.target.value })} className={inputCls} />
-                        <select
-                          aria-label="Pricing mode"
-                          value={r.pricingMode}
-                          onChange={(e) => setLineItem(i, { pricingMode: e.target.value as LineItemPricingMode })}
-                          className={inputCls}
-                        >
-                          <option value="unit">Per unit</option>
-                          <option value="lump_sum">Lump sum</option>
-                        </select>
-                        <input
-                          aria-label="Quantity" type="number" min={0} disabled={lumpSum}
-                          value={lumpSum ? "" : r.quantity}
-                          onChange={(e) => setLineItem(i, { quantity: Number(e.target.value) || 0 })}
-                          className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
-                        />
-                        <input
-                          aria-label="Unit" disabled={lumpSum}
-                          value={lumpSum ? "" : r.unit}
-                          onChange={(e) => setLineItem(i, { unit: e.target.value })}
-                          className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
-                        />
-                        <input
-                          aria-label="Unit price" type="number" min={0} step="0.01" disabled={lumpSum}
-                          value={lumpSum ? "" : r.unitPrice}
-                          onChange={(e) => setLineItem(i, { unitPrice: Number(e.target.value) || 0 })}
-                          className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
-                        />
-                        {lumpSum ? (
+                      <div key={i} className="rounded-md border border-line bg-cream/40 p-2.5">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[2fr_1fr_2rem]">
                           <input
-                            aria-label="Amount" type="number" min={0} step="0.01"
-                            value={r.amount}
-                            onChange={(e) => setLineItem(i, { amount: Number(e.target.value) || 0 })}
-                            className={inputCls}
+                            aria-label="Item"
+                            placeholder="Item, e.g. Sofa"
+                            value={r.item}
+                            onChange={(e) => setLineItem(i, { item: e.target.value })}
+                            className={`${inputCls} font-medium`}
                           />
-                        ) : (
-                          <input aria-label="Amount" readOnly value={formatPeso(r.amount)} className={`${inputCls} bg-surface-gray`} />
-                        )}
-                        <button
-                          type="button"
-                          aria-label="Remove row"
-                          onClick={() => set({ lineItems: t.lineItems.filter((_, j) => j !== i) })}
-                          className="self-center text-sm font-semibold text-slate hover:text-error"
-                        >
-                          ×
-                        </button>
+                          <select
+                            aria-label="Pricing mode"
+                            value={r.pricingMode}
+                            onChange={(e) => setLineItem(i, { pricingMode: e.target.value as LineItemPricingMode })}
+                            className={inputCls}
+                          >
+                            <option value="unit">Per unit</option>
+                            <option value="lump_sum">Lump sum</option>
+                          </select>
+                          <button
+                            type="button"
+                            aria-label="Remove row"
+                            onClick={() => set({ lineItems: t.lineItems.filter((_, j) => j !== i) })}
+                            className="self-center text-sm font-semibold text-slate hover:text-error"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-[2fr_0.6fr_0.7fr_0.9fr_0.9fr]">
+                          <input
+                            aria-label="Description"
+                            placeholder="Description — brand, model, specifics"
+                            value={r.description}
+                            onChange={(e) => setLineItem(i, { description: e.target.value })}
+                            className={`${inputCls} col-span-2 sm:col-span-1`}
+                          />
+                          <input
+                            aria-label="Quantity" type="number" min={0} disabled={lumpSum}
+                            value={lumpSum ? "" : r.quantity}
+                            onChange={(e) => setLineItem(i, { quantity: Number(e.target.value) || 0 })}
+                            className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
+                          />
+                          <input
+                            aria-label="Unit" disabled={lumpSum}
+                            value={lumpSum ? "" : r.unit}
+                            onChange={(e) => setLineItem(i, { unit: e.target.value })}
+                            className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
+                          />
+                          <input
+                            aria-label="Unit price" type="number" min={0} step="0.01" disabled={lumpSum}
+                            value={lumpSum ? "" : r.unitPrice}
+                            onChange={(e) => setLineItem(i, { unitPrice: Number(e.target.value) || 0 })}
+                            className={`${inputCls} ${lumpSum ? "bg-surface-gray" : ""}`}
+                          />
+                          {lumpSum ? (
+                            <input
+                              aria-label="Amount" type="number" min={0} step="0.01"
+                              value={r.amount}
+                              onChange={(e) => setLineItem(i, { amount: Number(e.target.value) || 0 })}
+                              className={inputCls}
+                            />
+                          ) : (
+                            <input aria-label="Amount" readOnly value={formatPeso(r.amount)} className={`${inputCls} bg-surface-gray`} />
+                          )}
+                        </div>
                       </div>
                     );
                   })}

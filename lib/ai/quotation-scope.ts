@@ -7,6 +7,7 @@ export type QuotationScopeInput = {
   paymentTermsType?: "cash" | "progress_billing" | "";
   lineItems: {
     category: LineItemCategory;
+    item: string;
     description: string;
     quantity: number;
     unit: string;

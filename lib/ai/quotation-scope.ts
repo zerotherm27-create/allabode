@@ -40,7 +40,10 @@ export async function draftQuotationScope(input: QuotationScopeInput): Promise<s
             "\"elevate\", \"transform\", no exclamation points, no persuasive framing. Plain, neutral, " +
             "precise technical language only, as you'd find in a contractor's work order. " +
             "Do not invent work items, materials, or specifications that aren't implied by the input — " +
-            "if a line item is sparse, state only what's given rather than guessing specifics.",
+            "if a line item is sparse, state only what's given rather than guessing specifics. " +
+            "Do not include a \"Scope of Work\" title or heading at the top — the surrounding document " +
+            "already labels this section; start directly with the content (category sub-headings like " +
+            "\"Unit Furnishing\" are fine).",
         },
         { role: "user", content: JSON.stringify(input) },
       ],

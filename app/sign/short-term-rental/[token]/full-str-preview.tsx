@@ -65,7 +65,7 @@ function ClauseList({ clauses }: { clauses: StrClause[] }) {
  * Full-text on-screen review of the Short Term Rental Agreement, built from
  * the same clause source as the PDF (lib/pm/short-term-rental-clauses.ts) so
  * they never drift. `tenantDetails`/`occupants` are passed separately so the
- * tenant wizard can preview unsaved edits; the homeowner page passes the
+ * tenant wizard can preview unsaved edits; the landlord page passes the
  * stored values.
  */
 export function FullStrPreview({
@@ -88,13 +88,13 @@ export function FullStrPreview({
   const feeItems: StrFeeItem[] = record.fee_items ?? [];
   const feeTotal = feeItems.reduce((sum, r) => sum + (Number(r.amount) || 0), 0) + (Number(record.security_deposit_amount) || 0);
   const inventory: StrInventoryRow[] = (record.inventory ?? []).filter((r) => r.particulars?.trim());
-  const homeownerName = record.homeowner_details?.name;
+  const landlordName = record.landlord_details?.name;
   const peso = (n: number) => `PHP ${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="text-ink">
       <h3 className="mb-3 text-center font-display text-base font-bold text-navy">SHORT TERM RENTAL AGREEMENT</h3>
-      <p className="mb-2 text-sm">{strRecital(homeownerName, tenantDetails.name)}</p>
+      <p className="mb-2 text-sm">{strRecital(landlordName, tenantDetails.name)}</p>
 
       <ClauseList clauses={buildStrClausesBeforeTable(terms)} />
 
@@ -139,7 +139,7 @@ export function FullStrPreview({
       <ClauseList clauses={buildStrClausesAfterTable()} />
 
       <p className="mb-2 mt-4 text-sm">
-        The Parties agree to the terms of this Short Term Rental Agreement — the Homeowner and the Tenant sign
+        The Parties agree to the terms of this Short Term Rental Agreement — the Landlord and the Tenant sign
         electronically.
       </p>
 

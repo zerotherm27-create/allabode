@@ -6,8 +6,8 @@ import { countersignStrAgreement } from "@/app/admin/short-term-rental-actions";
 import { SignatureInput, type SignatureInputHandle } from "@/components/forms/signature-input";
 
 /**
- * In-dashboard homeowner signature (designated signatory only) — used when
- * staff want to sign on the homeowner's behalf immediately, instead of
+ * In-dashboard landlord signature (designated signatory only) — used when
+ * staff want to sign on the landlord's behalf immediately, instead of
  * sending a remote signing link. This is the second signature in the flow
  * (the tenant signs first); it completes the agreement once submitted.
  */
@@ -43,9 +43,9 @@ export function StrCountersignForm({ agreementId, defaultName = "" }: { agreemen
 
   return (
     <div className="rounded-lg border border-line bg-surface p-5">
-      <h2 className="mb-1 font-display text-sm font-semibold text-navy">Sign now as Homeowner&#x2019;s representative</h2>
+      <h2 className="mb-1 font-display text-sm font-semibold text-navy">Sign now as Landlord&#x2019;s representative</h2>
       <p className="mb-3 text-xs text-slate">
-        Signs immediately in the dashboard on the homeowner&#x2019;s behalf.
+        Signs immediately in the dashboard on the landlord&#x2019;s behalf.
       </p>
       <label className="mb-3 block text-sm">
         <span className="mb-1 block font-medium text-navy">Your name</span>

@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeStrAgreement } from "@/lib/short-term-rental/complete";
 import type {
-  StrHomeownerDetails, StrTenantDetails, StrPropertyDetails,
+  StrLandlordDetails, StrTenantDetails, StrPropertyDetails,
   StrFeeItem, StrInventoryRow, StrBankDetails,
 } from "@/lib/pm/short-term-rental-clauses";
 
@@ -15,9 +15,9 @@ export type StrAgreementRecord = {
   status: string;
   tenant_email: string;
   tenant_name_hint: string | null;
-  homeowner_name_hint: string | null;
+  landlord_name_hint: string | null;
   agreement_date: string | null;
-  homeowner_details: StrHomeownerDetails;
+  landlord_details: StrLandlordDetails;
   property_details: StrPropertyDetails;
   check_in_date: string | null;
   check_out_date: string | null;
@@ -35,12 +35,12 @@ export type StrAgreementRecord = {
   tenant_id_issued_date: string | null;
   tenant_id_document_path: string | null;
   tenant_signed_at: string | null;
-  homeowner_id_type: string | null;
-  homeowner_id_number: string | null;
-  homeowner_id_issued_date: string | null;
-  homeowner_id_document_path: string | null;
-  homeowner_signature_data: string | null;
-  homeowner_signed_at: string | null;
+  landlord_id_type: string | null;
+  landlord_id_number: string | null;
+  landlord_id_issued_date: string | null;
+  landlord_id_document_path: string | null;
+  landlord_signature_data: string | null;
+  landlord_signed_at: string | null;
   pdf_path: string | null;
 };
 
@@ -146,17 +146,17 @@ export async function submitStrTenantSignature(token: string, input: SubmitSigna
 }
 
 // ============================================================
-// Homeowner side (separate token; issued after the tenant signs)
+// Landlord side (separate token; issued after the tenant signs)
 // ============================================================
 
-export async function loadStrAgreementForHomeowner(token: string): Promise<StrAgreementRecord | null> {
+export async function loadStrAgreementForLandlord(token: string): Promise<StrAgreementRecord | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_str_agreement_by_homeowner_token", { p_token: token });
+  const { data, error } = await supabase.rpc("get_str_agreement_by_landlord_token", { p_token: token });
   if (error || !data) return null;
   return data as StrAgreementRecord;
 }
 
-export async function createStrHomeownerIdUploadTicket(
+export async function createStrLandlordIdUploadTicket(
   token: string,
   fileName: string,
   fileSize: number,
@@ -167,15 +167,15 @@ export async function createStrHomeownerIdUploadTicket(
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG, PNG, or PDF file." };
 
   const supabase = await createClient();
-  const { data: agreement, error: lookupError } = await supabase.rpc("get_str_agreement_by_homeowner_token", { p_token: token });
+  const { data: agreement, error: lookupError } = await supabase.rpc("get_str_agreement_by_landlord_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as StrAgreementRecord;
-  if (record.status !== "tenant_signed" || record.homeowner_signature_data) {
+  if (record.status !== "tenant_signed" || record.landlord_signature_data) {
     return { error: "This agreement can no longer be edited." };
   }
 
   const ext = (fileName.split(".").pop() || "jpg").toLowerCase();
-  const path = `short-term-rental/${record.id}/homeowner-id-${Date.now()}.${ext}`;
+  const path = `short-term-rental/${record.id}/landlord-id-${Date.now()}.${ext}`;
 
   try {
     const admin = createAdminClient();
@@ -187,16 +187,16 @@ export async function createStrHomeownerIdUploadTicket(
   }
 }
 
-export type ConfirmHomeownerIdInput = {
+export type ConfirmLandlordIdInput = {
   idType: string;
   idNumber: string;
   idIssuedDate: string;
   path: string;
 };
 
-export async function confirmStrHomeownerIdUpload(token: string, input: ConfirmHomeownerIdInput): Promise<{ error?: string }> {
+export async function confirmStrLandlordIdUpload(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
   const supabase = await createClient();
-  const { error } = await supabase.rpc("save_str_homeowner_id_upload", {
+  const { error } = await supabase.rpc("save_str_landlord_id_upload", {
     p_token: token,
     p_id_type: input.idType,
     p_id_number: input.idNumber,
@@ -207,10 +207,10 @@ export async function confirmStrHomeownerIdUpload(token: string, input: ConfirmH
   return {};
 }
 
-export async function submitStrHomeownerSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
+export async function submitStrLandlordSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
   const supabase = await createClient();
   const ip = await clientIp();
-  const { error } = await supabase.rpc("submit_str_homeowner_signature", {
+  const { error } = await supabase.rpc("submit_str_landlord_signature", {
     p_token: token,
     p_typed_name: input.typedName,
     p_signature_data: input.signatureDataUrl,
@@ -221,8 +221,8 @@ export async function submitStrHomeownerSignature(token: string, input: SubmitSi
   // The signature is durable at this point. Completion (PDF, tenant record,
   // portal account) runs best-effort — if it fails, staff retry from the
   // admin "Finalize" button, so we never surface an error that would make
-  // the homeowner think their signature didn't register.
-  const { data } = await supabase.rpc("get_str_agreement_by_homeowner_token", { p_token: token });
+  // the landlord think their signature didn't register.
+  const { data } = await supabase.rpc("get_str_agreement_by_landlord_token", { p_token: token });
   const record = data as StrAgreementRecord | null;
   if (record?.id) {
     try {
@@ -233,7 +233,7 @@ export async function submitStrHomeownerSignature(token: string, input: SubmitSi
       await completeStrAgreement(record.id, createAdminClient());
       return { completed: true };
     } catch (err) {
-      console.warn("[short-term-rental] completion after homeowner signature failed:", err);
+      console.warn("[short-term-rental] completion after landlord signature failed:", err);
     }
   }
   return { completed: false };

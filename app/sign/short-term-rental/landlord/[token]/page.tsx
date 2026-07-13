@@ -1,12 +1,12 @@
 import Image from "next/image";
-import { loadStrAgreementForHomeowner } from "@/app/sign/short-term-rental-actions";
-import { StrHomeownerSign } from "./homeowner-sign";
+import { loadStrAgreementForLandlord } from "@/app/sign/short-term-rental-actions";
+import { StrLandlordSign } from "./landlord-sign";
 
 export const metadata = { title: "Sign the short term rental agreement", robots: { index: false } };
 
-export default async function SignStrHomeownerPage({ params }: { params: Promise<{ token: string }> }) {
+export default async function SignStrLandlordPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const agreement = await loadStrAgreementForHomeowner(token);
+  const agreement = await loadStrAgreementForLandlord(token);
 
   if (!agreement) {
     return (
@@ -25,7 +25,7 @@ export default async function SignStrHomeownerPage({ params }: { params: Promise
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-navy px-4 py-10">
-      <StrHomeownerSign token={token} initial={agreement} />
+      <StrLandlordSign token={token} initial={agreement} />
     </div>
   );
 }

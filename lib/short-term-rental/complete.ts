@@ -9,7 +9,7 @@ import { AGREEMENTS_BUCKET, DOCUMENTS_BUCKET } from "@/lib/storage";
 import { renderShortTermRentalPdf, type StrPdfInput } from "@/lib/pdf/short-term-rental";
 import { ownerIdTypeLabel } from "@/lib/pm/agreement-labels";
 import type {
-  StrHomeownerDetails, StrTenantDetails, StrPropertyDetails,
+  StrLandlordDetails, StrTenantDetails, StrPropertyDetails,
   StrFeeItem, StrInventoryRow, StrBankDetails,
 } from "@/lib/pm/short-term-rental-clauses";
 import { DEFAULT_STR_BANK_DETAILS } from "@/lib/pm/short-term-rental-clauses";
@@ -40,7 +40,7 @@ async function downloadAsDataUri(
 }
 
 /**
- * Completion pipeline for a short term rental agreement whose homeowner
+ * Completion pipeline for a short term rental agreement whose landlord
  * signature has just landed (remote link or staff countersign): render +
  * store the PDF, upsert the tenant, provision their portal login, attach
  * portal documents, and mark completed. No lease record is created (per the
@@ -48,7 +48,7 @@ async function downloadAsDataUri(
  *
  * Takes the Supabase client as a parameter because the two callers run under
  * different trust models: the staff countersign action passes the normal
- * RLS-scoped staff client, while the remote homeowner path is anonymous
+ * RLS-scoped staff client, while the remote landlord path is anonymous
  * (token-authenticated by the RPC) and passes the service-role admin client.
  */
 export async function completeStrAgreement(id: string, supabase: SupabaseClient): Promise<void> {
@@ -56,23 +56,23 @@ export async function completeStrAgreement(id: string, supabase: SupabaseClient)
   if (error) throw new Error(error.message);
   if (!a) throw new Error("Agreement not found.");
   if (a.status === "completed") return; // idempotent — retry-safe
-  if (!a.homeowner_signature_data || !a.tenant_signature_data) {
+  if (!a.landlord_signature_data || !a.tenant_signature_data) {
     throw new Error("Both signatures are required before the agreement can be finalized.");
   }
 
-  const hd = (a.homeowner_details ?? {}) as StrHomeownerDetails;
+  const hd = (a.landlord_details ?? {}) as StrLandlordDetails;
   const td = (a.tenant_details ?? {}) as StrTenantDetails;
 
   // 1-2. ID images
   const tenantIdFile = await downloadAsDataUri(supabase, a.tenant_id_document_path);
-  const homeownerIdFile = await downloadAsDataUri(supabase, a.homeowner_id_document_path);
+  const landlordIdFile = await downloadAsDataUri(supabase, a.landlord_id_document_path);
 
   // 3. Render the PDF
   const pdfInput: StrPdfInput = {
     id: a.id,
     referenceCode: strReferenceCode(a.id),
     agreementDate: a.agreement_date,
-    homeownerDetails: hd,
+    landlordDetails: hd,
     tenantDetails: td,
     terms: {
       propertyDetails: (a.property_details ?? {}) as StrPropertyDetails,
@@ -91,19 +91,19 @@ export async function completeStrAgreement(id: string, supabase: SupabaseClient)
     tenantIdNumber: a.tenant_id_number ?? "",
     tenantIdIssuedDate: a.tenant_id_issued_date,
     tenantIdImageDataUri: tenantIdFile.dataUri,
-    homeownerIdTypeLabel: a.homeowner_id_type ? ownerIdTypeLabel(a.homeowner_id_type) : null,
-    homeownerIdNumber: a.homeowner_id_number,
-    homeownerIdIssuedDate: a.homeowner_id_issued_date,
-    homeownerIdImageDataUri: homeownerIdFile.dataUri,
+    landlordIdTypeLabel: a.landlord_id_type ? ownerIdTypeLabel(a.landlord_id_type) : null,
+    landlordIdNumber: a.landlord_id_number,
+    landlordIdIssuedDate: a.landlord_id_issued_date,
+    landlordIdImageDataUri: landlordIdFile.dataUri,
     tenantTypedName: a.tenant_typed_name ?? "",
     tenantSignatureDataUri: a.tenant_signature_data ?? "",
     tenantSignedAtManila: manilaTime(a.tenant_signed_at),
     tenantSignedIp: a.tenant_signed_ip ?? "unknown",
-    homeownerTypedName: a.homeowner_typed_name ?? "",
-    homeownerSignatureDataUri: a.homeowner_signature_data ?? "",
-    homeownerSignedAtManila: manilaTime(a.homeowner_signed_at),
-    homeownerSignedIp: a.homeowner_signed_ip ?? "unknown",
-    homeownerSignedVia: (a.homeowner_signed_via ?? "countersign") as "remote" | "countersign",
+    landlordTypedName: a.landlord_typed_name ?? "",
+    landlordSignatureDataUri: a.landlord_signature_data ?? "",
+    landlordSignedAtManila: manilaTime(a.landlord_signed_at),
+    landlordSignedIp: a.landlord_signed_ip ?? "unknown",
+    landlordSignedVia: (a.landlord_signed_via ?? "countersign") as "remote" | "countersign",
     countersignerEmail: null,
   };
   if (a.signatory_user_id) {
@@ -235,12 +235,12 @@ export async function completeStrAgreement(id: string, supabase: SupabaseClient)
   }).eq("id", id);
   if (doneErr) throw new Error(doneErr.message);
 
-  // 10. Audit + notification + homeowner copy (remote-signed only)
+  // 10. Audit + notification + landlord copy (remote-signed only)
   await logAudit(supabase, { action: "short_term_rental_agreement.completed", entityType: "short_term_rental_agreement", entityId: id, metadata: { tenantId: tenantRecordId } });
 
-  if (a.homeowner_signed_via !== "countersign" && a.homeowner_email) {
+  if (a.landlord_signed_via !== "countersign" && a.landlord_email) {
     await sendEmail({
-      to: a.homeowner_email,
+      to: a.landlord_email,
       subject: "Short Term Rental Agreement fully executed",
       html: `<p>Hi ${hd.name ?? "there"},</p><p>The Short Term Rental Agreement with ${td.name ?? a.tenant_email} has been fully executed. You can download your copy from the signing link we sent you.</p>`,
     });

@@ -8,7 +8,7 @@ import { StrCountersignForm } from "@/components/admin/short-term-rental-counter
 import { StrInventoryForm } from "@/components/admin/short-term-rental-inventory-form";
 import { StrTermsForm, type StrTermsInitial } from "@/components/admin/short-term-rental-terms-form";
 import {
-  sendStrTenantLink, sendStrHomeownerLink, updateStrTerms, updateStrInventory,
+  sendStrTenantLink, sendStrLandlordLink, updateStrTerms, updateStrInventory,
   finalizeStrAgreement, voidStrAgreement, deleteStrAgreement, getStrPdfSignedUrl,
 } from "@/app/admin/short-term-rental-actions";
 import { getPublicSiteUrl } from "@/lib/url";
@@ -25,15 +25,15 @@ const inputCls =
 type StrAgreement = {
   id: string;
   access_token: string;
-  homeowner_access_token: string | null;
-  homeowner_token_expires_at: string | null;
+  landlord_access_token: string | null;
+  landlord_token_expires_at: string | null;
   status: string;
   tenant_email: string;
   tenant_name_hint: string | null;
-  homeowner_email: string | null;
-  homeowner_name_hint: string | null;
+  landlord_email: string | null;
+  landlord_name_hint: string | null;
   agreement_date: string | null;
-  homeowner_details: { name?: string; address?: string } | null;
+  landlord_details: { name?: string; address?: string } | null;
   property_details: { buildingName?: string; unitNumber?: string; address?: string } | null;
   check_in_date: string | null;
   check_out_date: string | null;
@@ -51,10 +51,10 @@ type StrAgreement = {
   tenant_id_issued_date: string | null;
   tenant_typed_name: string | null;
   tenant_signed_at: string | null;
-  homeowner_typed_name: string | null;
-  homeowner_signed_at: string | null;
-  homeowner_signed_via: string | null;
-  homeowner_signature_data: string | null;
+  landlord_typed_name: string | null;
+  landlord_signed_at: string | null;
+  landlord_signed_via: string | null;
+  landlord_signature_data: string | null;
   created_at: string;
   linked_tenant_id: string | null;
 };
@@ -62,7 +62,7 @@ type StrAgreement = {
 const STATUS_LABEL: Record<string, string> = {
   draft: "Draft",
   sent: "Sent — awaiting tenant",
-  tenant_signed: "Tenant signed — awaiting homeowner",
+  tenant_signed: "Tenant signed — awaiting landlord",
   completed: "Fully executed",
   voided: "Voided",
 };
@@ -75,7 +75,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 function toTermsInitial(a: StrAgreement): StrTermsInitial {
-  const hd = a.homeowner_details ?? {};
+  const hd = a.landlord_details ?? {};
   const pd = a.property_details ?? {};
   const td = a.tenant_details ?? {};
   return {
@@ -84,9 +84,9 @@ function toTermsInitial(a: StrAgreement): StrTermsInitial {
     tenantAddress: td.address ?? "",
     tenantContact: td.contact ?? "",
     occupants: a.occupants?.length ? a.occupants : [""],
-    homeownerName: hd.name ?? "",
-    homeownerAddress: hd.address ?? "",
-    homeownerEmail: a.homeowner_email ?? "",
+    landlordName: hd.name ?? "",
+    landlordAddress: hd.address ?? "",
+    landlordEmail: a.landlord_email ?? "",
     agreementDate: a.agreement_date ?? "",
     buildingName: pd.buildingName ?? "",
     unitNumber: pd.unitNumber ?? "",
@@ -122,19 +122,19 @@ export default async function AdminStrContractDetailPage({ params }: { params: P
   const isSignatory = !!staffRow?.is_signatory;
   const termsEditable = a.status === "draft" || a.status === "sent";
   const td = a.tenant_details ?? {};
-  const hd = a.homeowner_details ?? {};
+  const hd = a.landlord_details ?? {};
   const pd = a.property_details ?? {};
   const doSendTenantLink = sendStrTenantLink.bind(null, id);
-  const doSendHomeownerLink = sendStrHomeownerLink.bind(null, id);
+  const doSendLandlordLink = sendStrLandlordLink.bind(null, id);
   const doUpdateTerms = updateStrTerms.bind(null, id);
   const doUpdateInventory = updateStrInventory.bind(null, id);
   const doFinalize = finalizeStrAgreement.bind(null, id);
   const doVoid = voidStrAgreement.bind(null, id);
   const doDelete = deleteStrAgreement.bind(null, id);
   const tenantLink = `${getPublicSiteUrl()}/sign/short-term-rental/${a.access_token}`;
-  const homeownerLink = a.homeowner_access_token ? `${getPublicSiteUrl()}/sign/short-term-rental/homeowner/${a.homeowner_access_token}` : null;
-  const homeownerLinkExpired = !!a.homeowner_token_expires_at && new Date(a.homeowner_token_expires_at) < new Date();
-  const awaitingFinalize = a.status === "tenant_signed" && !!a.homeowner_signature_data;
+  const landlordLink = a.landlord_access_token ? `${getPublicSiteUrl()}/sign/short-term-rental/landlord/${a.landlord_access_token}` : null;
+  const landlordLinkExpired = !!a.landlord_token_expires_at && new Date(a.landlord_token_expires_at) < new Date();
+  const awaitingFinalize = a.status === "tenant_signed" && !!a.landlord_signature_data;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -183,8 +183,8 @@ export default async function AdminStrContractDetailPage({ params }: { params: P
         <h2 className="mb-3 font-display text-sm font-semibold text-navy">Rental terms</h2>
         <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           {[
-            ["Homeowner", hd.name],
-            ["Homeowner email", a.homeowner_email],
+            ["Landlord", hd.name],
+            ["Landlord email", a.landlord_email],
             ["Building", pd.buildingName],
             ["Unit", pd.unitNumber],
             ["Check-in", a.check_in_date],
@@ -236,7 +236,7 @@ export default async function AdminStrContractDetailPage({ params }: { params: P
       {awaitingFinalize && (
         <div className="mt-6 rounded-lg border border-gold/40 bg-gold/5 p-5">
           <p className="text-sm font-medium text-navy">
-            The homeowner has signed, but finalization didn&#x2019;t finish (PDF, tenant record, portal account).
+            The landlord has signed, but finalization didn&#x2019;t finish (PDF, tenant record, portal account).
           </p>
           <form action={doFinalize} className="mt-3">
             <button type="submit" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
@@ -249,30 +249,30 @@ export default async function AdminStrContractDetailPage({ params }: { params: P
       {a.status === "tenant_signed" && !awaitingFinalize && (
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded-lg border border-line bg-surface p-5">
-            <h2 className="mb-1 font-display text-sm font-semibold text-navy">Send to the homeowner</h2>
+            <h2 className="mb-1 font-display text-sm font-semibold text-navy">Send to the landlord</h2>
             <p className="mb-3 text-xs text-slate">
-              The homeowner reviews the signed agreement, confirms their ID, and signs on their own secure link.
+              The landlord reviews the signed agreement, confirms their ID, and signs on their own secure link.
             </p>
-            <form action={doSendHomeownerLink} className="flex flex-col gap-2">
+            <form action={doSendLandlordLink} className="flex flex-col gap-2">
               <input
-                name="homeowner_email"
+                name="landlord_email"
                 type="email"
-                defaultValue={a.homeowner_email ?? ""}
-                placeholder="homeowner@email.com"
+                defaultValue={a.landlord_email ?? ""}
+                placeholder="landlord@email.com"
                 className={inputCls}
               />
               <button type="submit" className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-                {a.homeowner_access_token ? "Resend homeowner link" : "Send homeowner link"}
+                {a.landlord_access_token ? "Resend landlord link" : "Send landlord link"}
               </button>
             </form>
-            {homeownerLink && (
+            {landlordLink && (
               <div className="mt-3">
-                <CopyLink link={homeownerLink} ownerName={hd.name || a.homeowner_name_hint || undefined} />
-                <p className={`mt-2 text-xs ${homeownerLinkExpired ? "text-error" : "text-slate"}`}>
-                  {homeownerLinkExpired
+                <CopyLink link={landlordLink} ownerName={hd.name || a.landlord_name_hint || undefined} />
+                <p className={`mt-2 text-xs ${landlordLinkExpired ? "text-error" : "text-slate"}`}>
+                  {landlordLinkExpired
                     ? "This link has expired — resend to issue a fresh validity window."
-                    : a.homeowner_token_expires_at
-                      ? `Valid until ${new Date(a.homeowner_token_expires_at).toLocaleDateString("en-PH")}.`
+                    : a.landlord_token_expires_at
+                      ? `Valid until ${new Date(a.landlord_token_expires_at).toLocaleDateString("en-PH")}.`
                       : null}
                 </p>
               </div>
@@ -282,7 +282,7 @@ export default async function AdminStrContractDetailPage({ params }: { params: P
             <StrCountersignForm agreementId={id} defaultName={staffRow?.name ?? ""} />
           ) : (
             <div className="rounded-lg border border-line bg-surface-gray p-5 text-sm text-slate">
-              Only a designated signatory account can countersign for the homeowner. Send the homeowner their
+              Only a designated signatory account can countersign for the landlord. Send the landlord their
               signing link instead.
             </div>
           )}
@@ -309,7 +309,7 @@ export default async function AdminStrContractDetailPage({ params }: { params: P
         <div className="mt-6 rounded-lg border border-available/30 bg-available/5 p-5">
           <p className="flex items-center gap-2 text-sm font-medium text-available">
             <Icon name="verified" size={18} fill={1} /> Fully executed
-            {a.homeowner_signed_via ? ` — homeowner signed via ${a.homeowner_signed_via === "remote" ? "their signing link" : "staff countersign"}` : ""}
+            {a.landlord_signed_via ? ` — landlord signed via ${a.landlord_signed_via === "remote" ? "their signing link" : "staff countersign"}` : ""}
           </p>
           {pdfUrl && (
             <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-navy-700 underline">

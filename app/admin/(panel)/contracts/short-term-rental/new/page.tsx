@@ -12,7 +12,7 @@ export default function NewStrContractPage() {
       <h1 className="font-display text-2xl font-bold text-navy">Send a Short Term Rental Agreement</h1>
       <p className="mt-1 text-sm text-slate">
         You set all the booking terms here. The tenant fills in their personal details, occupants, and government ID
-        on the signing link, then the homeowner signs via their own link (or a designated signatory countersigns).
+        on the signing link, then the landlord signs via their own link (or a designated signatory countersigns).
       </p>
       <div className="mt-6">
         <StrTermsForm

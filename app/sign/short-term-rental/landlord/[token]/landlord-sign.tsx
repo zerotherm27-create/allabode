@@ -7,7 +7,7 @@ import { FileUploadButton } from "@/components/forms/file-upload-button";
 import { SignatureInput, type SignatureInputHandle } from "@/components/forms/signature-input";
 import { Icon } from "@/components/icon";
 import {
-  createStrHomeownerIdUploadTicket, confirmStrHomeownerIdUpload, submitStrHomeownerSignature,
+  createStrLandlordIdUploadTicket, confirmStrLandlordIdUpload, submitStrLandlordSignature,
   type StrAgreementRecord,
 } from "@/app/sign/short-term-rental-actions";
 import { createClient } from "@/lib/supabase/client";
@@ -17,21 +17,21 @@ import { FullStrPreview } from "../../[token]/full-str-preview";
 
 const inputCls = "h-9";
 
-export function StrHomeownerSign({ token, initial }: { token: string; initial: StrAgreementRecord }) {
-  const alreadySigned = !!initial.homeowner_signature_data || initial.status === "completed";
+export function StrLandlordSign({ token, initial }: { token: string; initial: StrAgreementRecord }) {
+  const alreadySigned = !!initial.landlord_signature_data || initial.status === "completed";
   const [done, setDone] = useState<null | { completed: boolean }>(
     alreadySigned ? { completed: initial.status === "completed" } : null
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const [idType, setIdType] = useState(initial.homeowner_id_type ?? "passport");
-  const [idNumber, setIdNumber] = useState(initial.homeowner_id_number ?? "");
-  const [idIssuedDate, setIdIssuedDate] = useState(initial.homeowner_id_issued_date ?? "");
-  const [idUploaded, setIdUploaded] = useState(!!initial.homeowner_id_document_path);
+  const [idType, setIdType] = useState(initial.landlord_id_type ?? "passport");
+  const [idNumber, setIdNumber] = useState(initial.landlord_id_number ?? "");
+  const [idIssuedDate, setIdIssuedDate] = useState(initial.landlord_id_issued_date ?? "");
+  const [idUploaded, setIdUploaded] = useState(!!initial.landlord_id_document_path);
   const [idUploading, setIdUploading] = useState(false);
 
-  const [typedName, setTypedName] = useState(initial.homeowner_details?.name ?? "");
+  const [typedName, setTypedName] = useState(initial.landlord_details?.name ?? "");
   const [agreeChecked, setAgreeChecked] = useState(false);
   const padRef = useRef<SignatureInputHandle>(null);
 
@@ -43,7 +43,7 @@ export function StrHomeownerSign({ token, initial }: { token: string; initial: S
     }
     setIdUploading(true);
     try {
-      const ticket = await createStrHomeownerIdUploadTicket(token, file.name, file.size, file.type);
+      const ticket = await createStrLandlordIdUploadTicket(token, file.name, file.size, file.type);
       if (ticket.error || !ticket.signedUrl || !ticket.uploadToken || !ticket.path) {
         setError(ticket.error || "Could not prepare upload.");
         return;
@@ -55,7 +55,7 @@ export function StrHomeownerSign({ token, initial }: { token: string; initial: S
         setError(`Upload failed: ${upErr.message}`);
         return;
       }
-      const { error: confirmErr } = await confirmStrHomeownerIdUpload(token, {
+      const { error: confirmErr } = await confirmStrLandlordIdUpload(token, {
         idType, idNumber, idIssuedDate, path: ticket.path,
       });
       if (confirmErr) {
@@ -95,7 +95,7 @@ export function StrHomeownerSign({ token, initial }: { token: string; initial: S
         setError("Please draw or upload your signature.");
         return;
       }
-      const result = await submitStrHomeownerSignature(token, { typedName, signatureDataUrl: dataUrl });
+      const result = await submitStrLandlordSignature(token, { typedName, signatureDataUrl: dataUrl });
       if (result.error) {
         setError(result.error);
         return;
@@ -112,7 +112,7 @@ export function StrHomeownerSign({ token, initial }: { token: string; initial: S
     <div className="w-full max-w-2xl rounded-lg border border-line bg-surface p-6 sm:p-8">
       <div className="mb-6 flex flex-col items-center gap-2">
         <Image src="/logo/logo-primary.png" alt="All Abode Brokerage and Valuation OPC" width={160} height={48} className="h-10 w-auto" />
-        <p className="label-caps text-gold">Short Term Rental Agreement — Homeowner signature</p>
+        <p className="label-caps text-gold">Short Term Rental Agreement — Landlord signature</p>
       </div>
 
       {done ? (
@@ -186,7 +186,7 @@ export function StrHomeownerSign({ token, initial }: { token: string; initial: S
           </div>
 
           <div className="border-t border-line pt-5">
-            <h3 className="mb-3 text-sm font-semibold text-navy">Sign as Homeowner</h3>
+            <h3 className="mb-3 text-sm font-semibold text-navy">Sign as Landlord</h3>
             <Field label="Type your full legal name" required>
               <Input className={inputCls} value={typedName} onChange={(e) => setTypedName(e.target.value)} />
             </Field>

@@ -1,10 +1,10 @@
 -- Short Term Rental Agreement e-signature workflow. 4th sibling of the PM
 -- agreement (0020-0022), Tenancy Agreement (0023), and Parking Agreement
 -- (0024) flows — closest in shape to Parking (no unit/lease linkage), but
--- uses "homeowner" as the property-side party name (matching the reference
+-- uses "landlord" as the property-side party name (matching the reference
 -- template) instead of "landlord". Staff pre-fill all booking terms, the
 -- tenant fills their personal details + occupants + ID and signs first, then
--- the homeowner signs via their own token link — or a designated staff
+-- the landlord signs via their own token link — or a designated staff
 -- signatory countersigns as fallback.
 -- Depends on: set_updated_at(), is_staff() (0001), tenants (0003),
 -- users.is_signatory (0020).
@@ -16,24 +16,24 @@ create table short_term_rental_agreements (
   id                          uuid primary key default gen_random_uuid(),
   status                      short_term_rental_status not null default 'draft',
 
-  -- Tenant signing link. The homeowner gets a *separate* token (below) so
+  -- Tenant signing link. The landlord gets a *separate* token (below) so
   -- one party's credential can never reach the other party's signing RPCs.
   access_token                uuid not null unique default gen_random_uuid(),
   token_expires_at            timestamptz,
 
-  -- Homeowner signing link — issued only after the tenant has signed.
-  homeowner_access_token      uuid unique,
-  homeowner_token_expires_at  timestamptz,
+  -- Landlord signing link — issued only after the tenant has signed.
+  landlord_access_token      uuid unique,
+  landlord_token_expires_at  timestamptz,
 
   created_by                  uuid references auth.users(id) on delete set null,
   tenant_email                text not null,
   tenant_name_hint            text,
-  homeowner_email             text,     -- optional: countersign fallback needs none
-  homeowner_name_hint         text,
+  landlord_email             text,     -- optional: countersign fallback needs none
+  landlord_name_hint         text,
 
   -- Staff-authored terms (locked once the tenant signs)
   agreement_date              date,
-  homeowner_details           jsonb not null default '{}',  -- name, address
+  landlord_details           jsonb not null default '{}',  -- name, address
   property_details            jsonb not null default '{}',  -- buildingName, unitNumber, address
   check_in_date                date,
   check_out_date               date,
@@ -58,11 +58,11 @@ create table short_term_rental_agreements (
   tenant_id_issued_date        date,
   tenant_id_document_path      text,
 
-  -- Homeowner ID (remote signing path only; countersign path leaves these blank)
-  homeowner_id_type            text,
-  homeowner_id_number          text,
-  homeowner_id_issued_date      date,
-  homeowner_id_document_path    text,
+  -- Landlord ID (remote signing path only; countersign path leaves these blank)
+  landlord_id_type            text,
+  landlord_id_number          text,
+  landlord_id_issued_date      date,
+  landlord_id_document_path    text,
 
   -- Signatures
   tenant_typed_name            text,
@@ -70,11 +70,11 @@ create table short_term_rental_agreements (
   tenant_signed_at             timestamptz,
   tenant_signed_ip             text,
 
-  homeowner_typed_name         text,
-  homeowner_signature_data     text,
-  homeowner_signed_at          timestamptz,
-  homeowner_signed_ip          text,
-  homeowner_signed_via         text check (homeowner_signed_via is null or homeowner_signed_via in ('remote', 'countersign')),
+  landlord_typed_name         text,
+  landlord_signature_data     text,
+  landlord_signed_at          timestamptz,
+  landlord_signed_ip          text,
+  landlord_signed_via         text check (landlord_signed_via is null or landlord_signed_via in ('remote', 'countersign')),
   signatory_user_id            uuid references auth.users(id) on delete set null,  -- countersign path
 
   pdf_path                     text,      -- 'agreements' bucket, short-term-rental/{id}/... prefix
@@ -103,7 +103,7 @@ create or replace function get_str_agreement_by_token(p_token uuid)
 declare
   v jsonb;
 begin
-  select to_jsonb(a) - 'homeowner_access_token' into v
+  select to_jsonb(a) - 'landlord_access_token' into v
   from short_term_rental_agreements a
   where a.access_token = p_token
     and a.status in ('sent', 'tenant_signed', 'completed')
@@ -196,23 +196,23 @@ begin
 end;
 $$;
 
--- ── Homeowner-side RPCs ─────────────────────────────────────────────────────
+-- ── Landlord-side RPCs ─────────────────────────────────────────────────────
 
-create or replace function get_str_agreement_by_homeowner_token(p_token uuid)
+create or replace function get_str_agreement_by_landlord_token(p_token uuid)
   returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v jsonb;
 begin
   select to_jsonb(a) - 'access_token' into v
   from short_term_rental_agreements a
-  where a.homeowner_access_token = p_token
+  where a.landlord_access_token = p_token
     and a.status in ('tenant_signed', 'completed')
-    and (a.homeowner_token_expires_at is null or a.homeowner_token_expires_at > now());
+    and (a.landlord_token_expires_at is null or a.landlord_token_expires_at > now());
   return v;
 end;
 $$;
 
-create or replace function save_str_homeowner_id_upload(
+create or replace function save_str_landlord_id_upload(
   p_token uuid,
   p_id_type text,
   p_id_number text,
@@ -223,14 +223,14 @@ declare
   v_count int;
 begin
   update short_term_rental_agreements
-  set homeowner_id_type = p_id_type,
-      homeowner_id_number = p_id_number,
-      homeowner_id_issued_date = p_id_issued_date,
-      homeowner_id_document_path = p_path
-  where homeowner_access_token = p_token
+  set landlord_id_type = p_id_type,
+      landlord_id_number = p_id_number,
+      landlord_id_issued_date = p_id_issued_date,
+      landlord_id_document_path = p_path
+  where landlord_access_token = p_token
     and status = 'tenant_signed'
-    and homeowner_signature_data is null
-    and (homeowner_token_expires_at is null or homeowner_token_expires_at > now());
+    and landlord_signature_data is null
+    and (landlord_token_expires_at is null or landlord_token_expires_at > now());
 
   get diagnostics v_count = row_count;
   if v_count = 0 then
@@ -239,7 +239,7 @@ begin
 end;
 $$;
 
-create or replace function submit_str_homeowner_signature(
+create or replace function submit_str_landlord_signature(
   p_token uuid,
   p_typed_name text,
   p_signature_data text,
@@ -248,31 +248,31 @@ create or replace function submit_str_homeowner_signature(
 declare
   a short_term_rental_agreements;
 begin
-  -- homeowner_signature_data guard blocks the race where a staff signatory
-  -- countersigned while the homeowner had the remote page open (and vice
-  -- versa — the countersign action checks homeowner_signed_via first).
+  -- landlord_signature_data guard blocks the race where a staff signatory
+  -- countersigned while the landlord had the remote page open (and vice
+  -- versa — the countersign action checks landlord_signed_via first).
   select * into a from short_term_rental_agreements
-  where homeowner_access_token = p_token
+  where landlord_access_token = p_token
     and status = 'tenant_signed'
-    and homeowner_signature_data is null
-    and (homeowner_token_expires_at is null or homeowner_token_expires_at > now());
+    and landlord_signature_data is null
+    and (landlord_token_expires_at is null or landlord_token_expires_at > now());
 
   if a.id is null then
     raise exception 'agreement not found or not signable';
   end if;
-  if a.homeowner_id_document_path is null or a.homeowner_id_type is null or a.homeowner_id_number is null then
+  if a.landlord_id_document_path is null or a.landlord_id_type is null or a.landlord_id_number is null then
     raise exception 'a valid government ID (type, number, and uploaded image) is required before signing';
   end if;
-  if a.homeowner_id_issued_date is null then
+  if a.landlord_id_issued_date is null then
     raise exception 'the government ID''s issue date is required before signing';
   end if;
 
   update short_term_rental_agreements
-  set homeowner_typed_name = p_typed_name,
-      homeowner_signature_data = p_signature_data,
-      homeowner_signed_at = now(),
-      homeowner_signed_ip = p_ip,
-      homeowner_signed_via = 'remote'
+  set landlord_typed_name = p_typed_name,
+      landlord_signature_data = p_signature_data,
+      landlord_signed_at = now(),
+      landlord_signed_ip = p_ip,
+      landlord_signed_via = 'remote'
   where id = a.id;
   -- Status stays 'tenant_signed' — the server action runs the completion
   -- pipeline (PDF, tenant record, portal account) and flips the status to

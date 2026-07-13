@@ -6,7 +6,7 @@ import { AGREEMENTS_BUCKET } from "@/lib/storage";
 /**
  * Token-gated download for the fully-signed short term rental agreement PDF.
  * One route serves both parties: the token is tried as the tenant's
- * credential first, then as the homeowner's (each SECURITY DEFINER RPC only
+ * credential first, then as the landlord's (each SECURITY DEFINER RPC only
  * matches its own token column). Only serves the file once status =
  * 'completed'.
  */
@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
 
   let { data: agreement } = await supabase.rpc("get_str_agreement_by_token", { p_token: token });
   if (!agreement) {
-    ({ data: agreement } = await supabase.rpc("get_str_agreement_by_homeowner_token", { p_token: token }));
+    ({ data: agreement } = await supabase.rpc("get_str_agreement_by_landlord_token", { p_token: token }));
   }
   if (!agreement) return new NextResponse("Not found", { status: 404 });
 

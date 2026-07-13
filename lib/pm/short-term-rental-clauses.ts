@@ -6,7 +6,7 @@
 //
 // Reuses the clause/paragraph shapes and date helpers from the tenancy
 // agreement's clause lib — same rendering model, different contract. The
-// property-side party is called "Homeowner" (not "Landlord") throughout,
+// property-side party is called "Landlord" (not "Landlord") throughout,
 // matching the reference template.
 
 import { pesoAmountFigures } from "@/lib/pm/amount-words";
@@ -18,7 +18,7 @@ import {
 export type StrClause = TenancyClause;
 export type StrBankDetails = TenancyBankDetails;
 
-export type StrHomeownerDetails = { name?: string; address?: string };
+export type StrLandlordDetails = { name?: string; address?: string };
 export type StrTenantDetails = { name?: string; address?: string; contact?: string; email?: string };
 export type StrPropertyDetails = { buildingName?: string; unitNumber?: string; address?: string };
 export type StrFeeItem = { label: string; amount: number };
@@ -33,12 +33,12 @@ export const DEFAULT_STR_BANK_DETAILS: StrBankDetails = {
 
 /** The opening recital paragraph — a modern plain-language intro (not the
  *  "KNOW ALL MEN BY THESE PRESENTS" boilerplate used by Tenancy/Parking). */
-export function strRecital(homeownerName: string | null | undefined, tenantName: string | null | undefined): string {
+export function strRecital(landlordName: string | null | undefined, tenantName: string | null | undefined): string {
   return (
     `This Short Term Rental Agreement (the "Agreement") is entered into by and between ` +
-    `${homeownerName?.trim() || BLANK} (the "Homeowner") and ${tenantName?.trim() || BLANK} (the "Tenant"), ` +
+    `${landlordName?.trim() || BLANK} (the "Landlord") and ${tenantName?.trim() || BLANK} (the "Tenant"), ` +
     `each a "Party" and collectively the "Parties," as of the date last set forth on the signature page of this ` +
-    `Agreement (the "Effective Date"). This Agreement is administered on the Homeowner's behalf by All Abode ` +
+    `Agreement (the "Effective Date"). This Agreement is administered on the Landlord's behalf by All Abode ` +
     `Brokerage and Valuation OPC (the "Property Manager"). For good and valuable consideration, the sufficiency ` +
     `of which is acknowledged, the Parties agree as follows:`
   );
@@ -46,7 +46,7 @@ export function strRecital(homeownerName: string | null | undefined, tenantName:
 
 export const STR_DISCLAIMER =
   "DISCLAIMER: This Short Term Rental Agreement has been prepared by All Abode Brokerage and Valuation OPC for " +
-  "submission to the Homeowner and to the Tenant for review and approval. No representation or recommendation is " +
+  "submission to the Landlord and to the Tenant for review and approval. No representation or recommendation is " +
   "made by the Company, as to the legal sufficiency, legal effect, or tax consequences of this agreement. Both " +
   "parties may seek legal advice when in doubt. All Abode Brokerage and Valuation OPC, its owners, representatives " +
   "and employees, shall not be held responsible for any disputes arising from non-compliance of either parties to " +
@@ -60,7 +60,7 @@ export function strRentalRules(garbageDisposalLocation: string | null | undefine
     "Only registered tenants may stay and use the condominium facilities. Visitors are not allowed to sleep over. " +
       "For visitor requests, email the request and the visitor's ID to info@allabodeph.com.",
     "Tenants should not create excessive noise that disturbs neighbors.",
-    "All units are privately owned; the Homeowner is not responsible for any accident, injury, or illness occurring " +
+    "All units are privately owned; the Landlord is not responsible for any accident, injury, or illness occurring " +
       "on the premises or its facilities, nor for loss of the Tenant's or guests' personal belongings or valuables.",
     "Keep the property and all furnishings in good order.",
     "Only use appliances for their intended purpose.",
@@ -138,7 +138,7 @@ export function buildStrClausesBeforeTable(t: StrTermsInput): StrClause[] {
           text:
             "The Property is furnished per the attached Rental Agreement Checklist (Annex A). The Tenant shall " +
             "inspect the Property at Check-in and confirm its condition and inventory. Any discrepancy, damage, or " +
-            "missing item must be reported in writing to the Homeowner or the Property Manager within twenty-four " +
+            "missing item must be reported in writing to the Landlord or the Property Manager within twenty-four " +
             "(24) hours of Check-in; absent such notice, the Property and its furnishings shall be deemed accepted " +
             "in good order and condition.",
         },
@@ -157,7 +157,7 @@ export function buildStrClausesBeforeTable(t: StrTermsInput): StrClause[] {
           sub: "2.2",
           text:
             "Only the Tenant and any additional occupants disclosed in writing and approved in advance by the " +
-            "Homeowner or Property Manager may reside at or overnight in the Property. Unregistered visitors may " +
+            "Landlord or Property Manager may reside at or overnight in the Property. Unregistered visitors may " +
             "not stay overnight, consistent with the Rental Rules (Annex B).",
         },
       ],
@@ -178,9 +178,9 @@ export function buildStrClausesBeforeTable(t: StrTermsInput): StrClause[] {
           sub: "3.3",
           subTitle: "Holdover.",
           text:
-            "If the Tenant remains in the Property after the Checkout Date without the Homeowner's prior written " +
+            "If the Tenant remains in the Property after the Checkout Date without the Landlord's prior written " +
             "consent, the Tenant shall pay a holdover fee equivalent to the prevailing nightly rate for each day or " +
-            "part thereof beyond the Checkout Date, without prejudice to the Homeowner's right to recover " +
+            "part thereof beyond the Checkout Date, without prejudice to the Landlord's right to recover " +
             "possession of the Property and pursue any other remedy available at law.",
         },
         {
@@ -259,13 +259,13 @@ export function buildStrClausesAfterTable(): StrClause[] {
             { marker: "•", text: "Damage to the Property or its furnishings beyond ordinary wear and tear;" },
             { marker: "•", text: "Unit cleaning, including aircon and grease-trap cleaning;" },
             { marker: "•", text: "Unpaid bills or other charges properly due under this Agreement; and" },
-            { marker: "•", text: "Any other cost or expense reasonably and actually incurred by the Homeowner arising from the Tenant's stay, including breach of the Rental Rules." },
+            { marker: "•", text: "Any other cost or expense reasonably and actually incurred by the Landlord arising from the Tenant's stay, including breach of the Rental Rules." },
           ],
         },
         {
           sub: "7.2",
           text:
-            "The Homeowner or Property Manager shall provide the Tenant an itemized statement of any deductions " +
+            "The Landlord or Property Manager shall provide the Tenant an itemized statement of any deductions " +
             "within the same thirty (30)-day period. The Tenant may dispute a deduction in writing within seven " +
             "(7) days of receiving the statement; absent a timely dispute, the statement shall be deemed final and " +
             "binding.",
@@ -273,7 +273,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
         {
           sub: "7.3",
           text:
-            "The Security Deposit is not a cap on the Tenant's liability. The Homeowner may pursue the Tenant " +
+            "The Security Deposit is not a cap on the Tenant's liability. The Landlord may pursue the Tenant " +
             "directly for costs or damages exceeding the Security Deposit.",
         },
       ],
@@ -286,15 +286,15 @@ export function buildStrClausesAfterTable(): StrClause[] {
           sub: "8.1",
           text:
             "If the Tenant cancels the reservation for any reason prior to the Check-in Date, the Security " +
-            "Deposit shall be forfeited in favor of the Homeowner, without prejudice to the Homeowner's right to " +
+            "Deposit shall be forfeited in favor of the Landlord, without prejudice to the Landlord's right to " +
             "recover any additional actual damages caused by the cancellation.",
         },
         {
           sub: "8.2",
           text:
-            "If the Homeowner must cancel the reservation prior to Check-in for reasons beyond its reasonable " +
-            "control (see Section 12, Force Majeure), the Homeowner's sole liability shall be to refund amounts " +
-            "actually paid by the Tenant, and the Homeowner shall have no further liability for consequential, " +
+            "If the Landlord must cancel the reservation prior to Check-in for reasons beyond its reasonable " +
+            "control (see Section 12, Force Majeure), the Landlord's sole liability shall be to refund amounts " +
+            "actually paid by the Tenant, and the Landlord shall have no further liability for consequential, " +
             "incidental, or special damages.",
         },
       ],
@@ -306,7 +306,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
         {
           sub: "9.1",
           text:
-            "The Homeowner or Property Manager may terminate this Agreement immediately upon written notice, " +
+            "The Landlord or Property Manager may terminate this Agreement immediately upon written notice, " +
             "without refund of any amount paid, and may require the Tenant to vacate the Property within " +
             "twenty-four (24) hours, if the Tenant:",
           numbered: [
@@ -319,7 +319,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
         {
           sub: "9.2",
           text:
-            "Termination under this Section is without prejudice to the Homeowner's right to retain the Security " +
+            "Termination under this Section is without prejudice to the Landlord's right to retain the Security " +
             "Deposit and pursue any other remedy available at law.",
         },
       ],
@@ -331,22 +331,22 @@ export function buildStrClausesAfterTable(): StrClause[] {
         {
           sub: "10.1",
           text:
-            "The Tenant, for itself and its guests, waives and releases any claim against the Homeowner, the " +
+            "The Tenant, for itself and its guests, waives and releases any claim against the Landlord, the " +
             "Property Manager, and their respective successors, assigns, employees, and representatives for any " +
             "injury, loss, or death arising from or in connection with the Tenant's or its guests' use of the " +
             "Property or any common facilities or amenities, except to the extent caused by the gross negligence " +
-            "or willful misconduct of the Homeowner or Property Manager.",
+            "or willful misconduct of the Landlord or Property Manager.",
         },
         {
           sub: "10.2",
           text:
-            "The Tenant shall be liable for, and shall indemnify and hold harmless the Homeowner and Property " +
+            "The Tenant shall be liable for, and shall indemnify and hold harmless the Landlord and Property " +
             "Manager from, any loss or damage to the Property, its furnishings, or the condominium's common areas " +
             "caused by the Tenant or its guests.",
         },
         {
           sub: "10.3",
-          text: "The Homeowner and Property Manager are not responsible for the loss of the Tenant's or its guests' personal belongings or valuables.",
+          text: "The Landlord and Property Manager are not responsible for the loss of the Tenant's or its guests' personal belongings or valuables.",
         },
       ],
     },
@@ -356,7 +356,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
       paras: [
         {
           text:
-            "The Homeowner or Property Manager may enter the Property, upon at least twenty-four (24) hours' " +
+            "The Landlord or Property Manager may enter the Property, upon at least twenty-four (24) hours' " +
             "prior notice to the Tenant, to conduct inspections, maintenance, or repairs, or to show the Property " +
             "to prospective tenants during the last seven (7) days of the Term. No prior notice is required in " +
             "cases of emergency threatening life, safety, or property.",
@@ -372,7 +372,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
             "Neither Party shall be liable for any failure or delay in performance under this Agreement to the " +
             "extent caused by events beyond its reasonable control, including natural disasters, fire, government " +
             "action, or building-wide utility interruption. If the Property becomes uninhabitable due to such an " +
-            "event, the Homeowner's sole obligation shall be to refund the pro-rated Rental Rate for the unused " +
+            "event, the Landlord's sole obligation shall be to refund the pro-rated Rental Rate for the unused " +
             "portion of the Term.",
         },
       ],
@@ -384,7 +384,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
         {
           sub: "13.1",
           text:
-            "The Tenant consents to the collection, use, and processing by the Homeowner and Property Manager of " +
+            "The Tenant consents to the collection, use, and processing by the Landlord and Property Manager of " +
             "the Tenant's personal information, including copies of government-issued identification, solely for " +
             "identity verification, contract administration, and compliance with condominium and legal " +
             "requirements, in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).",
@@ -392,7 +392,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
         {
           sub: "13.2",
           text:
-            "The Homeowner and Property Manager shall retain such information only for as long as reasonably " +
+            "The Landlord and Property Manager shall retain such information only for as long as reasonably " +
             "necessary for the purposes stated above and shall implement reasonable measures to protect it from " +
             "unauthorized access or disclosure.",
         },
@@ -403,7 +403,7 @@ export function buildStrClausesAfterTable(): StrClause[] {
       title: "ASSIGNMENT AND SUBLETTING",
       paras: [
         {
-          text: "The Tenant may not assign this Agreement or sublet the Property, in whole or in part, without the Homeowner's prior written consent.",
+          text: "The Tenant may not assign this Agreement or sublet the Property, in whole or in part, without the Landlord's prior written consent.",
         },
       ],
     },

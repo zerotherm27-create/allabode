@@ -300,7 +300,7 @@ export function StrWizard({ token, initial }: { token: string; initial: StrAgree
           <p className="mt-3 max-w-md text-slate">
             {initial.status === "completed"
               ? "Both parties have signed. Your copy is ready to download below."
-              : "We've received your signature. The homeowner will sign next, and we'll email you once the agreement is fully executed."}
+              : "We've received your signature. The landlord will sign next, and we'll email you once the agreement is fully executed."}
           </p>
           {initial.status === "completed" && (
             <a

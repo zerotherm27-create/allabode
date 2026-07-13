@@ -43,7 +43,7 @@ type StrRow = {
   property_details: { buildingName?: string; unitNumber?: string } | null;
   status: string;
   created_at: string;
-  homeowner_signed_at: string | null;
+  landlord_signed_at: string | null;
 };
 
 type Row = {
@@ -99,7 +99,7 @@ export default async function AdminContractsPage() {
       .order("created_at", { ascending: false }),
     supabase
       .from("short_term_rental_agreements")
-      .select("id,tenant_email,tenant_name_hint,tenant_details,property_details,status,created_at,homeowner_signed_at")
+      .select("id,tenant_email,tenant_name_hint,tenant_details,property_details,status,created_at,landlord_signed_at")
       .order("created_at", { ascending: false }),
   ]);
 
@@ -150,7 +150,7 @@ export default async function AdminContractsPage() {
       status: r.status,
       statusLabel: TENANCY_STATUS_LABEL[r.status] ?? r.status,
       created_at: r.created_at,
-      signed_at: r.homeowner_signed_at,
+      signed_at: r.landlord_signed_at,
     })),
   ].sort((x, y) => (x.created_at < y.created_at ? 1 : -1));
 

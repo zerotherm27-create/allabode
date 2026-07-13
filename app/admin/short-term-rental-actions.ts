@@ -41,7 +41,7 @@ async function clientIp() {
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
 }
 
-const HOMEOWNER_LINK_VALIDITY_DAYS = 14;
+const LANDLORD_LINK_VALIDITY_DAYS = 14;
 
 /** Staff-authored term columns, shared by create + update. */
 function parseTerms(fd: FormData) {
@@ -71,11 +71,11 @@ function parseTerms(fd: FormData) {
 
   return {
     agreement_date: s(fd, "agreement_date"),
-    homeowner_email: s(fd, "homeowner_email"),
-    homeowner_name_hint: s(fd, "homeowner_name"),
-    homeowner_details: {
-      name: s(fd, "homeowner_name") ?? "",
-      address: s(fd, "homeowner_address") ?? "",
+    landlord_email: s(fd, "landlord_email"),
+    landlord_name_hint: s(fd, "landlord_name"),
+    landlord_details: {
+      name: s(fd, "landlord_name") ?? "",
+      address: s(fd, "landlord_address") ?? "",
     },
     property_details: {
       buildingName: s(fd, "building_name") ?? "",
@@ -167,53 +167,53 @@ export async function sendStrTenantLink(id: string) {
 }
 
 /**
- * Issues (or re-issues) the homeowner's own signing link once the tenant has
+ * Issues (or re-issues) the landlord's own signing link once the tenant has
  * signed. Each send extends the link's validity window.
  */
-export async function sendStrHomeownerLink(id: string, fd: FormData) {
+export async function sendStrLandlordLink(id: string, fd: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: agreement, error } = await supabase
     .from("short_term_rental_agreements")
-    .select("status,homeowner_access_token,homeowner_email,homeowner_name_hint,tenant_details,homeowner_signed_via")
+    .select("status,landlord_access_token,landlord_email,landlord_name_hint,tenant_details,landlord_signed_via")
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!agreement) throw new Error("Agreement not found.");
   if (agreement.status !== "tenant_signed") {
-    throw new Error("The homeowner link becomes available once the tenant has signed.");
+    throw new Error("The landlord link becomes available once the tenant has signed.");
   }
-  if (agreement.homeowner_signed_via) {
-    throw new Error("The homeowner signature is already in place.");
+  if (agreement.landlord_signed_via) {
+    throw new Error("The landlord signature is already in place.");
   }
 
-  const homeownerEmail = s(fd, "homeowner_email") ?? agreement.homeowner_email;
-  if (!homeownerEmail) throw new Error("Enter the homeowner's email address first.");
+  const landlordEmail = s(fd, "landlord_email") ?? agreement.landlord_email;
+  if (!landlordEmail) throw new Error("Enter the landlord's email address first.");
 
-  const token = agreement.homeowner_access_token ?? randomUUID();
-  const expiresAt = new Date(Date.now() + HOMEOWNER_LINK_VALIDITY_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const token = agreement.landlord_access_token ?? randomUUID();
+  const expiresAt = new Date(Date.now() + LANDLORD_LINK_VALIDITY_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const { error: upErr } = await supabase.from("short_term_rental_agreements").update({
-    homeowner_access_token: token,
-    homeowner_token_expires_at: expiresAt,
-    homeowner_email: homeownerEmail,
+    landlord_access_token: token,
+    landlord_token_expires_at: expiresAt,
+    landlord_email: landlordEmail,
   }).eq("id", id);
   if (upErr) throw new Error(upErr.message);
 
   const td = (agreement.tenant_details ?? {}) as { name?: string };
-  const link = `${getPublicSiteUrl()}/sign/short-term-rental/homeowner/${token}`;
+  const link = `${getPublicSiteUrl()}/sign/short-term-rental/landlord/${token}`;
   await sendEmail({
-    to: homeownerEmail,
+    to: landlordEmail,
     subject: "Short Term Rental Agreement ready for your signature",
     html: `
-      <p>Hi ${agreement.homeowner_name_hint ?? "there"},</p>
+      <p>Hi ${agreement.landlord_name_hint ?? "there"},</p>
       <p>${td.name ?? "Your tenant"} has signed the Short Term Rental Agreement prepared by All Abode Brokerage and Valuation OPC. It's now ready for your signature.</p>
       <p><a href="${link}">Review and sign the rental agreement</a></p>
-      <p>You'll need a valid ID on hand to complete the signing. This link is valid for ${HOMEOWNER_LINK_VALIDITY_DAYS} days.</p>
+      <p>You'll need a valid ID on hand to complete the signing. This link is valid for ${LANDLORD_LINK_VALIDITY_DAYS} days.</p>
     `,
   });
 
-  await logAudit(supabase, { action: "short_term_rental_agreement.homeowner_link_sent", entityType: "short_term_rental_agreement", entityId: id, actorId: user?.id });
+  await logAudit(supabase, { action: "short_term_rental_agreement.landlord_link_sent", entityType: "short_term_rental_agreement", entityId: id, actorId: user?.id });
   revalidatePath(`/admin/contracts/short-term-rental/${id}`);
 }
 
@@ -231,9 +231,9 @@ export async function updateStrTerms(id: string, fd: FormData) {
     throw new Error("Terms are locked once the tenant has signed against them.");
   }
 
-  const { homeowner_email, homeowner_name_hint, ...terms } = parseTerms(fd);
+  const { landlord_email, landlord_name_hint, ...terms } = parseTerms(fd);
   const { error } = await supabase.from("short_term_rental_agreements").update({
-    homeowner_email, homeowner_name_hint, ...terms,
+    landlord_email, landlord_name_hint, ...terms,
     tenant_name_hint: s(fd, "tenant_name_hint"),
     tenant_details: tenantDetailsFromForm(fd, s(fd, "tenant_email"), (agreement.tenant_details ?? {}) as Record<string, unknown>),
   }).eq("id", id);
@@ -270,7 +270,7 @@ export async function updateStrInventory(id: string, fd: FormData) {
 }
 
 // ============================================================
-// Homeowner countersign fallback (designated signatory) -> completion
+// Landlord countersign fallback (designated signatory) -> completion
 // ============================================================
 
 export async function countersignStrAgreement(id: string, signatureDataUrl: string, typedName: string) {
@@ -287,26 +287,26 @@ export async function countersignStrAgreement(id: string, signatureDataUrl: stri
 
   const { data: agreement } = await supabase
     .from("short_term_rental_agreements")
-    .select("status,homeowner_signed_via,homeowner_signature_data")
+    .select("status,landlord_signed_via,landlord_signature_data")
     .eq("id", id)
     .maybeSingle();
   if (!agreement) throw new Error("Agreement not found.");
   if (agreement.status !== "tenant_signed") {
-    throw new Error("This agreement is not ready for the homeowner signature yet.");
+    throw new Error("This agreement is not ready for the landlord signature yet.");
   }
-  if (agreement.homeowner_signed_via === "remote" || agreement.homeowner_signature_data) {
-    throw new Error("The homeowner has already signed via their signing link.");
+  if (agreement.landlord_signed_via === "remote" || agreement.landlord_signature_data) {
+    throw new Error("The landlord has already signed via their signing link.");
   }
 
   const ip = await clientIp();
   const { error } = await supabase.from("short_term_rental_agreements").update({
-    homeowner_typed_name: typedName.trim(),
-    homeowner_signature_data: signatureDataUrl,
-    homeowner_signed_at: new Date().toISOString(),
-    homeowner_signed_ip: ip,
-    homeowner_signed_via: "countersign",
+    landlord_typed_name: typedName.trim(),
+    landlord_signature_data: signatureDataUrl,
+    landlord_signed_at: new Date().toISOString(),
+    landlord_signed_ip: ip,
+    landlord_signed_via: "countersign",
     signatory_user_id: user.id,
-  }).eq("id", id).is("homeowner_signature_data", null);
+  }).eq("id", id).is("landlord_signature_data", null);
   if (error) throw new Error(error.message);
 
   await logAudit(supabase, { action: "short_term_rental_agreement.countersigned", entityType: "short_term_rental_agreement", entityId: id, actorId: user.id });
@@ -316,7 +316,7 @@ export async function countersignStrAgreement(id: string, signatureDataUrl: stri
 }
 
 /**
- * Retry button for the case where the homeowner's remote signature landed
+ * Retry button for the case where the landlord's remote signature landed
  * but the completion pipeline failed afterwards (the signature is durable;
  * the status stays 'tenant_signed' until this succeeds).
  */
@@ -325,12 +325,12 @@ export async function finalizeStrAgreement(id: string) {
 
   const { data: agreement } = await supabase
     .from("short_term_rental_agreements")
-    .select("status,homeowner_signature_data")
+    .select("status,landlord_signature_data")
     .eq("id", id)
     .maybeSingle();
   if (!agreement) throw new Error("Agreement not found.");
   if (agreement.status === "completed") return;
-  if (agreement.status !== "tenant_signed" || !agreement.homeowner_signature_data) {
+  if (agreement.status !== "tenant_signed" || !agreement.landlord_signature_data) {
     throw new Error("Both signatures are required before the agreement can be finalized.");
   }
 
@@ -364,7 +364,7 @@ export async function deleteStrAgreement(id: string) {
 
   const { data: agreement } = await supabase
     .from("short_term_rental_agreements")
-    .select("status,pdf_path,tenant_id_document_path,homeowner_id_document_path")
+    .select("status,pdf_path,tenant_id_document_path,landlord_id_document_path")
     .eq("id", id)
     .maybeSingle();
   if (!agreement) throw new Error("Agreement not found.");
@@ -372,7 +372,7 @@ export async function deleteStrAgreement(id: string) {
     throw new Error("A fully executed agreement can't be deleted — void it instead to preserve the signed record.");
   }
 
-  const paths = [agreement.pdf_path, agreement.tenant_id_document_path, agreement.homeowner_id_document_path]
+  const paths = [agreement.pdf_path, agreement.tenant_id_document_path, agreement.landlord_id_document_path]
     .filter((p): p is string => !!p);
   if (paths.length) {
     await supabase.storage.from(AGREEMENTS_BUCKET).remove(paths);

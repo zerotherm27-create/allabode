@@ -14,9 +14,9 @@ export type StrTermsInitial = {
   tenantAddress: string;
   tenantContact: string;
   occupants: string[];
-  homeownerName: string;
-  homeownerAddress: string;
-  homeownerEmail: string;
+  landlordName: string;
+  landlordAddress: string;
+  landlordEmail: string;
   agreementDate: string;
   buildingName: string;
   unitNumber: string;
@@ -36,7 +36,7 @@ function emptyStrTerms(): StrTermsInitial {
   return {
     tenantNameHint: "", tenantEmail: "", tenantAddress: "", tenantContact: "",
     occupants: [""],
-    homeownerName: "", homeownerAddress: "", homeownerEmail: "",
+    landlordName: "", landlordAddress: "", landlordEmail: "",
     agreementDate: "",
     buildingName: "", unitNumber: "", propertyAddress: "",
     checkInDate: "", checkOutDate: "",
@@ -122,15 +122,15 @@ export function StrTermsForm({
         </button>
       </fieldset>
 
-      <Group title="Homeowner">
-        <F label="Homeowner full name">
-          <input name="homeowner_name" required defaultValue={init.homeownerName} className={inputCls} />
+      <Group title="Landlord">
+        <F label="Landlord full name">
+          <input name="landlord_name" required defaultValue={init.landlordName} className={inputCls} />
         </F>
-        <F label="Homeowner residential address" span>
-          <input name="homeowner_address" defaultValue={init.homeownerAddress} className={inputCls} />
+        <F label="Landlord residential address" span>
+          <input name="landlord_address" defaultValue={init.landlordAddress} className={inputCls} />
         </F>
-        <F label="Homeowner email" hint="Their signing link is sent here after the tenant signs (optional if staff will countersign)">
-          <input name="homeowner_email" type="email" defaultValue={init.homeownerEmail} className={inputCls} />
+        <F label="Landlord email" hint="Their signing link is sent here after the tenant signs (optional if staff will countersign)">
+          <input name="landlord_email" type="email" defaultValue={init.landlordEmail} className={inputCls} />
         </F>
       </Group>
 

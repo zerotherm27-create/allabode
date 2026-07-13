@@ -5,7 +5,7 @@ import {
   buildStrClausesBeforeTable, buildStrClausesAfterTable, strClause61Intro,
   strRecital, strRentalRules, STR_MOVE_OUT_CHECKLIST, STR_DISCLAIMER,
   type StrClause, type StrTermsInput,
-  type StrHomeownerDetails, type StrTenantDetails,
+  type StrLandlordDetails, type StrTenantDetails,
   type StrFeeItem, type StrInventoryRow, type StrBankDetails,
 } from "@/lib/pm/short-term-rental-clauses";
 import { BLANK, type ClauseParagraph } from "@/lib/pm/tenancy-clauses";
@@ -82,7 +82,7 @@ function PageHeader() {
   );
 }
 
-function PageFooter({ homeownerSig, tenantSig }: { homeownerSig: string | null; tenantSig: string | null }) {
+function PageFooter({ landlordSig, tenantSig }: { landlordSig: string | null; tenantSig: string | null }) {
   return (
     <View style={styles.footer} fixed>
       <View style={styles.footerLeft}>
@@ -93,10 +93,10 @@ function PageFooter({ homeownerSig, tenantSig }: { homeownerSig: string | null; 
         <Text style={styles.signBoxTitle}>PLEASE SIGN</Text>
         <View style={styles.signBoxRow}>
           <View style={[styles.signBoxCell, styles.signBoxCellLeft]}>
-            <Text style={styles.signBoxLabel}>HOMEOWNER</Text>
-            {homeownerSig
+            <Text style={styles.signBoxLabel}>LANDLORD</Text>
+            {landlordSig
               // eslint-disable-next-line jsx-a11y/alt-text
-              ? <Image src={homeownerSig} style={styles.signBoxImg} />
+              ? <Image src={landlordSig} style={styles.signBoxImg} />
               : <View style={styles.signBoxBlank} />}
           </View>
           <View style={styles.signBoxCell}>
@@ -163,7 +163,7 @@ export type StrPdfInput = {
   id: string;
   referenceCode: string;
   agreementDate: string | null;
-  homeownerDetails: StrHomeownerDetails;
+  landlordDetails: StrLandlordDetails;
   tenantDetails: StrTenantDetails;
   terms: StrTermsInput;
   feeItems: StrFeeItem[];
@@ -174,27 +174,27 @@ export type StrPdfInput = {
   tenantIdNumber: string;
   tenantIdIssuedDate?: string | null;
   tenantIdImageDataUri: string | null;
-  homeownerIdTypeLabel: string | null;
-  homeownerIdNumber: string | null;
-  homeownerIdIssuedDate?: string | null;
-  homeownerIdImageDataUri: string | null;
+  landlordIdTypeLabel: string | null;
+  landlordIdNumber: string | null;
+  landlordIdIssuedDate?: string | null;
+  landlordIdImageDataUri: string | null;
   tenantTypedName: string;
   tenantSignatureDataUri: string;
   tenantSignedAtManila: string;
   tenantSignedIp: string;
-  homeownerTypedName: string;
-  homeownerSignatureDataUri: string;
-  homeownerSignedAtManila: string;
-  homeownerSignedIp: string;
-  homeownerSignedVia: "remote" | "countersign";
+  landlordTypedName: string;
+  landlordSignatureDataUri: string;
+  landlordSignedAtManila: string;
+  landlordSignedIp: string;
+  landlordSignedVia: "remote" | "countersign";
   countersignerEmail?: string | null;
 };
 
 export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buffer> {
-  const hd = input.homeownerDetails ?? {};
+  const hd = input.landlordDetails ?? {};
   const td = input.tenantDetails ?? {};
   const terms = input.terms;
-  const homeownerName = input.homeownerTypedName || hd.name || "";
+  const landlordName = input.landlordTypedName || hd.name || "";
   const tenantName = input.tenantTypedName || td.name || "";
   const feeItems = input.feeItems ?? [];
   const feeTotal = feeItems.reduce((sum, r) => sum + (Number(r.amount) || 0), 0) + (Number(input.securityDepositAmount) || 0);
@@ -202,7 +202,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
 
   const Footer = () => (
     <PageFooter
-      homeownerSig={input.homeownerSignatureDataUri || null}
+      landlordSig={input.landlordSignatureDataUri || null}
       tenantSig={input.tenantSignatureDataUri || null}
     />
   );
@@ -215,7 +215,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         <Footer />
         <Text style={styles.title}>SHORT TERM RENTAL AGREEMENT</Text>
 
-        <Text style={styles.p}>{strRecital(homeownerName, tenantName)}</Text>
+        <Text style={styles.p}>{strRecital(landlordName, tenantName)}</Text>
 
         <Clauses clauses={buildStrClausesBeforeTable(terms)} />
 
@@ -267,14 +267,14 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
 
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }} wrap={false}>
           <View style={{ width: "44%" }}>
-            {input.homeownerSignatureDataUri
+            {input.landlordSignatureDataUri
               // eslint-disable-next-line jsx-a11y/alt-text
-              ? <Image src={input.homeownerSignatureDataUri} style={styles.sigImg} />
+              ? <Image src={input.landlordSignatureDataUri} style={styles.sigImg} />
               : <View style={{ height: 46 }} />}
             <View style={[styles.sigLine, { width: "100%" }]} />
-            <Text style={styles.bold}>{homeownerName || BLANK}</Text>
-            <Text>Homeowner</Text>
-            {input.homeownerSignedAtManila ? <Text style={styles.meta}>Signed: {input.homeownerSignedAtManila}</Text> : null}
+            <Text style={styles.bold}>{landlordName || BLANK}</Text>
+            <Text>Landlord</Text>
+            {input.landlordSignedAtManila ? <Text style={styles.meta}>Signed: {input.landlordSignedAtManila}</Text> : null}
           </View>
           <View style={{ width: "44%" }}>
             {input.tenantSignatureDataUri
@@ -295,20 +295,20 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         <Footer />
         <Text style={styles.annexTitle}>COPY OF Valid IDs</Text>
 
-        <Text style={styles.idSectionLabel}>HOMEOWNER</Text>
-        {input.homeownerIdImageDataUri ? (
+        <Text style={styles.idSectionLabel}>LANDLORD</Text>
+        {input.landlordIdImageDataUri ? (
           <>
             <Text style={styles.meta}>
-              {input.homeownerIdTypeLabel} No. {input.homeownerIdNumber}
-              {input.homeownerIdIssuedDate ? ` · Issued ${input.homeownerIdIssuedDate}` : ""}
+              {input.landlordIdTypeLabel} No. {input.landlordIdNumber}
+              {input.landlordIdIssuedDate ? ` · Issued ${input.landlordIdIssuedDate}` : ""}
             </Text>
             {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image src={input.homeownerIdImageDataUri} style={{ width: 320, maxHeight: 220, objectFit: "contain", marginTop: 6, alignSelf: "flex-start" }} />
+            <Image src={input.landlordIdImageDataUri} style={{ width: 320, maxHeight: 220, objectFit: "contain", marginTop: 6, alignSelf: "flex-start" }} />
           </>
         ) : (
           <View style={{ height: 200 }}>
-            {input.homeownerSignedVia === "countersign" ? (
-              <Text style={styles.meta}>Signed by an authorized All Abode signatory — homeowner ID on file.</Text>
+            {input.landlordSignedVia === "countersign" ? (
+              <Text style={styles.meta}>Signed by an authorized All Abode signatory — landlord ID on file.</Text>
             ) : null}
           </View>
         )}
@@ -345,7 +345,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             <Text style={[styles.tdCellLast, styles.bold, { flex: 1 }]}>ID Number</Text>
           </View>
           {[
-            [homeownerName, input.homeownerIdTypeLabel ?? "", input.homeownerIdNumber ?? ""],
+            [landlordName, input.landlordIdTypeLabel ?? "", input.landlordIdNumber ?? ""],
             [tenantName, input.tenantIdTypeLabel ?? "", input.tenantIdNumber ?? ""],
             ["", "", ""],
             ["", "", ""],
@@ -372,13 +372,13 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
 
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }} wrap={false}>
           <View style={{ width: "44%" }}>
-            <Text style={styles.bold}>By: HOMEOWNER</Text>
-            {input.homeownerSignatureDataUri
+            <Text style={styles.bold}>By: LANDLORD</Text>
+            {input.landlordSignatureDataUri
               // eslint-disable-next-line jsx-a11y/alt-text
-              ? <Image src={input.homeownerSignatureDataUri} style={[styles.sigImg, { width: 130, height: 36 }]} />
+              ? <Image src={input.landlordSignatureDataUri} style={[styles.sigImg, { width: 130, height: 36 }]} />
               : <View style={{ height: 36 }} />}
             <View style={[styles.sigLine, { width: "100%" }]} />
-            <Text style={styles.meta}>{homeownerName || " "}</Text>
+            <Text style={styles.meta}>{landlordName || " "}</Text>
           </View>
           <View style={{ width: "44%" }}>
             <Text style={styles.bold}>By: TENANT</Text>
@@ -476,15 +476,15 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
           signature pad
         </Text>
 
-        <Text style={[styles.bold, { marginTop: 10, marginBottom: 4, color: NAVY }]}>Signer 2 — Homeowner</Text>
-        <Text style={styles.p}><Text style={styles.bold}>Name: </Text>{homeownerName}</Text>
-        <Text style={styles.p}><Text style={styles.bold}>Date/Time Signed: </Text>{input.homeownerSignedAtManila} (Asia/Manila)</Text>
-        <Text style={styles.p}><Text style={styles.bold}>IP Address: </Text>{input.homeownerSignedIp}</Text>
+        <Text style={[styles.bold, { marginTop: 10, marginBottom: 4, color: NAVY }]}>Signer 2 — Landlord</Text>
+        <Text style={styles.p}><Text style={styles.bold}>Name: </Text>{landlordName}</Text>
+        <Text style={styles.p}><Text style={styles.bold}>Date/Time Signed: </Text>{input.landlordSignedAtManila} (Asia/Manila)</Text>
+        <Text style={styles.p}><Text style={styles.bold}>IP Address: </Text>{input.landlordSignedIp}</Text>
         <Text style={styles.p}>
           <Text style={styles.bold}>Authentication Method: </Text>
-          {input.homeownerSignedVia === "remote"
+          {input.landlordSignedVia === "remote"
             ? "Signed via secure, single-use access link sent by All Abode; signature captured via electronic signature pad"
-            : `Signed on the Homeowner's behalf by an authenticated, designated All Abode signatory via the admin dashboard${input.countersignerEmail ? ` (${input.countersignerEmail})` : ""}; signature captured via electronic signature pad`}
+            : `Signed on the Landlord's behalf by an authenticated, designated All Abode signatory via the admin dashboard${input.countersignerEmail ? ` (${input.countersignerEmail})` : ""}; signature captured via electronic signature pad`}
         </Text>
       </Page>
     </Document>

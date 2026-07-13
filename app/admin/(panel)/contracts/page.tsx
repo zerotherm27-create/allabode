@@ -35,9 +35,20 @@ type ParkingRow = {
   landlord_signed_at: string | null;
 };
 
+type StrRow = {
+  id: string;
+  tenant_email: string;
+  tenant_name_hint: string | null;
+  tenant_details: { name?: string } | null;
+  property_details: { buildingName?: string; unitNumber?: string } | null;
+  status: string;
+  created_at: string;
+  homeowner_signed_at: string | null;
+};
+
 type Row = {
   id: string;
-  type: "pm" | "tenancy" | "parking";
+  type: "pm" | "tenancy" | "parking" | "short_term_rental";
   href: string;
   name: string;
   email: string;
@@ -73,7 +84,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default async function AdminContractsPage() {
   const supabase = await createClient();
-  const [{ data: pmData }, { data: tenancyData }, { data: parkingData }] = await Promise.all([
+  const [{ data: pmData }, { data: tenancyData }, { data: parkingData }, { data: strData }] = await Promise.all([
     supabase
       .from("agreements")
       .select("id,owner_email,owner_name_hint,owner_details,status,created_at,manager_signed_at")
@@ -85,6 +96,10 @@ export default async function AdminContractsPage() {
     supabase
       .from("parking_agreements")
       .select("id,tenant_email,tenant_name_hint,tenant_details,parking_details,status,created_at,landlord_signed_at")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("short_term_rental_agreements")
+      .select("id,tenant_email,tenant_name_hint,tenant_details,property_details,status,created_at,homeowner_signed_at")
       .order("created_at", { ascending: false }),
   ]);
 
@@ -125,6 +140,18 @@ export default async function AdminContractsPage() {
       created_at: r.created_at,
       signed_at: r.landlord_signed_at,
     })),
+    ...((strData ?? []) as StrRow[]).map((r): Row => ({
+      id: r.id,
+      type: "short_term_rental",
+      href: `/admin/contracts/short-term-rental/${r.id}`,
+      name: r.tenant_details?.name || r.tenant_name_hint || r.tenant_email,
+      email: r.tenant_email,
+      detail: [r.property_details?.unitNumber, r.property_details?.buildingName].filter(Boolean).join(", ") || "Short Term Rental",
+      status: r.status,
+      statusLabel: TENANCY_STATUS_LABEL[r.status] ?? r.status,
+      created_at: r.created_at,
+      signed_at: r.homeowner_signed_at,
+    })),
   ].sort((x, y) => (x.created_at < y.created_at ? 1 : -1));
 
   const columns: Column<Row>[] = [
@@ -140,9 +167,12 @@ export default async function AdminContractsPage() {
       header: "Type",
       cell: (r) => (
         <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-          r.type === "pm" ? "bg-navy/10 text-navy" : r.type === "tenancy" ? "bg-gold/15 text-gold-bright" : "bg-navy-700/10 text-navy-700"
+          r.type === "pm" ? "bg-navy/10 text-navy"
+            : r.type === "tenancy" ? "bg-gold/15 text-gold-bright"
+            : r.type === "parking" ? "bg-navy-700/10 text-navy-700"
+            : "bg-available/15 text-available"
         }`}>
-          {r.type === "pm" ? "PM Agreement" : r.type === "tenancy" ? "Tenancy" : "Parking"}
+          {r.type === "pm" ? "PM Agreement" : r.type === "tenancy" ? "Tenancy" : r.type === "parking" ? "Parking" : "Short Term Rental"}
         </span>
       ),
     },
@@ -175,6 +205,9 @@ export default async function AdminContractsPage() {
           </Link>
           <Link href="/admin/contracts/parking/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
             <Icon name="add" size={20} /> Parking agreement
+          </Link>
+          <Link href="/admin/contracts/short-term-rental/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
+            <Icon name="add" size={20} /> Short term rental
           </Link>
         </div>
       </div>

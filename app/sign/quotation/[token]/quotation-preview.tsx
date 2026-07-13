@@ -119,6 +119,12 @@ export function QuotationPreview({ record }: { record: QuotationRecord }) {
           <p className="whitespace-pre-wrap text-slate">{record.notes}</p>
         </div>
       )}
+
+      <p className="border-t border-line pt-3 text-slate">
+        By signing below, the Parties agree that this Quotation, once executed by both parties, constitutes a
+        binding Agreement between All Abode Brokerage and Valuation OPC and the Client for the Scope of Work,
+        pricing, and Terms &amp; Conditions set forth herein.
+      </p>
     </div>
   );
 }

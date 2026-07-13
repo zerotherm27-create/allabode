@@ -20,7 +20,7 @@ const STATUS_LABEL: Record<string, string> = {
   draft: "Draft — awaiting company signature",
   company_signed: "Company signed — ready to send",
   sent: "Sent — awaiting recipient",
-  completed: "Fully executed",
+  completed: "Fully executed — binding agreement",
   voided: "Voided",
 };
 const STATUS_COLOR: Record<string, string> = {

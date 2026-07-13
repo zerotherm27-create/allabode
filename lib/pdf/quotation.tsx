@@ -4,7 +4,7 @@ import path from "path";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
 import {
   LINE_ITEM_CATEGORIES, LINE_ITEM_CATEGORY_LABEL, resolveGrandTotal,
-  type QuotationLineItem, type ProgressMilestone,
+  type QuotationLineItem, type ProgressMilestone, type QuotationBankDetails,
 } from "@/lib/quotation/totals";
 
 // The standard Helvetica font (no custom font embedded) has no glyph for ₱,
@@ -117,7 +117,7 @@ function PageHeader() {
         // eslint-disable-next-line jsx-a11y/alt-text
         <Image src={logo} style={styles.logo} />
       )}
-      <Text style={styles.docTitle}>Quotation</Text>
+      <Text style={styles.docTitle}>Quotation &amp; Agreement</Text>
     </View>
   );
 }
@@ -212,6 +212,7 @@ export type QuotationPdfInput = {
   termsCompletion: string | null;
   termsWarranty: string | null;
   termsValidity: string | null;
+  bankDetails: QuotationBankDetails;
   companyTypedName: string;
   companySignatureDataUri: string;
   companySignedAtManila: string;
@@ -287,6 +288,23 @@ export async function renderQuotationPdf(input: QuotationPdfInput): Promise<Buff
             )}
           </View>
 
+          <View wrap={false}>
+            <Text style={styles.sectionLabel}>Bank Details for Payment</Text>
+            <View style={styles.table}>
+              {([
+                ["Name", input.bankDetails.name],
+                ["Bank", input.bankDetails.bank],
+                ["Branch", input.bankDetails.branch],
+                ["Account No.", input.bankDetails.accountNumber],
+              ] as const).map(([label, value], i, arr) => (
+                <View key={label} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
+                  <Text style={[styles.tdCell, { width: 110, fontFamily: "Helvetica-Bold" }]}>{label}</Text>
+                  <Text style={[styles.tdCell, styles.cellNoDivider, { flex: 1 }]}>{value}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
           {tc.some(([, text]) => !!text) && (
             <View wrap={false}>
               <Text style={styles.sectionLabel}>Terms &amp; Conditions</Text>
@@ -309,6 +327,12 @@ export async function renderQuotationPdf(input: QuotationPdfInput): Promise<Buff
               </View>
             </View>
           )}
+
+          <Text style={[styles.paragraph, { marginTop: 10 }]}>
+            By signing below, the Parties agree that this Quotation, once executed by both parties, constitutes a
+            binding Agreement between All Abode Brokerage and Valuation OPC and the Client for the Scope of Work,
+            pricing, and Terms &amp; Conditions set forth herein.
+          </Text>
 
           <View style={styles.sigRow} wrap={false}>
             <View style={styles.sigBlock}>

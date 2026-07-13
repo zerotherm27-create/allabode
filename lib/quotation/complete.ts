@@ -6,7 +6,8 @@ import { createNotification } from "@/lib/notify";
 import { logAudit } from "@/lib/audit";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { renderQuotationPdf, type QuotationPdfInput } from "@/lib/pdf/quotation";
-import type { QuotationLineItem, ProgressMilestone } from "@/lib/quotation/totals";
+import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
+import type { QuotationLineItem, ProgressMilestone, QuotationBankDetails } from "@/lib/quotation/totals";
 
 function manilaTime(iso: string | null) {
   if (!iso) return "—";
@@ -56,6 +57,7 @@ export async function completeQuotation(id: string, supabase: SupabaseClient): P
     termsCompletion: q.terms_completion,
     termsWarranty: q.terms_warranty,
     termsValidity: q.terms_validity,
+    bankDetails: { ...DEFAULT_BANK_DETAILS, ...((q.bank_details ?? {}) as Partial<QuotationBankDetails>) },
     companyTypedName: q.company_typed_name ?? "",
     companySignatureDataUri: q.company_signature_data ?? "",
     companySignedAtManila: manilaTime(q.company_signed_at),

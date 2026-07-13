@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { completeQuotation } from "@/lib/quotation/complete";
-import type { QuotationLineItem, ProgressMilestone } from "@/lib/quotation/totals";
+import type { QuotationLineItem, ProgressMilestone, QuotationBankDetails } from "@/lib/quotation/totals";
 
 export type QuotationRecord = {
   id: string;
@@ -28,6 +28,7 @@ export type QuotationRecord = {
   terms_completion: string | null;
   terms_warranty: string | null;
   terms_validity: string | null;
+  bank_details: Partial<QuotationBankDetails> | null;
   company_typed_name: string | null;
   company_signature_data: string | null;
   company_signed_at: string | null;

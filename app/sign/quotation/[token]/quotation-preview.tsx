@@ -1,6 +1,7 @@
 import {
   LINE_ITEM_CATEGORIES, computeCategoryTotals, resolveGrandTotal, formatPeso,
 } from "@/lib/quotation/totals";
+import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
 import type { QuotationRecord } from "@/app/sign/quotation-actions";
 
 export function QuotationPreview({ record }: { record: QuotationRecord }) {
@@ -8,6 +9,7 @@ export function QuotationPreview({ record }: { record: QuotationRecord }) {
   const categoryTotals = computeCategoryTotals(lineItems);
   const grandTotal = resolveGrandTotal(lineItems, record.grand_total_override);
   const rd = record.recipient_details ?? {};
+  const bank = { ...DEFAULT_BANK_DETAILS, ...(record.bank_details ?? {}) };
   const tcRows = [
     ["Payment terms", record.terms_payment],
     ["Completion timeline", record.terms_completion],
@@ -83,6 +85,18 @@ export function QuotationPreview({ record }: { record: QuotationRecord }) {
         ) : (
           <p className="whitespace-pre-wrap text-slate">{record.payment_terms_notes || "Cash payment."}</p>
         )}
+      </div>
+
+      <div>
+        <p className="font-semibold text-navy">Bank Details for Payment</p>
+        <div className="mt-1 flex flex-col gap-1">
+          {([["Name", bank.name], ["Bank", bank.bank], ["Branch", bank.branch], ["Account No.", bank.accountNumber]] as const).map(([label, value]) => (
+            <div key={label} className="flex justify-between gap-2 text-slate">
+              <span className="font-medium text-navy">{label}</span>
+              <span>{value}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {tcRows.some(([, text]) => !!text) && (

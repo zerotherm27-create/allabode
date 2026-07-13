@@ -1,3 +1,7 @@
+// Reuses the same bank-details shape/default as Tenancy/Parking/Short-Term-Rental
+// (lib/pm/tenancy-clauses.ts) rather than redefining an identical type.
+export type { TenancyBankDetails as QuotationBankDetails } from "@/lib/pm/tenancy-clauses";
+
 export type LineItemCategory = "furnishing" | "repairs" | "others";
 export type LineItemPricingMode = "unit" | "lump_sum";
 

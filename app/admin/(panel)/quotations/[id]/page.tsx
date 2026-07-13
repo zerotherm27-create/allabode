@@ -14,8 +14,9 @@ import { getPublicSiteUrl } from "@/lib/url";
 import { isAiConfigured } from "@/lib/ai/client";
 import {
   computeCategoryTotals, computeGrandTotal, resolveGrandTotal, formatPeso, LINE_ITEM_CATEGORY_LABEL,
-  type QuotationLineItem, type ProgressMilestone,
+  type QuotationLineItem, type ProgressMilestone, type QuotationBankDetails,
 } from "@/lib/quotation/totals";
+import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
 
 // Mirrors form-kit's inputCls — that module is "use client", so a server
 // component can't import its string constants directly.
@@ -52,6 +53,7 @@ type Quotation = {
   terms_completion: string | null;
   terms_warranty: string | null;
   terms_validity: string | null;
+  bank_details: Partial<QuotationBankDetails> | null;
   company_typed_name: string | null;
   company_signed_at: string | null;
   company_signed_via: string | null;
@@ -66,7 +68,7 @@ const STATUS_LABEL: Record<string, string> = {
   draft: "Draft — awaiting company signature",
   company_signed: "Company signed — ready to send",
   sent: "Sent — awaiting recipient",
-  completed: "Fully executed",
+  completed: "Fully executed — binding agreement",
   voided: "Voided",
 };
 const STATUS_COLOR: Record<string, string> = {
@@ -99,6 +101,7 @@ function toTermsInitial(q: Quotation): QuotationTermsInitial {
     termsCompletion: q.terms_completion ?? "",
     termsWarranty: q.terms_warranty ?? "",
     termsValidity: q.terms_validity ?? "",
+    bankDetails: { ...DEFAULT_BANK_DETAILS, ...(q.bank_details ?? {}) },
   };
 }
 
@@ -260,6 +263,8 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
             ["Valid until", q.valid_until],
             ["Property reference", q.property_reference],
             ["Payment terms", q.payment_terms_type === "progress_billing" ? "Progress billing" : q.payment_terms_type === "cash" ? "Cash" : null],
+            ["Bank", { ...DEFAULT_BANK_DETAILS, ...(q.bank_details ?? {}) }.bank],
+            ["Account number", { ...DEFAULT_BANK_DETAILS, ...(q.bank_details ?? {}) }.accountNumber],
           ].map(([k, v]) => (
             <div key={k as string} className="flex justify-between gap-2 border-b border-line pb-2">
               <dt className="text-slate">{k}</dt>
@@ -409,7 +414,7 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
       {q.status === "completed" && (
         <div className="mt-6 rounded-lg border border-available/30 bg-available/5 p-5">
           <p className="flex items-center gap-2 text-sm font-medium text-available">
-            <Icon name="verified" size={18} fill={1} /> Fully executed
+            <Icon name="verified" size={18} fill={1} /> Fully executed — binding agreement
           </p>
           {pdfUrl && (
             <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-navy-700 underline">

@@ -5,9 +5,11 @@ import { F, Group, inputCls, SubmitButton } from "@/components/admin/form-kit";
 import { Icon } from "@/components/icon";
 import { FURNITURE_ITEMS, APPLIANCE_ITEMS, FIXTURE_ITEMS } from "@/lib/pm/annex-b-fields";
 import { generateQuotationScope } from "@/app/admin/quotations-actions";
+import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
 import {
   LINE_ITEM_CATEGORIES, computeCategoryTotals, computeGrandTotal, resolveGrandTotal, formatPeso,
   type QuotationLineItem, type ProgressMilestone, type LineItemCategory, type LineItemPricingMode,
+  type QuotationBankDetails,
 } from "@/lib/quotation/totals";
 
 export type QuotationTermsInitial = {
@@ -30,6 +32,7 @@ export type QuotationTermsInitial = {
   termsCompletion: string;
   termsWarranty: string;
   termsValidity: string;
+  bankDetails: QuotationBankDetails;
 };
 
 function emptyQuotationTerms(): QuotationTermsInitial {
@@ -48,6 +51,7 @@ function emptyQuotationTerms(): QuotationTermsInitial {
     termsCompletion: "Work shall commence within [X] days of downpayment and be completed within [Y] calendar days, subject to material availability.",
     termsWarranty: "Labor is warranted for 30 days from completion date. Materials are covered under the applicable manufacturer's warranty.",
     termsValidity: "This quotation is valid for 30 days from the date issued, or until the date indicated above, whichever comes first.",
+    bankDetails: { ...DEFAULT_BANK_DETAILS },
   };
 }
 
@@ -432,6 +436,21 @@ export function QuotationTermsForm({
           </div>
         )}
       </fieldset>
+
+      <Group title="Bank Details for Payment">
+        <F label="Account name">
+          <input name="bank_name" defaultValue={init.bankDetails.name} className={inputCls} />
+        </F>
+        <F label="Bank">
+          <input name="bank_bank" value={t.bankDetails.bank} onChange={(e) => set({ bankDetails: { ...t.bankDetails, bank: e.target.value } })} className={inputCls} />
+        </F>
+        <F label="Branch">
+          <input name="bank_branch" value={t.bankDetails.branch} onChange={(e) => set({ bankDetails: { ...t.bankDetails, branch: e.target.value } })} className={inputCls} />
+        </F>
+        <F label="Account number">
+          <input name="bank_account_number" defaultValue={init.bankDetails.accountNumber} className={inputCls} />
+        </F>
+      </Group>
 
       <Group title="Terms & Conditions">
         <F label="Payment terms" span>

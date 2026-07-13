@@ -11,6 +11,7 @@ import { logAudit } from "@/lib/audit";
 import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeQuotation } from "@/lib/quotation/complete";
 import { draftQuotationScope, type QuotationScopeInput } from "@/lib/ai/quotation-scope";
+import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
 import type { QuotationLineItem, ProgressMilestone } from "@/lib/quotation/totals";
 
 function s(fd: FormData, k: string): string | null {
@@ -82,6 +83,12 @@ function parseTerms(fd: FormData) {
     terms_completion: s(fd, "terms_completion"),
     terms_warranty: s(fd, "terms_warranty"),
     terms_validity: s(fd, "terms_validity"),
+    bank_details: {
+      name: s(fd, "bank_name") ?? DEFAULT_BANK_DETAILS.name,
+      bank: s(fd, "bank_bank") ?? DEFAULT_BANK_DETAILS.bank,
+      branch: s(fd, "bank_branch") ?? DEFAULT_BANK_DETAILS.branch,
+      accountNumber: s(fd, "bank_account_number") ?? DEFAULT_BANK_DETAILS.accountNumber,
+    },
   };
 }
 

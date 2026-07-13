@@ -46,6 +46,7 @@ export async function completeQuotation(id: string, supabase: SupabaseClient): P
     recipientDetails: rd,
     recipientEmail: q.recipient_email,
     lineItems: (q.line_items ?? []) as QuotationLineItem[],
+    grandTotalOverride: q.grand_total_override != null ? Number(q.grand_total_override) : null,
     scopeOfWork: q.scope_of_work,
     notes: q.notes,
     paymentTermsType: q.payment_terms_type,

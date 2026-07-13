@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
 import {
-  LINE_ITEM_CATEGORIES, LINE_ITEM_CATEGORY_LABEL, computeGrandTotal,
+  LINE_ITEM_CATEGORIES, LINE_ITEM_CATEGORY_LABEL, resolveGrandTotal,
   type QuotationLineItem, type ProgressMilestone,
 } from "@/lib/quotation/totals";
 
@@ -208,6 +208,7 @@ export type QuotationPdfInput = {
   recipientDetails: { name?: string; email?: string; phone?: string; address?: string };
   recipientEmail: string;
   lineItems: QuotationLineItem[];
+  grandTotalOverride: number | null;
   scopeOfWork: string | null;
   notes: string | null;
   paymentTermsType: "cash" | "progress_billing" | null;
@@ -230,7 +231,7 @@ export type QuotationPdfInput = {
 
 export async function renderQuotationPdf(input: QuotationPdfInput): Promise<Buffer> {
   const rd = input.recipientDetails ?? {};
-  const grandTotal = computeGrandTotal(input.lineItems);
+  const grandTotal = resolveGrandTotal(input.lineItems, input.grandTotalOverride);
   const tc = [
     ["Payment Terms", input.termsPayment],
     ["Completion Timeline", input.termsCompletion],

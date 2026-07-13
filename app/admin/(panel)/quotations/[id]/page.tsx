@@ -13,7 +13,7 @@ import {
 import { getPublicSiteUrl } from "@/lib/url";
 import { isAiConfigured } from "@/lib/ai/client";
 import {
-  computeCategoryTotals, computeGrandTotal, formatPeso, LINE_ITEM_CATEGORY_LABEL,
+  computeCategoryTotals, computeGrandTotal, resolveGrandTotal, formatPeso, LINE_ITEM_CATEGORY_LABEL,
   type QuotationLineItem, type ProgressMilestone,
 } from "@/lib/quotation/totals";
 
@@ -27,6 +27,7 @@ type Quotation = {
   access_token: string | null;
   company_access_token: string;
   company_token_expires_at: string | null;
+  created_by: string | null;
   status: string;
   quotation_number: string;
   recipient_email: string;
@@ -41,6 +42,7 @@ type Quotation = {
   title: string | null;
   property_reference: string | null;
   line_items: QuotationLineItem[] | null;
+  grand_total_override: number | null;
   scope_of_work: string | null;
   notes: string | null;
   payment_terms_type: "cash" | "progress_billing" | null;
@@ -87,6 +89,7 @@ function toTermsInitial(q: Quotation): QuotationTermsInitial {
     title: q.title ?? "",
     propertyReference: q.property_reference ?? "",
     lineItems: q.line_items ?? [],
+    grandTotalOverride: q.grand_total_override != null ? Number(q.grand_total_override) : null,
     scopeOfWork: q.scope_of_work ?? "",
     notes: q.notes ?? "",
     paymentTermsType: q.payment_terms_type ?? "cash",
@@ -116,11 +119,14 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
   ]);
 
   const isSignatory = !!staffRow?.is_signatory;
+  const isCreator = !!user && user.id === q.created_by;
+  const canSignNow = isSignatory || isCreator;
   const termsEditable = q.status === "draft";
   const rd = q.recipient_details ?? {};
   const lineItems = q.line_items ?? [];
   const categoryTotals = computeCategoryTotals(lineItems);
-  const grandTotal = computeGrandTotal(lineItems);
+  const computedTotal = computeGrandTotal(lineItems);
+  const grandTotal = resolveGrandTotal(lineItems, q.grand_total_override);
 
   const doSendRecipientLink = sendQuotationRecipientLink.bind(null, id);
   const doSendCompanyLink = sendQuotationCompanyLink.bind(null, id);
@@ -162,11 +168,11 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
 
       {q.status === "draft" && (
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {isSignatory ? (
+          {canSignNow ? (
             <QuotationCountersignForm quotationId={id} />
           ) : (
             <div className="rounded-lg border border-line bg-surface-gray p-5 text-sm text-slate">
-              You&#x2019;re not a designated signatory — send the pre-signing link to a colleague who is, instead.
+              Only the quotation&#x2019;s preparer or a designated signatory can sign here — send the pre-signing link to one instead.
             </div>
           )}
           <div className="rounded-lg border border-line bg-surface p-5">
@@ -286,8 +292,13 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
               <div className="flex justify-between text-xs text-slate">
                 <span>Others subtotal</span><span>{formatPeso(categoryTotals.others)}</span>
               </div>
+              {q.grand_total_override != null && (
+                <div className="flex justify-between text-xs text-slate">
+                  <span>Itemized sum</span><span>{formatPeso(computedTotal)}</span>
+                </div>
+              )}
               <div className="mt-1 flex justify-between font-semibold text-navy">
-                <span>Grand total</span><span>{formatPeso(grandTotal)}</span>
+                <span>Grand total{q.grand_total_override != null ? " (custom)" : ""}</span><span>{formatPeso(grandTotal)}</span>
               </div>
             </div>
           )}

@@ -59,6 +59,12 @@ function parseTerms(fd: FormData) {
     throw new Error("Invalid payment terms type.");
   }
 
+  const grandTotalOverrideRaw = s(fd, "grand_total_override");
+  const grandTotalOverride = grandTotalOverrideRaw != null ? Number(grandTotalOverrideRaw) : null;
+  if (grandTotalOverride != null && !Number.isFinite(grandTotalOverride)) {
+    throw new Error("Invalid grand total override.");
+  }
+
   return {
     quotation_date: s(fd, "quotation_date"),
     valid_until: s(fd, "valid_until"),
@@ -66,6 +72,7 @@ function parseTerms(fd: FormData) {
     property_reference: s(fd, "property_reference"),
     unit_id: s(fd, "unit_id"),
     line_items: lineItems,
+    grand_total_override: grandTotalOverride,
     scope_of_work: s(fd, "scope_of_work"),
     notes: s(fd, "notes"),
     payment_terms_type: paymentTermsType,
@@ -241,7 +248,10 @@ export async function updateQuotationTerms(id: string, fd: FormData) {
 }
 
 // ============================================================
-// In-dashboard company signature (designated signatory) — signs first
+// In-dashboard company signature — signs first. Allowed for a designated
+// signatory, OR the staff member who prepared this particular quotation
+// (the preparer is the default signatory for their own quotations; they
+// send a pre-signing link instead if they want someone else to sign it).
 // ============================================================
 
 export async function countersignQuotationAsCompany(id: string, signatureDataUrl: string) {
@@ -249,17 +259,16 @@ export async function countersignQuotationAsCompany(id: string, signatureDataUrl
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in.");
 
-  const { data: staffRow } = await supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle();
-  if (!staffRow?.is_signatory) {
-    throw new Error("Only a designated signatory account can sign as company representative.");
-  }
-
-  const { data: q } = await supabase
-    .from("quotations")
-    .select("status,company_signature_data")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data: staffRow }, { data: q }] = await Promise.all([
+    supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle(),
+    supabase.from("quotations").select("status,company_signature_data,created_by").eq("id", id).maybeSingle(),
+  ]);
   if (!q) throw new Error("Quotation not found.");
+
+  const isCreator = q.created_by === user.id;
+  if (!staffRow?.is_signatory && !isCreator) {
+    throw new Error("Only the quotation's preparer or a designated signatory can sign as company representative.");
+  }
   if (q.status !== "draft") {
     throw new Error("This quotation is not ready to be signed.");
   }
@@ -269,7 +278,7 @@ export async function countersignQuotationAsCompany(id: string, signatureDataUrl
 
   const ip = await clientIp();
   const { error } = await supabase.from("quotations").update({
-    company_typed_name: staffRow.name ?? "",
+    company_typed_name: staffRow?.name ?? "",
     company_signature_data: signatureDataUrl,
     company_signed_at: new Date().toISOString(),
     company_signed_ip: ip,

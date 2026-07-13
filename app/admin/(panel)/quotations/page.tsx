@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
-import { computeGrandTotal, formatPeso, type QuotationLineItem } from "@/lib/quotation/totals";
+import { resolveGrandTotal, formatPeso, type QuotationLineItem } from "@/lib/quotation/totals";
 
 type Row = {
   id: string;
@@ -12,6 +12,7 @@ type Row = {
   title: string | null;
   status: string;
   line_items: QuotationLineItem[] | null;
+  grand_total_override: number | null;
   created_at: string;
 };
 
@@ -51,7 +52,7 @@ const columns: Column<Row>[] = [
   },
   {
     header: "Total",
-    cell: (r) => <span className="text-navy">{formatPeso(computeGrandTotal(r.line_items ?? []))}</span>,
+    cell: (r) => <span className="text-navy">{formatPeso(resolveGrandTotal(r.line_items ?? [], r.grand_total_override))}</span>,
   },
   {
     header: "Status",
@@ -71,7 +72,7 @@ export default async function AdminQuotationsPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("quotations")
-    .select("id,quotation_number,recipient_name_hint,recipient_email,title,status,line_items,created_at")
+    .select("id,quotation_number,recipient_name_hint,recipient_email,title,status,line_items,grand_total_override,created_at")
     .order("created_at", { ascending: false });
   const rows = (data ?? []) as Row[];
 

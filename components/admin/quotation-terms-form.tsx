@@ -6,7 +6,7 @@ import { Icon } from "@/components/icon";
 import { FURNITURE_ITEMS, APPLIANCE_ITEMS, FIXTURE_ITEMS } from "@/lib/pm/annex-b-fields";
 import { generateQuotationScope } from "@/app/admin/quotations-actions";
 import {
-  LINE_ITEM_CATEGORIES, computeCategoryTotals, computeGrandTotal, formatPeso,
+  LINE_ITEM_CATEGORIES, computeCategoryTotals, computeGrandTotal, resolveGrandTotal, formatPeso,
   type QuotationLineItem, type ProgressMilestone, type LineItemCategory, type LineItemPricingMode,
 } from "@/lib/quotation/totals";
 
@@ -20,6 +20,7 @@ export type QuotationTermsInitial = {
   title: string;
   propertyReference: string;
   lineItems: QuotationLineItem[];
+  grandTotalOverride: number | null;
   scopeOfWork: string;
   notes: string;
   paymentTermsType: "cash" | "progress_billing" | "";
@@ -37,6 +38,7 @@ function emptyQuotationTerms(): QuotationTermsInitial {
     quotationDate: new Date().toISOString().slice(0, 10), validUntil: "",
     title: "", propertyReference: "",
     lineItems: [],
+    grandTotalOverride: null,
     scopeOfWork: "",
     notes: "",
     paymentTermsType: "cash",
@@ -133,7 +135,9 @@ export function QuotationTermsForm({
   }
 
   const categoryTotals = computeCategoryTotals(t.lineItems);
-  const grandTotal = computeGrandTotal(t.lineItems);
+  const computedTotal = computeGrandTotal(t.lineItems);
+  const grandTotal = resolveGrandTotal(t.lineItems, t.grandTotalOverride);
+  const overrideOn = t.grandTotalOverride != null;
 
   return (
     <form action={action} className="flex flex-col gap-6">
@@ -284,9 +288,36 @@ export function QuotationTermsForm({
           );
         })}
 
-        <div className="border-t border-line pt-3 text-right">
-          <span className="text-sm text-slate">Grand total: </span>
-          <span className="font-display text-lg font-bold text-navy">{formatPeso(grandTotal)}</span>
+        <input type="hidden" name="grand_total_override" value={overrideOn ? String(t.grandTotalOverride) : ""} />
+        <div className="border-t border-line pt-3">
+          <label className="flex items-center justify-end gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={overrideOn}
+              onChange={(e) => set({ grandTotalOverride: e.target.checked ? computedTotal : null })}
+              className="h-4 w-4 accent-navy"
+            />
+            <span className="text-slate">Override grand total (e.g. a package/discounted price)</span>
+          </label>
+          <div className="mt-2 flex items-center justify-end gap-3">
+            {overrideOn ? (
+              <>
+                <span className="text-xs text-slate">Itemized sum: {formatPeso(computedTotal)}</span>
+                <input
+                  type="number" min={0} step="0.01"
+                  aria-label="Custom grand total"
+                  value={t.grandTotalOverride ?? 0}
+                  onChange={(e) => set({ grandTotalOverride: Number(e.target.value) || 0 })}
+                  className={`${inputCls} w-40 text-right`}
+                />
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-slate">Grand total: </span>
+                <span className="font-display text-lg font-bold text-navy">{formatPeso(grandTotal)}</span>
+              </>
+            )}
+          </div>
         </div>
       </fieldset>
 

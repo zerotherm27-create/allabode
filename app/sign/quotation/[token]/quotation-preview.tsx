@@ -1,12 +1,12 @@
 import {
-  LINE_ITEM_CATEGORIES, computeCategoryTotals, computeGrandTotal, formatPeso,
+  LINE_ITEM_CATEGORIES, computeCategoryTotals, resolveGrandTotal, formatPeso,
 } from "@/lib/quotation/totals";
 import type { QuotationRecord } from "@/app/sign/quotation-actions";
 
 export function QuotationPreview({ record }: { record: QuotationRecord }) {
   const lineItems = record.line_items ?? [];
   const categoryTotals = computeCategoryTotals(lineItems);
-  const grandTotal = computeGrandTotal(lineItems);
+  const grandTotal = resolveGrandTotal(lineItems, record.grand_total_override);
   const rd = record.recipient_details ?? {};
   const tcRows = [
     ["Payment terms", record.terms_payment],

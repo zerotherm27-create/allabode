@@ -18,6 +18,7 @@ export type QuotationRecord = {
   title: string | null;
   property_reference: string | null;
   line_items: QuotationLineItem[] | null;
+  grand_total_override: number | null;
   scope_of_work: string | null;
   notes: string | null;
   payment_terms_type: "cash" | "progress_billing" | null;

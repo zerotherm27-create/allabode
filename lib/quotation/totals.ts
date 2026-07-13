@@ -43,6 +43,11 @@ export function computeGrandTotal(lineItems: QuotationLineItem[]): number {
   return totals.furnishing + totals.repairs + totals.others;
 }
 
+/** The itemized sum, unless a manual grand-total override is set (e.g. a package/discounted price) — the override wins. */
+export function resolveGrandTotal(lineItems: QuotationLineItem[], grandTotalOverride: number | null): number {
+  return grandTotalOverride != null ? grandTotalOverride : computeGrandTotal(lineItems);
+}
+
 export function formatPeso(amount: number): string {
   return `₱${amount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

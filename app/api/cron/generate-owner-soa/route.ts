@@ -91,7 +91,13 @@ export async function POST(req: NextRequest) {
             deposit_id:    l.deposit_id ?? null,
           }))
         );
-        if (lineErr) errors.push(`lease ${lease.id} lines: ${lineErr.message}`);
+        if (lineErr) {
+          // Statement row would otherwise sit with computed totals but no
+          // supporting lines — remove it instead of leaving an inconsistent SOA.
+          await supabase.from("statements_of_account").delete().eq("id", soaRow.id);
+          errors.push(`lease ${lease.id} lines: ${lineErr.message}`);
+          continue;
+        }
       }
 
       taken++;

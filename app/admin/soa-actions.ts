@@ -282,7 +282,7 @@ export async function generateOwnerSoaByLease(formData: FormData) {
 
   const soaId = stmt.id as string;
   if (lines.length) {
-    await supabase.from("soa_lines").insert(
+    const { error: linesError } = await supabase.from("soa_lines").insert(
       lines.map((l) => ({
         statement_id:  soaId,
         line_type:     l.line_type,
@@ -296,6 +296,12 @@ export async function generateOwnerSoaByLease(formData: FormData) {
         deposit_id:    (l as { deposit_id?: string | null }).deposit_id ?? null,
       }))
     );
+    if (linesError) {
+      // Statement row would otherwise be left with computed totals but no
+      // supporting lines — clean it up rather than leave an inconsistent SOA.
+      await supabase.from("statements_of_account").delete().eq("id", soaId);
+      throw new Error(`Failed to save SOA lines: ${linesError.message}`);
+    }
   }
 
   await logAudit(supabase, { action: "soa.generated", entityType: "statement", entityId: soaId, actorId: user?.id, metadata: { leaseId } });
@@ -326,7 +332,7 @@ export async function regenerateSoaLines(id: string) {
   const computed = await computeOwnerSoaByLease(supabase, s.lease_id, s.period_start, s.period_end);
 
   if (computed.lines.length > 0) {
-    await supabase.from("soa_lines").insert(
+    const { error: linesError } = await supabase.from("soa_lines").insert(
       computed.lines.map((l) => ({
         statement_id:  id,
         line_type:     l.line_type,
@@ -340,6 +346,10 @@ export async function regenerateSoaLines(id: string) {
         deposit_id:    l.deposit_id ?? null,
       }))
     );
+    // Old lines are already deleted above — don't overwrite the statement's
+    // totals to match lines that failed to save, and surface the failure
+    // instead of leaving a payout with no supporting line items.
+    if (linesError) throw new Error(`Failed to save SOA lines: ${linesError.message}`);
   }
 
   // Update totals from recomputed lines and re-run AI validation

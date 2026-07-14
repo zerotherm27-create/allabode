@@ -272,11 +272,11 @@ export async function computeOwnerSoaByLease(
   // as a note — soa_id gates each deposit to ever fund a payout once.
   const { data: depositData } = await supabase
     .from("security_deposits")
-    .select("id,amount_held,deposit_type")
+    .select("id,amount_held,deposit_type,months_held")
     .eq("lease_id", leaseId)
     .eq("status", "held")
     .is("soa_id", null);
-  type DepositRow = { id: string; amount_held: number; deposit_type: string };
+  type DepositRow = { id: string; amount_held: number; deposit_type: string; months_held: number };
   const heldDeposits = (depositData ?? []) as DepositRow[];
   const securityDeposits = heldDeposits.filter((d) => d.deposit_type !== "advance");
   const advanceDeposits = heldDeposits.filter((d) => d.deposit_type === "advance");
@@ -294,10 +294,9 @@ export async function computeOwnerSoaByLease(
 
   // 9. Income lines — use recorded payments if any, otherwise pre-fill from lease rent_amount
   // (so an SOA can still be generated before a payment is logged for the month). Skip that
-  // pre-fill when a not-yet-applied security deposit is funding this SOA instead — the
-  // lease's first remittance comes from the deposit, not a phantom "Monthly Rent" line on
-  // top of it (the deposit already covers the first period; commission/expenses net it down
-  // below).
+  // pre-fill when a not-yet-applied deposit (security OR advance) is funding this SOA instead —
+  // a new lease's first remittance comes from the deposit(s), not a phantom "Monthly Rent" line
+  // stacked on top of it.
   const incomeType = incomeTypeForLeaseType(leaseType);
   const rentIncomeLines: OwnerSoaLineExtended[] = payments.length > 0
     ? payments.map((p, i) => ({
@@ -306,7 +305,7 @@ export async function computeOwnerSoaByLease(
         amount: Number(p.amount),
         sort_order: i,
       }))
-    : securityDeposits.length > 0
+    : heldDeposits.length > 0
     ? []
     : [{
         line_type: incomeType,
@@ -314,25 +313,55 @@ export async function computeOwnerSoaByLease(
         amount: Number(lease.rent_amount),
         sort_order: 0,
       }];
-  const depositIncomeLines: OwnerSoaLineExtended[] = securityDeposits.map((d, i) => ({
+
+  const pesoAmt = (n: number) =>
+    `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  // Advance rent is prepaid rent — the owner's money — so it's full income.
+  // Kept on line_type "income_other" (not a distinct type) so the publish
+  // pipeline's "mark deposit applied" query (soa-pipeline.ts, filters on
+  // income_other + deposit_id) gates it the same way as a security deposit.
+  const advanceIncomeLines: OwnerSoaLineExtended[] = advanceDeposits.map((d, i) => ({
     line_type:   "income_other",
-    description: "Security Deposit Applied to First Remittance",
+    description: "Advance Rent",
     amount:      Number(d.amount_held),
     sort_order:  10 + i,
     deposit_id:  d.id,
   }));
+
+  // Security deposit: exactly one month's worth (amount_held / months_held) stays
+  // held/disclosed-only; the remainder is released as income. months_held <= 1 leaves
+  // no room for a distinct held month, so fall back to the column's schema default (2).
+  // releasedAmount is derived by subtraction (not rounded independently) so the two
+  // always reconcile to amount_held exactly.
+  const securityIncomeLines: OwnerSoaLineExtended[] = securityDeposits.map((d, i) => {
+    const amountHeld = Number(d.amount_held);
+    const rawMonths = Number(d.months_held);
+    const monthsHeld = Number.isFinite(rawMonths) && rawMonths > 1 ? rawMonths : 2;
+    const heldAmount = Math.round((amountHeld / monthsHeld) * 100) / 100;
+    const releasedAmount = amountHeld - heldAmount;
+    const monthsLabel = Number.isInteger(monthsHeld) ? String(monthsHeld) : monthsHeld.toFixed(1);
+    return {
+      line_type:    "income_other",
+      description:  `${monthsLabel} month${monthsHeld === 1 ? "" : "s"} deposit`,
+      amount:       releasedAmount,
+      billing_note: `1 month HELD BY ALL ABODE (${pesoAmt(heldAmount)})`,
+      sort_order:   20 + i,
+      deposit_id:   d.id,
+    };
+  });
+
+  const depositIncomeLines: OwnerSoaLineExtended[] = [...advanceIncomeLines, ...securityIncomeLines];
   const incomeLines: OwnerSoaLineExtended[] = [...rentIncomeLines, ...depositIncomeLines];
   const totalIncome = sum(incomeLines.map((l) => l.amount));
 
-  // Informational lines — excluded from totals. Advance rent is held by
-  // AllAbode and never enters the owner's payout math; it's shown here
-  // purely as a disclosure note. sort_order 15+ so it sorts after income.
-  const infoLines: OwnerSoaLineExtended[] = advanceDeposits.map((d, i) => ({
-    line_type:   "info_advance_rent",
-    description: "Advance Rent Held by AllAbode",
-    amount:      Number(d.amount_held),
-    sort_order:  15 + i,
-  }));
+  // No more info-only deposit lines going forward — advance is now full income (above)
+  // and the security deposit's held portion is disclosed via billing_note on its own
+  // income line, not a separate line item. Kept as an empty array (not removed) so the
+  // three render sites, which all filter on `line_type.startsWith("info_")`, need no
+  // changes and keep rendering correctly for previously-published statements that still
+  // carry real info_advance_rent rows.
+  const infoLines: OwnerSoaLineExtended[] = [];
 
   // 9. De-duplicate templates against expense records (by name)
   const expNames = new Set(expenses.map((e) => (e.description ?? "").toLowerCase().trim()));

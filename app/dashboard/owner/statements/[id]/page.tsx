@@ -122,7 +122,10 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
                   <tr><td colSpan={2} className="px-5 py-4 text-center text-slate">No income recorded for this period.</td></tr>
                 ) : incomeLines.map((line) => (
                   <tr key={line.id}>
-                    <td className="px-5 py-3 text-ink">{line.description}</td>
+                    <td className="px-5 py-3 text-ink">
+                      {line.description}
+                      {line.billing_note && <span className="ml-2 text-xs text-slate">{line.billing_note}</span>}
+                    </td>
                     <td className="px-5 py-3 text-right font-medium text-navy">{peso(Number(line.amount))}</td>
                   </tr>
                 ))}

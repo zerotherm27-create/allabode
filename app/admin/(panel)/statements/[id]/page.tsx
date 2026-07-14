@@ -195,7 +195,10 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                 )}
                 {incomeLines.map((l) => (
                   <tr key={l.id}>
-                    <td className="px-4 py-2.5 text-ink">{l.description}</td>
+                    <td className="px-4 py-2.5 text-ink">
+                      {l.description}
+                      {l.billing_note && <span className="ml-2 text-xs text-slate">{l.billing_note}</span>}
+                    </td>
                     <td className="px-4 py-2.5 text-right font-medium text-navy">{peso(l.amount)}</td>
                   </tr>
                 ))}
@@ -209,7 +212,9 @@ export default async function StatementDetailPage({ params }: { params: Promise<
             </table>
           </div>
 
-          {/* Advance Rent — informational, held by AllAbode, not counted in remittance */}
+          {/* Legacy: computeOwnerSoaByLease no longer produces info_advance_rent lines (advance
+              rent is now full income, disclosed instead via billing_note on its income line).
+              This block stays for statements generated before that change. */}
           {infoLines.length > 0 && (
             <div className="overflow-hidden rounded-lg border border-line bg-surface">
               <div className="border-b border-line bg-surface-gray px-4 py-2.5 text-sm font-semibold text-slate">Advance Rent (Held by AllAbode)</div>

@@ -121,6 +121,13 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
   const incOth = lines.filter((l) => l.line_type === "income_other");
   const totalIncome = [...incLT, ...incST, ...incBnb, ...incOth].reduce((s, l) => s + Number(l.amount), 0);
 
+  // Deposit/advance-rent lines (income_other) render under the same lease-type
+  // subheader as rent income, not a separate "Others" section, so the layout
+  // matches the reference format (e.g. "1 month advance" and "2 months deposit"
+  // both listed under "Long term").
+  const typeIncomeLines = [...incLT, ...incST, ...incBnb];
+  const typeIncomeLabel = input.leaseType === "bnb" ? "BNB / daily platform" : input.leaseType === "short_term" ? "Short-term rental" : "Long term";
+
   const infoLines   = lines.filter((l) => l.line_type.startsWith("info_"));
   const cfPdfLines  = lines.filter((l) => l.line_type === "deduction_carry_forward");
   const dedLines    = lines.filter((l) => l.line_type.startsWith("deduction_"));
@@ -131,9 +138,12 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
     ["deduction_expense_recurring", "deduction_expense_manual", "deduction_expense"].includes(l.line_type)
   );
 
-  const LineRow = ({ desc, note, amt, receipt }: { desc: string; note?: string | null; amt: number; receipt?: boolean }) => (
+  const LineRow = ({ desc, note, amt, receipt, subNote }: { desc: string; note?: string | null; amt: number; receipt?: boolean; subNote?: string | null }) => (
     <View style={ownerStyles.row}>
-      <Text style={ownerStyles.rowDesc}>{desc}</Text>
+      <View style={ownerStyles.rowDesc}>
+        <Text>{desc}</Text>
+        {subNote && <Text style={{ fontSize: 7, color: SLATE, marginTop: 1 }}>{subNote}</Text>}
+      </View>
       <Text style={ownerStyles.rowNote}>{note ?? ""}</Text>
       <Text style={ownerStyles.rowReceipt}>{receipt ? "R" : ""}</Text>
       <Text style={ownerStyles.rowAmt}>{amt !== 0 ? peso(Math.abs(amt)) : "—"}</Text>
@@ -221,36 +231,21 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
           <Text style={[ownerStyles.rowAmt, { color: SLATE, fontFamily: "Helvetica-Bold" }]}>Amount</Text>
         </View>
 
-        {incLT.length > 0 && (
-          <>
-            <Text style={ownerStyles.subHdr}>Long term</Text>
-            {incLT.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
-          </>
-        )}
-        {incST.length > 0 && (
-          <>
-            <Text style={ownerStyles.subHdr}>Short-term rental</Text>
-            {incST.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
-          </>
-        )}
-        {incBnb.length > 0 && (
-          <>
-            <Text style={ownerStyles.subHdr}>BNB / daily platform</Text>
-            {incBnb.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
-          </>
-        )}
-        {incLT.length === 0 && incST.length === 0 && incBnb.length === 0 && incOth.length === 0 && (
+        {typeIncomeLines.length === 0 && incOth.length === 0 && (
           <LineRow desc={input.leaseType === "long_term" ? "Long term — no payments recorded" : input.leaseType === "bnb" ? "BNB / daily platform — no payouts recorded" : "Short-term rental — no payments recorded"} amt={0} />
         )}
-        {incOth.length > 0 && (
+        {(typeIncomeLines.length > 0 || incOth.length > 0) && (
           <>
-            <Text style={ownerStyles.subHdr}>Others</Text>
-            {incOth.map((l, i) => <LineRow key={i} desc={l.description} amt={l.amount} />)}
+            <Text style={ownerStyles.subHdr}>{typeIncomeLabel}</Text>
+            {typeIncomeLines.map((l, i) => <LineRow key={`t-${i}`} desc={l.description} amt={l.amount} subNote={l.billing_note} />)}
+            {incOth.map((l, i) => <LineRow key={`o-${i}`} desc={l.description} amt={l.amount} subNote={l.billing_note} />)}
           </>
         )}
         <TotalRow label="Total Income" amt={totalIncome} bg={BLUE_BG} />
 
-        {/* ── ADVANCE RENT (informational — held by AllAbode, not in remittance) ── */}
+        {/* ── ADVANCE RENT (legacy) — computeOwnerSoaByLease no longer produces info_advance_rent
+            lines (advance rent is now full income, disclosed via billing_note instead); this
+            stays for statements generated before that change ── */}
         {infoLines.length > 0 && (
           <>
             <View style={[ownerStyles.sectionHdr, { backgroundColor: "#f3f4f6", color: "#5b6573" }]}>

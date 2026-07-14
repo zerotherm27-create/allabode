@@ -319,7 +319,7 @@ export async function regenerateSoaLines(id: string) {
 
   const { data: s } = await supabase
     .from("statements_of_account")
-    .select("lease_id,status,period_start,period_end,mgmt_fee_pct,vat_pct")
+    .select("lease_id,status,period_start,period_end")
     .eq("id", id)
     .maybeSingle();
   if (!s) throw new Error("Statement not found.");

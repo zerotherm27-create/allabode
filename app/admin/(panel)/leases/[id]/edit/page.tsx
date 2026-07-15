@@ -7,7 +7,7 @@ import { recordPaymentOnLease, updatePayment, deletePayment, voidInvoice } from 
 import { recordDeposit, recordCommission, updateCommission, waiveCommission } from "@/app/admin/security-deposit-actions";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { createClient } from "@/lib/supabase/server";
-import { inputCls } from "@/components/admin/form-kit";
+import { inputCls, SubmitButton } from "@/components/admin/form-kit";
 
 const peso = (n: number | string) => `₱${Math.round(Number(n)).toLocaleString("en-PH")}`;
 
@@ -203,9 +203,7 @@ export default async function EditLeasePage({
             <input name="notes" type="text" className={inputCls} placeholder="Internal notes (not shown on receipt)" />
           </div>
           <div className="flex items-end">
-            <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-              <Icon name="add" size={16} /> Record
-            </button>
+            <SubmitButton label="Record" pendingLabel="Recording…" />
           </div>
         </form>
 

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { CopyLink } from "@/components/admin/copy-link";
-import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
+import { ActionRow, ActionButton, ActionForm, ActionSubmitButton } from "@/components/admin/action-row";
 import { QuotationCountersignForm } from "@/components/admin/quotation-countersign-form";
 import { QuotationTermsForm, type QuotationTermsInitial } from "@/components/admin/quotation-terms-form";
 import {
@@ -151,6 +151,7 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
   ] as const;
 
   return (
+    <ActionRow>
     <div className="mx-auto max-w-4xl">
       <Link href="/admin/quotations" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate hover:text-navy">
         <Icon name="arrow_back" size={18} /> Back to quotations
@@ -183,7 +184,7 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
             <p className="mb-3 text-xs text-slate">
               A designated signatory reviews and signs remotely, before this ever reaches the recipient.
             </p>
-            <form action={doSendCompanyLink} className="flex flex-col gap-2">
+            <ActionForm actionKey="send-company-link" action={doSendCompanyLink} className="flex flex-col gap-2">
               <input
                 name="company_name_hint"
                 defaultValue={q.company_name_hint ?? ""}
@@ -197,10 +198,9 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
                 placeholder="signatory@allabodeph.com"
                 className={inputCls}
               />
-              <button type="submit" className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-                {q.company_token_expires_at ? "Resend pre-signing link" : "Send pre-signing link"}
-              </button>
-            </form>
+              <ActionSubmitButton label={q.company_token_expires_at ? "Resend pre-signing link" : "Send pre-signing link"}
+                className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+            </ActionForm>
             {q.company_token_expires_at && (
               <div className="mt-3">
                 <CopyLink link={companyLink} ownerName={q.company_name_hint ?? undefined} />
@@ -218,11 +218,10 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
       {q.status === "company_signed" && (
         <div className="mt-4 rounded-lg border border-line bg-surface p-5">
           <p className="text-sm text-slate">Signed by the company representative — ready to send to the recipient.</p>
-          <form action={doSendRecipientLink} className="mt-3">
-            <button type="submit" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-              Send signing link to recipient
-            </button>
-          </form>
+          <div className="mt-3">
+            <ActionButton actionKey="send-recipient-link" action={doSendRecipientLink} label="Send signing link to recipient"
+              className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+          </div>
         </div>
       )}
 
@@ -230,9 +229,10 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
         <div className="mt-4 rounded-lg border border-line bg-surface p-5">
           <p className="text-sm text-slate">Awaiting the recipient to review and sign.</p>
           <CopyLink link={recipientLink} ownerName={rd.name || q.recipient_name_hint || undefined} />
-          <form action={doSendRecipientLink} className="mt-3">
-            <button type="submit" className="text-sm font-medium text-navy-700 underline">Resend email</button>
-          </form>
+          <div className="mt-3">
+            <ActionButton actionKey="send-recipient-link" action={doSendRecipientLink} label="Resend email"
+              className="text-sm font-medium text-navy-700 underline" />
+          </div>
         </div>
       )}
 
@@ -397,11 +397,10 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
           <p className="text-sm font-medium text-navy">
             The recipient has signed, but finalization didn&#x2019;t finish (PDF generation).
           </p>
-          <form action={doFinalize} className="mt-3">
-            <button type="submit" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-              Finalize quotation
-            </button>
-          </form>
+          <div className="mt-3">
+            <ActionButton actionKey="finalize" action={doFinalize} label="Finalize quotation" pendingLabel="Finalizing…"
+              className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+          </div>
         </div>
       )}
 
@@ -428,31 +427,22 @@ export default async function AdminQuotationDetailPage({ params }: { params: Pro
         <div className="mt-6 rounded-lg border border-error/30 bg-error/5 p-5">
           <h2 className="mb-1 font-display text-sm font-semibold text-error">Danger Zone</h2>
           <div className="mt-3 flex flex-wrap gap-3">
-            <ConfirmActionForm
-              action={doVoid}
-              message="Void this quotation? This invalidates both signing links, but keeps the record for history. This can't be undone."
-            >
-              <button type="submit" className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray">
-                Void quotation
-              </button>
-            </ConfirmActionForm>
+            <ActionButton actionKey="void" action={doVoid} label="Void quotation"
+              className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray"
+              confirmMessage="Void this quotation? This invalidates both signing links, but keeps the record for history. This can't be undone." />
             {q.status !== "draft" ? (
               <p className="flex items-center text-xs text-slate">
                 A quotation with a signature on file can&#x2019;t be deleted — void it instead to preserve the record.
               </p>
             ) : (
-              <ConfirmActionForm
-                action={doDelete}
-                message="Permanently delete this quotation? This can't be undone."
-              >
-                <button type="submit" className="rounded-md bg-error px-4 py-2 text-sm font-semibold text-white hover:bg-error/90">
-                  Delete quotation
-                </button>
-              </ConfirmActionForm>
+              <ActionButton actionKey="delete" action={doDelete} label="Delete quotation"
+                className="rounded-md bg-error px-4 py-2 text-sm font-semibold text-white hover:bg-error/90"
+                confirmMessage="Permanently delete this quotation? This can't be undone." />
             )}
           </div>
         </div>
       )}
     </div>
+    </ActionRow>
   );
 }

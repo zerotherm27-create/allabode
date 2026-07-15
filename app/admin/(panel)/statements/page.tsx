@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { generateStatement, generateOwnerSoaByLease } from "@/app/admin/soa-actions";
+import { SubmitButton } from "@/components/admin/form-kit";
 
 type Named = { name?: string };
 type Row = {
@@ -106,9 +107,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
               <input name="period_start" type="date" defaultValue={first} required className={inputCls} />
               <input name="period_end"   type="date" defaultValue={last}  required className={inputCls} />
             </div>
-            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-              <Icon name="note_add" size={18} /> Generate draft
-            </button>
+            <SubmitButton label="Generate draft" />
           </div>
         </form>
 
@@ -125,9 +124,7 @@ export default async function AdminStatementsPage({ searchParams }: { searchPara
               <input name="period_start" type="date" defaultValue={first} required className={inputCls} />
               <input name="period_end"   type="date" defaultValue={last}  required className={inputCls} />
             </div>
-            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-              <Icon name="note_add" size={18} /> Generate
-            </button>
+            <SubmitButton label="Generate" />
           </div>
         </form>
       </div>

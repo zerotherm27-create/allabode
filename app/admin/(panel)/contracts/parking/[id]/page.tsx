@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { CopyLink } from "@/components/admin/copy-link";
-import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
+import { ActionRow, ActionButton, ActionForm, ActionSubmitButton } from "@/components/admin/action-row";
 import { ParkingCountersignForm } from "@/components/admin/parking-countersign-form";
 import { ParkingTermsForm, type ParkingTermsInitial } from "@/components/admin/parking-terms-form";
 import {
@@ -139,6 +139,7 @@ export default async function AdminParkingContractDetailPage({ params }: { param
   const awaitingFinalize = a.status === "tenant_signed" && !!a.landlord_signature_data;
 
   return (
+    <ActionRow>
     <div className="mx-auto max-w-4xl">
       <Link href="/admin/contracts" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate hover:text-navy">
         <Icon name="arrow_back" size={18} /> Back to contracts
@@ -160,11 +161,10 @@ export default async function AdminParkingContractDetailPage({ params }: { param
       {a.status === "draft" && (
         <div className="mt-4 rounded-lg border border-line bg-surface p-5">
           <p className="text-sm text-slate">This agreement hasn&#x2019;t been sent to the tenant yet.</p>
-          <form action={doSendTenantLink} className="mt-3">
-            <button type="submit" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-              Send signing link to tenant
-            </button>
-          </form>
+          <div className="mt-3">
+            <ActionButton actionKey="send-tenant-link" action={doSendTenantLink} label="Send signing link to tenant"
+              className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+          </div>
           <p className="mt-3 text-xs text-slate">Or copy the link below to share it directly:</p>
           <CopyLink link={tenantLink} ownerName={td.name || a.tenant_name_hint || undefined} />
         </div>
@@ -174,9 +174,10 @@ export default async function AdminParkingContractDetailPage({ params }: { param
         <div className="mt-4 rounded-lg border border-line bg-surface p-5">
           <p className="text-sm text-slate">Awaiting the tenant to fill in their details and sign.</p>
           <CopyLink link={tenantLink} ownerName={td.name || a.tenant_name_hint || undefined} />
-          <form action={doSendTenantLink} className="mt-3">
-            <button type="submit" className="text-sm font-medium text-navy-700 underline">Resend email</button>
-          </form>
+          <div className="mt-3">
+            <ActionButton actionKey="send-tenant-link" action={doSendTenantLink} label="Resend email"
+              className="text-sm font-medium text-navy-700 underline" />
+          </div>
         </div>
       )}
 
@@ -244,11 +245,10 @@ export default async function AdminParkingContractDetailPage({ params }: { param
           <p className="text-sm font-medium text-navy">
             The landlord has signed, but finalization didn&#x2019;t finish (PDF, tenant record, portal account).
           </p>
-          <form action={doFinalize} className="mt-3">
-            <button type="submit" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-              Finalize agreement
-            </button>
-          </form>
+          <div className="mt-3">
+            <ActionButton actionKey="finalize" action={doFinalize} label="Finalize agreement" pendingLabel="Finalizing…"
+              className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+          </div>
         </div>
       )}
 
@@ -259,7 +259,7 @@ export default async function AdminParkingContractDetailPage({ params }: { param
             <p className="mb-3 text-xs text-slate">
               The landlord reviews the signed agreement, confirms their ID, and signs on their own secure link.
             </p>
-            <form action={doSendLandlordLink} className="flex flex-col gap-2">
+            <ActionForm actionKey="send-landlord-link" action={doSendLandlordLink} className="flex flex-col gap-2">
               <input
                 name="landlord_email"
                 type="email"
@@ -267,10 +267,9 @@ export default async function AdminParkingContractDetailPage({ params }: { param
                 placeholder="landlord@email.com"
                 className={inputCls}
               />
-              <button type="submit" className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800">
-                {a.landlord_access_token ? "Resend landlord link" : "Send landlord link"}
-              </button>
-            </form>
+              <ActionSubmitButton label={a.landlord_access_token ? "Resend landlord link" : "Send landlord link"}
+                className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+            </ActionForm>
             {landlordLink && (
               <div className="mt-3">
                 <CopyLink link={landlordLink} ownerName={ld.name || a.landlord_name_hint || undefined} />
@@ -324,31 +323,22 @@ export default async function AdminParkingContractDetailPage({ params }: { param
         <div className="mt-6 rounded-lg border border-error/30 bg-error/5 p-5">
           <h2 className="mb-1 font-display text-sm font-semibold text-error">Danger Zone</h2>
           <div className="mt-3 flex flex-wrap gap-3">
-            <ConfirmActionForm
-              action={doVoid}
-              message="Void this agreement? This invalidates both signing links, but keeps the record for history. This can't be undone."
-            >
-              <button type="submit" className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray">
-                Void agreement
-              </button>
-            </ConfirmActionForm>
+            <ActionButton actionKey="void" action={doVoid} label="Void agreement"
+              className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray"
+              confirmMessage="Void this agreement? This invalidates both signing links, but keeps the record for history. This can't be undone." />
             {a.status === "completed" ? (
               <p className="flex items-center text-xs text-slate">
                 Fully executed agreements can&#x2019;t be deleted — void it instead to invalidate it while keeping the signed record.
               </p>
             ) : (
-              <ConfirmActionForm
-                action={doDelete}
-                message="Permanently delete this agreement and its uploaded files? This can't be undone."
-              >
-                <button type="submit" className="rounded-md bg-error px-4 py-2 text-sm font-semibold text-white hover:bg-error/90">
-                  Delete agreement
-                </button>
-              </ConfirmActionForm>
+              <ActionButton actionKey="delete" action={doDelete} label="Delete agreement"
+                className="rounded-md bg-error px-4 py-2 text-sm font-semibold text-white hover:bg-error/90"
+                confirmMessage="Permanently delete this agreement and its uploaded files? This can't be undone." />
             )}
           </div>
         </div>
       )}
     </div>
+    </ActionRow>
   );
 }

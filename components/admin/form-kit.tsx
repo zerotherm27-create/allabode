@@ -35,7 +35,7 @@ export function Group({ title, children }: { title: string; children: React.Reac
   );
 }
 
-export function SubmitButton({ label = "Save" }: { label?: string }) {
+export function SubmitButton({ label = "Save", pendingLabel = "Saving…" }: { label?: string; pendingLabel?: string }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -46,7 +46,7 @@ export function SubmitButton({ label = "Save" }: { label?: string }) {
       {pending ? (
         <>
           <Icon name="progress_activity" size={18} className="animate-spin" />
-          Saving…
+          {pendingLabel}
         </>
       ) : (
         label

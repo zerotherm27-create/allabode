@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signedUrl, RECEIPTS_BUCKET } from "@/lib/storage";
 import { isImageMime } from "@/lib/ai/receipts";
 import { approveExtraction, rejectReceipt, runExtraction } from "@/app/admin/finance-actions";
+import { SubmitButton } from "@/components/admin/form-kit";
 
 const inputCls =
   "h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15";
@@ -61,9 +62,7 @@ export default async function ReceiptReviewPage({ params }: { params: Promise<{ 
           </p>
         </div>
         <form action={runExtraction.bind(null, id)}>
-          <button type="submit" className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-medium text-navy hover:bg-surface-gray">
-            <Icon name="refresh" size={18} /> Re-run AI
-          </button>
+          <SubmitButton label="Re-run AI" pendingLabel="Extracting…" />
         </form>
       </div>
 

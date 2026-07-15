@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
-import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
+import { ActionRow, ActionButton, ActionForm, ActionSubmitButton } from "@/components/admin/action-row";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrl, buildOwnerSoaFilename, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import {
@@ -132,6 +132,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
   const statusColor = STATUS_COLOR[s.status] ?? "bg-surface-gray text-slate";
 
   return (
+    <ActionRow>
     <div className="mx-auto max-w-4xl">
 
       {/* ── Back ── */}
@@ -184,7 +185,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
 
       {/* ── Lease-based review form ── */}
       {isLeaseBased && s.status === "generated" ? (
-        <form action={saveOwnerSoaReview.bind(null, id)} className="mt-6 flex flex-col gap-4">
+        <ActionForm actionKey="save-recalc" action={saveOwnerSoaReview.bind(null, id)} className="mt-6 flex flex-col gap-4">
           <input type="hidden" name="editable_line_ids" value={editableLines.map((l) => l.id).join(",")} />
           <input type="hidden" name="deleted_line_ids" value="" />
 
@@ -390,10 +391,8 @@ export default async function StatementDetailPage({ params }: { params: Promise<
             )}
           </div>
 
-          <button type="submit" className={`${btn} bg-navy text-white hover:bg-navy-800`}>
-            <Icon name="save" size={18} /> Save &amp; Recalculate
-          </button>
-        </form>
+          <ActionSubmitButton label="Save & Recalculate" icon="save" className={`${btn} bg-navy text-white hover:bg-navy-800`} />
+        </ActionForm>
 
       ) : (
         /* ── Read-only view (approved / published / legacy) ── */
@@ -527,32 +526,21 @@ export default async function StatementDetailPage({ params }: { params: Promise<
       {/* ── Workflow actions ── */}
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-6">
         {s.status === "generated" && (
-          <form action={submitForReview.bind(null, id)}>
-            <button className={`${btn} bg-navy text-white hover:bg-navy-800`}>
-              <Icon name="send" size={18} /> Submit for Review
-            </button>
-          </form>
+          <ActionButton actionKey="submit-review" action={submitForReview.bind(null, id)}
+            label="Submit for Review" icon="send" className={`${btn} bg-navy text-white hover:bg-navy-800`} />
         )}
         {s.status === "checker_review" && (
-          <form action={approveStatement.bind(null, id)}>
-            <button className={`${btn} bg-navy text-white hover:bg-navy-800`}>
-              <Icon name="verified" size={18} /> Approve
-            </button>
-          </form>
+          <ActionButton actionKey="approve" action={approveStatement.bind(null, id)}
+            label="Approve" icon="verified" className={`${btn} bg-navy text-white hover:bg-navy-800`} />
         )}
         {s.status === "approved" && (
           <>
-            <form action={publishStatement.bind(null, id)}>
-              <button className={`${btn} bg-available text-white hover:opacity-90`}>
-                <Icon name="send" size={18} /> Publish &amp; Send to Owner
-              </button>
-            </form>
+            <ActionButton actionKey="publish" action={publishStatement.bind(null, id)}
+              label="Publish & Send to Owner" pendingLabel="Publishing…" icon="send"
+              className={`${btn} bg-available text-white hover:opacity-90`} />
             {isLeaseBased && (
-              <form action={regenerateSoaLines.bind(null, id)}>
-                <button className={`${btn} border border-line text-navy hover:bg-surface-gray`}>
-                  <Icon name="refresh" size={18} /> Regenerate Lines
-                </button>
-              </form>
+              <ActionButton actionKey="regenerate" action={regenerateSoaLines.bind(null, id)}
+                label="Regenerate Lines" icon="refresh" className={`${btn} border border-line text-navy hover:bg-surface-gray`} />
             )}
             <p className={`text-xs ${autoSendOn ? "text-available" : "text-slate"}`}>
               {autoSendOn
@@ -562,11 +550,8 @@ export default async function StatementDetailPage({ params }: { params: Promise<
           </>
         )}
         {(s.status === "generated" && isLeaseBased) && (
-          <form action={regenerateSoaLines.bind(null, id)}>
-            <button className={`${btn} border border-line text-navy hover:bg-surface-gray`}>
-              <Icon name="refresh" size={18} /> Regenerate Lines
-            </button>
-          </form>
+          <ActionButton actionKey="regenerate" action={regenerateSoaLines.bind(null, id)}
+            label="Regenerate Lines" icon="refresh" className={`${btn} border border-line text-navy hover:bg-surface-gray`} />
         )}
         {pdfUrl && (
           <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className={`${btn} border border-line text-navy hover:bg-surface-gray`}>
@@ -584,38 +569,29 @@ export default async function StatementDetailPage({ params }: { params: Promise<
           </a>
         )}
         {(s.status === "approved" || s.status === "published") && (
-          <ConfirmActionForm
-            action={reopenStatement.bind(null, id)}
-            message={s.status === "published"
+          <ActionButton actionKey="reopen" action={reopenStatement.bind(null, id)}
+            label="Re-open for Editing" icon="edit" className={`${btn} border border-gold text-gold-bright hover:bg-gold/5`}
+            confirmMessage={s.status === "published"
               ? "Re-opening will unpublish this SOA and clear the PDF. The owner will lose portal access to it until you re-publish. Continue?"
               : "Re-open this SOA for editing?"
             }
-          >
-            <button className={`${btn} border border-gold text-gold-bright hover:bg-gold/5`}>
-              <Icon name="edit" size={18} /> Re-open for Editing
-            </button>
-          </ConfirmActionForm>
+          />
         )}
         {s.status !== "voided" && (
-          <form action={voidStatement.bind(null, id)} className="flex items-center gap-2 border-l border-line pl-3 ml-auto">
+          <ActionForm actionKey="void" action={voidStatement.bind(null, id)} className="flex items-center gap-2 border-l border-line pl-3 ml-auto">
             <input name="reason" placeholder="Void reason" required
               className="h-9 rounded-md border border-line bg-surface px-3 text-sm focus:border-error focus:outline-none" />
-            <button className={`${btn} border border-error text-error hover:bg-error-bg`}>
-              <Icon name="block" size={18} /> Void
-            </button>
-          </form>
+            <ActionSubmitButton label="Void" icon="block" className={`${btn} border border-error text-error hover:bg-error-bg`} />
+          </ActionForm>
         )}
         {(s.status === "generated" || s.status === "voided") && (
-          <ConfirmActionForm
-            action={deleteStatement.bind(null, id)}
-            message="Permanently delete this statement? This cannot be undone."
-          >
-            <button className={`${btn} border border-error/50 text-error hover:bg-error-bg`}>
-              <Icon name="delete" size={18} /> Delete
-            </button>
-          </ConfirmActionForm>
+          <ActionButton actionKey="delete" action={deleteStatement.bind(null, id)}
+            label="Delete" icon="delete" className={`${btn} border border-error/50 text-error hover:bg-error-bg`}
+            confirmMessage="Permanently delete this statement? This cannot be undone."
+          />
         )}
       </div>
     </div>
+    </ActionRow>
   );
 }

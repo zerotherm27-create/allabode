@@ -85,7 +85,7 @@ export default async function Home() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
         {heroImage && (
           <div
-            className="absolute inset-0 -z-10 bg-cover bg-center opacity-30"
+            className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-30 sm:bg-cover"
             style={{ backgroundImage: `url(${heroImage})` }}
           />
         )}

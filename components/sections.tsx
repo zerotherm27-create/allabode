@@ -86,7 +86,7 @@ export function PageHero({
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
       {image && (
         <div
-          className="absolute inset-0 -z-10 bg-cover bg-center opacity-25"
+          className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-25 sm:bg-cover"
           style={{ backgroundImage: `url(${image})` }}
         />
       )}

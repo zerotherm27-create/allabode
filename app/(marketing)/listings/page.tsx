@@ -6,11 +6,15 @@ import { ListingsBrowser } from "@/components/listings-browser";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Property Listings Philippines | All Abode";
+const description =
+  "Browse All Abode property listings for rent, sale, commercial spaces, office spaces, warehouses, industrial properties, and parking.";
+
 export const metadata: Metadata = {
-  title: "Property Listings Philippines | All Abode",
-  description:
-    "Browse All Abode property listings for rent, sale, commercial spaces, office spaces, warehouses, industrial properties, and parking.",
+  title,
+  description,
   alternates: { canonical: "/listings" },
+  openGraph: { title, description },
 };
 
 const categories = [

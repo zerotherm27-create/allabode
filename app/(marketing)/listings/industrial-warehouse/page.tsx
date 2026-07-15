@@ -3,11 +3,15 @@ import { CategoryListingsPage } from "@/components/listings-category";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Industrial and Warehouse Properties Philippines";
+const description =
+  "Find industrial and warehouse properties for lease or sale through All Abode, with support for inquiries, viewings, and coordination.";
+
 export const metadata: Metadata = {
-  title: "Industrial and Warehouse Properties Philippines",
-  description:
-    "Find industrial and warehouse properties for lease or sale through All Abode, with support for inquiries, viewings, and coordination.",
+  title,
+  description,
   alternates: { canonical: "/listings/industrial-warehouse" },
+  openGraph: { title, description },
 };
 
 export default async function IndustrialWarehouseListingsPage() {

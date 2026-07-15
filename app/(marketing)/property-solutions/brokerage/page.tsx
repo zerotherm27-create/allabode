@@ -9,11 +9,15 @@ import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-l
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Real Estate Brokerage Services Philippines";
+const description =
+  "All Abode provides licensed real estate brokerage support for buying, selling, resale, commercial, office, industrial, and parking properties.";
+
 export const metadata: Metadata = {
-  title: "Real Estate Brokerage Services Philippines",
-  description:
-    "All Abode provides licensed real estate brokerage support for buying, selling, resale, commercial, office, industrial, and parking properties.",
+  title,
+  description,
   alternates: { canonical: "/property-solutions/brokerage" },
+  openGraph: { title, description },
 };
 
 const sellers = [

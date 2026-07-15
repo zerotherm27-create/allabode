@@ -5,10 +5,15 @@ import { PageHero, SectionHeading } from "@/components/sections";
 import { ListPropertyForm } from "@/components/forms/lead-forms";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "List Your Property";
+const description =
+  "List your property with All Abode Property Solutions for leasing, selling, management, or appraisal. Submit your details and a licensed agent will guide you through the next steps.";
+
 export const metadata: Metadata = {
-  title: "List Your Property",
-  description:
-    "List your property with All Abode Property Solutions for leasing, selling, management, or appraisal. Submit your details and a licensed agent will guide you through the next steps.",
+  title,
+  description,
+  alternates: { canonical: "/list-your-property" },
+  openGraph: { title, description },
 };
 
 const steps = [

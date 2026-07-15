@@ -4,11 +4,15 @@ import { PageHero } from "@/components/sections";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 
+const title = "Cookie Policy | All Abode";
+const description =
+  "Read the All Abode Cookie Policy for information about the cookies this website uses and how to manage them.";
+
 export const metadata: Metadata = {
-  title: "Cookie Policy | All Abode",
-  description:
-    "Read the All Abode Cookie Policy for information about the cookies this website uses and how to manage them.",
+  title,
+  description,
   alternates: { canonical: "/cookie-policy" },
+  openGraph: { title, description },
 };
 
 export default async function CookiePolicyPage() {

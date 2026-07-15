@@ -7,11 +7,15 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { services } from "@/lib/data";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Real Estate Services by All Abode";
+const description =
+  "Explore All Abode real estate services including brokerage, leasing, property management, valuation, and documentation assistance.";
+
 export const metadata: Metadata = {
-  title: "Real Estate Services by All Abode",
-  description:
-    "Explore All Abode real estate services including brokerage, leasing, property management, valuation, and documentation assistance.",
+  title,
+  description,
   alternates: { canonical: "/property-solutions" },
+  openGraph: { title, description },
 };
 
 const sectionCopy: Record<string, { audience: string }> = {

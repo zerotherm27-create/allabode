@@ -5,11 +5,15 @@ import { PageHero, SectionHeading } from "@/components/sections";
 import { ContactForm } from "@/components/forms/lead-forms";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Contact All Abode Property Solutions";
+const description =
+  "Contact All Abode for brokerage, leasing, valuation, property management, listings, and documentation assistance.";
+
 export const metadata: Metadata = {
-  title: "Contact All Abode Property Solutions",
-  description:
-    "Contact All Abode for brokerage, leasing, valuation, property management, listings, and documentation assistance.",
+  title,
+  description,
   alternates: { canonical: "/contact" },
+  openGraph: { title, description },
 };
 
 export default async function ContactPage() {

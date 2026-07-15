@@ -4,11 +4,15 @@ import { PageHero } from "@/components/sections";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 
+const title = "Terms of Service | All Abode";
+const description =
+  "Read the All Abode Terms of Service for website use, listings, inquiries, and property-related service limitations.";
+
 export const metadata: Metadata = {
-  title: "Terms of Service | All Abode",
-  description:
-    "Read the All Abode Terms of Service for website use, listings, inquiries, and property-related service limitations.",
+  title,
+  description,
   alternates: { canonical: "/terms-of-service" },
+  openGraph: { title, description },
 };
 
 export default async function TermsOfServicePage() {

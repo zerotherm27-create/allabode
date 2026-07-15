@@ -8,10 +8,14 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Property Management Services Philippines";
+const description =
+  "All Abode helps owners with rent collection, maintenance coordination, cleaning, furnishing, fit-out, turnover, and property care.";
+
 export const metadata: Metadata = {
-  title: "Property Management Services Philippines",
-  description:
-    "All Abode helps owners with rent collection, maintenance coordination, cleaning, furnishing, fit-out, turnover, and property care.",
+  title,
+  description,
+  openGraph: { title, description },
   alternates: { canonical: "/property-solutions/property-management" },
 };
 

@@ -4,11 +4,15 @@ import { PageHero } from "@/components/sections";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 
+const title = "Privacy Policy | All Abode";
+const description =
+  "Read the All Abode Privacy Policy for information about how personal data is collected, used, stored, and protected.";
+
 export const metadata: Metadata = {
-  title: "Privacy Policy | All Abode",
-  description:
-    "Read the All Abode Privacy Policy for information about how personal data is collected, used, stored, and protected.",
+  title,
+  description,
   alternates: { canonical: "/privacy-policy" },
+  openGraph: { title, description },
 };
 
 export default async function PrivacyPolicyPage() {

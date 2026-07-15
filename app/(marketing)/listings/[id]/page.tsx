@@ -13,6 +13,7 @@ import { ViewingScheduler } from "@/components/forms/viewing-scheduler";
 import { formatBeds, statusStyles } from "@/lib/data";
 import { getListing, getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
+import { JsonLd, realEstateListingSchema, breadcrumbSchema } from "@/components/seo/json-ld";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -29,9 +30,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       title: "Listing not found",
       description: "This property listing could not be found. Browse current All Abode listings for available properties.",
     };
+  const title = `${listing.title} | ${listing.price}`;
+  const description = listing.seoDescription ?? `${listing.title} in ${listing.location}. ${listing.status}, ${listing.area}.`;
   return {
-    title: `${listing.title} | ${listing.price}`,
-    description: listing.seoDescription ?? `${listing.title} in ${listing.location}. ${listing.status}, ${listing.area}.`,
+    title,
+    description,
+    alternates: { canonical: `/listings/${id}` },
+    openGraph: {
+      title,
+      description,
+      images: listing.images?.length ? listing.images.map((i) => ({ url: i.url, alt: i.alt ?? listing.title })) : undefined,
+    },
   };
 }
 
@@ -65,6 +74,22 @@ export default async function ListingDetailPage({ params }: Params) {
 
   return (
     <>
+      <JsonLd
+        data={realEstateListingSchema({
+          id: listing.id,
+          title: listing.title,
+          description: listing.seoDescription ?? `${listing.title} in ${listing.location}. ${listing.status}, ${listing.area}.`,
+          location: listing.location,
+          images: listing.images,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { label: "Home", href: "/" },
+          { label: "Listings", href: "/listings" },
+          { label: listing.title },
+        ])}
+      />
       {/* Gallery */}
       <ListingGallery images={listing.images ?? []} title={listing.title} gradient={listing.gradient}>
         <Container className="absolute inset-x-0 bottom-0 pb-6">

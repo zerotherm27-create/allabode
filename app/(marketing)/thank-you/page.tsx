@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 
+const title = "Thank You | All Abode Property Solutions";
+const description =
+  "Your inquiry has been received. The All Abode team will review your details and get back to you.";
+
 export const metadata: Metadata = {
-  title: "Thank You | All Abode Property Solutions",
-  description:
-    "Your inquiry has been received. The All Abode team will review your details and get back to you.",
+  title,
+  description,
+  alternates: { canonical: "/thank-you" },
+  openGraph: { title, description },
+  robots: { index: false, follow: true },
 };
 
 export default function ThankYouPage() {

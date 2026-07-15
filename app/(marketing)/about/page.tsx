@@ -6,11 +6,15 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { trustPoints } from "@/lib/data";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "About All Abode Property Solutions";
+const description =
+  "Learn about All Abode, operated by All Abode Brokerage and Valuation OPC, providing brokerage, valuation, leasing, property management, and documentation assistance.";
+
 export const metadata: Metadata = {
-  title: "About All Abode Property Solutions",
-  description:
-    "Learn about All Abode, operated by All Abode Brokerage and Valuation OPC, providing brokerage, valuation, leasing, property management, and documentation assistance.",
+  title,
+  description,
   alternates: { canonical: "/about" },
+  openGraph: { title, description },
 };
 
 const whoWeServe = [

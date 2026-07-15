@@ -3,11 +3,15 @@ import { CategoryListingsPage } from "@/components/listings-category";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Parking Slots for Rent or Sale Philippines";
+const description =
+  "Browse parking slots for rent or sale through All Abode. Availability is subject to building rules, ownership, and verification.";
+
 export const metadata: Metadata = {
-  title: "Parking Slots for Rent or Sale Philippines",
-  description:
-    "Browse parking slots for rent or sale through All Abode. Availability is subject to building rules, ownership, and verification.",
+  title,
+  description,
   alternates: { canonical: "/listings/parking" },
+  openGraph: { title, description },
 };
 
 export default async function ParkingListingsPage() {

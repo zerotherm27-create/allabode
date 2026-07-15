@@ -3,11 +3,15 @@ import { CategoryListingsPage } from "@/components/listings-category";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Properties for Sale Philippines | All Abode";
+const description =
+  "Browse properties for sale through All Abode, including condos, lots, house and lots, commercial, office, industrial, and parking assets.";
+
 export const metadata: Metadata = {
-  title: "Properties for Sale Philippines | All Abode",
-  description:
-    "Browse properties for sale through All Abode, including condos, lots, house and lots, commercial, office, industrial, and parking assets.",
+  title,
+  description,
   alternates: { canonical: "/listings/for-sale" },
+  openGraph: { title, description },
 };
 
 export default async function ForSaleListingsPage() {

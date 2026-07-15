@@ -47,6 +47,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_PH",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "All Abode Property Solutions",
+    description:
+      "Complete real estate, leasing, property management, and appraisal services in the Philippines.",
+  },
   applicationName: "All Abode",
   appleWebApp: {
     capable: true,

@@ -8,11 +8,15 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Real Estate Valuation and Appraisal Philippines";
+const description =
+  "All Abode provides real estate valuation and appraisal support for residential, commercial, office, industrial, and investment properties.";
+
 export const metadata: Metadata = {
-  title: "Real Estate Valuation and Appraisal Philippines",
-  description:
-    "All Abode provides real estate valuation and appraisal support for residential, commercial, office, industrial, and investment properties.",
+  title,
+  description,
   alternates: { canonical: "/valuation" },
+  openGraph: { title, description },
 };
 
 const types = [

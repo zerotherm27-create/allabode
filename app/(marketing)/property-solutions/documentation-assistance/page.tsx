@@ -7,11 +7,15 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Property Documentation Assistance Philippines";
+const description =
+  "All Abode assists with title transfer coordination, tax payment assistance, notarial coordination, and property document processing.";
+
 export const metadata: Metadata = {
-  title: "Property Documentation Assistance Philippines",
-  description:
-    "All Abode assists with title transfer coordination, tax payment assistance, notarial coordination, and property document processing.",
+  title,
+  description,
   alternates: { canonical: "/property-solutions/documentation-assistance" },
+  openGraph: { title, description },
 };
 
 const services = [

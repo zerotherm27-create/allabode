@@ -3,11 +3,15 @@ import { CategoryListingsPage } from "@/components/listings-category";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Properties for Rent Philippines | All Abode";
+const description =
+  "Find properties for rent through All Abode, including condominiums, residential units, commercial spaces, offices, warehouses, and parking.";
+
 export const metadata: Metadata = {
-  title: "Properties for Rent Philippines | All Abode",
-  description:
-    "Find properties for rent through All Abode, including condominiums, residential units, commercial spaces, offices, warehouses, and parking.",
+  title,
+  description,
   alternates: { canonical: "/listings/for-rent" },
+  openGraph: { title, description },
 };
 
 export default async function ForRentListingsPage() {

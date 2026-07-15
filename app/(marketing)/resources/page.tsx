@@ -5,10 +5,15 @@ import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Property Guides Philippines | All Abode Resources";
+const description =
+  "Read practical guides about leasing, property management, buying, selling, appraisal, and real estate decisions in the Philippines.";
+
 export const metadata: Metadata = {
-  title: "Property Guides Philippines | All Abode Resources",
-  description:
-    "Read practical guides about leasing, property management, buying, selling, appraisal, and real estate decisions in the Philippines.",
+  title,
+  description,
+  alternates: { canonical: "/resources" },
+  openGraph: { title, description },
 };
 
 const categories = [

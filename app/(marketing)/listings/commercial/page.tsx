@@ -3,11 +3,15 @@ import { CategoryListingsPage } from "@/components/listings-category";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Commercial Properties Philippines | All Abode";
+const description =
+  "Browse commercial properties for rent or sale with All Abode, including retail spaces, business spaces, and mixed-use property options.";
+
 export const metadata: Metadata = {
-  title: "Commercial Properties Philippines | All Abode",
-  description:
-    "Browse commercial properties for rent or sale with All Abode, including retail spaces, business spaces, and mixed-use property options.",
+  title,
+  description,
   alternates: { canonical: "/listings/commercial" },
+  openGraph: { title, description },
 };
 
 export default async function CommercialListingsPage() {

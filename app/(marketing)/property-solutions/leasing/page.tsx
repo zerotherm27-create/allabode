@@ -9,11 +9,15 @@ import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-l
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "Property Leasing Services Philippines";
+const description =
+  "All Abode assists with residential, commercial, office, warehouse, parking, long-term, short-stay, and bedspace leasing.";
+
 export const metadata: Metadata = {
-  title: "Property Leasing Services Philippines",
-  description:
-    "All Abode assists with residential, commercial, office, warehouse, parking, long-term, short-stay, and bedspace leasing.",
+  title,
+  description,
   alternates: { canonical: "/property-solutions/leasing" },
+  openGraph: { title, description },
 };
 
 const leasingServices = [

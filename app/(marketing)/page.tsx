@@ -10,10 +10,14 @@ import { services, trustPoints, credentials, testimonials } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
+const homeTitle = "All Abode Property Solutions Philippines";
+const homeDescription =
+  "All Abode provides licensed real estate brokerage, valuation, leasing, property management, and documentation assistance in the Philippines.";
+
 export const metadata: Metadata = {
-  title: "All Abode Property Solutions Philippines",
-  description:
-    "All Abode provides licensed real estate brokerage, valuation, leasing, property management, and documentation assistance in the Philippines.",
+  title: homeTitle,
+  description: homeDescription,
+  openGraph: { title: homeTitle, description: homeDescription },
   alternates: { canonical: "/" },
 };
 

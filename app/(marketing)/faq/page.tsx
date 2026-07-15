@@ -7,11 +7,15 @@ import { faqSections } from "@/lib/faq-data";
 import { JsonLd, faqPageSchema, breadcrumbSchema } from "@/components/seo/json-ld";
 import { getSettings, s } from "@/lib/settings";
 
+const title = "All Abode FAQ | Real Estate Services Philippines";
+const description =
+  "Read frequently asked questions about All Abode brokerage, leasing, property management, valuation, listings, and documentation assistance.";
+
 export const metadata: Metadata = {
-  title: "All Abode FAQ | Real Estate Services Philippines",
-  description:
-    "Read frequently asked questions about All Abode brokerage, leasing, property management, valuation, listings, and documentation assistance.",
+  title,
+  description,
   alternates: { canonical: "/faq" },
+  openGraph: { title, description },
 };
 
 

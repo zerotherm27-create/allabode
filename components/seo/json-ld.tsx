@@ -83,6 +83,34 @@ export function breadcrumbSchema(crumbs: { label: string; href?: string }[]) {
   };
 }
 
+/** RealEstateListing schema for a single listing detail page. Price is left
+ *  out of the structured data — listing.price/salePrice/rentPrice are
+ *  pre-formatted display strings (e.g. "₱45,000/mo"), not clean numbers, and
+ *  parsing them back out risks silently mangling a price in a way that's
+ *  hard to notice. */
+export function realEstateListingSchema(opts: {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  images?: { url: string }[];
+}) {
+  const base = getPublicSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: opts.title,
+    description: opts.description,
+    url: `${base}/listings/${opts.id}`,
+    ...(opts.images?.length ? { image: opts.images.map((i) => i.url) } : {}),
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: opts.location,
+      addressCountry: "PH",
+    },
+  };
+}
+
 /** FAQPage schema from q/a sections. */
 export function faqPageSchema(
   sections: { items: { q: string; a: string }[] }[]

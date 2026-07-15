@@ -1,12 +1,13 @@
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import fs from "fs";
 import path from "path";
+import { PageContactRow } from "@/lib/pdf/contact-icons";
 
 let _logoWhite: string | null = null;
 function getLogoWhite(): string | null {
   if (_logoWhite !== null) return _logoWhite;
   try {
-    const buf = fs.readFileSync(path.join(process.cwd(), "public/logo/logo-white-icon.png"));
+    const buf = fs.readFileSync(path.join(process.cwd(), "public/logo/logo-2-white.png"));
     _logoWhite = `data:image/png;base64,${buf.toString("base64")}`;
   } catch { _logoWhite = ""; }
   return _logoWhite || null;
@@ -32,29 +33,19 @@ const CREAM = "#f8f6f1";
 const WHITE = "#ffffff";
 
 const styles = StyleSheet.create({
-  page: { backgroundColor: WHITE, fontFamily: "Helvetica" },
+  page: { backgroundColor: WHITE, fontFamily: "Helvetica", paddingTop: 74, paddingBottom: 64 },
 
-  // ── Header band ──
+  // ── Header band (fixed, matches lib/pdf/quotation.tsx's PageHeader) ──
   header: {
-    backgroundColor: NAVY,
-    paddingHorizontal: 32,
-    paddingVertical: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    position: "absolute", top: 0, left: 0, right: 0, height: 74,
+    backgroundColor: NAVY, paddingHorizontal: 32,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
-  logoWrap: { flexDirection: "row", alignItems: "center", gap: 10 },
-  logo: { width: 30, height: 30 },
-  companyName: {
-    color: WHITE,
-    fontFamily: "Helvetica-Bold",
-    fontSize: 11,
-  },
-  companyTagline: { color: "rgba(255,255,255,0.55)", fontSize: 8, marginTop: 2 },
+  logo: { width: 150, height: 40, objectFit: "contain" },
   receiptTitle: {
     color: GOLD,
     fontFamily: "Helvetica-Bold",
-    fontSize: 14,
+    fontSize: 15,
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
@@ -73,7 +64,7 @@ const styles = StyleSheet.create({
   metaValue: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 10, marginTop: 2 },
 
   // ── Body ──
-  body: { paddingHorizontal: 32, paddingTop: 24, paddingBottom: 100 },
+  body: { paddingHorizontal: 32, paddingTop: 24 },
 
   // ── Received from ──
   fromBox: {
@@ -133,24 +124,18 @@ const styles = StyleSheet.create({
   signatureName: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 10 },
   signatureMeta: { color: SLATE, fontSize: 8, marginTop: 1 },
 
-  // ── Footer ──
+  // ── Footer band (fixed, matches lib/pdf/quotation.tsx's PageFooter) ──
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: NAVY,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
+    position: "absolute", bottom: 0, left: 0, right: 0, height: 64,
+    backgroundColor: NAVY, paddingHorizontal: 32, paddingVertical: 8, alignItems: "center",
   },
   footerTitle: {
     color: WHITE,
     fontFamily: "Helvetica-Bold",
-    fontSize: 9,
-    textAlign: "center",
-    marginBottom: 3,
+    fontSize: 8.5,
+    marginBottom: 2,
   },
-  footerText: { color: "rgba(255,255,255,0.5)", fontSize: 7.5, textAlign: "center" },
+  footerText: { color: "rgba(255,255,255,0.55)", fontSize: 6.5, textAlign: "center", marginTop: 2 },
 });
 
 export type PaymentReceiptInput = {
@@ -174,15 +159,12 @@ export async function renderPaymentReceiptPdf(input: PaymentReceiptInput): Promi
       author="All Abode Property Solutions"
     >
       <Page size="A4" style={styles.page}>
-        {/* ── Header ── */}
-        <View style={styles.header}>
-          <View style={styles.logoWrap}>
-            {logo && <Image style={styles.logo} src={logo} />}
-            <View>
-              <Text style={styles.companyName}>All Abode Property Solutions</Text>
-              <Text style={styles.companyTagline}>PRC Licensed Real Estate Firm</Text>
-            </View>
-          </View>
+        {/* ── Header (fixed, matches lib/pdf/quotation.tsx's PageHeader) ── */}
+        <View style={styles.header} fixed>
+          {logo && (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <Image style={styles.logo} src={logo} />
+          )}
           <Text style={styles.receiptTitle}>Acknowledgement Receipt</Text>
         </View>
 
@@ -251,15 +233,11 @@ export async function renderPaymentReceiptPdf(input: PaymentReceiptInput): Promi
           </View>
         </View>
 
-        {/* ── Footer ── */}
-        <View style={styles.footer}>
+        {/* ── Footer (fixed, matches lib/pdf/quotation.tsx's PageFooter) ── */}
+        <View style={styles.footer} fixed>
           <Text style={styles.footerTitle}>All Abode Property Solutions</Text>
-          <Text style={styles.footerText}>
-            This is your official acknowledgement receipt. Please keep for your records.
-          </Text>
-          <Text style={styles.footerText}>
-            For inquiries, please contact us at allabodeph.com
-          </Text>
+          <PageContactRow phone="+63 917 159 6808" email="info@allabodeph.com" website="www.allabodeph.com" color="rgba(255,255,255,0.65)" fontSize={6.5} />
+          <Text style={styles.footerText}>This is your official acknowledgement receipt. Please keep for your records.</Text>
         </View>
       </Page>
     </Document>

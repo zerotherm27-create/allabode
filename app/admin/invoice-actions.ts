@@ -7,6 +7,10 @@ import { logAudit } from "@/lib/audit";
 import { renderPaymentReceiptPdf, METHOD_LABEL } from "@/lib/pdf/payment-receipt";
 import { sendEmail } from "@/lib/email";
 
+function siteUrl() {
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabodeph.com").replace(/\/$/, "");
+}
+
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
   const t = typeof v === "string" ? v.trim() : "";
@@ -400,8 +404,8 @@ function buildReceiptEmail({
 
     <!-- Header -->
     <div style="background:#0a2540;padding:28px 36px;text-align:center;">
-      <p style="margin:0;color:#b4975a;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;">All Abode Property Solutions</p>
-      <h1 style="margin:10px 0 4px;color:#ffffff;font-size:20px;letter-spacing:2px;font-weight:bold;text-transform:uppercase;">Acknowledgement Receipt</h1>
+      <img src="${siteUrl()}/logo/logo-2-white.png" alt="All Abode Property Solutions" style="height:34px;width:auto;margin:0 auto;display:block;">
+      <h1 style="margin:14px 0 4px;color:#ffffff;font-size:20px;letter-spacing:2px;font-weight:bold;text-transform:uppercase;">Acknowledgement Receipt</h1>
       <p style="margin:0;color:rgba(255,255,255,0.45);font-size:11px;">${receiptNumber}</p>
     </div>
 

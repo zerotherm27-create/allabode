@@ -3,6 +3,7 @@ import { Inter_Tight, Inter } from "next/font/google";
 import "./globals.css";
 import { PWARegister } from "@/components/pwa-register";
 import { InstallPrompt } from "@/components/install-prompt";
+import { CookieConsent } from "@/components/cookie-consent";
 import { SiteContentProtection } from "@/components/site-content-protection";
 
 const interTight = Inter_Tight({
@@ -81,6 +82,7 @@ export default function RootLayout({
         {children}
         <PWARegister />
         <InstallPrompt />
+        <CookieConsent />
       </body>
     </html>
   );

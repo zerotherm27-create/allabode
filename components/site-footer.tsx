@@ -58,13 +58,15 @@ export async function SiteFooter() {
 
       <div className="border-t border-white/10">
         <div className="container-site flex flex-col gap-3 py-4 text-xs text-white/40 md:flex-row md:items-start md:justify-between">
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <div className="flex flex-col gap-1.5">
             <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
-            {footerNav.compliance.map((item) => (
-              <Link key={item.label} href={item.href} className="transition-colors hover:text-white/60">
-                {item.label}
-              </Link>
-            ))}
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {footerNav.compliance.map((item) => (
+                <Link key={item.label} href={item.href} className="transition-colors hover:text-white/60">
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           </div>
           <p className="max-w-2xl text-white/30 md:text-right">
             All Abode is operated by All Abode Brokerage and Valuation OPC, a

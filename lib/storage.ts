@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { slugify } from "@/lib/quotation/totals";
 
 export const RECEIPTS_BUCKET = "receipts";
 export const FINANCE_DOCS_BUCKET = "finance-docs";
@@ -11,10 +12,27 @@ export async function signedUrl(
   supabase: SupabaseClient,
   bucket: string,
   path: string,
-  expiresInSeconds = 120
+  expiresInSeconds = 120,
+  downloadFilename?: string
 ): Promise<string | null> {
-  const { data } = await supabase.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
+  const { data } = await supabase.storage.from(bucket).createSignedUrl(
+    path,
+    expiresInSeconds,
+    downloadFilename ? { download: downloadFilename } : undefined
+  );
   return data?.signedUrl ?? null;
+}
+
+/** Human-readable download filename for an owner SOA PDF — "Owner-Unit-Property-Period.pdf". */
+export function buildOwnerSoaFilename(args: {
+  ownerName: string;
+  unitLabel?: string | null;
+  propertyName?: string | null;
+  periodStart: string;
+}): string {
+  const period = new Date(`${args.periodStart}T00:00:00`).toLocaleString("en-PH", { month: "short", year: "numeric" });
+  const parts = [args.ownerName, args.unitLabel, args.propertyName, period].filter(Boolean) as string[];
+  return `${slugify(parts.join("-"))}.pdf`;
 }
 
 /** Recovers the object path from a Supabase Storage URL for the given bucket —

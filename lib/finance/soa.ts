@@ -314,8 +314,11 @@ export async function computeOwnerSoaByLease(
         sort_order: 0,
       }];
 
+  // "PHP" not "₱" — the peso glyph doesn't render correctly in the PDF's font
+  // (lib/pdf/soa.tsx's own peso() formatter avoids it for the same reason),
+  // and this note text is shared verbatim across the PDF, admin, and owner views.
   const pesoAmt = (n: number) =>
-    `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `PHP ${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   // Advance rent is prepaid rent — the owner's money — so it's full income.
   // Kept on line_type "income_other" (not a distinct type) so the publish

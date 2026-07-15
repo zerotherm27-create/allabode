@@ -163,6 +163,10 @@ export default async function EditLeasePage({
         <div className="border-b border-line px-5 py-4">
           <h2 className="font-display text-base font-semibold text-navy">Payments received</h2>
           <p className="mt-0.5 text-xs text-slate">Verified payments on this lease — used as rental income in the SOA.</p>
+          <p className="mt-1 text-xs text-gold-bright">
+            Leave blank on a new lease&apos;s first SOA — the advance rent and security deposit recorded
+            below fund the first remittance instead. Start recording payments here from the following month.
+          </p>
         </div>
 
         {/* Record payment form */}
@@ -192,7 +196,7 @@ export default async function EditLeasePage({
           </div>
           <div className="col-span-2 md:col-span-4">
             <label className="mb-1 block text-xs font-medium text-slate">Payment for</label>
-            <input name="payment_for" type="text" className={inputCls} placeholder="e.g. 1 month advance rental and 2 months security deposit" />
+            <input name="payment_for" type="text" className={inputCls} placeholder="e.g. August 2026 rent" />
           </div>
           <div className="col-span-2 md:col-span-3">
             <label className="mb-1 block text-xs font-medium text-slate">Notes</label>
@@ -306,9 +310,9 @@ export default async function EditLeasePage({
           <div>
             <h2 className="font-display text-base font-semibold text-navy">Security Deposit &amp; Advance Rent</h2>
             <p className="mt-0.5 text-xs text-slate">
-              Held by AllAbode at lease signing. The Security Deposit funds the lease&#x2019;s first owner
-              remittance (minus commission and other expenses); the Advance Rent is held and shown only as a
-              note — it never enters the owner&#x2019;s payout math.
+              Collected at lease signing. The Advance Rent is full owner income on the first SOA; of the
+              Security Deposit, one month&#x2019;s worth funds the first remittance and the rest stays held by
+              AllAbode (shown as a note only, minus commission and other expenses from the released amount).
             </p>
           </div>
           {deposits.length > 0 && (

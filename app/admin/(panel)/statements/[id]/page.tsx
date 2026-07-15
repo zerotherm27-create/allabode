@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { createClient } from "@/lib/supabase/server";
-import { signedUrl, FINANCE_DOCS_BUCKET } from "@/lib/storage";
+import { signedUrl, buildOwnerSoaFilename, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 import {
   submitForReview, approveStatement, publishStatement, voidStatement, deleteStatement, reopenStatement,
   saveOwnerSoaReview, markSoaProcessing, markSoaPaid, carryForwardSoa, regenerateSoaLines,
@@ -91,7 +91,10 @@ export default async function StatementDetailPage({ params }: { params: Promise<
   const { data: lineRows } = await supabase.from("soa_lines").select("*").eq("statement_id", id).order("sort_order");
   const lines = (lineRows ?? []) as Line[];
 
-  const pdfUrl  = s.pdf_path        ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.pdf_path,        300) : null;
+  const pdfFilename = type === "owner"
+    ? buildOwnerSoaFilename({ ownerName: partyName, unitLabel, propertyName, periodStart: s.period_start })
+    : undefined;
+  const pdfUrl  = s.pdf_path        ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.pdf_path,        300, pdfFilename) : null;
   const slipUrl = s.payout_slip_url ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 300) : null;
 
   const { data: autoSendRule } = await supabase

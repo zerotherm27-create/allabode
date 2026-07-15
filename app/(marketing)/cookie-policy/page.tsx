@@ -55,11 +55,6 @@ export default async function CookiePolicyPage() {
               <h2 className="font-display text-xl font-bold text-navy">
                 Cookies We Use
               </h2>
-              <p className="mt-3">
-                We keep cookie use to what&apos;s strictly necessary for the
-                site to function. We do not currently use advertising,
-                marketing, or third-party analytics cookies.
-              </p>
               <ul className="mt-3 list-disc space-y-1.5 pl-6">
                 <li>
                   <span className="font-medium text-navy">
@@ -68,7 +63,17 @@ export default async function CookiePolicyPage() {
                   — set when you sign in to the owner, tenant, or staff portal.
                   These keep you signed in as you move between pages and are
                   required for the portal and admin dashboard to work. They
-                  are cleared when you sign out or your session expires.
+                  are cleared when you sign out or your session expires. These
+                  are always on and are not affected by the cookie banner.
+                </li>
+                <li>
+                  <span className="font-medium text-navy">
+                    Analytics cookies (Google Analytics, Meta Pixel)
+                  </span>{" "}
+                  — help us understand how visitors use the site (pages
+                  viewed, general traffic patterns) so we can improve it. These
+                  only load if you accept cookies in the banner shown on your
+                  first visit; if you decline, they are never set.
                 </li>
               </ul>
             </div>
@@ -80,12 +85,12 @@ export default async function CookiePolicyPage() {
               <p className="mt-3">
                 On your first visit, a banner lets you accept or decline
                 cookies; your choice is remembered on your device so the
-                banner won&apos;t show again. Most browsers also let you block
-                or delete cookies through their settings. Since the only
-                cookies we set are required to keep you signed in, blocking
-                them will prevent the owner, tenant, or staff portal from
-                working, but will not affect your ability to browse listings
-                or submit inquiries on the public site.
+                banner won&apos;t show again. Declining blocks Google
+                Analytics and Meta Pixel from loading — it does not affect
+                your ability to browse listings, submit inquiries, or sign in
+                to a portal, since the sign-in cookie is essential and always
+                on. Most browsers also let you block or delete cookies
+                through their own settings at any time.
               </p>
             </div>
 
@@ -94,9 +99,9 @@ export default async function CookiePolicyPage() {
                 Changes to This Policy
               </h2>
               <p className="mt-3">
-                If we introduce analytics, marketing, or other non-essential
-                cookies in the future, we will update this page to describe
-                them before they are used.
+                If we introduce additional non-essential cookies in the
+                future, we will update this page to describe them before they
+                are used.
               </p>
             </div>
 

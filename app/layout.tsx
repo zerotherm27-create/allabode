@@ -4,6 +4,7 @@ import "./globals.css";
 import { PWARegister } from "@/components/pwa-register";
 import { InstallPrompt } from "@/components/install-prompt";
 import { CookieConsent } from "@/components/cookie-consent";
+import { Analytics } from "@/components/analytics";
 import { SiteContentProtection } from "@/components/site-content-protection";
 
 const interTight = Inter_Tight({
@@ -83,6 +84,7 @@ export default function RootLayout({
         <PWARegister />
         <InstallPrompt />
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );

@@ -4,6 +4,13 @@ import { ChatWidget } from "@/components/chat/chat-widget";
 import { JsonLd, organizationSchema } from "@/components/seo/json-ld";
 import { getSettings, s } from "@/lib/settings";
 
+// Applies to every page under this layout (Next.js ISR default), now that
+// getSettings()/getListings() use plain anon clients and no longer force
+// dynamic rendering. Listing/settings admin mutations call revalidatePath
+// for immediate on-demand invalidation — this is just the time-based
+// safety-net ceiling for pages nothing explicitly revalidated.
+export const revalidate = 300;
+
 export default async function MarketingLayout({
   children,
 }: {

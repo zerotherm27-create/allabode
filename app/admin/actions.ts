@@ -33,6 +33,29 @@ function slugify(v: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Public marketing pages that show listing data — revalidate after any
+ *  listing mutation so ISR (app/(marketing)/layout.tsx) doesn't serve stale
+ *  availability, pricing, or photos after an admin edit. */
+function revalidatePublicListingPaths(slug?: string | null) {
+  revalidatePath("/");
+  revalidatePath("/listings");
+  revalidatePath("/listings/for-rent");
+  revalidatePath("/listings/for-sale");
+  revalidatePath("/listings/commercial");
+  revalidatePath("/listings/office");
+  revalidatePath("/listings/industrial-warehouse");
+  revalidatePath("/listings/parking");
+  if (slug) revalidatePath(`/listings/${slug}`);
+}
+
+/** Same as revalidatePublicListingPaths, but looks the slug up by id first —
+ *  for actions (image management, status/featured toggles) that only have
+ *  the listing id in scope. */
+async function revalidatePublicListingById(supabase: Awaited<ReturnType<typeof createClient>>, id: string) {
+  const { data } = await supabase.from("listings").select("slug").eq("id", id).maybeSingle();
+  revalidatePublicListingPaths((data as { slug?: string } | null)?.slug);
+}
+
 function listingRow(fd: FormData) {
   const title = s(fd, "title") ?? "Untitled";
   const amenities = (s(fd, "amenities") ?? "")
@@ -76,26 +99,31 @@ function listingRow(fd: FormData) {
 
 export async function createListing(fd: FormData) {
   const supabase = await createClient();
+  const row = listingRow(fd);
   const { data, error } = await supabase
     .from("listings")
-    .insert(listingRow(fd))
+    .insert(row)
     .select("id")
     .single();
   if (error) throw new Error(error.message);
   revalidatePath("/admin/listings");
+  revalidatePublicListingPaths(row.slug);
   redirect(`/admin/listings/${data.id}/edit`);
 }
 
 export async function updateListing(id: string, fd: FormData) {
   const supabase = await createClient();
-  const { error } = await supabase.from("listings").update(listingRow(fd)).eq("id", id);
+  const row = listingRow(fd);
+  const { error } = await supabase.from("listings").update(row).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/listings");
+  revalidatePublicListingPaths(row.slug);
   redirect("/admin/listings");
 }
 
 export async function deleteListing(id: string) {
   const supabase = await createClient();
+  await revalidatePublicListingById(supabase, id);
   await supabase.from("listings").delete().eq("id", id);
   revalidatePath("/admin/listings");
 }
@@ -104,12 +132,14 @@ export async function setListingStatus(id: string, status: string) {
   const supabase = await createClient();
   await supabase.from("listings").update({ status }).eq("id", id);
   revalidatePath("/admin/listings");
+  await revalidatePublicListingById(supabase, id);
 }
 
 export async function toggleFeatured(id: string, value: boolean) {
   const supabase = await createClient();
   await supabase.from("listings").update({ is_featured: value }).eq("id", id);
   revalidatePath("/admin/listings");
+  await revalidatePublicListingById(supabase, id);
 }
 
 export async function generateListingDescription(input: ListingDescriptionInput): Promise<string | null> {
@@ -174,6 +204,7 @@ export async function uploadListingImages(listingId: string, fd: FormData) {
     nextOrder += 1;
   }
   revalidatePath(`/admin/listings/${listingId}/edit`);
+  await revalidatePublicListingById(supabase, listingId);
 }
 
 export async function deleteListingImage(imageId: string, listingId: string) {
@@ -187,6 +218,7 @@ export async function deleteListingImage(imageId: string, listingId: string) {
   if (path) await supabase.storage.from(LISTING_IMAGES_BUCKET).remove([path]);
   await supabase.from("listing_images").delete().eq("id", imageId);
   revalidatePath(`/admin/listings/${listingId}/edit`);
+  await revalidatePublicListingById(supabase, listingId);
 }
 
 export async function reorderListingImages(listingId: string, orderedIds: string[]) {
@@ -195,6 +227,7 @@ export async function reorderListingImages(listingId: string, orderedIds: string
     orderedIds.map((id, i) => supabase.from("listing_images").update({ sort_order: i }).eq("id", id))
   );
   revalidatePath(`/admin/listings/${listingId}/edit`);
+  await revalidatePublicListingById(supabase, listingId);
 }
 
 /* ---- Leads: status + internal notes ---- */

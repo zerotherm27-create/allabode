@@ -13,6 +13,7 @@ import { motion, useReducedMotion, type Variants } from "motion/react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
 
 function revealVariants(reduced: boolean, y: number): Variants {
   return {
@@ -106,5 +107,42 @@ export function StaggerItem({ as = "div", y = 20, className, children }: Stagger
     <Tag className={className} variants={revealVariants(reduced, y)}>
       {children}
     </Tag>
+  );
+}
+
+type AmbientHeroProps = {
+  image: string;
+  /** CSS background-position keyword(s), e.g. "center" or "top left". */
+  position?: string;
+  className?: string;
+};
+
+/**
+ * Slow, looping camera-drift background (aerial-screensaver feel) for a
+ * single hero photo. Baseline scale(1.1) leaves headroom so the drift
+ * never exposes an edge; the parent must clip with `overflow-hidden`.
+ */
+export function AmbientHero({ image, position = "center", className }: AmbientHeroProps) {
+  const reduced = useReducedMotion() ?? false;
+  return (
+    <motion.div
+      className={className}
+      style={{ backgroundImage: `url(${image})`, backgroundPosition: position }}
+      initial={{ scale: 1.1, x: "0%", y: "0%" }}
+      animate={
+        reduced
+          ? { scale: 1.08 }
+          : {
+              scale: [1.1, 1.14, 1.1],
+              x: ["0%", "-2.5%", "2%", "0%"],
+              y: ["0%", "1.5%", "-1.5%", "0%"],
+            }
+      }
+      transition={
+        reduced
+          ? { duration: 0 }
+          : { duration: 32, repeat: Infinity, repeatType: "mirror", ease: EASE_IN_OUT }
+      }
+    />
   );
 }

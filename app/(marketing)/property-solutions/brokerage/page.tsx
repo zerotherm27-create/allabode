@@ -86,6 +86,7 @@ export default async function BrokeragePage() {
         title="Real Estate Brokerage"
         subtitle="Buying or selling property is a major decision. All Abode helps property owners, buyers, sellers, and investors move through real estate transactions with professional support, market guidance, and organized coordination. Brokerage services are handled under the supervision of duly licensed real estate service practitioners."
         image={s(settings, "page_buysell_image") || undefined}
+        imagePosition={s(settings, "page_buysell_image_position")}
         crumbs={[
           { label: "Home", href: "/" },
           { label: "Services", href: "/property-solutions" },

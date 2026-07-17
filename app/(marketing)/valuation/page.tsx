@@ -69,6 +69,7 @@ export default async function ValuationPage() {
         title="Real Estate Valuation"
         subtitle="Property decisions are easier when you understand value. All Abode provides valuation and appraisal support for property owners, buyers, sellers, investors, and businesses. Our valuation services help clients make more informed decisions for selling, buying, leasing, financing, planning, reporting, or internal review."
         image={s(settings, "page_appraisal_image") || undefined}
+        imagePosition={s(settings, "page_appraisal_image_position")}
         crumbs={[{ label: "Home", href: "/" }, { label: "Valuation" }]}
       >
         <Button href="#request" size="lg" variant="ghost-light">

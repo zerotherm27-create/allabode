@@ -73,6 +73,7 @@ export default async function LeasingPage() {
         title="Property Leasing"
         subtitle="All Abode helps property owners find tenants and helps tenants find the right space. We assist with leasing for residential, commercial, office, industrial, warehouse, bedspace, short-stay, and parking properties. Our goal is to make the leasing process clearer, smoother, and more organized for both property owners and tenants."
         image={s(settings, "page_leasing_image") || undefined}
+        imagePosition={s(settings, "page_leasing_image_position")}
         crumbs={[
           { label: "Home", href: "/" },
           { label: "Services", href: "/property-solutions" },

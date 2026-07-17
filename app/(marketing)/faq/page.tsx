@@ -30,6 +30,7 @@ export default async function FaqPage() {
         title="Frequently Asked Questions"
         subtitle="Find answers to common questions about All Abode services, including brokerage, leasing, property management, valuation, listings, and documentation assistance."
         image={s(settings, "page_faq_image") || undefined}
+        imagePosition={s(settings, "page_faq_image_position")}
         crumbs={[{ label: "Home", href: "/" }, { label: "FAQ" }]}
       />
 

@@ -94,6 +94,7 @@ export default async function DocumentationAssistancePage() {
         title="Documentation Assistance"
         subtitle="Property transactions often require documents, payments, coordination, and follow-ups with different offices. All Abode helps clients organize and coordinate property-related documentation requirements with a clearer process."
         image={s(settings, "page_documentation_image") || undefined}
+        imagePosition={s(settings, "page_documentation_image_position")}
         crumbs={[
           { label: "Home", href: "/" },
           { label: "Services", href: "/property-solutions" },

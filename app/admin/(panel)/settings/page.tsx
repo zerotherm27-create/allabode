@@ -124,6 +124,22 @@ function SettingsSection({
                   name={field.key}
                   defaultValue={settings[field.key] ?? ""}
                 />
+              ) : field.type === "position" ? (
+                <select
+                  name={field.key}
+                  defaultValue={settings[field.key] || "center"}
+                  className="w-full rounded-md border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/20"
+                >
+                  <option value="top left">Top left</option>
+                  <option value="top">Top</option>
+                  <option value="top right">Top right</option>
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                  <option value="bottom left">Bottom left</option>
+                  <option value="bottom">Bottom</option>
+                  <option value="bottom right">Bottom right</option>
+                </select>
               ) : (
                 <input
                   name={field.key}

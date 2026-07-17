@@ -44,6 +44,7 @@ export default async function ContactPage() {
         title="Contact All Abode"
         subtitle="Tell us what you need help with and our team will guide you to the right property solution. You may contact All Abode for property listings, leasing, sale, valuation, management, documentation assistance, and general real estate concerns."
         image={s(settings, "page_contact_image") || undefined}
+        imagePosition={s(settings, "page_contact_image_position")}
         crumbs={[{ label: "Home", href: "/" }, { label: "Contact" }]}
       />
 

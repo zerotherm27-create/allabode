@@ -36,6 +36,7 @@ export default async function ListingsPage() {
         lead="Explore available properties for rent, sale, business use, office use, industrial use, warehouse use, and parking. All listings are subject to availability, owner approval, and verification at the time of inquiry."
         crumbs={[{ label: "Home", href: "/" }, { label: "Listings" }]}
         image={s(settings, "page_listings_image") || undefined}
+        imagePosition={s(settings, "page_listings_image_position")}
       />
       <section className="py-section">
         <Container>

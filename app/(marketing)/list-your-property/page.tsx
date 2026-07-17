@@ -31,6 +31,7 @@ export default async function ListYourPropertyPage() {
         title="Put your property in licensed hands."
         subtitle="Whether you want to lease, sell, have it managed, or valued, submit your property below and our team will take it from there."
         image={s(settings, "page_listyour_image") || undefined}
+        imagePosition={s(settings, "page_listyour_image_position")}
       />
 
       {/* How it works */}

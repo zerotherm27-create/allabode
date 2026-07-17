@@ -145,6 +145,7 @@ export default async function PropertyManagementPage() {
         title="Property Management"
         subtitle="Owning property should not mean handling every concern alone. All Abode helps property owners manage the day-to-day needs of their units, from rent coordination and maintenance to cleaning, furnishing, turnover, and owner updates. This service is ideal for busy owners, investors, OFWs, and owners who want local support for their property."
         image={s(settings, "page_pm_image") || undefined}
+        imagePosition={s(settings, "page_pm_image_position")}
         crumbs={[
           { label: "Home", href: "/" },
           { label: "Services", href: "/property-solutions" },

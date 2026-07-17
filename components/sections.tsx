@@ -69,6 +69,7 @@ export function PageHero({
   lead,
   crumbs,
   image,
+  imagePosition = "center",
   children,
 }: {
   eyebrow: string;
@@ -78,6 +79,7 @@ export function PageHero({
   lead?: string;
   crumbs?: Crumb[];
   image?: string;
+  imagePosition?: string;
   children?: ReactNode;
 }) {
   const body = subtitle ?? lead;
@@ -86,8 +88,8 @@ export function PageHero({
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
       {image && (
         <div
-          className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-25 sm:bg-cover"
-          style={{ backgroundImage: `url(${image})` }}
+          className="absolute inset-0 -z-10 bg-no-repeat bg-cover opacity-25"
+          style={{ backgroundImage: `url(${image})`, backgroundPosition: imagePosition }}
         />
       )}
       <div className="absolute inset-0 -z-10 opacity-50 [background:radial-gradient(70%_60%_at_88%_10%,rgba(180,151,90,0.25),transparent_60%)]" />

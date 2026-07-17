@@ -4,7 +4,7 @@ import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
 import { Faq } from "@/components/faq";
-import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
+import { AmbientHero, Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 
 import { services, trustPoints, credentials, testimonials } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
@@ -78,15 +78,17 @@ export default async function Home() {
     getSettings(),
   ]);
   const heroImage = s(settings, "hero_image");
+  const heroImagePosition = s(settings, "hero_image_position") || "center";
   return (
     <>
       {/* ---------- Hero ---------- */}
       <section className="relative isolate overflow-hidden bg-navy">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
         {heroImage && (
-          <div
-            className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-30 sm:bg-cover"
-            style={{ backgroundImage: `url(${heroImage})` }}
+          <AmbientHero
+            image={heroImage}
+            position={heroImagePosition}
+            className="absolute inset-0 -z-10 bg-no-repeat bg-cover opacity-30"
           />
         )}
         <div className="absolute inset-0 -z-10 opacity-60 [background:radial-gradient(80%_60%_at_85%_15%,rgba(180,151,90,0.28),transparent_60%)]" />
@@ -345,7 +347,7 @@ export default async function Home() {
           >
             {testimonials.map((t) => (
               <StaggerItem as="li" key={t.name} className="sm:first:pr-12 sm:last:pl-12">
-                <Icon name="format_quote" size={28} className="text-gold-ink" />
+                <Icon name="verified_user" size={28} className="text-gold-ink" />
                 <p className="mt-3 text-lg leading-relaxed text-navy">{t.quote}</p>
                 <p className="label-caps mt-4 text-slate">
                   {t.name}, {t.role}

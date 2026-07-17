@@ -27,6 +27,7 @@ export default async function TermsOfServicePage() {
         title="Terms of Service"
         subtitle="These Terms of Service apply to the use of the All Abode website and services. By using this website or submitting an inquiry, you agree to these terms."
         image={s(settings, "page_terms_image") || undefined}
+        imagePosition={s(settings, "page_terms_image_position")}
         crumbs={[{ label: "Home", href: "/" }, { label: "Terms of Service" }]}
       />
 

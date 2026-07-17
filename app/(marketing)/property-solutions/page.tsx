@@ -50,6 +50,7 @@ export default async function PropertySolutionsPage() {
         title="Real Estate Services"
         subtitle="All Abode brings together the services you need to buy, sell, lease, manage, value, and process property-related documents. Whether you are a property owner, buyer, seller, tenant, investor, or business, we help you choose the right path and move through the process with confidence."
         image={s(settings, "page_property_solutions_image") || undefined}
+        imagePosition={s(settings, "page_property_solutions_image_position")}
         crumbs={[{ label: "Home", href: "/" }, { label: "Services" }]}
       >
         <Button href="#services" size="lg" variant="ghost-light">

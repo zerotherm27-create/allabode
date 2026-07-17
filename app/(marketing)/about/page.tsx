@@ -37,6 +37,7 @@ export default async function AboutPage() {
         title="About All Abode"
         subtitle="All Abode is a real estate service brand focused on practical support for owners, buyers, sellers, tenants, investors, and businesses. All Abode is operated by All Abode Brokerage and Valuation OPC, a Philippine real estate service company providing brokerage, valuation, leasing, property management, and documentation assistance services."
         image={s(settings, "page_about_image") || undefined}
+        imagePosition={s(settings, "page_about_image_position")}
         crumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
       />
 

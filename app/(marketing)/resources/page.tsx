@@ -83,6 +83,7 @@ export default async function ResourcesPage() {
         title="Property guides and practical real estate advice."
         subtitle="Explore guides from All Abode to help you understand leasing, brokerage, property management, appraisal, and property ownership decisions."
         image={s(settings, "page_resources_image") || undefined}
+        imagePosition={s(settings, "page_resources_image_position")}
       />
 
       {/* Categories */}

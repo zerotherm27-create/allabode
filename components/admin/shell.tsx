@@ -113,7 +113,7 @@ export function AdminShell({
           />
           <span className="label-caps ml-auto text-gold">Admin</span>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
           {navGroups.map(({ group, items }) => (
             <div key={group ?? "__top"}>
               {group && (

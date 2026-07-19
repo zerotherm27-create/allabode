@@ -30,7 +30,7 @@ export function PropertyCard({
     ];
 
   return (
-    <article className="group flex flex-col overflow-hidden border border-line bg-surface transition-shadow duration-[var(--dur-mid)] hover:shadow-[var(--shadow-card)]">
+    <article className="group flex h-full flex-col overflow-hidden border border-line bg-surface transition-shadow duration-[var(--dur-mid)] hover:shadow-[var(--shadow-card)]">
       {/* Image band */}
       <div className="relative aspect-[4/3] overflow-hidden">
         {listing.images?.[0] ? (

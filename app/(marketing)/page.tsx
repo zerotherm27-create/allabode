@@ -276,7 +276,7 @@ export default async function Home() {
 
           <StaggerGroup className="mt-12 grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3">
             {featured.map((listing) => (
-              <StaggerItem key={listing.id}>
+              <StaggerItem key={listing.id} className="h-full">
                 <PropertyCard listing={listing} />
               </StaggerItem>
             ))}

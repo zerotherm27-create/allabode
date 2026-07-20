@@ -24,8 +24,12 @@ export function ListingShareButton({ title }: { title: string }) {
       }
       return;
     }
+    await copyLink();
+  }
+
+  async function copyLink() {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -51,11 +55,11 @@ export function ListingShareButton({ title }: { title: string }) {
       <div className="relative">
         <button
           type="button"
-          onClick={share}
-          aria-label="Share this listing"
+          onClick={copyLink}
+          aria-label="Copy link to this listing"
           className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-navy transition-colors hover:bg-surface-gray"
         >
-          <Icon name="share" size={20} />
+          <Icon name={copied ? "check" : "content_copy"} size={20} />
         </button>
         {copied && (
           <span
@@ -66,6 +70,16 @@ export function ListingShareButton({ title }: { title: string }) {
           </span>
         )}
       </div>
+      {typeof navigator !== "undefined" && "share" in navigator && (
+        <button
+          type="button"
+          onClick={share}
+          aria-label="Share this listing"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-navy transition-colors hover:bg-surface-gray"
+        >
+          <Icon name="share" size={20} />
+        </button>
+      )}
     </div>
   );
 }

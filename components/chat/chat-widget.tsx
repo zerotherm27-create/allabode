@@ -66,12 +66,14 @@ export function ChatWidget() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
-            {messages.length === 0 && (
-              <p className="text-sm text-slate">
-                Ask about our services, or open a listing and ask about that property.
-              </p>
-            )}
             <div className="flex flex-col gap-3">
+              {messages.length === 0 && (
+                <div className="max-w-[85%] self-start rounded-md bg-surface-gray px-3 py-2 text-sm text-ink">
+                  {listingSlug
+                    ? "Hi! I can answer questions about this listing, or about our other services — what would you like to know?"
+                    : "Hi! I'm the All Abode assistant. Ask me about our services, or open a listing and ask about that property specifically."}
+                </div>
+              )}
               {messages.map((m, i) => (
                 <div
                   key={i}

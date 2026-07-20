@@ -6,6 +6,7 @@ import { Faq } from "@/components/faq";
 import { AppraisalForm } from "@/components/forms/lead-forms";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
+import { faqSections } from "@/lib/faq-data";
 import { getSettings, s } from "@/lib/settings";
 
 const title = "Real Estate Valuation and Appraisal Philippines";
@@ -51,12 +52,7 @@ const processSteps = [
   { n: "5", title: "Report or Value Opinion", body: "We provide the appropriate valuation output based on the agreed engagement." },
 ];
 
-const faqs = [
-  { q: "Do you provide appraisal services?", a: "Yes. All Abode provides valuation and appraisal support through duly licensed real estate service practitioners." },
-  { q: "What is the difference between pricing guidance and formal appraisal?", a: "Pricing guidance is informal market advice for selling or leasing decisions. A formal appraisal is a written valuation report prepared under a formal appraisal engagement." },
-  { q: "What documents are needed for valuation?", a: "Common documents may include title, tax declaration, floor plan, photos, location details, building information, and other property records." },
-  { q: "When do I need a valuation?", a: "Commonly for selling, buying, setting a rental rate, estate planning, loan or financing preparation, investment review, and business reporting." },
-];
+const faqs = faqSections.find((section) => section.id === "valuation")!.items;
 
 export default async function ValuationPage() {
   const settings = await getSettings();

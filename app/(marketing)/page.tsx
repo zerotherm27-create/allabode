@@ -7,6 +7,7 @@ import { Faq } from "@/components/faq";
 import { AmbientHero, Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 
 import { services, trustPoints, credentials, testimonials } from "@/lib/data";
+import { faqSections } from "@/lib/faq-data";
 import { getFeaturedListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
@@ -53,24 +54,7 @@ const processSteps = [
   { n: "5", title: "Completion and Next Steps", body: "We help close the loop with turnover, documentation, reports, or continued management support when needed." },
 ];
 
-const homeFaqs = [
-  {
-    q: "What services does All Abode offer?",
-    a: "All Abode provides brokerage, valuation, leasing, property management, and documentation assistance in the Philippines.",
-  },
-  {
-    q: "Is All Abode only a listing website?",
-    a: "No. Listings are part of the website, but All Abode is a full-service real estate company for owners, buyers, sellers, tenants, and investors.",
-  },
-  {
-    q: "Can owners list properties for lease or sale?",
-    a: "Yes. Owners can submit property details through the List My Property form and our team will guide you through pricing, marketing, and the next steps.",
-  },
-  {
-    q: "Can I request a formal appraisal?",
-    a: "Yes. Valuation and appraisal support is available, with formal appraisal reports prepared by duly licensed real estate appraisers under a formal engagement.",
-  },
-];
+const homeFaqs = faqSections.find((section) => section.id === "general")!.items;
 
 export default async function Home() {
   const [featured, settings] = await Promise.all([

@@ -102,44 +102,54 @@ export async function POST(req: NextRequest) {
 
   const history = body.messages.slice(-MAX_HISTORY_TURNS);
   const client = getOpenAI();
-  const settings = await getSettings();
 
-  const messages: ChatCompletionMessageParam[] = [
-    { role: "system", content: buildSystemPrompt(body.listingSlug, settings) },
-    ...history.map((m): ChatCompletionMessageParam => ({ role: m.role, content: m.content })),
-  ];
+  let stream: Awaited<ReturnType<typeof client.chat.completions.create>>;
+  try {
+    const settings = await getSettings();
 
-  // First pass: non-streaming, so tool calls (which arrive incrementally when
-  // streamed) can be reliably captured and resolved before the final answer.
-  const first = await client.chat.completions.create({
-    model: RECEIPT_MODEL,
-    messages,
-    tools: TOOLS,
-    max_tokens: MAX_TOKENS,
-  });
+    const messages: ChatCompletionMessageParam[] = [
+      { role: "system", content: buildSystemPrompt(body.listingSlug, settings) },
+      ...history.map((m): ChatCompletionMessageParam => ({ role: m.role, content: m.content })),
+    ];
 
-  const toolCalls = first.choices[0]?.message?.tool_calls;
-  if (toolCalls && toolCalls.length > 0) {
-    messages.push({ role: "assistant", content: first.choices[0].message.content, tool_calls: toolCalls });
-    for (const call of toolCalls) {
-      if (call.type !== "function") continue;
-      let args: Record<string, unknown> = {};
-      try {
-        args = JSON.parse(call.function.arguments);
-      } catch {
-        // malformed args — runTool below returns a "not found" style error
+    // First pass: non-streaming, so tool calls (which arrive incrementally when
+    // streamed) can be reliably captured and resolved before the final answer.
+    const first = await client.chat.completions.create({
+      model: RECEIPT_MODEL,
+      messages,
+      tools: TOOLS,
+      max_tokens: MAX_TOKENS,
+    });
+
+    const toolCalls = first.choices[0]?.message?.tool_calls;
+    if (toolCalls && toolCalls.length > 0) {
+      messages.push({ role: "assistant", content: first.choices[0].message.content, tool_calls: toolCalls });
+      for (const call of toolCalls) {
+        if (call.type !== "function") continue;
+        let args: Record<string, unknown> = {};
+        try {
+          args = JSON.parse(call.function.arguments);
+        } catch {
+          // malformed args — runTool below returns a "not found" style error
+        }
+        const result = await runTool(call.function.name, args);
+        messages.push({ role: "tool", tool_call_id: call.id, content: result });
       }
-      const result = await runTool(call.function.name, args);
-      messages.push({ role: "tool", tool_call_id: call.id, content: result });
     }
-  }
 
-  const stream = await client.chat.completions.create({
-    model: RECEIPT_MODEL,
-    messages,
-    max_tokens: MAX_TOKENS,
-    stream: true,
-  });
+    stream = await client.chat.completions.create({
+      model: RECEIPT_MODEL,
+      messages,
+      max_tokens: MAX_TOKENS,
+      stream: true,
+    });
+  } catch (err) {
+    console.error("chat route error:", err);
+    return NextResponse.json(
+      { error: "The assistant is having trouble responding right now — please try again." },
+      { status: 502 }
+    );
+  }
 
   const encoder = new TextEncoder();
   const readable = new ReadableStream({
@@ -149,6 +159,8 @@ export async function POST(req: NextRequest) {
           const text = chunk.choices[0]?.delta?.content;
           if (text) controller.enqueue(encoder.encode(text));
         }
+      } catch (err) {
+        console.error("chat stream error:", err);
       } finally {
         controller.close();
       }

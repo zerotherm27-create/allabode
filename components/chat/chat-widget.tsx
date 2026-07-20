@@ -141,21 +141,21 @@ export function ChatWidget() {
       <div className="flex items-center justify-end">
         {!open && (
           <div
-            className={`flex h-14 items-center gap-1 rounded-full bg-navy py-2 pl-5 pr-16 text-white shadow-[var(--shadow-card)] ring-1 ring-gold/30 transition-[transform,opacity] duration-500 ease-[var(--ease-out)] ${
-              showHint
-                ? "-mr-8 translate-x-0 scale-100 opacity-100"
-                : "pointer-events-none mr-0 translate-x-4 scale-90 opacity-0"
+            className={`flex h-14 items-center overflow-hidden rounded-full bg-navy text-white shadow-[var(--shadow-card)] ring-1 ring-gold/30 transition-[width,margin-right] duration-500 ease-[var(--ease-out)] ${
+              showHint ? "mr-3 w-40" : "pointer-events-none mr-0 w-0"
             }`}
           >
-            <span className="text-sm font-medium whitespace-nowrap">Ask Abbie</span>
-            <button
-              type="button"
-              onClick={() => setHintDismissed(true)}
-              aria-label="Dismiss"
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white"
-            >
-              <Icon name="close" size={16} />
-            </button>
+            <div className="flex w-40 shrink-0 items-center gap-1 py-2 pl-5 pr-2">
+              <span className="text-sm font-medium whitespace-nowrap">Ask Abbie</span>
+              <button
+                type="button"
+                onClick={() => setHintDismissed(true)}
+                aria-label="Dismiss"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
           </div>
         )}
 

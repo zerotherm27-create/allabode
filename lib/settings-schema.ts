@@ -46,6 +46,8 @@ export const settingsFallback: Settings = {
   page_terms_image_position:              "center",
   page_privacy_image:            "",
   page_privacy_image_position:            "center",
+  page_cookie_image:             "",
+  page_cookie_image_position:             "center",
 };
 
 export function s(settings: Settings, key: string): string {
@@ -129,6 +131,8 @@ export const settingsSchema = [
       { key: "page_terms_image_position",              label: "Terms of Service — Image Position", type: "position" },
       { key: "page_privacy_image",            label: "Privacy Policy — Background Image", type: "image" },
       { key: "page_privacy_image_position",            label: "Privacy Policy — Image Position", type: "position" },
+      { key: "page_cookie_image",              label: "Cookie Policy — Background Image", type: "image" },
+      { key: "page_cookie_image_position",              label: "Cookie Policy — Image Position", type: "position" },
     ],
   },
 ] as const;

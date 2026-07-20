@@ -27,6 +27,7 @@ export default async function CookiePolicyPage() {
         title="Cookie Policy"
         subtitle="This page explains what cookies this website uses, why, and how you can manage them."
         image={s(settings, "page_cookie_image") || undefined}
+        imagePosition={s(settings, "page_cookie_image_position")}
         crumbs={[{ label: "Home", href: "/" }, { label: "Cookie Policy" }]}
       />
 

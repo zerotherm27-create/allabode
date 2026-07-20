@@ -5,7 +5,6 @@ import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { Faq } from "@/components/faq";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
-import { faqSections } from "@/lib/faq-data";
 import { getSettings, s } from "@/lib/settings";
 
 const title = "Property Documentation Assistance Philippines";
@@ -65,7 +64,24 @@ const processSteps = [
   { n: "5", title: "Completion", body: "We help organize final documents, proof of payment, and related records." },
 ];
 
-const faqs = faqSections.find((section) => section.id === "documentation")!.items;
+const faqs = [
+  {
+    q: "Can you help with title transfer?",
+    a: "Yes. We provide title transfer assistance as administrative coordination and processing support.",
+  },
+  {
+    q: "Can you provide notarial services?",
+    a: "We can assist with notarial coordination through duly authorized notarial professionals.",
+  },
+  {
+    q: "Do you provide legal or tax advice?",
+    a: "No. Documentation assistance is administrative coordination. Legal advice and tax advice should be provided by duly authorized professionals.",
+  },
+  {
+    q: "Do I need to be in the Philippines?",
+    a: "No. With a Special Power of Attorney, which we can help coordinate, we regularly assist owners who are abroad, including OFWs.",
+  },
+];
 
 export default async function DocumentationAssistancePage() {
   const settings = await getSettings();

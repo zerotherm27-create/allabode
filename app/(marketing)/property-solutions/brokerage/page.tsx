@@ -6,7 +6,6 @@ import { PropertyCard } from "@/components/property-card";
 import { Faq } from "@/components/faq";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
-import { faqSections } from "@/lib/faq-data";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
@@ -67,7 +66,12 @@ const bestFor = [
   "Clients who need licensed guidance from inquiry through closing",
 ];
 
-const faqs = faqSections.find((section) => section.id === "brokerage")!.items;
+const faqs = [
+  { q: "Can you help price my property?", a: "Yes. We prepare a pricing recommendation grounded in current comparables and market conditions, so you list at the right number." },
+  { q: "Do you represent sellers?", a: "We do. We market your property, qualify buyers, coordinate negotiation, and guide you through documentation to a successful close." },
+  { q: "Can buyers request assistance?", a: "Absolutely. We help buyers find suitable properties, qualify financing, perform due diligence, and coordinate their interests in negotiation." },
+  { q: "What documents are usually needed?", a: "Typically the title, tax declaration, tax clearance, and valid IDs. We will confirm the complete checklist for your specific transaction." },
+];
 
 export default async function BrokeragePage() {
   const [all, settings] = await Promise.all([getListings(), getSettings()]);

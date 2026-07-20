@@ -4,9 +4,26 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
 import { type Listing } from "@/lib/data";
-import { FURNISHING_OPTIONS as FURNISHING, filterListings, listingTypeOptions, priceValue } from "@/lib/listings-filters";
 
 type Sort = "featured" | "price-asc" | "price-desc";
+
+function priceValue(p: string) {
+  const n = Number(p.replace(/[^\d]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function availabilityOf(l: Listing): "Available" | "Reserved" | "Sold" {
+  if (l.status === "Reserved") return "Reserved";
+  if (l.status === "Sold") return "Sold";
+  return "Available";
+}
+
+function listingTypeOptions(l: Listing): string[] {
+  if (l.listingTypes?.length) return l.listingTypes;
+  return l.listingType ? [l.listingType] : [];
+}
+
+const FURNISHING = ["Fully furnished", "Semi-furnished", "Unfurnished"];
 
 export function ListingsBrowser({
   listings,
@@ -50,16 +67,29 @@ export function ListingsBrowser({
   };
 
   const results = useMemo(() => {
-    let r = filterListings(listings, {
-      listingType,
-      propertyType,
-      minBeds,
-      minBaths,
-      furnishing,
-      availability,
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      query,
+    const min = minPrice ? Number(minPrice) : null;
+    const max = maxPrice ? Number(maxPrice) : null;
+    let r = listings.filter((l) => {
+      if (listingType !== "All" && !listingTypeOptions(l).includes(listingType)) return false;
+      if (propertyType !== "All" && l.propertyType !== propertyType) return false;
+      if (availability !== "All" && availabilityOf(l) !== availability) return false;
+      if (minBeds === 0 && (l.beds ?? -1) !== 0) return false;
+      if (minBeds > 0 && (l.beds ?? 0) < minBeds) return false;
+      if (minBaths > 0 && (l.baths ?? 0) < minBaths) return false;
+      if (furnishing !== "All" && !(l.furnishing ?? "").startsWith(furnishing.split(" ")[0]))
+        return false;
+      const pv = priceValue(l.price);
+      if (min != null && pv < min) return false;
+      if (max != null && pv > max) return false;
+      if (query.trim()) {
+        const q = query.toLowerCase();
+        if (
+          !l.title.toLowerCase().includes(q) &&
+          !l.location.toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
     });
     if (sort === "price-asc") r = [...r].sort((a, b) => priceValue(a.price) - priceValue(b.price));
     if (sort === "price-desc") r = [...r].sort((a, b) => priceValue(b.price) - priceValue(a.price));

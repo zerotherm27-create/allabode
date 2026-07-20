@@ -6,7 +6,6 @@ import { PropertyCard } from "@/components/property-card";
 import { Faq } from "@/components/faq";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
-import { faqSections } from "@/lib/faq-data";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
 
@@ -42,7 +41,24 @@ const processSteps = [
   { n: "7", title: "Turnover or Management", body: "After move-in, owners may choose to self-manage or continue with All Abode property management." },
 ];
 
-const faqs = faqSections.find((section) => section.id === "leasing")!.items;
+const faqs = [
+  {
+    q: "What types of leasing do you handle?",
+    a: "Residential leasing including long-term, short-stay, and bedspace, plus commercial, office, industrial and warehouse, and parking leasing for individual owners and investors alike.",
+  },
+  {
+    q: "Can you help screen tenants?",
+    a: "Yes. We assist with basic tenant screening and document collection, subject to owner approval, so your unit is occupied by reliable tenants.",
+  },
+  {
+    q: "Do you handle short-term leasing?",
+    a: "We do. Short-stay and BnB arrangements are coordinated when allowed by the property owner, building rules, local regulations, and platform requirements.",
+  },
+  {
+    q: "Can owners list their property with All Abode?",
+    a: "Absolutely. Submit your property through our List My Property form and our team will guide you through pricing, marketing, and tenant placement.",
+  },
+];
 
 export default async function LeasingPage() {
   const [all, settings] = await Promise.all([getListings(), getSettings()]);

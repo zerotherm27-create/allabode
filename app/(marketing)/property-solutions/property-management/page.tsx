@@ -6,7 +6,6 @@ import { Faq } from "@/components/faq";
 import { PropertyManagementForm } from "@/components/forms/lead-forms";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { JsonLd, serviceSchema, breadcrumbSchema } from "@/components/seo/json-ld";
-import { faqSections } from "@/lib/faq-data";
 import { getSettings, s } from "@/lib/settings";
 
 const title = "Property Management Services Philippines";
@@ -128,7 +127,12 @@ const process = [
   { n: "6", title: "Regular Updates", body: "We keep records and provide updates so the owner remains informed wherever they are." },
 ];
 
-const faqs = faqSections.find((section) => section.id === "property-management")!.items;
+const faqs = [
+  { q: "What does property management include?", a: "It depends on the package: full leasing and ongoing management, tenant-hunting only, vacant-unit care, furnishing and rental-ready setup, or owner assistance with bills and documentation, scaled to how hands-on you want to be." },
+  { q: "Do owners get reports?", a: "Yes. Every managed property receives transparent owner updates covering rent collection, occupancy, and unit condition, with an owner portal for live access." },
+  { q: "Can you manage units for OFWs?", a: "Absolutely. Remote and overseas owners are a core focus. We handle everything on the ground and keep you updated wherever you are." },
+  { q: "Who approves repairs?", a: "The property owner approves repairs unless there is a prior written agreement for small urgent items within an approved limit." },
+];
 
 export default async function PropertyManagementPage() {
   const settings = await getSettings();

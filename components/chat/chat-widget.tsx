@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/icon";
 
 type Message = { role: "user" | "assistant"; content: string };
+
+const HINT_SHOW_DELAY_MS = 2500;
+const HINT_AUTO_HIDE_MS = 7000;
 
 export function ChatWidget() {
   const pathname = usePathname();
@@ -15,6 +18,21 @@ export function ChatWidget() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [hintDismissed, setHintDismissed] = useState(false);
+  const [hintShown, setHintShown] = useState(false);
+
+  useEffect(() => {
+    const showTimer = setTimeout(() => setHintShown(true), HINT_SHOW_DELAY_MS);
+    return () => clearTimeout(showTimer);
+  }, []);
+
+  useEffect(() => {
+    if (!hintShown) return;
+    const hideTimer = setTimeout(() => setHintDismissed(true), HINT_AUTO_HIDE_MS);
+    return () => clearTimeout(hideTimer);
+  }, [hintShown]);
+
+  const showHint = hintShown && !hintDismissed && !open;
 
   async function send() {
     const text = input.trim();
@@ -120,14 +138,37 @@ export function ChatWidget() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close chat" : "Chat with Abbie"}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-navy text-white shadow-[var(--shadow-card)] hover:bg-navy-800"
-      >
-        <Icon name={open ? "close" : "chat"} size={26} />
-      </button>
+      <div className="flex items-center justify-end gap-3">
+        {!open && (
+          <div
+            className={`flex items-center gap-2 rounded-md bg-navy py-2 pl-4 pr-2 text-white shadow-[var(--shadow-card)] ring-1 ring-gold/30 transition-all duration-[var(--dur-mid)] ease-[var(--ease-out)] ${
+              showHint ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-2 opacity-0"
+            }`}
+          >
+            <span className="text-sm font-medium whitespace-nowrap">Ask Abbie</span>
+            <button
+              type="button"
+              onClick={() => setHintDismissed(true)}
+              aria-label="Dismiss"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-white/60 hover:text-white"
+            >
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => {
+            setOpen((o) => !o);
+            setHintDismissed(true);
+          }}
+          aria-label={open ? "Close chat" : "Chat with Abbie"}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-navy text-white shadow-[var(--shadow-card)] hover:bg-navy-800"
+        >
+          <Icon name={open ? "close" : "chat"} size={26} />
+        </button>
+      </div>
     </div>
   );
 }

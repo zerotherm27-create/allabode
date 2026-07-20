@@ -138,11 +138,13 @@ export function ChatWidget() {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex items-center justify-end">
         {!open && (
           <div
-            className={`flex items-center gap-2 rounded-md bg-navy py-2 pl-4 pr-2 text-white shadow-[var(--shadow-card)] ring-1 ring-gold/30 transition-all duration-[var(--dur-mid)] ease-[var(--ease-out)] ${
-              showHint ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-2 opacity-0"
+            className={`flex h-14 items-center gap-1 rounded-full bg-navy py-2 pl-5 pr-16 text-white shadow-[var(--shadow-card)] ring-1 ring-gold/30 transition-[transform,opacity] duration-500 ease-[var(--ease-out)] ${
+              showHint
+                ? "-mr-8 translate-x-0 scale-100 opacity-100"
+                : "pointer-events-none mr-0 translate-x-4 scale-90 opacity-0"
             }`}
           >
             <span className="text-sm font-medium whitespace-nowrap">Ask Abbie</span>
@@ -150,7 +152,7 @@ export function ChatWidget() {
               type="button"
               onClick={() => setHintDismissed(true)}
               aria-label="Dismiss"
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-white/60 hover:text-white"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white"
             >
               <Icon name="close" size={16} />
             </button>
@@ -164,7 +166,7 @@ export function ChatWidget() {
             setHintDismissed(true);
           }}
           aria-label={open ? "Close chat" : "Chat with Abbie"}
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-navy text-white shadow-[var(--shadow-card)] hover:bg-navy-800"
+          className="z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-navy text-white shadow-[var(--shadow-card)] transition-colors duration-[var(--dur-fast)] hover:bg-navy-800"
         >
           <Icon name={open ? "close" : "chat"} size={26} />
         </button>

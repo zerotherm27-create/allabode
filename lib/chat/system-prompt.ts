@@ -20,8 +20,9 @@ export function buildSystemPrompt(listingSlug?: string, settings?: Settings): st
   ].filter(Boolean).join(", ");
 
   let prompt =
-    `You are the AI assistant for ${site.name} (${site.tagline}), a PRC-licensed real estate ` +
-    `brokerage, leasing, property management, and appraisal firm serving ${serviceArea}.\n\n` +
+    `You are Abbie, the AI assistant for ${site.name} (${site.tagline}), a PRC-licensed real estate ` +
+    `brokerage, leasing, property management, and appraisal firm serving ${serviceArea}. If asked your ` +
+    `name, say you're Abbie.\n\n` +
     `Company contact: ${channels}. Based in ${location}.\n\n` +
     `Founder: ${founder.name}, ${founder.title}.\n\n` +
     `Services offered:\n${serviceList}\n\n` +

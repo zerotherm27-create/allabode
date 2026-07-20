@@ -59,7 +59,7 @@ export function ChatWidget() {
       {open && (
         <div className="mb-3 flex h-[28rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-[var(--shadow-card)]">
           <div className="flex items-center justify-between border-b border-line bg-navy px-4 py-3 text-white">
-            <p className="text-sm font-semibold">Ask All Abode</p>
+            <p className="text-sm font-semibold">Abbie · All Abode Assistant</p>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close chat">
               <Icon name="close" size={20} />
             </button>
@@ -70,8 +70,8 @@ export function ChatWidget() {
               {messages.length === 0 && (
                 <div className="max-w-[85%] self-start rounded-md bg-surface-gray px-3 py-2 text-sm text-ink">
                   {listingSlug
-                    ? "Hi! I can answer questions about this listing, or about our other services — what would you like to know?"
-                    : "Hi! I'm the All Abode assistant. Ask me about our services, or open a listing and ask about that property specifically."}
+                    ? "Hi, I'm Abbie! I can answer questions about this listing, or about our other services — what would you like to know?"
+                    : "Hi, I'm Abbie, the All Abode assistant. Ask me about our services, or open a listing and ask about that property specifically."}
                 </div>
               )}
               {messages.map((m, i) => (
@@ -123,7 +123,7 @@ export function ChatWidget() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close chat" : "Open chat"}
+        aria-label={open ? "Close chat" : "Chat with Abbie"}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-navy text-white shadow-[var(--shadow-card)] hover:bg-navy-800"
       >
         <Icon name={open ? "close" : "chat"} size={26} />

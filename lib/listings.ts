@@ -155,7 +155,11 @@ async function resolveImageUrls(listings: Listing[]): Promise<Listing[]> {
       .filter((p): p is string => p != null)
   );
   if (allPaths.length === 0) return listings;
-  const signed = await signedUrlsForPaths(db, LISTING_IMAGES_BUCKET, allPaths);
+  // These pages are cached (marketing layout `revalidate = 300`), so the signed
+  // URL baked into the HTML must outlive the cache by a wide margin — the
+  // previous 900s default expired well before ISR got around to regenerating
+  // the page, leaving every listing image broken until the next hit.
+  const signed = await signedUrlsForPaths(db, LISTING_IMAGES_BUCKET, allPaths, 60 * 60 * 24);
   if (signed.size === 0) return listings;
   for (const listing of listings) {
     if (!listing.images) continue;

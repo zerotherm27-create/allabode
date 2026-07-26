@@ -51,7 +51,7 @@ async function clientIp() {
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
 }
 
-const ALLOWED_ID_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_ID_TYPES = ["image/jpeg", "image/png"];
 const MAX_ID_SIZE = 10 * 1024 * 1024;
 
 // ============================================================
@@ -101,7 +101,7 @@ export async function createParkingIdUploadTicket(
 ): Promise<{ signedUrl?: string; uploadToken?: string; path?: string; error?: string }> {
   if (fileSize <= 0) return { error: "Please choose a file." };
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
-  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG, PNG, or PDF file." };
+  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
   const supabase = await createClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_parking_agreement_by_token", { p_token: token });
@@ -130,7 +130,7 @@ export async function createParkingOccupantIdUploadTicket(
 ): Promise<{ signedUrl?: string; uploadToken?: string; path?: string; error?: string }> {
   if (fileSize <= 0) return { error: "Please choose a file." };
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
-  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG, PNG, or PDF file." };
+  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
   const supabase = await createClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_parking_agreement_by_token", { p_token: token });
@@ -195,7 +195,7 @@ export async function createParkingLandlordIdUploadTicket(
 ): Promise<{ signedUrl?: string; uploadToken?: string; path?: string; error?: string }> {
   if (fileSize <= 0) return { error: "Please choose a file." };
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
-  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG, PNG, or PDF file." };
+  if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
   const supabase = await createClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_parking_agreement_by_landlord_token", { p_token: token });

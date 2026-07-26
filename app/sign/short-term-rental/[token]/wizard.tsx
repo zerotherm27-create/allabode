@@ -85,8 +85,12 @@ export function StrWizard({ token, initial }: { token: string; initial: StrAgree
         setError("Please fill in your name, address, and email.");
         return;
       }
-      if (!idNumber || !idIssuedDate || !idUploaded) {
-        setError("Please copy your ID number and issue date from the uploaded ID, then continue.");
+      if (!idNumber || !idIssuedDate) {
+        setError("Please copy your ID number and issue date from your ID, then continue.");
+        return;
+      }
+      if (!idUploaded) {
+        setError("A photo of your valid government ID is required — please upload it before continuing.");
         return;
       }
     }
@@ -241,9 +245,9 @@ export function StrWizard({ token, initial }: { token: string; initial: StrAgree
             <Field label="Date issued" required>
               <Input className={inputCls} type="date" value={idIssuedDate} onChange={(e) => setIdIssuedDate(e.target.value)} />
             </Field>
-            <Field label="Upload ID image" required hint="JPG, PNG, or PDF, up to 10 MB">
+            <Field label="Upload ID image" required hint="JPG or PNG image, up to 10 MB">
               <FileUploadButton
-                accept="image/jpeg,image/png,application/pdf"
+                accept="image/jpeg,image/png"
                 disabled={idUploading}
                 onFile={onIdFileChange}
                 label={idUploaded ? "Replace ID file" : "Upload ID file"}
@@ -252,6 +256,9 @@ export function StrWizard({ token, initial }: { token: string; initial: StrAgree
             {idUploading && <p className="text-xs text-slate">Uploading…</p>}
             {idUploaded && !idUploading && (
               <p className="flex items-center gap-1.5 text-xs text-available"><Icon name="check_circle" size={16} fill={1} /> ID uploaded</p>
+            )}
+            {!idUploaded && !idUploading && (
+              <p className="flex items-center gap-1.5 text-xs text-slate"><Icon name="info" size={16} /> Required — you cannot continue until your ID image is uploaded.</p>
             )}
           </div>
         </StepShell>

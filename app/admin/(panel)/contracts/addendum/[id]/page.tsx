@@ -1,0 +1,363 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { Icon } from "@/components/icon";
+import { CopyLink } from "@/components/admin/copy-link";
+import { ActionRow, ActionButton, ActionForm, ActionSubmitButton } from "@/components/admin/action-row";
+import { AddendumCountersignForm } from "@/components/admin/addendum-countersign-form";
+import { AddendumTermsForm, type AddendumTermsInitial } from "@/components/admin/addendum-terms-form";
+import {
+  sendAddendumTenantLink, sendAddendumLandlordLink, updateAddendumTerms,
+  finalizeAddendum, voidAddendum, deleteAddendum, getAddendumPdfSignedUrl,
+} from "@/app/admin/addendum-actions";
+import { getPublicSiteUrl } from "@/lib/url";
+import {
+  DEFAULT_ADDENDUM_BANK_DETAILS, addendumRoles, PARENT_TYPE_TITLE,
+  type AddendumFeeItem, type AddendumScheduleRow, type AddendumBankDetails,
+  type AddendumPartyChange, type AddendumAmendedClause, type AddendumParentType,
+  type AddendumParentSnapshot,
+} from "@/lib/pm/addendum-clauses";
+
+// Mirrors form-kit's inputCls — that module is "use client", so a server
+// component can't import its string constants directly.
+const inputCls =
+  "h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15";
+
+type Addendum = {
+  id: string;
+  access_token: string;
+  landlord_access_token: string | null;
+  landlord_token_expires_at: string | null;
+  status: string;
+  tenant_email: string;
+  tenant_name_hint: string | null;
+  landlord_email: string | null;
+  landlord_name_hint: string | null;
+  parent_type: AddendumParentType;
+  parent_id: string;
+  parent_snapshot: AddendumParentSnapshot | null;
+  agreement_date: string | null;
+  effective_date: string | null;
+  landlord_details: { name?: string; address?: string } | null;
+  new_start_date: string | null;
+  new_end_date: string | null;
+  fee_items: AddendumFeeItem[] | null;
+  payment_schedule: AddendumScheduleRow[] | null;
+  bank_details: Partial<AddendumBankDetails> | null;
+  party_changes: AddendumPartyChange[] | null;
+  amended_clauses: AddendumAmendedClause[] | null;
+  tenant_details: { name?: string; address?: string; contact?: string; email?: string } | null;
+  tenant_id_type: string | null;
+  tenant_id_number: string | null;
+  tenant_id_issued_date: string | null;
+  tenant_typed_name: string | null;
+  tenant_signed_at: string | null;
+  landlord_typed_name: string | null;
+  landlord_signed_at: string | null;
+  landlord_signed_via: string | null;
+  landlord_signature_data: string | null;
+  created_at: string;
+  linked_tenant_id: string | null;
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  draft: "bg-surface-gray text-slate",
+  sent: "bg-gold/15 text-gold-bright",
+  tenant_signed: "bg-reserved/15 text-reserved",
+  completed: "bg-available/15 text-available",
+  voided: "bg-error/10 text-error",
+};
+
+function toTermsInitial(a: Addendum): AddendumTermsInitial {
+  const hd = a.landlord_details ?? {};
+  const td = a.tenant_details ?? {};
+  const snap = a.parent_snapshot ?? {};
+  return {
+    parentType: a.parent_type,
+    parentId: a.parent_id,
+    parentContractTitle: snap.contractTitle ?? PARENT_TYPE_TITLE[a.parent_type] ?? "",
+    parentReferenceCode: snap.referenceCode ?? "",
+    parentAgreementDate: snap.agreementDate ?? "",
+    parentPropertyDescription: snap.propertyDescription ?? "",
+    tenantNameHint: a.tenant_name_hint ?? "",
+    tenantEmail: a.tenant_email,
+    tenantAddress: td.address ?? "",
+    tenantContact: td.contact ?? "",
+    landlordName: hd.name ?? "",
+    landlordAddress: hd.address ?? "",
+    landlordEmail: a.landlord_email ?? "",
+    agreementDate: a.agreement_date ?? "",
+    effectiveDate: a.effective_date ?? "",
+    newStartDate: a.new_start_date ?? "",
+    newEndDate: a.new_end_date ?? "",
+    feeItems: a.fee_items ?? [],
+    paymentSchedule: a.payment_schedule ?? [],
+    bankDetails: { ...DEFAULT_ADDENDUM_BANK_DETAILS, ...(a.bank_details ?? {}) },
+    partyChanges: a.party_changes ?? [],
+    amendedClauses: a.amended_clauses ?? [],
+  };
+}
+
+export default async function AdminAddendumDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const [{ data }, { data: { user } }] = await Promise.all([
+    supabase.from("addenda").select("*").eq("id", id).maybeSingle(),
+    supabase.auth.getUser(),
+  ]);
+  if (!data) notFound();
+  const a = data as Addendum;
+
+  const [{ data: staffRow }, pdfUrl] = await Promise.all([
+    user ? supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
+    a.status === "completed" ? getAddendumPdfSignedUrl(id) : Promise.resolve(null),
+  ]);
+
+  const roles = addendumRoles(a.parent_type);
+  const STATUS_LABEL: Record<string, string> = {
+    draft: "Draft",
+    sent: `Sent — awaiting ${roles.counterparty.toLowerCase()}`,
+    tenant_signed: `${roles.counterparty} signed — awaiting ${roles.principal.toLowerCase()}`,
+    completed: "Fully executed",
+    voided: "Voided",
+  };
+
+  const isSignatory = !!staffRow?.is_signatory;
+  const termsEditable = a.status === "draft" || a.status === "sent";
+  const td = a.tenant_details ?? {};
+  const hd = a.landlord_details ?? {};
+  const snap = a.parent_snapshot ?? {};
+  const doSendTenantLink = sendAddendumTenantLink.bind(null, id);
+  const doSendLandlordLink = sendAddendumLandlordLink.bind(null, id);
+  const doUpdateTerms = updateAddendumTerms.bind(null, id);
+  const doFinalize = finalizeAddendum.bind(null, id);
+  const doVoid = voidAddendum.bind(null, id);
+  const doDelete = deleteAddendum.bind(null, id);
+  const tenantLink = `${getPublicSiteUrl()}/sign/addendum/${a.access_token}`;
+  const landlordLink = a.landlord_access_token ? `${getPublicSiteUrl()}/sign/addendum/landlord/${a.landlord_access_token}` : null;
+  const landlordLinkExpired = !!a.landlord_token_expires_at && new Date(a.landlord_token_expires_at) < new Date();
+  const awaitingFinalize = a.status === "tenant_signed" && !!a.landlord_signature_data;
+
+  const parentHref: Record<AddendumParentType, string> = {
+    pm: `/admin/contracts/${a.parent_id}`,
+    tenancy: `/admin/contracts/tenancy/${a.parent_id}`,
+    parking: `/admin/contracts/parking/${a.parent_id}`,
+    short_term_rental: `/admin/contracts/short-term-rental/${a.parent_id}`,
+  };
+
+  const amendmentSummary = [
+    (a.new_start_date || a.new_end_date) && "Term",
+    (a.fee_items?.length ?? 0) > 0 && "Rent and fees",
+    (a.party_changes?.length ?? 0) > 0 && "Parties and occupants",
+    (a.amended_clauses?.length ?? 0) > 0 && "Amended provisions",
+  ].filter(Boolean) as string[];
+
+  return (
+    <ActionRow>
+    <div className="mx-auto max-w-4xl">
+      <Link href="/admin/contracts" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate hover:text-navy">
+        <Icon name="arrow_back" size={18} /> Back to contracts
+      </Link>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="label-caps text-gold">Addendum</p>
+          <h1 className="mt-1 font-display text-2xl font-bold text-navy">{td.name || a.tenant_name_hint || a.tenant_email}</h1>
+          <p className="mt-1 text-sm text-slate">
+            {a.tenant_email} · amends {snap.contractTitle ?? PARENT_TYPE_TITLE[a.parent_type]}
+            {snap.referenceCode ? ` (${snap.referenceCode})` : ""}
+          </p>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_COLOR[a.status] ?? "bg-surface-gray text-navy"}`}>
+          {STATUS_LABEL[a.status] ?? a.status}
+        </span>
+      </div>
+
+      {a.status === "draft" && (
+        <div className="mt-4 rounded-lg border border-line bg-surface p-5">
+          <p className="text-sm text-slate">This addendum hasn&#x2019;t been sent to the {roles.counterparty.toLowerCase()} yet.</p>
+          <div className="mt-3">
+            <ActionButton actionKey="send-tenant-link" action={doSendTenantLink} label={`Send signing link to ${roles.counterparty.toLowerCase()}`}
+              className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+          </div>
+          <p className="mt-3 text-xs text-slate">Or copy the link below to share it directly:</p>
+          <CopyLink link={tenantLink} ownerName={td.name || a.tenant_name_hint || undefined} />
+        </div>
+      )}
+
+      {a.status === "sent" && (
+        <div className="mt-4 rounded-lg border border-line bg-surface p-5">
+          <p className="text-sm text-slate">Awaiting the {roles.counterparty.toLowerCase()} to fill in their details and sign.</p>
+          <CopyLink link={tenantLink} ownerName={td.name || a.tenant_name_hint || undefined} />
+          <div className="mt-3">
+            <ActionButton actionKey="send-tenant-link" action={doSendTenantLink} label="Resend email"
+              className="text-sm font-medium text-navy-700 underline" />
+          </div>
+        </div>
+      )}
+
+      {/* Staff-set amendment summary (always) */}
+      <div className="mt-6 rounded-lg border border-line bg-surface p-5">
+        <h2 className="mb-3 font-display text-sm font-semibold text-navy">Amendment</h2>
+        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+          {[
+            ["Original agreement", snap.contractTitle ?? PARENT_TYPE_TITLE[a.parent_type]],
+            ["Reference number", snap.referenceCode],
+            ["Property", snap.propertyDescription],
+            [roles.principal, hd.name],
+            [`${roles.principal} email`, a.landlord_email],
+            ["Addendum date", a.agreement_date],
+            ["Effective date", a.effective_date],
+            ["Sections included", amendmentSummary.length ? amendmentSummary.join(", ") : "None yet"],
+          ].map(([k, v]) => (
+            <div key={k as string} className="flex justify-between gap-2 border-b border-line pb-2">
+              <dt className="text-slate">{k}</dt>
+              <dd className="text-right font-medium text-navy">{v || "—"}</dd>
+            </div>
+          ))}
+        </dl>
+        <Link href={parentHref[a.parent_type]} className="mt-3 inline-flex items-center gap-1.5 text-sm text-navy-700 underline">
+          <Icon name="description" size={16} /> Open the original contract
+        </Link>
+        {termsEditable && (
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm font-semibold text-navy-700">Edit amendment</summary>
+            <p className="mt-2 text-xs text-slate">
+              The amendment locks automatically once the {roles.counterparty.toLowerCase()} signs against it.
+            </p>
+            <div className="mt-4">
+              <AddendumTermsForm
+                action={doUpdateTerms}
+                initial={toTermsInitial(a)}
+                submitLabel="Save amendment"
+                lockParent
+                lockTenant
+              />
+            </div>
+          </details>
+        )}
+      </div>
+
+      {(a.status === "tenant_signed" || a.status === "completed") && (
+        <div className="mt-6 rounded-lg border border-line bg-surface p-5">
+          <h2 className="mb-3 font-display text-sm font-semibold text-navy">{roles.counterparty}&#x2019;s submitted details</h2>
+          <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            {[
+              ["Name", td.name], ["Address", td.address], ["Contact", td.contact], ["Email", td.email],
+              ["Typed name", a.tenant_typed_name],
+              ["Government ID", a.tenant_id_type ? `${a.tenant_id_type} — ${a.tenant_id_number}` : null],
+              ["ID issued date", a.tenant_id_issued_date],
+              ["Signed at", a.tenant_signed_at ? new Date(a.tenant_signed_at).toLocaleString("en-PH", { timeZone: "Asia/Manila" }) : null],
+            ].map(([k, v]) => (
+              <div key={k as string} className="flex justify-between gap-2 border-b border-line pb-2">
+                <dt className="text-slate">{k}</dt>
+                <dd className="text-right font-medium text-navy">{v || "—"}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+
+      {awaitingFinalize && (
+        <div className="mt-6 rounded-lg border border-gold/40 bg-gold/5 p-5">
+          <p className="text-sm font-medium text-navy">
+            The {roles.principal.toLowerCase()} has signed, but finalization didn&#x2019;t finish (PDF, tenant record, portal account).
+          </p>
+          <div className="mt-3">
+            <ActionButton actionKey="finalize" action={doFinalize} label="Finalize addendum" pendingLabel="Finalizing…"
+              className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+          </div>
+        </div>
+      )}
+
+      {a.status === "tenant_signed" && !awaitingFinalize && (
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-lg border border-line bg-surface p-5">
+            <h2 className="mb-1 font-display text-sm font-semibold text-navy">Send to the {roles.principal.toLowerCase()}</h2>
+            <p className="mb-3 text-xs text-slate">
+              The {roles.principal.toLowerCase()} reviews the signed addendum, confirms their ID, and signs on their own secure link.
+            </p>
+            <ActionForm actionKey="send-landlord-link" action={doSendLandlordLink} className="flex flex-col gap-2">
+              <input
+                name="landlord_email"
+                type="email"
+                defaultValue={a.landlord_email ?? ""}
+                placeholder="email@example.com"
+                className={inputCls}
+              />
+              <ActionSubmitButton label={a.landlord_access_token ? "Resend link" : "Send link"}
+                className="self-start rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800" />
+            </ActionForm>
+            {landlordLink && (
+              <div className="mt-3">
+                <CopyLink link={landlordLink} ownerName={hd.name || a.landlord_name_hint || undefined} />
+                <p className={`mt-2 text-xs ${landlordLinkExpired ? "text-error" : "text-slate"}`}>
+                  {landlordLinkExpired
+                    ? "This link has expired — resend to issue a fresh validity window."
+                    : a.landlord_token_expires_at
+                      ? `Valid until ${new Date(a.landlord_token_expires_at).toLocaleDateString("en-PH")}.`
+                      : null}
+                </p>
+              </div>
+            )}
+          </div>
+          {isSignatory ? (
+            <AddendumCountersignForm addendumId={id} defaultName={staffRow?.name ?? ""} roleLabel={roles.principal} />
+          ) : (
+            <div className="rounded-lg border border-line bg-surface-gray p-5 text-sm text-slate">
+              Only a designated signatory account can countersign for the {roles.principal.toLowerCase()}. Send them their
+              signing link instead.
+            </div>
+          )}
+        </div>
+      )}
+
+      {a.status === "voided" && (
+        <div className="mt-4 rounded-lg border border-error/30 bg-error/5 p-5 text-sm text-error">
+          This addendum has been voided. Both signing links no longer work.
+        </div>
+      )}
+
+      {a.status === "completed" && (
+        <div className="mt-6 rounded-lg border border-available/30 bg-available/5 p-5">
+          <p className="flex items-center gap-2 text-sm font-medium text-available">
+            <Icon name="verified" size={18} fill={1} /> Fully executed
+            {a.landlord_signed_via ? ` — ${roles.principal.toLowerCase()} signed via ${a.landlord_signed_via === "remote" ? "their signing link" : "staff countersign"}` : ""}
+          </p>
+          {pdfUrl && (
+            <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-navy-700 underline">
+              <Icon name="picture_as_pdf" size={18} /> View signed PDF
+            </a>
+          )}
+          {a.linked_tenant_id && (
+            <div className="mt-3 text-sm">
+              <Link href={`/admin/tenants/${a.linked_tenant_id}/edit`} className="text-navy-700 underline">Tenant record</Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {a.status !== "voided" && (
+        <div className="mt-6 rounded-lg border border-error/30 bg-error/5 p-5">
+          <h2 className="mb-1 font-display text-sm font-semibold text-error">Danger Zone</h2>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <ActionButton actionKey="void" action={doVoid} label="Void addendum"
+              className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray"
+              confirmMessage="Void this addendum? This invalidates both signing links, but keeps the record for history. This can't be undone." />
+            {a.status === "completed" ? (
+              <p className="flex items-center text-xs text-slate">
+                Fully executed addenda can&#x2019;t be deleted — void it instead to invalidate it while keeping the signed record.
+              </p>
+            ) : (
+              <ActionButton actionKey="delete" action={doDelete} label="Delete addendum"
+                className="rounded-md bg-error px-4 py-2 text-sm font-semibold text-white hover:bg-error/90"
+                confirmMessage="Permanently delete this addendum and its uploaded files? This can't be undone." />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+    </ActionRow>
+  );
+}

@@ -46,9 +46,20 @@ type StrRow = {
   landlord_signed_at: string | null;
 };
 
+type AddendumRow = {
+  id: string;
+  tenant_email: string;
+  tenant_name_hint: string | null;
+  tenant_details: { name?: string } | null;
+  parent_snapshot: { contractTitle?: string; referenceCode?: string } | null;
+  status: string;
+  created_at: string;
+  landlord_signed_at: string | null;
+};
+
 type Row = {
   id: string;
-  type: "pm" | "tenancy" | "parking" | "short_term_rental";
+  type: "pm" | "tenancy" | "parking" | "short_term_rental" | "addendum";
   href: string;
   name: string;
   email: string;
@@ -84,7 +95,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default async function AdminContractsPage() {
   const supabase = await createClient();
-  const [{ data: pmData }, { data: tenancyData }, { data: parkingData }, { data: strData }] = await Promise.all([
+  const [{ data: pmData }, { data: tenancyData }, { data: parkingData }, { data: strData }, { data: addendumData }] = await Promise.all([
     supabase
       .from("agreements")
       .select("id,owner_email,owner_name_hint,owner_details,status,created_at,manager_signed_at")
@@ -100,6 +111,10 @@ export default async function AdminContractsPage() {
     supabase
       .from("short_term_rental_agreements")
       .select("id,tenant_email,tenant_name_hint,tenant_details,property_details,status,created_at,landlord_signed_at")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("addenda")
+      .select("id,tenant_email,tenant_name_hint,tenant_details,parent_snapshot,status,created_at,landlord_signed_at")
       .order("created_at", { ascending: false }),
   ]);
 
@@ -152,6 +167,18 @@ export default async function AdminContractsPage() {
       created_at: r.created_at,
       signed_at: r.landlord_signed_at,
     })),
+    ...((addendumData ?? []) as AddendumRow[]).map((r): Row => ({
+      id: r.id,
+      type: "addendum",
+      href: `/admin/contracts/addendum/${r.id}`,
+      name: r.tenant_details?.name || r.tenant_name_hint || r.tenant_email,
+      email: r.tenant_email,
+      detail: [r.parent_snapshot?.contractTitle, r.parent_snapshot?.referenceCode].filter(Boolean).join(" · ") || "Addendum",
+      status: r.status,
+      statusLabel: TENANCY_STATUS_LABEL[r.status] ?? r.status,
+      created_at: r.created_at,
+      signed_at: r.landlord_signed_at,
+    })),
   ].sort((x, y) => (x.created_at < y.created_at ? 1 : -1));
 
   const columns: Column<Row>[] = [
@@ -170,9 +197,14 @@ export default async function AdminContractsPage() {
           r.type === "pm" ? "bg-navy/10 text-navy"
             : r.type === "tenancy" ? "bg-gold/15 text-gold-bright"
             : r.type === "parking" ? "bg-navy-700/10 text-navy-700"
-            : "bg-available/15 text-available"
+            : r.type === "short_term_rental" ? "bg-available/15 text-available"
+            : "bg-reserved/15 text-reserved"
         }`}>
-          {r.type === "pm" ? "PM Agreement" : r.type === "tenancy" ? "Tenancy" : r.type === "parking" ? "Parking" : "Short Term Rental"}
+          {r.type === "pm" ? "PM Agreement"
+            : r.type === "tenancy" ? "Tenancy"
+            : r.type === "parking" ? "Parking"
+            : r.type === "short_term_rental" ? "Short Term Rental"
+            : "Addendum"}
         </span>
       ),
     },
@@ -208,6 +240,9 @@ export default async function AdminContractsPage() {
           </Link>
           <Link href="/admin/contracts/short-term-rental/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
             <Icon name="add" size={20} /> Short term rental
+          </Link>
+          <Link href="/admin/contracts/addendum/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
+            <Icon name="add" size={20} /> Addendum
           </Link>
         </div>
       </div>

@@ -28,8 +28,18 @@ async function downloadAsDataUri(
   storagePath: string | null
 ): Promise<{ dataUri: string | null; buffer: Buffer | null; mime: string }> {
   if (!storagePath) return { dataUri: null, buffer: null, mime: "image/jpeg" };
-  const { data: file } = await supabase.storage.from(AGREEMENTS_BUCKET).download(storagePath);
-  if (!file) return { dataUri: null, buffer: null, mime: "image/jpeg" };
+  // The staff countersign path passes an RLS-scoped client, which cannot always
+  // read the private `agreements` bucket — without this fallback the download
+  // returns null and the ID silently prints as "ID image unavailable" on an
+  // otherwise-valid signed PDF (same fix as the tenancy flow).
+  let { data: file } = await supabase.storage.from(AGREEMENTS_BUCKET).download(storagePath);
+  if (!file) {
+    ({ data: file } = await createAdminClient().storage.from(AGREEMENTS_BUCKET).download(storagePath));
+  }
+  if (!file) {
+    console.warn("[short-term-rental] ID image download failed for", storagePath);
+    return { dataUri: null, buffer: null, mime: "image/jpeg" };
+  }
   const buffer = Buffer.from(await file.arrayBuffer());
   const ext = storagePath.split(".").pop()?.toLowerCase();
   const mime = ext === "png" ? "image/png" : ext === "pdf" ? "application/pdf" : "image/jpeg";

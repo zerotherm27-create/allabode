@@ -1,23 +1,70 @@
-# Current Handoff - 2026-07-10
+# Current Handoff - 2026-08-05
 
-This file previously described an older Hallmark redesign pass. Current continuation notes are now:
-
-- `memory.md` — local project memory with latest task details.
-- `CODEX_HANDOFF.md` — main tracked Codex handoff.
+Continuation notes still live in `memory.md` (local, gitignored) and
+`CODEX_HANDOFF.md` (tracked) — both updated alongside this file today. Read
+`memory.md`'s 2026-08-05 section first; it has full detail, this is the summary.
 
 ## Current Repo State
 
 - Workspace: `/Users/jojo/allabode`
 - Branch: `main`
 - Latest pushed/deployed commit:
-  - `ec185a6 support dual-market listings`
+  - `0e25414 feat: add CMS-managed hero background video`
 - Production alias:
   - https://allabodeph.com
+- Latest production deployment:
+  - `dpl_Eyow4nkjE7Bd4ggenSvSQyAkypc2` (READY)
+  - https://allabode-li0og0s7h-zerotherm27-8336s-projects.vercel.app
+- Working tree: clean except untracked `.vscode/` and `skills-lock.json`.
+
+## Shipped this session — Hero background video
+
+Staff can now upload an MP4 background video for the homepage hero from
+`/admin/settings` (new `hero_video` setting, mirrors the existing `hero_image`
+pattern — image doubles as poster/reduced-motion/error fallback). Files:
+`supabase/migrations/20260805100000_hero_video_setting.sql`,
+`lib/settings-schema.ts`, `components/motion/index.tsx` (`VideoHero` +
+`HeroBackground`), `app/(marketing)/page.tsx`, `app/admin/(panel)/settings/page.tsx`
+(`VideoField`). Already uploaded and live — homepage confirmed rendering the
+correct `<video>` element pointing at the Supabase `site-assets` URL. Actual
+playback wasn't independently confirmed (automated browser tab showed
+`readyState: 0`, possibly a Chrome autoplay-deferral quirk on a non-focused
+automated tab, not necessarily a real bug) — worth a manual glance.
+
+## OPEN — Owner portal 404 for Aremchel Cruzado's SOA (diagnosed, unfixed)
+
+Root cause: Aremchel has **two** `owners` rows (duplicate — `amcruzado@gmail.com`
+linked to a real auth account and owning the real property/SOA, vs.
+`chel.cruzado@allabodeph.com` — her actual portal login email — unlinked, owns
+nothing). `getCurrentRole()`'s email-fallback resolves her work-email login to
+the empty duplicate, so `statement.owner_id !== ownerId` → 404. Fix decided
+(merge into the real record, keyed to her work email + her real auth id
+`b07ce428-6ad0-492d-8396-c174f7859419`) but **not executed** — an FK-dependency
+check query was handed to the user and never answered before the session moved
+to the video task. Full SQL and exact next step are in `memory.md`'s 2026-08-05
+section. Do this before anything else if Aremchel reports the issue again.
+
+## Next Steps
+
+1. Finish the Aremchel owner-record merge (see above / `memory.md`).
+2. Manually confirm the hero video actually autoplays in a normal browser tab.
+3. Run `git status -sb` before staging anything new.
+4. Do not print or commit `.env.local` secrets.
+5. If editing Next.js app code, follow `AGENTS.md` and read the relevant docs under `node_modules/next/dist/docs/`.
+
+---
+
+# Historical Handoff - 2026-07-10
+
+## Current Repo State (at that time)
+
+- Latest pushed/deployed commit:
+  - `ec185a6 support dual-market listings`
 - Latest production deployment:
   - `dpl_2jrgGfj5RR384PeFJmjrVSQVLhYA`
   - https://allabode-n4pb57ix6-zerotherm27-8336s-projects.vercel.app
 
-## Current Uncommitted Work
+## Work landed that session
 
 Owner/property delete fix:
 
@@ -34,18 +81,8 @@ Tenancy agreement occupant fix:
 - Admin and tenant signing Add occupant buttons now use functional state updates.
 - Added/updated `tests/tenancy-admin-form.test.mjs` and `tests/tenancy-occupants.test.mjs`.
 
-## Verification Already Run
-
-- `node --test tests/*.test.mjs` — 15/15 passed.
-- `npm run lint` — passed with existing warnings only.
-- `NODE_OPTIONS=--max-old-space-size=6144 npm run build` — passed.
-
-## Next Steps
-
-1. Run `git status -sb` before staging.
-2. If shipping current fixes, stage the intended product/test/docs files only, rerun verification, commit, push `main`, then deploy/inspect Vercel production.
-3. Do not print or commit `.env.local` secrets.
-4. If editing Next.js app code, follow `AGENTS.md` and read the relevant docs under `node_modules/next/dist/docs/`.
+Verification: `node --test tests/*.test.mjs` (15/15 passed), `npm run lint` (passed,
+existing warnings only), `NODE_OPTIONS=--max-old-space-size=6144 npm run build` (passed).
 
 ---
 

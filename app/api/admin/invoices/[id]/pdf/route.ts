@@ -18,6 +18,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       billing_period_start, billing_period_end,
       subtotal, tax_amount, total_amount, amount_paid, notes,
       tenants(name,email),
+      owners(name,email),
       units(unit_label,properties(name,address)),
       invoice_lines(description,quantity,unit_price,amount,sort_order)
     `)
@@ -28,10 +29,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const inv = data as Record<string, unknown>;
   const tenant = Array.isArray(inv.tenants) ? inv.tenants[0] : inv.tenants as { name: string; email: string | null } | null;
+  const owner  = Array.isArray(inv.owners)  ? inv.owners[0]  : inv.owners  as { name: string; email: string | null } | null;
   const unit   = Array.isArray(inv.units)   ? inv.units[0]   : inv.units   as { unit_label: string; properties: { name: string; address: string | null } | null } | null;
   const prop   = unit ? (Array.isArray((unit as { properties: unknown }).properties) ? (unit as { properties: { name: string; address: string | null }[] }).properties[0] : (unit as { properties: { name: string; address: string | null } | null }).properties) : null;
   const rawLines = (Array.isArray(inv.invoice_lines) ? inv.invoice_lines : []) as (LineRow & { sort_order: number })[];
   const lines = rawLines.sort((a, b) => a.sort_order - b.sort_order);
+  const billToName  = (tenant as { name?: string } | null)?.name ?? (owner as { name?: string } | null)?.name ?? "Tenant";
+  const billToEmail = (tenant as { email?: string | null } | null)?.email ?? (owner as { email?: string | null } | null)?.email ?? null;
 
   const pdf = await renderInvoicePdf({
     invoiceNumber:      String(inv.invoice_number),
@@ -41,8 +45,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     status:             String(inv.status),
     billingPeriodStart: String(inv.billing_period_start),
     billingPeriodEnd:   String(inv.billing_period_end),
-    tenantName:         (tenant as { name?: string } | null)?.name ?? "Tenant",
-    tenantEmail:        (tenant as { email?: string | null } | null)?.email ?? null,
+    tenantName:         billToName,
+    tenantEmail:        billToEmail,
     unitLabel:          (unit   as { unit_label?: string } | null)?.unit_label ?? "",
     propertyName:       (prop   as { name?: string } | null)?.name ?? "",
     propertyAddress:    (prop   as { address?: string | null } | null)?.address ?? null,

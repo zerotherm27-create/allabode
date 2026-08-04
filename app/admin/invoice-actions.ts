@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
 import { renderPaymentReceiptPdf, METHOD_LABEL } from "@/lib/pdf/payment-receipt";
 import { sendEmail } from "@/lib/email";
+import { createNotification } from "@/lib/notify";
 
 function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabodeph.com").replace(/\/$/, "");
@@ -101,6 +102,159 @@ export async function createInvoice(fd: FormData) {
   redirect(`/admin/invoices/${inv.id}`);
 }
 
+type UnitRow = {
+  id: string;
+  unit_label: string;
+  property_id: string;
+  properties: { owner_id: string | null } | null;
+};
+
+// ============================================================
+// Create a draft invoice billed directly to a property owner
+// (no lease/tenant — e.g. company paid for a repair, bills owner back)
+// ============================================================
+export async function createOwnerInvoice(fd: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const unitId = s(fd, "unit_id");
+  if (!unitId) throw new Error("Unit is required");
+
+  const { data: unit } = await supabase
+    .from("units")
+    .select("id,unit_label,property_id,properties(owner_id)")
+    .eq("id", unitId)
+    .maybeSingle();
+  if (!unit) throw new Error("Unit not found");
+
+  const u = unit as unknown as UnitRow;
+  const ownerId = u.properties?.owner_id ?? null;
+  if (!ownerId) throw new Error("This unit's property has no owner on file");
+
+  const description = s(fd, "description");
+  if (!description) throw new Error("Description is required");
+  const amount = n(fd, "amount");
+  if (amount == null || amount <= 0) throw new Error("Amount is required");
+
+  const dueDate = s(fd, "due_date") ?? "";
+  if (!dueDate) throw new Error("Due date is required");
+  const notes = s(fd, "notes");
+
+  const { data: invoiceNumber } = await supabase.rpc("generate_invoice_number");
+  if (!invoiceNumber) throw new Error("Could not generate invoice number");
+
+  // billing_period_start/end stay NOT NULL in the schema but have no real
+  // meaning for an ad-hoc owner charge — default both to the due date.
+  const { data: inv, error: invErr } = await supabase
+    .from("invoices")
+    .insert({
+      invoice_number:       invoiceNumber as string,
+      lease_id:             null,
+      tenant_id:            null,
+      unit_id:              unitId,
+      property_id:          u.property_id,
+      owner_id:             ownerId,
+      billing_period_start: dueDate,
+      billing_period_end:   dueDate,
+      due_date:             dueDate,
+      status:               "draft",
+      subtotal:             amount,
+      total_amount:         amount,
+      notes,
+    })
+    .select("id")
+    .single();
+  if (invErr) throw new Error(invErr.message);
+
+  await supabase.from("invoice_lines").insert({
+    invoice_id:  inv.id,
+    description,
+    quantity:    1,
+    unit_price:  amount,
+    amount,
+    sort_order:  0,
+  });
+
+  await logAudit(supabase, {
+    action: "invoice.created", entityType: "invoice", entityId: inv.id, actorId: user?.id,
+    metadata: { invoice_number: invoiceNumber, unit_id: unitId, owner_id: ownerId, party: "owner" },
+  });
+
+  revalidatePath("/admin/invoices");
+  redirect(`/admin/invoices/${inv.id}`);
+}
+
+// ============================================================
+// Add / remove a line item (draft invoices only — e.g. a repair cost
+// the company paid and is charging back to the tenant)
+// ============================================================
+async function recalcInvoiceTotals(supabase: Awaited<ReturnType<typeof createClient>>, invoiceId: string) {
+  const [{ data: lines }, { data: inv }] = await Promise.all([
+    supabase.from("invoice_lines").select("amount").eq("invoice_id", invoiceId),
+    supabase.from("invoices").select("tax_amount").eq("id", invoiceId).maybeSingle(),
+  ]);
+  const subtotal = ((lines ?? []) as { amount: number }[]).reduce((sum, l) => sum + Number(l.amount), 0);
+  const taxAmount = Number(inv?.tax_amount ?? 0);
+  await supabase.from("invoices")
+    .update({ subtotal, total_amount: subtotal + taxAmount })
+    .eq("id", invoiceId);
+}
+
+export async function addInvoiceLine(invoiceId: string, fd: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: inv } = await supabase.from("invoices").select("status").eq("id", invoiceId).maybeSingle();
+  if (!inv) throw new Error("Invoice not found");
+  if (inv.status !== "draft") throw new Error("Only draft invoices can be edited.");
+
+  const description = s(fd, "description");
+  if (!description) throw new Error("Description is required");
+  const quantity = n(fd, "quantity") ?? 1;
+  const unitPrice = n(fd, "unit_price");
+  if (unitPrice == null) throw new Error("Unit price is required");
+
+  const { data: existing } = await supabase.from("invoice_lines")
+    .select("sort_order").eq("invoice_id", invoiceId).order("sort_order", { ascending: false }).limit(1);
+  const nextSort = ((existing?.[0] as { sort_order?: number } | undefined)?.sort_order ?? -1) + 1;
+
+  const { error } = await supabase.from("invoice_lines").insert({
+    invoice_id:  invoiceId,
+    description,
+    quantity,
+    unit_price:  unitPrice,
+    amount:      quantity * unitPrice,
+    sort_order:  nextSort,
+  });
+  if (error) throw new Error(error.message);
+
+  await recalcInvoiceTotals(supabase, invoiceId);
+  await logAudit(supabase, {
+    action: "invoice.line_added", entityType: "invoice", entityId: invoiceId, actorId: user?.id,
+    metadata: { description, amount: quantity * unitPrice },
+  });
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+}
+
+export async function deleteInvoiceLine(invoiceId: string, lineId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: inv } = await supabase.from("invoices").select("status").eq("id", invoiceId).maybeSingle();
+  if (!inv) throw new Error("Invoice not found");
+  if (inv.status !== "draft") throw new Error("Only draft invoices can be edited.");
+
+  const { error } = await supabase.from("invoice_lines").delete().eq("id", lineId).eq("invoice_id", invoiceId);
+  if (error) throw new Error(error.message);
+
+  await recalcInvoiceTotals(supabase, invoiceId);
+  await logAudit(supabase, {
+    action: "invoice.line_removed", entityType: "invoice", entityId: invoiceId, actorId: user?.id,
+    metadata: { line_id: lineId },
+  });
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+}
+
 // ============================================================
 // Issue a draft invoice (makes it visible to the tenant)
 // ============================================================
@@ -108,18 +262,62 @@ export async function issueInvoice(invoiceId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("invoices")
     .update({ status: "issued", issued_at: new Date().toISOString() })
     .eq("id", invoiceId)
-    .eq("status", "draft");
+    .eq("status", "draft")
+    .select("owner_id,tenant_id,invoice_number")
+    .maybeSingle();
   if (error) throw new Error(error.message);
+
+  if (updated && updated.owner_id && !updated.tenant_id) {
+    await notifyOwnerInvoiceIssued(supabase, updated.owner_id, invoiceId, updated.invoice_number as string);
+  }
 
   await logAudit(supabase, {
     action: "invoice.issued", entityType: "invoice", entityId: invoiceId, actorId: user?.id,
   });
   revalidatePath(`/admin/invoices/${invoiceId}`);
   revalidatePath("/admin/invoices");
+}
+
+async function notifyOwnerInvoiceIssued(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ownerId: string,
+  invoiceId: string,
+  invoiceNumber: string
+) {
+  const { data: owner } = await supabase
+    .from("owners")
+    .select("name,email,auth_user_id")
+    .eq("id", ownerId)
+    .maybeSingle();
+  const row = owner as { name?: string | null; email?: string | null; auth_user_id?: string | null } | null;
+  if (!row?.email && !row?.auth_user_id) return;
+
+  const title = "New invoice";
+  const body  = `A new invoice (${invoiceNumber}) has been issued to you.`;
+  const link  = `/dashboard/owner/invoices/${invoiceId}`;
+
+  if (row.auth_user_id) {
+    await createNotification(supabase, {
+      recipientUserId: row.auth_user_id,
+      type: "invoice_issued",
+      title, body, link,
+      entityType: "invoice", entityId: invoiceId,
+      recipientEmail: row.email ?? undefined,
+    });
+    return;
+  }
+
+  if (row.email) {
+    await sendEmail({
+      to: row.email,
+      subject: title,
+      html: `<p>Hi ${row.name ?? "Owner"},</p><p>${body}</p><p><a href="${siteUrl()}${link}">View in dashboard</a></p>`,
+    });
+  }
 }
 
 // ============================================================

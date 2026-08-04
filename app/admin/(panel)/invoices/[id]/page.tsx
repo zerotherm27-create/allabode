@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
-import { issueInvoice, voidInvoice, recordPaymentOnInvoice } from "@/app/admin/invoice-actions";
+import { issueInvoice, voidInvoice, recordPaymentOnInvoice, addInvoiceLine, deleteInvoiceLine } from "@/app/admin/invoice-actions";
 import { inputCls } from "@/components/admin/form-kit";
 
 const peso = (n: number | string) => `₱${Math.round(Number(n)).toLocaleString("en-PH")}`;
@@ -35,6 +35,7 @@ type Invoice = {
   voided_at: string | null;
   created_at: string;
   tenants: { name: string; email: string } | null;
+  owners: { name: string; email: string } | null;
   units: { unit_label: string; properties: { name: string; address: string | null } | null } | null;
   invoice_lines: Line[];
 };
@@ -49,6 +50,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       status, subtotal, tax_amount, total_amount, amount_paid,
       notes, issued_at, voided_at, created_at,
       tenants(name,email),
+      owners(name,email),
       units(unit_label,properties(name,address)),
       invoice_lines(id,description,quantity,unit_price,amount,sort_order)
     `)
@@ -60,12 +62,15 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   const unit = Array.isArray(inv.units) ? inv.units[0] : inv.units;
   const property = unit ? (Array.isArray((unit as { properties: unknown }).properties) ? ((unit as { properties: { name: string; address: string | null }[] }).properties)[0] : (unit as { properties: { name: string; address: string | null } | null }).properties) : null;
   const tenant = Array.isArray(inv.tenants) ? inv.tenants[0] : inv.tenants;
+  const owner = Array.isArray(inv.owners) ? inv.owners[0] : inv.owners;
   const lines = (Array.isArray(inv.invoice_lines) ? inv.invoice_lines : []).sort((a, b) => (a as unknown as { sort_order: number }).sort_order - (b as unknown as { sort_order: number }).sort_order);
   const balance = Number(inv.total_amount) - Number(inv.amount_paid);
   const canIssue = inv.status === "draft";
   const canVoid  = inv.status !== "voided" && inv.status !== "paid";
   const canPay   = inv.status === "issued" || inv.status === "partially_paid" || inv.status === "overdue";
+  const canEditLines = inv.status === "draft";
   const recordPayment = recordPaymentOnInvoice.bind(null, id);
+  const addLine = addInvoiceLine.bind(null, id);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -78,7 +83,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         <div>
           <h1 className="font-display text-2xl font-bold text-navy">{inv.invoice_number}</h1>
           <p className="mt-1 text-sm text-slate">
-            {(tenant as { name?: string } | null)?.name} · {(unit as { unit_label?: string } | null)?.unit_label}
+            {(tenant as { name?: string } | null)?.name ?? (owner as { name?: string } | null)?.name} · {(unit as { unit_label?: string } | null)?.unit_label}
             {(property as { name?: string } | null)?.name ? `, ${(property as { name: string }).name}` : ""}
           </p>
         </div>
@@ -146,6 +151,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                   <th className="px-5 py-2.5 font-medium text-right">Qty</th>
                   <th className="px-5 py-2.5 font-medium text-right">Unit price</th>
                   <th className="px-5 py-2.5 font-medium text-right">Amount</th>
+                  {canEditLines && <th className="px-5 py-2.5" />}
                 </tr>
               </thead>
               <tbody>
@@ -155,28 +161,59 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                     <td className="px-5 py-3 text-right text-slate">{Number(line.quantity)}</td>
                     <td className="px-5 py-3 text-right text-slate">{peso(line.unit_price)}</td>
                     <td className="px-5 py-3 text-right font-medium text-navy">{peso(line.amount)}</td>
+                    {canEditLines && (
+                      <td className="px-5 py-3 text-right">
+                        <form action={deleteInvoiceLine.bind(null, id, line.id)}>
+                          <button type="submit" className="text-xs font-medium text-error hover:underline">
+                            Remove
+                          </button>
+                        </form>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="bg-surface-gray">
-                  <td colSpan={3} className="px-5 py-3 text-right text-sm font-semibold text-navy">Total</td>
+                  <td colSpan={canEditLines ? 4 : 3} className="px-5 py-3 text-right text-sm font-semibold text-navy">Total</td>
                   <td className="px-5 py-3 text-right text-sm font-bold text-navy">{peso(inv.total_amount)}</td>
                 </tr>
                 {Number(inv.amount_paid) > 0 && (
                   <>
                     <tr>
-                      <td colSpan={3} className="px-5 py-2 text-right text-sm text-slate">Paid</td>
+                      <td colSpan={canEditLines ? 4 : 3} className="px-5 py-2 text-right text-sm text-slate">Paid</td>
                       <td className="px-5 py-2 text-right text-sm font-medium text-available">− {peso(inv.amount_paid)}</td>
                     </tr>
                     <tr className="border-t border-line">
-                      <td colSpan={3} className="px-5 py-3 text-right text-sm font-semibold text-navy">Balance due</td>
+                      <td colSpan={canEditLines ? 4 : 3} className="px-5 py-3 text-right text-sm font-semibold text-navy">Balance due</td>
                       <td className="px-5 py-3 text-right text-sm font-bold text-navy">{peso(balance)}</td>
                     </tr>
                   </>
                 )}
               </tfoot>
             </table>
+            {canEditLines && (
+              <form action={addLine} className="flex flex-wrap items-end gap-3 border-t border-line px-5 py-4">
+                <label className="flex flex-1 min-w-[180px] flex-col gap-1.5 text-sm">
+                  <span className="font-medium text-navy">Description</span>
+                  <input name="description" required className={inputCls} placeholder="e.g. Plumbing repair — charged to tenant" />
+                </label>
+                <label className="flex w-20 flex-col gap-1.5 text-sm">
+                  <span className="font-medium text-navy">Qty</span>
+                  <input name="quantity" type="number" step="0.01" min="0.01" defaultValue={1} className={inputCls} />
+                </label>
+                <label className="flex w-32 flex-col gap-1.5 text-sm">
+                  <span className="font-medium text-navy">Unit price (₱)</span>
+                  <input name="unit_price" type="number" step="0.01" min="0" required className={inputCls} />
+                </label>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800"
+                >
+                  <Icon name="add" size={16} /> Add line
+                </button>
+              </form>
+            )}
           </div>
         </div>
 

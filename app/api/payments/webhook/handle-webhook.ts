@@ -10,13 +10,13 @@ export async function handleWebhook(
   const supabase = await createClient();
 
   const { data: intent } = await supabase.from("payment_intents")
-    .select("id,invoice_id,tenant_id,amount")
+    .select("id,invoice_id,tenant_id,owner_id,amount")
     .eq("provider_reference", referenceId)
     .maybeSingle();
 
   if (!intent) return new NextResponse("Not found", { status: 404 });
 
-  const pi = intent as { id: string; invoice_id: string | null; tenant_id: string; amount: number };
+  const pi = intent as { id: string; invoice_id: string | null; tenant_id: string | null; owner_id: string | null; amount: number };
 
   await supabase.from("payment_intents").update({
     status,
@@ -42,9 +42,10 @@ export async function handleWebhook(
       await supabase.from("payments").insert({
         lease_id:    (await supabase.from("invoices").select("lease_id").eq("id", pi.invoice_id).maybeSingle()).data?.lease_id ?? null,
         tenant_id:   pi.tenant_id,
+        owner_id:    pi.owner_id,
         amount:      pi.amount,
         method:      providerName,
-        status:      "completed",
+        status:      "verified",
         notes:       `Online payment via ${providerName} - ref: ${referenceId}`,
       });
     }

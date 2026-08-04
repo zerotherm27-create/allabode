@@ -26,6 +26,7 @@ type Row = {
   amount_paid: number;
   status: string;
   tenants: Named | Named[] | null;
+  owners: Named | Named[] | null;
   units: Named | Named[] | null;
 };
 const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v ?? null);
@@ -40,7 +41,7 @@ const columns: Column<Row>[] = [
       </Link>
     ),
   },
-  { header: "Tenant", cell: (r) => <span className="text-slate">{one(r.tenants)?.name ?? "—"}</span> },
+  { header: "Billed to", cell: (r) => <span className="text-slate">{one(r.tenants)?.name ?? one(r.owners)?.name ?? "—"}</span> },
   { header: "Unit",   cell: (r) => <span className="text-slate">{one(r.units)?.unit_label ?? "—"}</span> },
   {
     header: "Period",
@@ -92,7 +93,7 @@ export default async function AdminInvoicesPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("invoices")
-    .select("id,invoice_number,billing_period_start,billing_period_end,due_date,total_amount,amount_paid,status,tenants(name),units(unit_label)")
+    .select("id,invoice_number,billing_period_start,billing_period_end,due_date,total_amount,amount_paid,status,tenants(name),owners(name),units(unit_label)")
     .order("created_at", { ascending: false });
   const rows = (data ?? []) as Row[];
 
@@ -122,6 +123,12 @@ export default async function AdminInvoicesPage() {
             className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800"
           >
             <Icon name="add" size={20} /> New invoice
+          </Link>
+          <Link
+            href="/admin/invoices/new-owner"
+            className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-2.5 text-sm font-medium text-navy hover:bg-surface-gray"
+          >
+            <Icon name="request_quote" size={20} /> New owner invoice
           </Link>
         </div>
       </div>

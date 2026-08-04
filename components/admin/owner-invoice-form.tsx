@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { F, Group, inputCls, SubmitButton } from "@/components/admin/form-kit";
+import { InvoiceLineItemsEditor, emptyLineItem, type InvoiceLineItemDraft } from "@/components/admin/invoice-line-items-editor";
 
 export type UnitOption = {
   id: string;
@@ -26,9 +27,11 @@ export function OwnerInvoiceForm({
 }) {
   const [selected, setSelected] = useState<UnitOption | null>(null);
   const [due, setDue] = useState(defaultDueDate());
+  const [items, setItems] = useState<InvoiceLineItemDraft[]>([emptyLineItem()]);
 
   return (
     <form action={action} className="flex flex-col gap-6">
+      <input type="hidden" name="line_items" value={JSON.stringify(items)} />
       <Group title="Unit">
         <F label="Unit" span>
           <select
@@ -62,13 +65,12 @@ export function OwnerInvoiceForm({
         )}
       </Group>
 
-      <Group title="Charge">
-        <F label="Description" span>
-          <input name="description" required className={inputCls} placeholder="e.g. Plumbing repair — charged to owner" />
-        </F>
-        <F label="Amount (₱)">
-          <input name="amount" type="number" step="0.01" min="0.01" required className={inputCls} />
-        </F>
+      <fieldset className="rounded-lg border border-line bg-surface p-6">
+        <legend className="px-2 font-display text-sm font-semibold text-navy">Line items</legend>
+        <InvoiceLineItemsEditor items={items} onChange={setItems} />
+      </fieldset>
+
+      <Group title="Due date">
         <F label="Due date">
           <input
             name="due_date" type="date" required

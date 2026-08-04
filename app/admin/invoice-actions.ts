@@ -24,6 +24,27 @@ function n(fd: FormData, k: string): number | null {
   return Number.isFinite(x) ? x : null;
 }
 
+type LineItemInput = { description: string; quantity: number; unit_price: number };
+
+function parseLineItems(fd: FormData): LineItemInput[] {
+  const raw = s(fd, "line_items");
+  if (!raw) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map((it) => ({
+      description: typeof it?.description === "string" ? it.description.trim() : "",
+      quantity:    Number(it?.quantity) || 1,
+      unit_price:  Number(it?.unit_price) || 0,
+    }))
+    .filter((it) => it.description !== "" && it.unit_price > 0);
+}
+
 type LeaseRow = {
   id: string;
   tenant_id: string;
@@ -60,7 +81,10 @@ export async function createInvoice(fd: FormData) {
   const billingEnd   = s(fd, "billing_period_end") ?? "";
   const dueDate      = s(fd, "due_date") ?? "";
   const notes        = s(fd, "notes");
-  const rentAmount   = Number(l.rent_amount);
+
+  const lineItems = parseLineItems(fd);
+  if (lineItems.length === 0) throw new Error("At least one line item is required");
+  const subtotal = lineItems.reduce((sum, it) => sum + it.quantity * it.unit_price, 0);
 
   const { data: inv, error: invErr } = await supabase
     .from("invoices")
@@ -75,23 +99,24 @@ export async function createInvoice(fd: FormData) {
       billing_period_end:   billingEnd,
       due_date:             dueDate,
       status:               "draft",
-      subtotal:             rentAmount,
-      total_amount:         rentAmount,
+      subtotal,
+      total_amount:         subtotal,
       notes,
     })
     .select("id")
     .single();
   if (invErr) throw new Error(invErr.message);
 
-  // Default line: Monthly Rent
-  await supabase.from("invoice_lines").insert({
-    invoice_id:  inv.id,
-    description: "Monthly Rent",
-    quantity:    1,
-    unit_price:  rentAmount,
-    amount:      rentAmount,
-    sort_order:  0,
-  });
+  await supabase.from("invoice_lines").insert(
+    lineItems.map((it, i) => ({
+      invoice_id:  inv.id,
+      description: it.description,
+      quantity:    it.quantity,
+      unit_price:  it.unit_price,
+      amount:      it.quantity * it.unit_price,
+      sort_order:  i,
+    }))
+  );
 
   await logAudit(supabase, {
     action: "invoice.created", entityType: "invoice", entityId: inv.id, actorId: user?.id,
@@ -131,14 +156,13 @@ export async function createOwnerInvoice(fd: FormData) {
   const ownerId = u.properties?.owner_id ?? null;
   if (!ownerId) throw new Error("This unit's property has no owner on file");
 
-  const description = s(fd, "description");
-  if (!description) throw new Error("Description is required");
-  const amount = n(fd, "amount");
-  if (amount == null || amount <= 0) throw new Error("Amount is required");
-
   const dueDate = s(fd, "due_date") ?? "";
   if (!dueDate) throw new Error("Due date is required");
   const notes = s(fd, "notes");
+
+  const lineItems = parseLineItems(fd);
+  if (lineItems.length === 0) throw new Error("At least one line item is required");
+  const amount = lineItems.reduce((sum, it) => sum + it.quantity * it.unit_price, 0);
 
   const { data: invoiceNumber } = await supabase.rpc("generate_invoice_number");
   if (!invoiceNumber) throw new Error("Could not generate invoice number");
@@ -166,14 +190,16 @@ export async function createOwnerInvoice(fd: FormData) {
     .single();
   if (invErr) throw new Error(invErr.message);
 
-  await supabase.from("invoice_lines").insert({
-    invoice_id:  inv.id,
-    description,
-    quantity:    1,
-    unit_price:  amount,
-    amount,
-    sort_order:  0,
-  });
+  await supabase.from("invoice_lines").insert(
+    lineItems.map((it, i) => ({
+      invoice_id:  inv.id,
+      description: it.description,
+      quantity:    it.quantity,
+      unit_price:  it.unit_price,
+      amount:      it.quantity * it.unit_price,
+      sort_order:  i,
+    }))
+  );
 
   await logAudit(supabase, {
     action: "invoice.created", entityType: "invoice", entityId: inv.id, actorId: user?.id,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { F, Group, inputCls, SubmitButton } from "@/components/admin/form-kit";
+import { InvoiceLineItemsEditor, type InvoiceLineItemDraft } from "@/components/admin/invoice-line-items-editor";
 
 export type LeaseOption = {
   id: string;
@@ -36,15 +37,23 @@ export function InvoiceForm({
   defaultLeaseId?: string;
 }) {
   const d = defaultDates();
-  const [selected, setSelected] = useState<LeaseOption | null>(
-    defaultLeaseId ? (leases.find((l) => l.id === defaultLeaseId) ?? null) : null
-  );
+  const initialLease = defaultLeaseId ? (leases.find((l) => l.id === defaultLeaseId) ?? null) : null;
+  const [selected, setSelected] = useState<LeaseOption | null>(initialLease);
   const [start, setStart] = useState(d.start);
   const [end, setEnd]     = useState(d.end);
   const [due, setDue]     = useState(d.due);
+  const [items, setItems] = useState<InvoiceLineItemDraft[]>(
+    initialLease ? [{ description: "Monthly Rent", quantity: 1, unit_price: initialLease.rent_amount }] : []
+  );
+
+  function selectLease(l: LeaseOption | null) {
+    setSelected(l);
+    setItems(l ? [{ description: "Monthly Rent", quantity: 1, unit_price: l.rent_amount }] : []);
+  }
 
   return (
     <form action={action} className="flex flex-col gap-6">
+      <input type="hidden" name="line_items" value={JSON.stringify(items)} />
       <Group title="Lease">
         <F label="Lease" span>
           <select
@@ -53,7 +62,7 @@ export function InvoiceForm({
             className={inputCls}
             defaultValue={defaultLeaseId ?? ""}
             onChange={(e) =>
-              setSelected(leases.find((l) => l.id === e.target.value) ?? null)
+              selectLease(leases.find((l) => l.id === e.target.value) ?? null)
             }
           >
             <option value="">— select a lease —</option>
@@ -79,6 +88,14 @@ export function InvoiceForm({
           </div>
         )}
       </Group>
+
+      <fieldset className="rounded-lg border border-line bg-surface p-6">
+        <legend className="px-2 font-display text-sm font-semibold text-navy">Line items</legend>
+        {items.length === 0 && (
+          <p className="mb-3 text-sm text-slate">Select a lease to auto-fill rent, or add an item below.</p>
+        )}
+        <InvoiceLineItemsEditor items={items} onChange={setItems} />
+      </fieldset>
 
       <Group title="Billing period">
         <F label="Period start">

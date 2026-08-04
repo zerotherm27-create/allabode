@@ -9,12 +9,29 @@ Continuation notes still live in `memory.md` (local, gitignored) and
 - Workspace: `/Users/jojo/allabode`
 - Branch: `main`
 - Latest pushed/deployed commits:
+  - `3635b01 feat: add owner-facing invoices (billed directly to a property owner)`
+  - `ddd4323 docs: mark Aremchel Cruzado SOA duplicate-owner issue resolved`
   - `cde9cc4 feat: sitewide Framer Motion pass (marketing, admin, dashboards)`
   - `02ac915 docs: update handoff notes with hero-video shipment and open SOA data issue`
   - `0e25414 feat: add CMS-managed hero background video`
 - Production alias:
   - https://allabodeph.com
 - Working tree: clean except untracked `.vscode/` and `skills-lock.json`.
+
+## Shipped this session — Owner-facing invoices
+
+Invoices can now be billed directly to a property owner (no lease/tenant) —
+for services/errands on a unit with no active lease. Migration
+`20260805120000_owner_invoices.sql` **confirmed run** by the user. New admin
+creation flow (`/admin/invoices/new-owner`), owner portal
+(`/dashboard/owner/invoices/**`), new payment route, PDF routes generalized
+to fall back to owner name/email. Also fixed a real pre-existing bug found
+in passing: the payment webhook inserted an invalid `payment_status` enum
+value, silently failing to record a `payments` row on **every** successful
+online invoice payment (tenant or owner) until now. Full detail in
+`memory.md`'s 2026-08-05 section — including a note that this hasn't been
+independently browser-verified end-to-end (create → issue → pay → webhook),
+worth a spot-check on the first real owner invoice.
 
 ## Shipped this session — Sitewide Framer Motion pass
 
@@ -58,11 +75,13 @@ for someone else, that's the pattern to check for.
 
 ## Next Steps
 
-1. Manually confirm the hero video actually autoplays in a normal browser tab.
-2. Manually verify the motion pass (reduced-motion toggle, admin workflow buttons, a large DataTable page).
-3. Run `git status -sb` before staging anything new.
-4. Do not print or commit `.env.local` secrets.
-5. If editing Next.js app code, follow `AGENTS.md` and read the relevant docs under `node_modules/next/dist/docs/`.
+1. Spot-check the owner-invoice feature end-to-end on the first real one:
+   create → issue → owner sees it in portal → pay → webhook flips to paid.
+2. Manually confirm the hero video actually autoplays in a normal browser tab.
+3. Manually verify the motion pass (reduced-motion toggle, admin workflow buttons, a large DataTable page).
+4. Run `git status -sb` before staging anything new.
+5. Do not print or commit `.env.local` secrets.
+6. If editing Next.js app code, follow `AGENTS.md` and read the relevant docs under `node_modules/next/dist/docs/`.
 
 ---
 

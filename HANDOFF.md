@@ -8,14 +8,23 @@ Continuation notes still live in `memory.md` (local, gitignored) and
 
 - Workspace: `/Users/jojo/allabode`
 - Branch: `main`
-- Latest pushed/deployed commit:
+- Latest pushed/deployed commits:
+  - `cde9cc4 feat: sitewide Framer Motion pass (marketing, admin, dashboards)`
+  - `02ac915 docs: update handoff notes with hero-video shipment and open SOA data issue`
   - `0e25414 feat: add CMS-managed hero background video`
 - Production alias:
   - https://allabodeph.com
-- Latest production deployment:
-  - `dpl_Eyow4nkjE7Bd4ggenSvSQyAkypc2` (READY)
-  - https://allabode-li0og0s7h-zerotherm27-8336s-projects.vercel.app
 - Working tree: clean except untracked `.vscode/` and `skills-lock.json`.
+
+## Shipped this session — Sitewide Framer Motion pass
+
+Full micro-interaction/scroll-reveal/page-transition pass across marketing,
+admin (72 pages), and owner/tenant dashboards (18 pages), which had zero
+motion before. Phased (foundation → fix instant toggles → centralized
+propagation → gap-filling → page transitions). `tsc`/`eslint` clean on all 28
+touched files. Not independently browser-verified (sandbox can't run `next
+dev`) — worth checking reduced-motion behavior and admin workflow buttons
+manually. Full detail in `memory.md`'s 2026-08-05 section.
 
 ## Shipped this session — Hero background video
 
@@ -31,23 +40,26 @@ playback wasn't independently confirmed (automated browser tab showed
 `readyState: 0`, possibly a Chrome autoplay-deferral quirk on a non-focused
 automated tab, not necessarily a real bug) — worth a manual glance.
 
-## OPEN — Owner portal 404 for Aremchel Cruzado's SOA (diagnosed, unfixed)
+## RESOLVED — Owner portal 404 for Aremchel Cruzado's SOA
 
-Root cause: Aremchel has **two** `owners` rows (duplicate — `amcruzado@gmail.com`
+Root cause: Aremchel had **two** `owners` rows (duplicate — `amcruzado@gmail.com`
 linked to a real auth account and owning the real property/SOA, vs.
-`chel.cruzado@allabodeph.com` — her actual portal login email — unlinked, owns
-nothing). `getCurrentRole()`'s email-fallback resolves her work-email login to
-the empty duplicate, so `statement.owner_id !== ownerId` → 404. Fix decided
-(merge into the real record, keyed to her work email + her real auth id
-`b07ce428-6ad0-492d-8396-c174f7859419`) but **not executed** — an FK-dependency
-check query was handed to the user and never answered before the session moved
-to the video task. Full SQL and exact next step are in `memory.md`'s 2026-08-05
-section. Do this before anything else if Aremchel reports the issue again.
+`chel.cruzado@allabodeph.com` — her actual portal login email — unlinked, owned
+nothing). `getCurrentRole()`'s email-fallback resolved her work-email login to
+the empty duplicate, so `statement.owner_id !== ownerId` → 404.
+
+Fixed 2026-08-05 (data-only, no deploy): reassigned any references from the
+duplicate to the real record across all 12 owner-referencing tables, deleted
+the duplicate, then pointed the real record at her actual login email + auth
+id. User confirmed the SQL ran clean. Not independently re-verified in-browser
+this session. Full SQL + the two syntax issues hit along the way are in
+`memory.md`'s 2026-08-05 section — if a similar duplicate-owner 404 shows up
+for someone else, that's the pattern to check for.
 
 ## Next Steps
 
-1. Finish the Aremchel owner-record merge (see above / `memory.md`).
-2. Manually confirm the hero video actually autoplays in a normal browser tab.
+1. Manually confirm the hero video actually autoplays in a normal browser tab.
+2. Manually verify the motion pass (reduced-motion toggle, admin workflow buttons, a large DataTable page).
 3. Run `git status -sb` before staging anything new.
 4. Do not print or commit `.env.local` secrets.
 5. If editing Next.js app code, follow `AGENTS.md` and read the relevant docs under `node_modules/next/dist/docs/`.

@@ -122,7 +122,7 @@ export default async function AdminInvoicesPage() {
             href="/admin/invoices/new"
             className="inline-flex items-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-800"
           >
-            <Icon name="add" size={20} /> New invoice
+            <Icon name="add" size={20} /> New tenant invoice
           </Link>
           <Link
             href="/admin/invoices/new-owner"

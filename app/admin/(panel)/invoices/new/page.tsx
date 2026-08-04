@@ -50,7 +50,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: P
       >
         <Icon name="arrow_back" size={18} /> Back to invoices
       </Link>
-      <h1 className="font-display text-2xl font-bold text-navy">New invoice</h1>
+      <h1 className="font-display text-2xl font-bold text-navy">New tenant invoice</h1>
       <p className="mt-1 text-sm text-slate">
         Select a lease — a draft invoice is created from the monthly rent amount.
       </p>

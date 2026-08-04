@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { DUR_MID, EASE_OUT } from "@/components/motion";
 import { Icon } from "@/components/icon";
 
 export type FaqItem = { q: string; a: string };
 
 export function Faq({ items }: { items: FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
+  const reduced = useReducedMotion() ?? false;
 
   return (
     <div className="mx-auto max-w-3xl divide-y divide-line border-y border-line">
@@ -37,15 +40,22 @@ export function Faq({ items }: { items: FaqItem[] }) {
                 </span>
               </button>
             </h3>
-            <div
-              id={panelId}
-              role="region"
-              aria-labelledby={btnId}
-              hidden={!isOpen}
-              className="pb-6 pr-10 text-slate leading-relaxed"
-            >
-              {item.a}
-            </div>
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={btnId}
+                  initial={{ height: 0, opacity: reduced ? 1 : 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: reduced ? 1 : 0 }}
+                  transition={{ duration: reduced ? 0 : DUR_MID, ease: EASE_OUT }}
+                  className="overflow-hidden"
+                >
+                  <div className="pb-6 pr-10 text-slate leading-relaxed">{item.a}</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       })}

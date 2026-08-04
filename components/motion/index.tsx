@@ -13,8 +13,19 @@ import { motion, useReducedMotion, type Variants } from "motion/react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";
 import { useState } from "react";
 
-const EASE_OUT = [0.16, 1, 0.3, 1] as const;
-const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
+export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+export const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
+
+export const DUR_FAST = 0.15; // matches --dur-fast: 150ms
+export const DUR_MID = 0.25; // matches --dur-mid: 250ms
+
+/** Hover/tap scale feedback, reduced-motion-safe. Reused across Button-like elements. */
+export function pressable(reduced: boolean) {
+  return {
+    whileHover: reduced ? undefined : { scale: 1.05 },
+    whileTap: reduced ? undefined : { scale: 0.95 },
+  };
+}
 
 function revealVariants(reduced: boolean, y: number): Variants {
   return {

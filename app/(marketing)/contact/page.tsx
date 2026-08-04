@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading } from "@/components/sections";
+import { Reveal } from "@/components/motion";
 import { ContactForm } from "@/components/forms/lead-forms";
 import { getSettings, s } from "@/lib/settings";
 
@@ -48,7 +49,7 @@ export default async function ContactPage() {
         crumbs={[{ label: "Home", href: "/" }, { label: "Contact" }]}
       />
 
-      <section className="py-section">
+      <Reveal as="section" className="py-section">
         <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr]">
           {/* Details */}
           <div>
@@ -113,7 +114,7 @@ export default async function ContactPage() {
             </div>
           </div>
         </Container>
-      </section>
+      </Reveal>
     </>
   );
 }

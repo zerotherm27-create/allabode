@@ -1,6 +1,8 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { motion, useReducedMotion } from "motion/react";
+import { pressable } from "@/components/motion";
 import { Icon } from "@/components/icon";
 
 export const inputCls =
@@ -37,11 +39,13 @@ export function Group({ title, children }: { title: string; children: React.Reac
 
 export function SubmitButton({ label = "Save", pendingLabel = "Saving…" }: { label?: string; pendingLabel?: string }) {
   const { pending } = useFormStatus();
+  const reduced = useReducedMotion() ?? false;
   return (
-    <button
+    <motion.button
       type="submit"
       disabled={pending}
       className="inline-flex items-center gap-2 rounded-md bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50"
+      {...pressable(reduced)}
     >
       {pending ? (
         <>
@@ -51,6 +55,6 @@ export function SubmitButton({ label = "Save", pendingLabel = "Saving…" }: { l
       ) : (
         label
       )}
-    </button>
+    </motion.button>
   );
 }

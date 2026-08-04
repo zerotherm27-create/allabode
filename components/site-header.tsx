@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { DUR_FAST, DUR_MID, EASE_OUT } from "@/components/motion";
 import { mainNav, isDropdown, type NavDropdown } from "@/lib/site";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui";
@@ -23,6 +25,7 @@ export function SiteHeader() {
   const [overLightSurface, setOverLightSurface] = useState(false);
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const [mobileLoginOpen, setMobileLoginOpen] = useState(false);
+  const reduced = useReducedMotion() ?? false;
   const close = () => {
     setOpen(false);
     setLoginMenuOpen(false);
@@ -222,10 +225,24 @@ export function SiteHeader() {
       </div>
 
       {/* Mobile drawer */}
-      {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" onClick={close} />
-          <div className="absolute right-0 top-0 flex h-full w-[82%] max-w-sm flex-col bg-cream shadow-[var(--shadow-lift)]">
+      <AnimatePresence>
+        {open && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <motion.div
+              className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
+              onClick={close}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduced ? 0 : DUR_FAST }}
+            />
+            <motion.div
+              className="absolute right-0 top-0 flex h-full w-[82%] max-w-sm flex-col bg-cream shadow-[var(--shadow-lift)]"
+              initial={{ x: reduced ? 0 : "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: reduced ? 0 : "100%" }}
+              transition={{ duration: reduced ? 0 : DUR_MID, ease: EASE_OUT }}
+            >
             <div className="flex h-16 items-center justify-between border-b border-line px-5">
               <Logo />
               <button
@@ -321,9 +338,10 @@ export function SiteHeader() {
                 List My Property
               </Button>
             </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </header>
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { MotionTr, MotionCard } from "@/components/admin/table-row-motion";
 
 export type Column<T> = {
   header: string;
@@ -53,13 +54,13 @@ export function DataTable<T>({
           </thead>
           <tbody className="divide-y divide-line">
             {rows.map((row) => (
-              <tr key={getKey(row)}>
+              <MotionTr key={getKey(row)}>
                 {columns.map((c, i) => (
                   <td key={i} className={`px-4 py-3 ${c.align === "right" ? "text-right" : ""}`}>
                     {c.cell(row)}
                   </td>
                 ))}
-              </tr>
+              </MotionTr>
             ))}
           </tbody>
         </table>
@@ -68,7 +69,7 @@ export function DataTable<T>({
       {/* Mobile cards */}
       <div className="flex flex-col gap-3 md:hidden">
         {rows.map((row) => (
-          <div key={getKey(row)} className="rounded-lg border border-line bg-surface p-4">
+          <MotionCard key={getKey(row)} className="rounded-lg border border-line bg-surface p-4">
             <div className="font-medium text-navy">{columns[primaryIdx].cell(row)}</div>
             <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
               {columns.map((c, i) => {
@@ -88,7 +89,7 @@ export function DataTable<T>({
                 );
               })}
             </div>
-          </div>
+          </MotionCard>
         ))}
       </div>
     </>

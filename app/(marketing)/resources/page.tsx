@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
+import { Reveal } from "@/components/motion";
 import { getSettings, s } from "@/lib/settings";
 
 const title = "Property Guides Philippines | All Abode Resources";
@@ -87,7 +88,7 @@ export default async function ResourcesPage() {
       />
 
       {/* Categories */}
-      <section className="py-section">
+      <Reveal as="section" className="py-section">
         <Container>
           <SectionHeading
             eyebrow="Browse by Topic"
@@ -106,7 +107,7 @@ export default async function ResourcesPage() {
             ))}
           </div>
         </Container>
-      </section>
+      </Reveal>
 
       {/* Articles by category */}
       <section className="bg-surface-gray py-section">

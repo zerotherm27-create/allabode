@@ -7,6 +7,7 @@ import { Icon } from "@/components/icon";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
+import { Reveal } from "@/components/motion";
 
 export type NavItem = { label: string; icon: string; href: string };
 
@@ -170,7 +171,7 @@ export function StatCard({
   const toneColor =
     tone === "up" ? "text-available" : tone === "down" ? "text-sold" : "text-slate";
   return (
-    <div className="rounded-lg border border-line bg-surface p-5">
+    <Reveal as="div" y={12} className="rounded-lg border border-line bg-surface p-5">
       <div className="flex items-center justify-between">
         <span className="label-caps text-slate">{label}</span>
         <span className="flex size-9 items-center justify-center rounded-md bg-navy/5 text-navy-700">
@@ -187,7 +188,7 @@ export function StatCard({
           {delta}
         </p>
       )}
-    </div>
+    </Reveal>
   );
 }
 
@@ -201,12 +202,12 @@ export function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-line bg-surface">
+    <Reveal as="section" y={12} className="rounded-lg border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <h2 className="font-display text-base font-semibold text-navy">{title}</h2>
         {action}
       </div>
       <div className="p-5">{children}</div>
-    </section>
+    </Reveal>
   );
 }

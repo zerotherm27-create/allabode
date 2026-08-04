@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
+import { Reveal } from "@/components/motion";
 import { ListingGallery } from "@/components/listing-gallery";
 import { ListingMap } from "@/components/listing-map";
 import { ListingNearbyPlaces } from "@/components/listing-nearby-places";
@@ -103,7 +104,7 @@ export default async function ListingDetailPage({ params }: Params) {
         </Container>
       </ListingGallery>
 
-      <section className="py-section">
+      <Reveal as="section" className="py-section">
         <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_360px]">
           {/* Main */}
           <div>
@@ -262,7 +263,7 @@ export default async function ListingDetailPage({ params }: Params) {
             </div>
           </aside>
         </Container>
-      </section>
+      </Reveal>
 
       {/* Schedule a viewing */}
       {listing.dbId && (

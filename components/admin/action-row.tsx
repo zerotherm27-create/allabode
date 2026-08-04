@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, useTransition, type ReactNode } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { pressable } from "@/components/motion";
 import { Icon } from "@/components/icon";
 
 type RunOpts = { pendingLabel?: string };
@@ -72,9 +74,10 @@ export function ActionButton({
   const { isPending, pendingKey, run } = useActionRow();
   const thisPending = pendingKey === actionKey;
   const shownLabel = thisPending ? pendingLabel ?? "Working…" : label;
+  const reduced = useReducedMotion() ?? false;
 
   return (
-    <button
+    <motion.button
       type="button"
       disabled={isPending}
       className={`${className} ${disabledCls}`}
@@ -82,6 +85,7 @@ export function ActionButton({
         if (confirmMessage && !window.confirm(confirmMessage)) return;
         run(actionKey, action, { pendingLabel });
       }}
+      {...pressable(reduced)}
     >
       {thisPending ? (
         <Icon name="progress_activity" size={18} className="animate-spin" />
@@ -89,7 +93,7 @@ export function ActionButton({
         icon && <Icon name={icon} size={18} />
       )}
       {shownLabel}
-    </button>
+    </motion.button>
   );
 }
 
@@ -146,15 +150,16 @@ export function ActionSubmitButton({
   if (!formCtx) throw new Error("ActionSubmitButton must be used inside <ActionForm>");
   const thisPending = pendingKey === formCtx.actionKey;
   const shownLabel = thisPending ? formCtx.pendingLabel ?? "Working…" : label;
+  const reduced = useReducedMotion() ?? false;
 
   return (
-    <button type="submit" disabled={isPending} className={`${className} ${disabledCls}`}>
+    <motion.button type="submit" disabled={isPending} className={`${className} ${disabledCls}`} {...pressable(reduced)}>
       {thisPending ? (
         <Icon name="progress_activity" size={18} className="animate-spin" />
       ) : (
         icon && <Icon name={icon} size={18} />
       )}
       {shownLabel}
-    </button>
+    </motion.button>
   );
 }

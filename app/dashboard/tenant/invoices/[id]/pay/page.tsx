@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { Reveal } from "@/components/motion";
 
 export default function PayInvoicePage() {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +35,7 @@ export default function PayInvoicePage() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-surface-gray px-4">
-      <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-8 shadow-sm text-center">
+      <Reveal as="div" className="w-full max-w-sm rounded-xl border border-line bg-surface p-8 shadow-sm text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-navy/5 text-navy-700 mx-auto">
           <Icon name="payments" size={28} />
         </span>
@@ -65,7 +66,7 @@ export default function PayInvoicePage() {
         <Link href={`/dashboard/tenant/invoices/${id}`} className="mt-4 block text-sm text-slate hover:text-navy">
           ← Cancel and go back
         </Link>
-      </div>
+      </Reveal>
 
       <p className="mt-6 text-xs text-slate">
         Payments processed securely via {process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "xendit" ? "Xendit" : "Maya"}.

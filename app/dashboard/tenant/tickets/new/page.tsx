@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { DashboardShell, type NavItem } from "@/components/dashboard/shell";
+import { Reveal } from "@/components/motion";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 import { createTicketFromPortal } from "@/app/admin/ticket-actions";
@@ -32,7 +33,7 @@ export default async function NewTenantTicketPage() {
 
   return (
     <DashboardShell role="Tenant" nav={nav} userName={tenantName}>
-      <div className="mx-auto max-w-xl">
+      <Reveal as="div" className="mx-auto max-w-xl">
         <Link href="/dashboard/tenant/tickets" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate hover:text-navy">
           <Icon name="arrow_back" size={18} /> Back to tickets
         </Link>
@@ -78,7 +79,7 @@ export default async function NewTenantTicketPage() {
             <Icon name="send" size={18} /> Submit request
           </button>
         </form>
-      </div>
+      </Reveal>
     </DashboardShell>
   );
 }

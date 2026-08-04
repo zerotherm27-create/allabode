@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
+import { StaggerGroup, StaggerItem } from "@/components/motion";
 import { type Listing } from "@/lib/data";
 
 type Sort = "featured" | "price-asc" | "price-desc";
@@ -222,11 +223,13 @@ export function ListingsBrowser({
         </div>
 
         {results.length > 0 ? (
-          <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3">
+          <StaggerGroup as="div" className="grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3">
             {results.map((listing) => (
-              <PropertyCard key={listing.id} listing={listing} priceContext={priceContext} />
+              <StaggerItem as="div" key={listing.id}>
+                <PropertyCard listing={listing} priceContext={priceContext} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         ) : (
           <div className="flex flex-col items-center rounded-lg border border-dashed border-line-strong bg-surface p-12 text-center">
             <span className="text-slate-soft">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { Reveal } from "@/components/motion";
 
 export default async function PaymentReturnPage({
   params,
@@ -16,7 +17,7 @@ export default async function PaymentReturnPage({
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-surface-gray px-4">
-      <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-8 shadow-sm text-center">
+      <Reveal as="div" className="w-full max-w-sm rounded-xl border border-line bg-surface p-8 shadow-sm text-center">
         <span className={`flex size-14 items-center justify-center rounded-full mx-auto ${
           succeeded ? "bg-available/10 text-available" :
           cancelled ? "bg-surface-gray text-slate" :
@@ -53,7 +54,7 @@ export default async function PaymentReturnPage({
             Back to dashboard
           </Link>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

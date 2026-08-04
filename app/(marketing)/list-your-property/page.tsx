@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading } from "@/components/sections";
+import { Reveal } from "@/components/motion";
 import { ListPropertyForm } from "@/components/forms/lead-forms";
 import { getSettings, s } from "@/lib/settings";
 
@@ -35,7 +36,7 @@ export default async function ListYourPropertyPage() {
       />
 
       {/* How it works */}
-      <section className="py-section">
+      <Reveal as="section" className="py-section">
         <Container>
           <SectionHeading eyebrow="How It Works" title="Three simple steps" />
           <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line md:grid-cols-3">
@@ -57,7 +58,7 @@ export default async function ListYourPropertyPage() {
             ))}
           </div>
         </Container>
-      </section>
+      </Reveal>
 
       {/* Form */}
       <section className="bg-surface-gray py-section">

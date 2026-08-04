@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { DashboardShell, type NavItem } from "@/components/dashboard/shell";
+import { Reveal } from "@/components/motion";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 
@@ -81,7 +82,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
 
   return (
     <DashboardShell role="Owner" nav={nav} userName={ownerName}>
-      <div className="mx-auto max-w-6xl">
+      <Reveal as="div" className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <Link href="/dashboard/owner#statements" className="mb-2 inline-flex items-center gap-1.5 text-sm text-slate hover:text-navy">
@@ -188,7 +189,7 @@ export default async function OwnerStatementViewPage({ params }: { params: Promi
             </div>
           </div>
         </div>
-      </div>
+      </Reveal>
     </DashboardShell>
   );
 }

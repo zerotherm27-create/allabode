@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { DUR_FAST, EASE_OUT } from "@/components/motion";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/icon";
 
@@ -15,6 +17,7 @@ export function NotificationBell({ role }: { role: "tenant" | "owner" }) {
   const [open, setOpen]       = useState(false);
   const [loading, setLoading] = useState(true);
   const panelRef              = useRef<HTMLDivElement>(null);
+  const reduced                = useReducedMotion() ?? false;
 
   useEffect(() => {
     const supabase = createClient();
@@ -62,15 +65,30 @@ export function NotificationBell({ role }: { role: "tenant" | "owner" }) {
         className="relative inline-flex size-10 items-center justify-center rounded-md text-slate hover:bg-surface-gray hover:text-navy"
       >
         <Icon name="notifications" size={22} />
-        {unreadCount > 0 && (
-          <span className="absolute right-2 top-2 flex size-4 items-center justify-center rounded-full bg-sold text-[9px] font-bold text-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
+        <AnimatePresence>
+          {unreadCount > 0 && (
+            <motion.span
+              className="absolute right-2 top-2 flex size-4 items-center justify-center rounded-full bg-sold text-[9px] font-bold text-white"
+              initial={{ scale: reduced ? 1 : 0, opacity: reduced ? 1 : 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: reduced ? 1 : 0, opacity: reduced ? 1 : 0 }}
+              transition={{ duration: reduced ? 0 : DUR_FAST }}
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-line bg-surface shadow-xl">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-line bg-surface shadow-xl"
+            initial={{ opacity: 0, scale: reduced ? 1 : 0.96, y: reduced ? 0 : -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: reduced ? 1 : 0.96, y: reduced ? 0 : -4 }}
+            transition={{ duration: reduced ? 0 : DUR_FAST, ease: EASE_OUT }}
+          >
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <span className="text-sm font-semibold text-navy">Notifications</span>
             {unreadCount > 0 && (
@@ -115,8 +133,9 @@ export function NotificationBell({ role }: { role: "tenant" | "owner" }) {
               View all notices →
             </Link>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

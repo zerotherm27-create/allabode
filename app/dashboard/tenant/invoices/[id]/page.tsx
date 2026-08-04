@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { DashboardShell, type NavItem } from "@/components/dashboard/shell";
+import { Reveal } from "@/components/motion";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 
@@ -37,7 +38,7 @@ export default async function TenantInvoiceViewPage({ params }: { params: Promis
 
   return (
     <DashboardShell role="Tenant" nav={nav} userName={tenantName}>
-      <div className="mx-auto max-w-6xl">
+      <Reveal as="div" className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <Link href="/dashboard/tenant/invoices" className="mb-2 inline-flex items-center gap-1.5 text-sm text-slate hover:text-navy">
@@ -60,7 +61,7 @@ export default async function TenantInvoiceViewPage({ params }: { params: Promis
         <div className="mt-6 overflow-hidden rounded-lg border border-line bg-surface">
           <iframe src={`/api/portal/invoices/${id}`} title="Invoice PDF" className="h-[78vh] w-full" />
         </div>
-      </div>
+      </Reveal>
     </DashboardShell>
   );
 }

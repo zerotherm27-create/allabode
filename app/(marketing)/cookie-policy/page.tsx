@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui";
 import { PageHero } from "@/components/sections";
+import { Reveal } from "@/components/motion";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 
@@ -31,7 +32,7 @@ export default async function CookiePolicyPage() {
         crumbs={[{ label: "Home", href: "/" }, { label: "Cookie Policy" }]}
       />
 
-      <section className="py-section">
+      <Reveal as="section" className="py-section">
         <Container>
           <div className="mx-auto max-w-3xl space-y-10 text-slate leading-relaxed">
 
@@ -129,7 +130,7 @@ export default async function CookiePolicyPage() {
 
           </div>
         </Container>
-      </section>
+      </Reveal>
     </>
   );
 }

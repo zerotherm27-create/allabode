@@ -4,8 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { pressable, Reveal } from "@/components/motion";
 import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/client";
+
+const MotionLink = motion.create(Link);
 
 const navGroups = [
   {
@@ -85,6 +89,7 @@ export function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const reduced = useReducedMotion() ?? false;
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -122,7 +127,7 @@ export function AdminShell({
                 </p>
               )}
               {items.map((item) => (
-                <Link
+                <MotionLink
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
@@ -132,10 +137,11 @@ export function AdminShell({
                       ? "bg-white/10 text-white"
                       : "text-white/70 hover:bg-white/5 hover:text-white"
                   }`}
+                  {...pressable(reduced)}
                 >
                   <Icon name={item.icon} size={20} />
                   {item.label}
-                </Link>
+                </MotionLink>
               ))}
             </div>
           ))}
@@ -200,7 +206,7 @@ export function StatCard({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-line bg-surface p-5">
+    <Reveal as="div" y={12} className="rounded-lg border border-line bg-surface p-5">
       <div className="flex items-center justify-between">
         <span
           className={`flex h-10 w-10 items-center justify-center rounded-md ${
@@ -212,6 +218,6 @@ export function StatCard({
       </div>
       <p className="mt-4 font-display text-2xl font-bold text-navy">{value}</p>
       <p className="mt-1 text-sm text-slate">{label}</p>
-    </div>
+    </Reveal>
   );
 }

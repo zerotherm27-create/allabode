@@ -124,6 +124,11 @@ function SettingsSection({
                   name={field.key}
                   defaultValue={settings[field.key] ?? ""}
                 />
+              ) : field.type === "video" ? (
+                <VideoField
+                  name={field.key}
+                  defaultValue={settings[field.key] ?? ""}
+                />
               ) : field.type === "position" ? (
                 <select
                   name={field.key}
@@ -250,6 +255,97 @@ function ImageField({ name, defaultValue }: { name: string; defaultValue: string
         {!uploadError && (
           <p className="text-xs text-slate">
             Requires a public <strong>site-assets</strong> bucket in Supabase Storage.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
+
+function VideoField({ name, defaultValue }: { name: string; defaultValue: string }) {
+  const [url, setUrl] = useState(defaultValue);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError("");
+    if (file.type !== "video/mp4") {
+      setUploadError("Please upload an MP4 video file.");
+      return;
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      setUploadError("Video must be 20MB or smaller.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const path = `hero/${Date.now()}.mp4`;
+      const { error } = await supabase.storage
+        .from("site-assets")
+        .upload(path, file, { contentType: "video/mp4", upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
+      setUrl(data.publicUrl);
+    } catch {
+      setUploadError("Upload failed. Make sure the 'site-assets' bucket exists in Supabase Storage.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <input type="hidden" name={name} value={url} />
+      <input
+        type="url"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder="https://... (paste video URL or upload below)"
+        className="w-full rounded-md border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/20"
+      />
+      {url && (
+        <video
+          src={url}
+          muted
+          loop
+          playsInline
+          autoPlay
+          className="h-32 w-full rounded-md border border-line object-cover"
+        />
+      )}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-medium text-navy hover:bg-surface-gray disabled:opacity-60"
+        >
+          {uploading ? (
+            <><Icon name="progress_activity" size={16} className="animate-spin" /> Uploading…</>
+          ) : (
+            <><Icon name="upload" size={16} /> Upload video</>
+          )}
+        </button>
+        <input ref={fileRef} type="file" accept="video/mp4" onChange={handleUpload} className="hidden" />
+        {url && !uploading && (
+          <button
+            type="button"
+            onClick={() => { setUrl(""); setUploadError(""); }}
+            className="text-xs font-medium text-error hover:underline"
+          >
+            Remove
+          </button>
+        )}
+        {uploadError && <p className="text-xs text-error">{uploadError}</p>}
+        {!uploadError && !url && (
+          <p className="text-xs text-slate">
+            MP4, up to 20MB. Requires a public <strong>site-assets</strong> bucket in Supabase Storage.
           </p>
         )}
       </div>

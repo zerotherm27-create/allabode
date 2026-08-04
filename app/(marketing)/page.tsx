@@ -4,7 +4,7 @@ import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
 import { Faq } from "@/components/faq";
-import { AmbientHero, Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
+import { HeroBackground, Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 
 import { services, trustPoints, credentials, testimonials } from "@/lib/data";
 import { getFeaturedListings } from "@/lib/listings";
@@ -79,22 +79,13 @@ export default async function Home() {
   ]);
   const heroImage = s(settings, "hero_image");
   const heroImagePosition = s(settings, "hero_image_position") || "center";
+  const heroVideo = s(settings, "hero_video");
   return (
     <>
       {/* ---------- Hero ---------- */}
       <section className="relative isolate overflow-hidden bg-navy">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy via-navy-800 to-navy-700" />
-        {heroImage && (
-          <AmbientHero
-            image={heroImage}
-            position={heroImagePosition}
-            className="absolute inset-0 -z-10 bg-no-repeat bg-cover opacity-30"
-          />
-        )}
-        <div className="absolute inset-0 -z-10 opacity-60 [background:radial-gradient(80%_60%_at_85%_15%,rgba(180,151,90,0.28),transparent_60%)]" />
-        {heroImage && (
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy/70 via-navy/35 to-transparent sm:from-navy/60 sm:via-navy/20 sm:to-transparent" />
-        )}
+        <HeroBackground heroImage={heroImage} heroImagePosition={heroImagePosition} heroVideo={heroVideo} />
 
         <Container className="flex min-h-[72vh] flex-col justify-center pb-20 pt-32 md:pt-36">
           <div className="max-w-3xl">

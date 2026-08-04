@@ -11,6 +11,7 @@
 
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";
+import { useState } from "react";
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
@@ -144,5 +145,86 @@ export function AmbientHero({ image, position = "center", className }: AmbientHe
           : { duration: 32, repeat: Infinity, repeatType: "mirror", ease: EASE_IN_OUT }
       }
     />
+  );
+}
+
+type VideoHeroProps = {
+  video: string;
+  /** Fallback image: used as the <video> poster and as the reduced-motion background. */
+  poster?: string;
+  posterPosition?: string;
+  className?: string;
+  onError?: () => void;
+};
+
+/**
+ * Autoplaying, looping, muted background video for the homepage hero.
+ * Reduced-motion users never get a <video> mounted at all — they see the
+ * poster image via AmbientHero's frozen treatment instead, reusing that
+ * component rather than duplicating a static-frame implementation.
+ */
+export function VideoHero({ video, poster, posterPosition = "center", className, onError }: VideoHeroProps) {
+  const reduced = useReducedMotion() ?? false;
+
+  if (reduced) {
+    return poster ? <AmbientHero image={poster} position={posterPosition} className={className} /> : null;
+  }
+
+  return (
+    <video
+      className={className}
+      src={video}
+      poster={poster || undefined}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      onError={onError}
+    />
+  );
+}
+
+type HeroBackgroundProps = {
+  heroImage: string;
+  heroImagePosition: string;
+  heroVideo: string;
+};
+
+/**
+ * Homepage hero background stack: video-or-image layer, gold radial glow,
+ * left-to-right legibility scrim. Owns the video error-fallback state, which
+ * is why this is a client component even though the page itself is a server
+ * component. Video takes precedence over the image when both are set; the
+ * image doubles as the video's poster and as its load-failure fallback.
+ */
+export function HeroBackground({ heroImage, heroImagePosition, heroVideo }: HeroBackgroundProps) {
+  const [videoFailed, setVideoFailed] = useState(false);
+  const showVideo = !!heroVideo && !videoFailed;
+  const showImage = !showVideo && !!heroImage;
+
+  return (
+    <>
+      {showVideo && (
+        <VideoHero
+          video={heroVideo}
+          poster={heroImage}
+          posterPosition={heroImagePosition}
+          className="absolute inset-0 -z-10 h-full w-full object-cover opacity-30"
+          onError={() => setVideoFailed(true)}
+        />
+      )}
+      {showImage && (
+        <AmbientHero
+          image={heroImage}
+          position={heroImagePosition}
+          className="absolute inset-0 -z-10 bg-no-repeat bg-cover opacity-30"
+        />
+      )}
+      <div className="absolute inset-0 -z-10 opacity-60 [background:radial-gradient(80%_60%_at_85%_15%,rgba(180,151,90,0.28),transparent_60%)]" />
+      {(showVideo || showImage) && (
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy/70 via-navy/35 to-transparent sm:from-navy/60 sm:via-navy/20 sm:to-transparent" />
+      )}
+    </>
   );
 }

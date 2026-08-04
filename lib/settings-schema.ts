@@ -18,6 +18,7 @@ export const settingsFallback: Settings = {
   hero_body:            "All Abode helps you handle real estate with more confidence. Whether you are buying, selling, leasing, managing, or valuing a property, our team provides practical support from inquiry to completion.",
   hero_image:           "",
   hero_image_position:  "center",
+  hero_video:           "",
   page_about_image:     "",
   page_about_image_position:     "center",
   page_leasing_image:   "",
@@ -96,6 +97,7 @@ export const settingsSchema = [
       { key: "hero_body",       label: "Body Text",        type: "textarea" },
       { key: "hero_image",      label: "Background Image", type: "image" },
       { key: "hero_image_position", label: "Background Image Position", type: "position" },
+      { key: "hero_video",      label: "Background Video", type: "video" },
     ],
   },
   {

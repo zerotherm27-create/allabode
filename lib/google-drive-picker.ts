@@ -125,12 +125,20 @@ export function openDrivePicker(opts: {
      *  renders one flat list of every image in the account with no way to
      *  narrow it down. Folders are shown so they can be opened, but selecting
      *  one is disabled: clicking a folder should navigate into it, not return
-     *  the folder itself as the pick. */
+     *  the folder itself as the pick.
+     *
+     *  LIST mode is deliberate, and is what Google recommends for any scope
+     *  narrower than `drive`/`drive.readonly`. The default grid mode renders a
+     *  thumbnail per file, but under `drive.file` this app has no read access
+     *  to a file until *after* it's picked — and a thumbnail is file content —
+     *  so every tile came back as a broken-image placeholder. A detailed list
+     *  shows names, dates and type icons, none of which need that access. */
     const browsable = (label: string) =>
       new gp.DocsView(gp.ViewId.DOCS)
         .setMimeTypes(IMAGE_MIME_TYPES)
         .setIncludeFolders(true)
         .setSelectFolderEnabled(false)
+        .setMode(gp.DocsViewMode.LIST)
         .setLabel(label);
 
     const myDrive = browsable("My Drive").setParent("root").setOwnedByMe(true);

@@ -19,6 +19,7 @@ declare global {
         PickerBuilder: new () => GooglePickerBuilder;
         DocsView: new (viewId: string) => GoogleDocsView;
         ViewId: { DOCS: string; DOCS_IMAGES: string };
+        DocsViewMode: { GRID: string; LIST: string };
         Feature: { MULTISELECT_ENABLED: string };
         Action: { PICKED: string; CANCEL: string };
         Response: { ACTION: string; DOCUMENTS: string };
@@ -35,6 +36,7 @@ declare global {
     setOwnedByMe: (me: boolean) => GoogleDocsView;
     setEnableDrives: (enabled: boolean) => GoogleDocsView;
     setLabel: (label: string) => GoogleDocsView;
+    setMode: (mode: string) => GoogleDocsView;
   }
 
   interface GooglePickerBuilder {

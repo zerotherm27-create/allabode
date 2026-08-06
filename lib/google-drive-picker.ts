@@ -64,6 +64,7 @@ export function openDrivePicker(opts: { apiKey: string; accessToken: string }): 
       .addView(view)
       .setOAuthToken(opts.accessToken)
       .setDeveloperKey(opts.apiKey)
+      .setOrigin(window.location.protocol + "//" + window.location.host)
       .setCallback((data) => {
         const action = data[window.google.picker.Response.ACTION];
         if (action === window.google.picker.Action.PICKED) {

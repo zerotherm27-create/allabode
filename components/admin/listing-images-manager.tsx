@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { FileUploadButton } from "@/components/forms/file-upload-button";
+import { GoogleDrivePickerButton } from "@/components/admin/google-drive-picker-button";
 import { deleteListingImage, reorderListingImages, uploadListingImages } from "@/app/admin/actions";
 import { optimizeImageFile } from "@/lib/image-optimize";
 
@@ -117,7 +118,7 @@ export function ListingImagesManager({
         </div>
       )}
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <FileUploadButton
           accept="image/*"
           multiple
@@ -126,6 +127,7 @@ export function ListingImagesManager({
           onFiles={handleFiles}
           label={uploading ? "Uploading…" : "Add photos"}
         />
+        <GoogleDrivePickerButton disabled={uploading} onFiles={handleFiles} onError={setError} />
       </div>
       {error && (
         <p role="alert" className="mt-2 text-xs text-error">

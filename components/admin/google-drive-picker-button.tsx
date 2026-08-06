@@ -23,6 +23,7 @@ export function GoogleDrivePickerButton({
   onError?: (message: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   if (!CLIENT_ID || !API_KEY || !APP_ID) return null;
 
@@ -33,12 +34,20 @@ export function GoogleDrivePickerButton({
       const accessToken = await getDriveAccessToken(CLIENT_ID!);
       const docs = await openDrivePicker({ apiKey: API_KEY!, accessToken, appId: APP_ID! });
       if (docs.length === 0) return;
-      const files = await Promise.all(docs.map((doc) => downloadDriveFile(doc, accessToken)));
+      // Sequential, not Promise.all: picking a whole folder can mean dozens of
+      // full-size photos, and streaming them all through the download proxy at
+      // once risks exhausting the serverless function.
+      const files: File[] = [];
+      for (const doc of docs) {
+        setProgress({ done: files.length, total: docs.length });
+        files.push(await downloadDriveFile(doc, accessToken));
+      }
       onFiles(files);
     } catch (err) {
       onError?.(err instanceof Error ? err.message : "Couldn't import photos from Google Drive.");
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   }
 
@@ -52,7 +61,11 @@ export function GoogleDrivePickerButton({
       }`}
     >
       <Icon name="drive_folder_upload" size={18} />
-      {busy ? "Connecting…" : "Add from Google Drive"}
+      {!busy
+        ? "Add from Google Drive"
+        : progress
+          ? `Importing ${progress.done + 1} of ${progress.total}…`
+          : "Connecting…"}
     </button>
   );
 }

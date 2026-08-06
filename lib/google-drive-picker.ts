@@ -4,7 +4,18 @@
 
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const GAPI_SRC = "https://apis.google.com/js/api.js";
+/** Per-file scope: the app only ever gets access to the images the user picks,
+ *  never their whole Drive. Folder browsing in the picker works fine under it
+ *  — the picker's file list is drawn from the user's own signed-in session,
+ *  not from anything this app is authorised to read. Widening this to
+ *  `drive.readonly` would make it a Google "restricted" scope and pull the
+ *  project into a paid annual CASA security assessment. */
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+
+/** Canvas-decodable web image formats — `optimizeImageFile` re-encodes every
+ *  pick through a <canvas>, so formats a browser can't decode (HEIC, RAW)
+ *  would fail silently after selection. */
+const IMAGE_MIME_TYPES = "image/jpeg,image/png,image/webp,image/gif";
 
 export type PickedDoc = { id: string; name: string; mimeType: string };
 
@@ -61,11 +72,33 @@ export function openDrivePicker(opts: {
   appId: string;
 }): Promise<PickedDoc[]> {
   return new Promise((resolve, reject) => {
-    const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS_IMAGES).setSelectFolderEnabled(
-      false
-    );
+    const gp = window.google.picker;
+
+    /** A browsable Drive view filtered to images. `ViewId.DOCS` (rather than
+     *  `DOCS_IMAGES`) is what makes it a real folder tree — `DOCS_IMAGES`
+     *  renders one flat list of every image in the account with no way to
+     *  narrow it down. Folders are shown so they can be opened, but selecting
+     *  one is disabled: clicking a folder should navigate into it, not return
+     *  the folder itself as the pick. */
+    const browsable = (label: string) =>
+      new gp.DocsView(gp.ViewId.DOCS)
+        .setMimeTypes(IMAGE_MIME_TYPES)
+        .setIncludeFolders(true)
+        .setSelectFolderEnabled(false)
+        .setLabel(label);
+
+    const myDrive = browsable("My Drive").setParent("root").setOwnedByMe(true);
+    const sharedWithMe = browsable("Shared with me").setOwnedByMe(false);
+    const sharedDrives = browsable("Shared drives").setEnableDrives(true);
+
     const picker = new window.google.picker.PickerBuilder()
-      .addView(view)
+      .addView(myDrive)
+      .addView(sharedWithMe)
+      .addView(sharedDrives)
+      // The caller uploads an array of files, so let the user pick a whole
+      // folder's worth in one pass instead of reopening the picker per photo.
+      .enableFeature(gp.Feature.MULTISELECT_ENABLED)
+      .setTitle("Select listing photos")
       .setOAuthToken(opts.accessToken)
       .setDeveloperKey(opts.apiKey)
       // Required by Google whenever the drive.file scope is used: it's what

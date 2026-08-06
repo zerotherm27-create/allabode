@@ -90,8 +90,13 @@ export function openDrivePicker(opts: { apiKey: string; accessToken: string }): 
 }
 
 export async function downloadDriveFile(doc: PickedDoc, accessToken: string): Promise<File> {
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${doc.id}?alt=media`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+  // Fetched via our own API route, not directly from googleapis.com — Drive's
+  // alt=media redirect doesn't carry CORS headers, so a browser-side fetch()
+  // to it fails silently. See app/api/admin/google-drive-download/route.ts.
+  const res = await fetch("/api/admin/google-drive-download", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fileId: doc.id, accessToken }),
   });
   if (!res.ok) {
     throw new Error(`Couldn't download "${doc.name}" from Google Drive.`);

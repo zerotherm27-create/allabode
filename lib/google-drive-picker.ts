@@ -55,7 +55,11 @@ export function getDriveAccessToken(clientId: string): Promise<string> {
   });
 }
 
-export function openDrivePicker(opts: { apiKey: string; accessToken: string }): Promise<PickedDoc[]> {
+export function openDrivePicker(opts: {
+  apiKey: string;
+  accessToken: string;
+  appId: string;
+}): Promise<PickedDoc[]> {
   return new Promise((resolve, reject) => {
     const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS_IMAGES).setSelectFolderEnabled(
       false
@@ -64,6 +68,12 @@ export function openDrivePicker(opts: { apiKey: string; accessToken: string }): 
       .addView(view)
       .setOAuthToken(opts.accessToken)
       .setDeveloperKey(opts.apiKey)
+      // Required by Google whenever the drive.file scope is used: it's what
+      // ties the picker to our Cloud project so selecting a file actually
+      // grants this app access to it. Without it the picker still lists file
+      // names (those come from the user's own Drive session) but every
+      // thumbnail — and any later read of the file — is unauthorised.
+      .setAppId(opts.appId)
       .setOrigin(window.location.protocol + "//" + window.location.host)
       .setCallback((data) => {
         const action = data[window.google.picker.Response.ACTION];

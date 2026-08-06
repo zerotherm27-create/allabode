@@ -35,6 +35,7 @@ declare global {
     addView: (view: GoogleDocsView | string) => GooglePickerBuilder;
     setOAuthToken: (token: string) => GooglePickerBuilder;
     setDeveloperKey: (key: string) => GooglePickerBuilder;
+    setAppId: (appId: string) => GooglePickerBuilder;
     setOrigin: (origin: string) => GooglePickerBuilder;
     setCallback: (cb: (data: Record<string, unknown>) => void) => GooglePickerBuilder;
     build: () => { setVisible: (v: boolean) => void };

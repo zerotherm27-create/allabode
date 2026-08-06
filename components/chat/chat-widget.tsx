@@ -141,8 +141,8 @@ export function ChatWidget() {
       <div className="flex items-center justify-end">
         {!open && (
           <div
-            className={`flex h-14 items-center overflow-hidden rounded-full bg-navy text-white shadow-[var(--shadow-card)] ring-1 ring-gold/30 transition-[width,margin-right] duration-500 ease-[var(--ease-out)] ${
-              showHint ? "mr-3 w-40" : "pointer-events-none mr-0 w-0"
+            className={`flex h-14 items-center overflow-hidden rounded-full bg-navy text-white shadow-[var(--shadow-card)] transition-[width,margin-right] duration-500 ease-[var(--ease-out)] ${
+              showHint ? "mr-3 w-40 ring-1 ring-gold/30" : "pointer-events-none mr-0 w-0"
             }`}
           >
             <div className="flex w-40 shrink-0 items-center gap-1 py-2 pl-5 pr-2">

@@ -192,6 +192,32 @@ button:not(:disabled):active {
   }
 }
 
+/* Google Drive Picker — Google injects this dialog straight into <body> and
+   positions it `absolute`, i.e. anchored to document coordinates rather than
+   the viewport. Scrolling then slides the dialog off-screen while its
+   full-page backdrop carries on swallowing every click, so the page reads as
+   frozen. Pin both to the viewport instead. `!important` is required: these
+   rules compete with Google's own injected stylesheet and inline top/left.
+   Scrolling of the page behind is locked separately in lib/google-drive-picker.ts. */
+.picker-dialog-bg {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.picker-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  /* Viewport-pinned elements can't be scrolled to, so a dialog taller than a
+     short screen would have its top and bottom permanently unreachable. */
+  max-height: 100dvh !important;
+  overflow: auto !important;
+}
+
 @media print {
   body * {
     visibility: hidden !important;

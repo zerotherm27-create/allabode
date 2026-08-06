@@ -66,6 +66,27 @@ export function getDriveAccessToken(clientId: string): Promise<string> {
   });
 }
 
+/** Stops the page behind the picker from scrolling, and returns an idempotent
+ *  release. Padding compensates for the scrollbar's width so hiding it doesn't
+ *  shift the layout underneath on platforms that reserve space for one. */
+function lockPageScroll(): () => void {
+  const { body } = document;
+  const prevOverflow = body.style.overflow;
+  const prevPaddingRight = body.style.paddingRight;
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+  body.style.overflow = "hidden";
+  if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    body.style.overflow = prevOverflow;
+    body.style.paddingRight = prevPaddingRight;
+  };
+}
+
 export function openDrivePicker(opts: {
   apiKey: string;
   accessToken: string;
@@ -73,6 +94,31 @@ export function openDrivePicker(opts: {
 }): Promise<PickedDoc[]> {
   return new Promise((resolve, reject) => {
     const gp = window.google.picker;
+    const releaseScroll = lockPageScroll();
+
+    /* Backstop for the scroll lock. The callback below covers the normal
+       PICKED/CANCEL exits, but any dismissal path that fires neither would
+       otherwise strand the page permanently unscrollable — a worse hang than
+       the one this is fixing. Watch for the dialog leaving the DOM instead.
+       The `seen` flag matters: unrelated <body> mutations fire before Google
+       has inserted the dialog, and releasing on those would undo the lock
+       immediately. */
+    let seen = false;
+    const observer = new MutationObserver(() => {
+      if (document.querySelector(".picker-dialog")) {
+        seen = true;
+      } else if (seen) {
+        releaseScroll();
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true });
+
+    const settle = (docs: PickedDoc[]) => {
+      releaseScroll();
+      observer.disconnect();
+      resolve(docs);
+    };
 
     /** A browsable Drive view filtered to images. `ViewId.DOCS` (rather than
      *  `DOCS_IMAGES`) is what makes it a real folder tree — `DOCS_IMAGES`
@@ -112,7 +158,7 @@ export function openDrivePicker(opts: {
         const action = data[window.google.picker.Response.ACTION];
         if (action === window.google.picker.Action.PICKED) {
           const docs = (data[window.google.picker.Response.DOCUMENTS] as Record<string, string>[]) ?? [];
-          resolve(
+          settle(
             docs.map((doc) => ({
               id: doc[window.google.picker.Document.ID],
               name: doc[window.google.picker.Document.NAME],
@@ -120,13 +166,15 @@ export function openDrivePicker(opts: {
             }))
           );
         } else if (action === window.google.picker.Action.CANCEL) {
-          resolve([]);
+          settle([]);
         }
       })
       .build();
     try {
       picker.setVisible(true);
     } catch (err) {
+      releaseScroll();
+      observer.disconnect();
       reject(err instanceof Error ? err : new Error("Could not open the Google Drive picker."));
     }
   });

@@ -1,22 +1,101 @@
-# Current Handoff - 2026-08-05
+# Current Handoff - 2026-08-06
 
-Continuation notes still live in `memory.md` (local, gitignored) and
-`CODEX_HANDOFF.md` (tracked) — both updated alongside this file today. Read
-`memory.md`'s 2026-08-05 section first; it has full detail, this is the summary.
+Continuation notes still live in `memory.md` (local, gitignored) — read its
+2026-08-06 section first, it has full detail, this is the summary.
+`CODEX_HANDOFF.md` was **not** updated this session (only `HANDOFF.md` and
+`memory.md` were, per explicit request).
 
 ## Current Repo State
 
 - Workspace: `/Users/jojo/allabode`
 - Branch: `main`
 - Latest pushed/deployed commits:
-  - `3635b01 feat: add owner-facing invoices (billed directly to a property owner)`
-  - `ddd4323 docs: mark Aremchel Cruzado SOA duplicate-owner issue resolved`
-  - `cde9cc4 feat: sitewide Framer Motion pass (marketing, admin, dashboards)`
-  - `02ac915 docs: update handoff notes with hero-video shipment and open SOA data issue`
-  - `0e25414 feat: add CMS-managed hero background video`
+  - `80b5e4e fix: set Picker origin so Google Drive thumbnails render`
+  - `1d61d9c fix: remove lingering hairline beside Ask Abbie chat icon`
+  - `327ac5c feat: add Google Drive photo picker for listing images`
+  - `0437470 polish: rename "New invoice" to "New tenant invoice"`
+  - `098a662 feat: support multiple line items on invoice creation`
 - Production alias:
   - https://allabodeph.com
-- Working tree: clean except untracked `.vscode/` and `skills-lock.json`.
+- Working tree: clean except untracked `.vscode/` and `skills-lock.json`
+  (pre-existing, not touched this session).
+
+## Shipped this session — Google Drive photo picker for listing images
+
+Admins can now add listing photos from their own Google Drive, alongside the
+existing local upload, on the listing edit page. Zero backend/schema changes
+— `uploadListingImages`/`listing_images.url` were already provider-agnostic,
+so Drive-picked files just get downloaded client-side and fed into the exact
+same upload pipeline. New files: `types/google-picker.d.ts`,
+`lib/google-drive-picker.ts`, `components/admin/google-drive-picker-button.tsx`.
+Modified: `components/admin/listing-images-manager.tsx`.
+
+Uses the `drive.file` OAuth scope (switched from `drive.readonly` mid-build
+after seeing it's non-sensitive in the GCP console — no "unverified app"
+warning, no 100-user cap, and it's Google's recommended pairing with the
+Picker anyway).
+
+**Live Google Cloud Console + Vercel setup was done directly this session**
+(user said "do it"), not just documented as manual steps — enabled the
+Picker + Drive APIs, added the scope, created a dedicated OAuth Client ID
+and a referrer-restricted API key on project "My Project Allabode" (same
+project the site's Google Sign-in already uses), and added both as
+`NEXT_PUBLIC_GOOGLE_DRIVE_CLIENT_ID`/`NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY` on
+Vercel (Production + Preview). Full credential values and every step are in
+`memory.md`'s 2026-08-06 section.
+
+User tested it live and reported the Picker's file thumbnails weren't
+rendering (checkered/broken-image icons, but filenames loaded fine — see
+screenshot in conversation). Root cause: `openDrivePicker()` in
+`lib/google-drive-picker.ts` never called `.setOrigin()`, which Google's
+Picker docs list as required boilerplate — file metadata loads via the
+OAuth token regardless, but thumbnail images need the picker's own
+authenticated origin context and silently fail without it. Fixed in
+`80b5e4e` (added `.setOrigin(window.location.protocol + "//" +
+window.location.host)` + the matching type in `types/google-picker.d.ts`).
+**Not yet re-verified live** — if thumbnails still don't render after this
+deploy, the next most likely cause is browser third-party-cookie blocking, a
+separate widely-reported Google Picker limitation outside this codebase's
+control.
+
+**Still needs the user**: add those same two env vars to local `.env.local`
+(this session's permission settings hard-block all file/Bash access to
+`.env*` paths — can't be done from here), then log into `/admin`, open a
+listing's edit page, and manually test "Add from Google Drive" end-to-end —
+this was never browser-verified this session (no admin credentials
+available). Only `tsc`/`eslint` and a clean dev-server boot were confirmed.
+
+## Shipped this session — Chat widget hairline fix
+
+User reported (via screenshot) a thin line left beside the chat icon after
+the "Ask Abbie" hint pill's close animation. Root cause: `ring-1
+ring-gold/30` in `components/chat/chat-widget.tsx` was applied
+unconditionally while only `width` animated to 0 — a box-shadow ring isn't
+clipped by width, so it stayed visible as a 1px line at the icon's edge.
+Fixed by making the ring classes conditional on `showHint`, same as the
+width/margin classes. Verified via `getComputedStyle` in the live dev
+preview: ring box-shadow present at `width: 160px` (expanded), gone at
+`width: 0px` (collapsed) — bug reproduced and confirmed fixed, not just
+eyeballed.
+
+## Next Steps
+
+1. Add `NEXT_PUBLIC_GOOGLE_DRIVE_CLIENT_ID` / `NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY`
+   to local `.env.local` (values in `memory.md`'s 2026-08-06 section) — this
+   session was permission-blocked from touching `.env*` files at all.
+2. Manually test "Add from Google Drive" end-to-end on `/admin/listings/[id]/edit`
+   once logged in — never browser-verified this session (no admin credentials).
+3. Manually re-check the "Ask Abbie" chat widget on the live site after deploy:
+   let the hint pill show (~2.5s after page load) and auto-hide (~7s later) or
+   dismiss it with the X, confirm no line remains beside the icon.
+4. Run `git status -sb` before staging anything new.
+5. Do not print or commit `.env.local` secrets.
+6. If editing Next.js app code, follow `AGENTS.md` and read the relevant docs
+   under `node_modules/next/dist/docs/`.
+
+---
+
+# Historical Handoff - 2026-08-05
 
 ## Shipped this session — Owner-facing invoices
 

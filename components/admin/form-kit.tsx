@@ -37,13 +37,22 @@ export function Group({ title, children }: { title: string; children: React.Reac
   );
 }
 
-export function SubmitButton({ label = "Save", pendingLabel = "Saving…" }: { label?: string; pendingLabel?: string }) {
+export function SubmitButton({
+  label = "Save",
+  pendingLabel = "Saving…",
+  disabled = false,
+}: {
+  label?: string;
+  pendingLabel?: string;
+  /** Blocks submission for a reason outside the form's own submit cycle. */
+  disabled?: boolean;
+}) {
   const { pending } = useFormStatus();
   const reduced = useReducedMotion() ?? false;
   return (
     <motion.button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className="inline-flex items-center gap-2 rounded-md bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50"
       {...pressable(reduced)}
     >

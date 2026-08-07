@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
 import { F, Group, inputCls, SubmitButton } from "@/components/admin/form-kit";
 import { createClient } from "@/lib/supabase/client";
@@ -65,6 +65,73 @@ export function emptyAddendumTerms(): AddendumTermsInitial {
     bankDetails: { ...DEFAULT_ADDENDUM_BANK_DETAILS },
     partyChanges: [], amendedClauses: [],
   };
+}
+
+type UploadState = "idle" | "uploading" | "reading";
+
+/**
+ * Progress for the two-stage attach: the browser→storage upload, then the AI
+ * read. The read is the slow one — a long contract can take the better part of
+ * a minute — so it carries a running elapsed count. Without it the form looks
+ * hung and staff re-pick the file, which starts the whole thing over.
+ */
+function ElapsedSeconds() {
+  const [secs, setSecs] = useState(0);
+  // Counts from mount, so each read starts at zero without ever resetting
+  // state from inside the effect.
+  useEffect(() => {
+    const started = Date.now();
+    const id = setInterval(() => setSecs(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return secs > 0 ? <> · {secs}s</> : null;
+}
+
+function ContractReadProgress({ state, fileName }: { state: UploadState; fileName: string }) {
+  if (state === "idle") return null;
+  const reading = state === "reading";
+
+  return (
+    <div className="mt-4 rounded-md border border-line bg-cream p-4" role="status" aria-live="polite">
+      <p className="flex items-center gap-2 text-sm font-semibold text-navy">
+        <Icon name="progress_activity" size={18} className="animate-spin" />
+        {reading ? "Reading the contract…" : "Uploading the file…"}
+      </p>
+
+      {/* items-start, not items-center: a long filename wraps to two or three
+          lines on mobile and the marker belongs beside the first one. */}
+      <ol className="mt-3 flex flex-col gap-1.5 text-sm">
+        <li className="flex items-start gap-2">
+          {reading ? (
+            <Icon name="check_circle" size={16} className="mt-0.5 shrink-0 text-available" />
+          ) : (
+            <Icon name="progress_activity" size={16} className="mt-0.5 shrink-0 animate-spin text-slate" />
+          )}
+          <span className={reading ? "text-slate" : "text-ink"}>
+            Uploading {fileName || "the file"}
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          {reading ? (
+            <Icon name="progress_activity" size={16} className="mt-0.5 shrink-0 animate-spin text-slate" />
+          ) : (
+            <Icon name="radio_button_unchecked" size={16} className="mt-0.5 shrink-0 text-line" />
+          )}
+          <span className={reading ? "text-ink" : "text-slate"}>
+            Reading the parties, property, dates and clauses
+            {reading && <ElapsedSeconds />}
+          </span>
+        </li>
+      </ol>
+
+      {reading && (
+        <p className="mt-3 text-xs text-slate">
+          A long contract can take up to a minute. Everything it finds comes back for you to check — please stay on
+          this page.
+        </p>
+      )}
+    </div>
+  );
 }
 
 const PESO = (n: number) => `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -210,8 +277,11 @@ export function AddendumTermsForm({
   const [init] = useState(t);
   const set = (patch: Partial<AddendumTermsInitial>) => setT((prev) => ({ ...prev, ...patch }));
 
-  const [uploadState, setUploadState] = useState<"idle" | "uploading" | "reading">("idle");
+  const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Named separately from parentDocumentName so the progress panel can show the
+  // file straight away, while the form only records it once it is really stored.
+  const [pendingFileName, setPendingFileName] = useState("");
 
   const roles = addendumRoles((t.parentType || "tenancy") as AddendumParentType);
   const uploaded = t.parentSource === "uploaded";
@@ -251,6 +321,7 @@ export function AddendumTermsForm({
       return;
     }
 
+    setPendingFileName(file.name);
     setUploadState("uploading");
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80) || "contract.pdf";
     const path = `addendum/uploads/${crypto.randomUUID()}/${safeName}`;
@@ -451,11 +522,8 @@ export function AddendumTermsForm({
                   />
                 </label>
 
-                {uploadState !== "idle" && (
-                  <p className="mt-3 text-sm text-slate" role="status">
-                    {uploadState === "uploading" ? "Uploading the file…" : "Reading the contract…"}
-                  </p>
-                )}
+                <ContractReadProgress state={uploadState} fileName={pendingFileName} />
+
                 {t.parentDocumentName && uploadState === "idle" && (
                   <p className="mt-3 flex items-center gap-1.5 text-sm text-ink">
                     <Icon name="description" size={16} /> {t.parentDocumentName}
@@ -681,8 +749,11 @@ export function AddendumTermsForm({
         </button>
       </fieldset>
 
-      <div className="flex justify-end">
-        <SubmitButton label={submitLabel} />
+      <div className="flex items-center justify-end gap-4">
+        {uploadState !== "idle" && (
+          <p className="text-xs text-slate">Waiting for the contract to finish reading…</p>
+        )}
+        <SubmitButton label={submitLabel} disabled={uploadState !== "idle"} />
       </div>
     </form>
   );

@@ -121,6 +121,7 @@ import {
   Eye,
   Warehouse,
   AlertTriangle,
+  Circle,
   HelpCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -233,6 +234,7 @@ const ICONS: Record<string, LucideIcon> = {
   progress_activity: Loader2,
   public: Globe,
   publish: UploadCloud,
+  radio_button_unchecked: Circle,
   real_estate_agent: Handshake,
   receipt: Receipt,
   receipt_long: ReceiptText,

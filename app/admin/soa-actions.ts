@@ -197,15 +197,23 @@ export async function reopenStatement(id: string) {
     throw new Error("Only approved or published statements can be re-opened.");
   }
 
-  await supabase.from("statements_of_account").update({
+  const { error: reopenErr } = await supabase.from("statements_of_account").update({
     status:       "generated",
     approved_by:  null,
     approved_at:  null,
     published_at: null,
     pdf_path:     null,
-    payout_status: null,
+    // NOT `null`: payout_status is `not null default 'pending'` (0012), so
+    // nulling it aborted the whole UPDATE. The error was discarded, the audit
+    // row was still written, and the statement silently stayed published — the
+    // re-open button looked like it worked but nothing was ever editable.
+    // 'pending' is also exactly what a freshly generated statement carries.
+    payout_status: "pending",
     ai_summary:   null,
   }).eq("id", id);
+  // Surfaced, not swallowed: a re-open that cannot be written must say so
+  // rather than leave the statement locked with an audit trail claiming otherwise.
+  if (reopenErr) throw new Error(`Could not re-open this statement: ${reopenErr.message}`);
 
   await logAudit(supabase, { action: "soa.reopened", entityType: "statement", entityId: id, actorId: user?.id, metadata: { from_status: s.status } });
   revalidatePath(`/admin/statements/${id}`);

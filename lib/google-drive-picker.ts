@@ -4,13 +4,19 @@
 
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const GAPI_SRC = "https://apis.google.com/js/api.js";
-/** Per-file scope: the app only ever gets access to the images the user picks,
- *  never their whole Drive. Folder browsing in the picker works fine under it
- *  — the picker's file list is drawn from the user's own signed-in session,
- *  not from anything this app is authorised to read. Widening this to
- *  `drive.readonly` would make it a Google "restricted" scope and pull the
- *  project into a paid annual CASA security assessment. */
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+/** Read-only access to the whole Drive. Deliberately broader than the
+ *  per-file `drive.file`, and the only way to get preview thumbnails: the
+ *  Picker renders them only for `drive`/`drive.readonly`, because under
+ *  `drive.file` an app has no read access to a file until *after* it's picked
+ *  — and a thumbnail is file content.
+ *
+ *  This is a Google "restricted" scope, but it needs no verification or paid
+ *  CASA assessment here: an unverified project may still request unapproved
+ *  restricted scopes, at the cost of an "unverified app" consent screen and a
+ *  lifetime cap of 100 users who can grant them (per project, never resets).
+ *  Only staff importing photos consume that cap — portal sign-in grants just
+ *  basic profile scopes, which don't count against it. */
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
 
 /** Canvas-decodable web image formats — `optimizeImageFile` re-encodes every
  *  pick through a <canvas>, so formats a browser can't decode (HEIC, RAW)
@@ -127,18 +133,17 @@ export function openDrivePicker(opts: {
      *  one is disabled: clicking a folder should navigate into it, not return
      *  the folder itself as the pick.
      *
-     *  LIST mode is deliberate, and is what Google recommends for any scope
-     *  narrower than `drive`/`drive.readonly`. The default grid mode renders a
-     *  thumbnail per file, but under `drive.file` this app has no read access
-     *  to a file until *after* it's picked — and a thumbnail is file content —
-     *  so every tile came back as a broken-image placeholder. A detailed list
-     *  shows names, dates and type icons, none of which need that access. */
+     *  GRID mode gives the thumbnail previews needed to choose photos by sight
+     *  rather than by filename. It only renders them because DRIVE_SCOPE is
+     *  `drive.readonly` — revert this to `DocsViewMode.LIST` if that ever
+     *  narrows back to `drive.file`, or every tile becomes a broken-image
+     *  placeholder. */
     const browsable = (label: string) =>
       new gp.DocsView(gp.ViewId.DOCS)
         .setMimeTypes(IMAGE_MIME_TYPES)
         .setIncludeFolders(true)
         .setSelectFolderEnabled(false)
-        .setMode(gp.DocsViewMode.LIST)
+        .setMode(gp.DocsViewMode.GRID)
         .setLabel(label);
 
     const myDrive = browsable("My Drive").setParent("root").setOwnedByMe(true);

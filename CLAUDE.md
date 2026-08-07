@@ -101,6 +101,35 @@ per-task). Read both before any `/impeccable` design command.
 
 ## Build status (updated — resume here)
 
+**DONE — Addendum can amend an uploaded (off-system) contract:**
+- Migration `20260808100000_addendum_external_parent.sql` — `addenda.parent_id` is now
+  nullable; adds `parent_source ('system'|'uploaded')`, `parent_document_path/_name`,
+  `parent_extraction jsonb`, and a table check that one provenance or the other is
+  satisfied. Replaces both token getters so they also strip `parent_extraction` (staff
+  review material). **User must run it in the SQL editor.** No new bucket/policy —
+  reuses `agreements` under `addendum/uploads/{uuid}/`.
+- `lib/ai/contract-extract.ts` — `extractParentContract()`: sends the PDF to the model as a
+  chat `{type:"file"}` part (first use of PDF input in the repo; no PDF-parsing dep, and it
+  handles scans), strict JSON schema per the `lib/ai/receipts.ts` pattern. Model knob
+  `OPENAI_CONTRACT_MODEL` (defaults `gpt-4.1-mini`) — **add to `.env.example`**, it is not
+  documented there yet. Degrades to manual entry when `OPENAI_API_KEY` is absent.
+- `lib/pm/parent-contract.ts` holds the extraction *types* + accepted mime list, kept
+  dependency-free **on purpose**: the create form is a client component and importing them
+  from `lib/ai/*` would pull the OpenAI SDK into the browser bundle.
+- Admin: the parent picker on `/admin/contracts/addendum/new` gains an "Upload a signed copy"
+  mode — direct browser→storage upload, then `analyzeUploadedContract` (useActionState-shaped)
+  reads it. Everything extracted lands in **editable review fields**; the original's term/rent/
+  deposit/occupants show as read-only reference and are never auto-copied into the amendment.
+  "Amended provisions" becomes a dropdown of the original's real sections that prefills their
+  current wording (system-picked parents keep free-text refs — wiring those to
+  `lib/pm/*-clauses.ts` is a deliberate follow-up).
+- The original is kept: staff link on the detail page, token-gated
+  `/api/sign/addendum/[token]/original` for both signing parties, and a `documents` row
+  (`document_type:'source_contract'`) in the tenant portal on completion.
+- PDF format unchanged. The only contract-text change is one clause in `buildAddendumRecital`:
+  an uploaded parent adds ", a copy of which is on file with the Company and has been
+  furnished to both Parties". Covered by 2 new cases in `tests/addendum-clauses.test.mjs`.
+
 **DONE — Parking Space Rental Agreement e-signature (third sibling flow):**
 - Migration `supabase/migrations/0024_parking_signing.sql` — `parking_agreements` table
   + 7 SECURITY DEFINER RPCs, exact structural mirror of the tenancy flow (0023): same
@@ -340,11 +369,15 @@ per-task). Read both before any `/impeccable` design command.
 ## Verification
 
 - `npx tsc --noEmit` and `npx eslint .` both pass clean — use these as the primary gate.
-- **This sandbox cannot run the app:** the dev server reaches "Ready" but is reaped and
-  never binds (HTTP 000 on every route), and `next build` SIGBUS-crashes (exit 138) on
-  both Turbopack and `--webpack`. These are environment limits, not code bugs — the app
-  builds/runs normally on a normal machine and on Vercel. **Run `npm run dev` locally to
-  verify visually.** Visual target is `design/screenshots/`.
+- `node --test tests/*.test.mjs` runs the unit tests (plain `tests/` as the argument fails —
+  pass the glob).
+- **Sandbox limits (re-measured 2026-08-08 — the older note here was stale):** `npm run dev`
+  now binds fine and serves routes, so public pages and API routes *can* be exercised with
+  curl or the browser tools. `next build` compiles successfully (~92s) but then OOMs in its
+  separate "Running TypeScript" step — that step is exactly `npx tsc --noEmit`, so a clean
+  tsc plus "Compiled successfully" is full build coverage. Anything behind `/admin` or a
+  portal login still can't be walked here (no credentials). **Run `npm run dev` locally to
+  verify those visually.** Visual target is `design/screenshots/`.
 - Company name is **All Abode Property Solutions** (not "Allabode Realty" — that string in
   older Stitch copy is stale). lucide-react is installed but unused (icons = Material Symbols).
 

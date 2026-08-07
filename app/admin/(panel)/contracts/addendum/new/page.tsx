@@ -13,10 +13,11 @@ export default async function NewAddendumPage() {
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">Send an Addendum</h1>
       <p className="mt-1 text-sm text-slate">
-        An addendum amends a contract that has already been fully executed. Pick the original contract, fill in only
-        what changes — everything you leave blank is omitted from the document and stays as it is in the original.
-        The other party fills in their details and government ID on the signing link, then signs; the landlord signs
-        via their own link (or a designated signatory countersigns).
+        An addendum amends a contract that has already been fully executed. Pick the original contract — or upload a
+        signed copy, if it was never executed here — then fill in only what changes; everything you leave blank is
+        omitted from the document and stays as it is in the original. The other party fills in their details and
+        government ID on the signing link, then signs; the landlord signs via their own link (or a designated
+        signatory countersigns).
       </p>
       <div className="mt-6">
         <AddendumTermsForm

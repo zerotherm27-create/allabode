@@ -11,12 +11,14 @@ import {
   finalizeAddendum, voidAddendum, deleteAddendum, getAddendumPdfSignedUrl,
 } from "@/app/admin/addendum-actions";
 import { getPublicSiteUrl } from "@/lib/url";
+import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
 import {
   DEFAULT_ADDENDUM_BANK_DETAILS, addendumRoles, PARENT_TYPE_TITLE,
   type AddendumFeeItem, type AddendumScheduleRow, type AddendumBankDetails,
   type AddendumPartyChange, type AddendumAmendedClause, type AddendumParentType,
-  type AddendumParentSnapshot,
+  type AddendumParentSnapshot, type AddendumParentSource,
 } from "@/lib/pm/addendum-clauses";
+import type { ContractExtraction } from "@/lib/pm/parent-contract";
 
 // Mirrors form-kit's inputCls — that module is "use client", so a server
 // component can't import its string constants directly.
@@ -34,7 +36,11 @@ type Addendum = {
   landlord_email: string | null;
   landlord_name_hint: string | null;
   parent_type: AddendumParentType;
-  parent_id: string;
+  parent_id: string | null;
+  parent_source: AddendumParentSource | null;
+  parent_document_path: string | null;
+  parent_document_name: string | null;
+  parent_extraction: ContractExtraction | null;
   parent_snapshot: AddendumParentSnapshot | null;
   agreement_date: string | null;
   effective_date: string | null;
@@ -73,8 +79,12 @@ function toTermsInitial(a: Addendum): AddendumTermsInitial {
   const td = a.tenant_details ?? {};
   const snap = a.parent_snapshot ?? {};
   return {
+    parentSource: a.parent_source ?? "system",
     parentType: a.parent_type,
-    parentId: a.parent_id,
+    parentId: a.parent_id ?? "",
+    parentDocumentPath: a.parent_document_path ?? "",
+    parentDocumentName: a.parent_document_name ?? "",
+    parentExtraction: a.parent_extraction,
     parentContractTitle: snap.contractTitle ?? PARENT_TYPE_TITLE[a.parent_type] ?? "",
     parentReferenceCode: snap.referenceCode ?? "",
     parentAgreementDate: snap.agreementDate ?? "",
@@ -109,9 +119,14 @@ export default async function AdminAddendumDetailPage({ params }: { params: Prom
   if (!data) notFound();
   const a = data as Addendum;
 
-  const [{ data: staffRow }, pdfUrl] = await Promise.all([
+  const uploadedParent = a.parent_source === "uploaded";
+
+  const [{ data: staffRow }, pdfUrl, parentDocUrl] = await Promise.all([
     user ? supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     a.status === "completed" ? getAddendumPdfSignedUrl(id) : Promise.resolve(null),
+    uploadedParent && a.parent_document_path
+      ? signedUrl(supabase, AGREEMENTS_BUCKET, a.parent_document_path, 600)
+      : Promise.resolve(null),
   ]);
 
   const roles = addendumRoles(a.parent_type);
@@ -217,9 +232,33 @@ export default async function AdminAddendumDetailPage({ params }: { params: Prom
             </div>
           ))}
         </dl>
-        <Link href={parentHref[a.parent_type]} className="mt-3 inline-flex items-center gap-1.5 text-sm text-navy-700 underline">
-          <Icon name="description" size={16} /> Open the original contract
-        </Link>
+        {uploadedParent ? (
+          <>
+            {parentDocUrl ? (
+              <a href={parentDocUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm text-navy-700 underline">
+                <Icon name="description" size={16} /> Open the uploaded original
+                {a.parent_document_name ? ` (${a.parent_document_name})` : ""}
+              </a>
+            ) : (
+              <p className="mt-3 text-sm text-slate">The uploaded original could not be opened.</p>
+            )}
+            {a.parent_extraction && (
+              <p className="mt-2 text-xs text-slate">
+                Read by {a.parent_extraction.model_name}
+                {typeof a.parent_extraction.confidence === "number"
+                  ? ` · confidence ${Math.round(a.parent_extraction.confidence * 100)}%`
+                  : ""}
+                {a.parent_extraction.warnings?.length
+                  ? ` · ${a.parent_extraction.warnings.join("; ")}`
+                  : ""}
+              </p>
+            )}
+          </>
+        ) : (
+          <Link href={parentHref[a.parent_type]} className="mt-3 inline-flex items-center gap-1.5 text-sm text-navy-700 underline">
+            <Icon name="description" size={16} /> Open the original contract
+          </Link>
+        )}
         {termsEditable && (
           <details className="mt-4">
             <summary className="cursor-pointer text-sm font-semibold text-navy-700">Edit amendment</summary>

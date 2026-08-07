@@ -150,7 +150,7 @@ export function AddendumLandlordSign({ token, initial }: { token: string; initia
           </p>
 
           <div className="max-h-[55vh] overflow-y-auto rounded-md border border-line bg-surface-gray p-5">
-            <FullAddendumPreview record={initial} tenantDetails={initial.tenant_details ?? {}} />
+            <FullAddendumPreview record={initial} tenantDetails={initial.tenant_details ?? {}} token={token} />
           </div>
 
           <div className="border-t border-line pt-5">

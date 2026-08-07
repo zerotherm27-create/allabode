@@ -194,6 +194,48 @@ test("the recital identifies the parent contract by title, date and reference", 
   ]);
 });
 
+test("an uploaded parent says so in the recital, and changes nothing else", async () => {
+  const m = await loadAddendumClauses();
+  const uploaded = baseTerms({
+    parentSnapshot: { ...baseTerms().parentSnapshot, referenceCode: "", source: "uploaded" },
+  });
+  const recital = m.buildAddendumRecital(uploaded, { name: "Jose Rizal" }, { name: "Andres Bonifacio" }, "2026-08-01");
+
+  assert.match(recital.whereas[0], /a copy of which is on file with the Company/);
+  assert.match(recital.whereas[0], /Tenancy Agreement dated January 15, 2026/);
+  // An off-system contract often carries no reference number of its own — it
+  // must print a blank line, not "undefined".
+  assert.ok(!JSON.stringify(recital).includes("undefined"));
+
+  // A system parent keeps the original wording, ending at the defined term.
+  const system = baseTerms();
+  const systemRecital = m.buildAddendumRecital(system, { name: "Jose Rizal" }, { name: "Andres Bonifacio" }, "2026-08-01");
+  assert.ok(!systemRecital.whereas[0].includes("on file with the Company"));
+  assert.match(systemRecital.whereas[0], /\(the "Original Agreement"\);$/);
+});
+
+test("provenance does not affect section numbering or Section 1", async () => {
+  const m = await loadAddendumClauses();
+  const overrides = {
+    newStartDate: "2026-08-01",
+    feeItems: [{ label: "Monthly rent", amount: 45000 }],
+    partyChanges: [{ action: "add", role: "occupant", name: "Maria Santos" }],
+    amendedClauses: [{ ref: "12.3", heading: "Utilities", mode: "replace", newText: "Water is for the Tenant's account." }],
+  };
+  const system = baseTerms(overrides);
+  const uploaded = baseTerms({
+    ...overrides,
+    parentSnapshot: { ...baseTerms().parentSnapshot, source: "uploaded" },
+  });
+
+  assert.deepEqual(m.addendumSectionNumbers(uploaded), m.addendumSectionNumbers(system));
+  assert.deepEqual(
+    m.buildAddendumClauses(uploaded),
+    m.buildAddendumClauses(system),
+    "the clause body is identical regardless of where the parent came from",
+  );
+});
+
 test("missing values fall back to blanks rather than printing undefined", async () => {
   const m = await loadAddendumClauses();
   const t = baseTerms({ parentSnapshot: {}, effectiveDate: null });

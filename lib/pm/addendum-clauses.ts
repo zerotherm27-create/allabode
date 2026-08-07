@@ -26,6 +26,13 @@ export type AddendumBankDetails = TenancyBankDetails;
 export type AddendumParentType = "pm" | "tenancy" | "parking" | "short_term_rental";
 
 /**
+ * Whether the amended contract was executed in this system or signed elsewhere
+ * and uploaded. An uploaded parent has no `parent_id` to point at — its
+ * identity lives entirely in the snapshot below.
+ */
+export type AddendumParentSource = "system" | "uploaded";
+
+/**
  * The parent contract's identity, copied at creation time rather than joined
  * live. An executed addendum must keep printing the parent as it stood when
  * signed — if it read through to the parent row, editing that contract would
@@ -36,6 +43,12 @@ export type AddendumParentSnapshot = {
   referenceCode?: string;
   agreementDate?: string;
   propertyDescription?: string;
+  /**
+   * Where the parent came from. `"uploaded"` means it was signed outside this
+   * system and staff attached the executed copy — the recital then says so, so
+   * a reader can tell why no in-system reference number is being cited.
+   */
+  source?: AddendumParentSource;
 };
 
 export type AddendumLandlordDetails = { name?: string; address?: string };
@@ -234,7 +247,10 @@ export function buildAddendumRecital(
     whereas: [
       `the Parties executed a ${parentTitle} dated ${snap.agreementDate ? longDate(snap.agreementDate) : BLANK}, ` +
         `bearing reference number ${snap.referenceCode?.trim() || BLANK}, covering ` +
-        `${snap.propertyDescription?.trim() || BLANK} (the "Original Agreement");`,
+        `${snap.propertyDescription?.trim() || BLANK} (the "Original Agreement")` +
+        (snap.source === "uploaded"
+          ? ", a copy of which is on file with the Company and has been furnished to both Parties;"
+          : ";"),
       "the Original Agreement remains in full force and effect as of the date of this Addendum, and the Parties " +
         "now desire to amend certain of its provisions as set forth below;",
     ],

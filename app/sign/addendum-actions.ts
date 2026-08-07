@@ -7,7 +7,7 @@ import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeAddendum } from "@/lib/addendum/complete";
 import type {
   AddendumLandlordDetails, AddendumTenantDetails, AddendumParentType,
-  AddendumParentSnapshot, AddendumFeeItem, AddendumScheduleRow,
+  AddendumParentSnapshot, AddendumParentSource, AddendumFeeItem, AddendumScheduleRow,
   AddendumBankDetails, AddendumPartyChange, AddendumAmendedClause,
 } from "@/lib/pm/addendum-clauses";
 
@@ -20,7 +20,11 @@ export type AddendumRecord = {
   agreement_date: string | null;
   effective_date: string | null;
   parent_type: AddendumParentType;
-  parent_id: string;
+  parent_id: string | null;
+  /** 'uploaded' when the amended contract was signed outside this system. */
+  parent_source: AddendumParentSource | null;
+  parent_document_path: string | null;
+  parent_document_name: string | null;
   parent_snapshot: AddendumParentSnapshot | null;
   landlord_details: AddendumLandlordDetails;
   new_start_date: string | null;

@@ -16,3 +16,9 @@ export function getOpenAI() {
 export const AI_PROVIDER = "openai";
 export const RECEIPT_MODEL = process.env.OPENAI_RECEIPT_MODEL || "gpt-4.1-mini";
 export const RECEIPT_PROMPT_VERSION = "receipt-extract-v1";
+
+// Reading an already-signed contract that was never executed in this system,
+// so an Addendum can amend it. Separate knob from the receipt model because
+// contracts are long documents and may warrant a bigger model later.
+export const CONTRACT_MODEL = process.env.OPENAI_CONTRACT_MODEL || "gpt-4.1-mini";
+export const CONTRACT_PROMPT_VERSION = "contract-extract-v1";

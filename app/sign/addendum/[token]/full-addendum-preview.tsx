@@ -64,10 +64,12 @@ function ClauseBlock({ clause }: { clause: AddendumClause }) {
  * unsaved edits; the landlord page passes the stored values.
  */
 export function FullAddendumPreview({
-  record, tenantDetails,
+  record, tenantDetails, token,
 }: {
   record: AddendumRecord;
   tenantDetails: AddendumTenantDetails;
+  /** Supplied so an uploaded original can be opened through its token-gated route. */
+  token?: string;
 }) {
   const terms: AddendumTermsInput = {
     parentType: record.parent_type,
@@ -92,6 +94,21 @@ export function FullAddendumPreview({
   return (
     <div className="text-ink">
       <h3 className="mb-4 text-center font-display text-base font-bold text-navy">{addendumTitle(terms)}</h3>
+
+      {/* The original was signed off-platform, so give the reader a way to open
+          the very document this Addendum amends before they sign it. */}
+      {token && record.parent_source === "uploaded" && record.parent_document_path && (
+        <p className="mb-4 rounded-md bg-surface-gray px-4 py-3 text-sm">
+          <a
+            href={`/api/sign/addendum/${token}/original`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-navy-700 underline"
+          >
+            Open the original {record.parent_snapshot?.contractTitle || "contract"} this Addendum amends
+          </a>
+        </p>
+      )}
 
       <p className="mb-2 text-sm font-bold">{recital.opener}</p>
       <p className="mb-2 text-sm">{recital.intro}</p>

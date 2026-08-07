@@ -236,6 +236,20 @@ export function AddendumWizard({ token, initial }: { token: string; initial: Add
             {initial.parent_snapshot?.referenceCode ? ` (${initial.parent_snapshot.referenceCode})` : ""}. The
             amendments have been prepared by All Abode — you&apos;ll review them in full in the next step. Here we
             only need your details.
+            {initial.parent_source === "uploaded" && initial.parent_document_path && (
+              <>
+                {" "}
+                <a
+                  href={`/api/sign/addendum/${token}/original`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-navy-700 underline"
+                >
+                  Open your original contract
+                </a>{" "}
+                to read it alongside.
+              </>
+            )}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Full legal name" required>
@@ -322,7 +336,7 @@ export function AddendumWizard({ token, initial }: { token: string; initial: Add
             your original {parentTitle}. The notarial acknowledgment is handled separately and is not shown here.
           </p>
           <div className="max-h-[60vh] overflow-y-auto rounded-md border border-line bg-surface-gray p-5">
-            <FullAddendumPreview record={initial} tenantDetails={{ ...tenant }} />
+            <FullAddendumPreview record={initial} tenantDetails={{ ...tenant }} token={token} />
           </div>
         </StepShell>
       )}

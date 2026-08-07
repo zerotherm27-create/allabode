@@ -13,8 +13,11 @@ import { completeAddendum } from "@/lib/addendum/complete";
 import type {
   AddendumFeeItem, AddendumScheduleRow, AddendumPartyChange,
   AddendumAmendedClause, AddendumParentType, AddendumParentSnapshot,
+  AddendumParentSource,
 } from "@/lib/pm/addendum-clauses";
 import { DEFAULT_ADDENDUM_BANK_DETAILS, PARENT_TYPE_TITLE } from "@/lib/pm/addendum-clauses";
+import { isAiConfigured } from "@/lib/ai/client";
+import { extractParentContract, isSupportedContractMime, type ContractExtraction } from "@/lib/ai/contract-extract";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -190,6 +193,109 @@ export async function listAmendableContracts(): Promise<ParentContractOption[]> 
 }
 
 // ============================================================
+// Uploaded (off-system) parent contract
+// ============================================================
+
+/** Where the amended contract came from — an in-system row, or an uploaded copy. */
+function parseParentSource(fd: FormData): AddendumParentSource {
+  return s(fd, "parent_source") === "uploaded" ? "uploaded" : "system";
+}
+
+/**
+ * The parent's identity is snapshotted rather than joined, so an executed
+ * addendum keeps printing the parent exactly as it stood when signed. For an
+ * uploaded parent these four fields are AI-read and then staff-corrected on the
+ * form — what lands here is what a human approved, not what the model said.
+ */
+function parseParentSnapshot(
+  fd: FormData,
+  parentType: AddendumParentType,
+  source: AddendumParentSource,
+): AddendumParentSnapshot {
+  return {
+    contractTitle: s(fd, "parent_contract_title") ?? PARENT_TYPE_TITLE[parentType],
+    referenceCode: s(fd, "parent_reference_code") ?? "",
+    agreementDate: s(fd, "parent_agreement_date") ?? "",
+    propertyDescription: s(fd, "parent_property_description") ?? "",
+    source,
+  };
+}
+
+/** The extraction record round-trips through the form as JSON; a broken one is not worth failing the send over. */
+function parseParentExtraction(fd: FormData): ContractExtraction | null {
+  const raw = s(fd, "parent_extraction");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as ContractExtraction;
+  } catch {
+    return null;
+  }
+}
+
+export type AnalyzeContractState =
+  | { ok?: false; error?: string; extraction?: undefined }
+  | { ok: true; error?: undefined; extraction: ContractExtraction };
+
+const MAX_CONTRACT_UPLOAD_BYTES = 20 * 1024 * 1024;
+
+/**
+ * Reads an already-uploaded contract file and returns the extraction for staff
+ * review. The file itself is uploaded straight from the browser to the private
+ * `agreements` bucket (staff sessions already satisfy its RLS), so a 15 MB scan
+ * never has to travel through a server action body.
+ *
+ * Returns `{ error }` rather than throwing — the create form renders failures
+ * inline via `useActionState`, the same convention as `uploadReceipt`.
+ */
+export async function analyzeUploadedContract(
+  _prev: AnalyzeContractState,
+  fd: FormData,
+): Promise<AnalyzeContractState> {
+  const path = s(fd, "path");
+  const mime = s(fd, "mime") ?? "";
+  const fileName = s(fd, "file_name") ?? "contract.pdf";
+  if (!path) return { error: "The upload did not complete — please try the file again." };
+  if (!isSupportedContractMime(mime)) {
+    return { error: "Upload the contract as a PDF, JPG, PNG or WebP file." };
+  }
+  if (!isAiConfigured()) {
+    return {
+      error:
+        "AI reading is not configured on this environment. The file is attached — fill in the contract details below by hand.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: blob, error: dlErr } = await supabase.storage.from(AGREEMENTS_BUCKET).download(path);
+  if (dlErr || !blob) return { error: "The uploaded file could not be read back from storage." };
+  if (blob.size > MAX_CONTRACT_UPLOAD_BYTES) {
+    return { error: "That file is larger than 20 MB — upload a smaller scan or split it." };
+  }
+
+  let extraction: ContractExtraction;
+  try {
+    extraction = await extractParentContract(Buffer.from(await blob.arrayBuffer()), mime, fileName);
+  } catch (e) {
+    return {
+      error: `The contract could not be read automatically (${e instanceof Error ? e.message : "unknown error"}). The file is attached — fill in the contract details below by hand.`,
+    };
+  }
+
+  // No addendum row exists yet, and `audit_log.entity_id` is a uuid — the file
+  // path belongs in metadata, not there.
+  await logAudit(supabase, {
+    action: "addendum.parent_extracted",
+    entityType: "addendum",
+    actorId: user?.id,
+    metadata: { path, mime, file_name: fileName, model: extraction.model_name, confidence: extraction.confidence },
+  });
+
+  return { ok: true, extraction };
+}
+
+// ============================================================
 // Create + send links
 // ============================================================
 
@@ -202,17 +308,17 @@ export async function createAddendum(fd: FormData) {
 
   const parentType = s(fd, "parent_type") as AddendumParentType | null;
   const parentId = s(fd, "parent_id");
-  if (!parentType || !parentId) throw new Error("Select the contract this addendum amends.");
+  const parentSource = parseParentSource(fd);
+  if (!parentType) throw new Error("Select the contract this addendum amends.");
   if (!PARENT_TYPE_TITLE[parentType]) throw new Error("Unknown parent contract type.");
 
-  // The parent's identity is snapshotted rather than joined, so an executed
-  // addendum keeps printing the parent exactly as it stood when signed.
-  const parentSnapshot: AddendumParentSnapshot = {
-    contractTitle: s(fd, "parent_contract_title") ?? PARENT_TYPE_TITLE[parentType],
-    referenceCode: s(fd, "parent_reference_code") ?? "",
-    agreementDate: s(fd, "parent_agreement_date") ?? "",
-    propertyDescription: s(fd, "parent_property_description") ?? "",
-  };
+  const parentDocumentPath = s(fd, "parent_document_path");
+  if (parentSource === "system" && !parentId) {
+    throw new Error("Select the contract this addendum amends.");
+  }
+  if (parentSource === "uploaded" && !parentDocumentPath) {
+    throw new Error("Upload the signed original contract this addendum amends.");
+  }
 
   const { data, error } = await supabase
     .from("addenda")
@@ -221,8 +327,12 @@ export async function createAddendum(fd: FormData) {
       tenant_name_hint: s(fd, "tenant_name_hint"),
       tenant_details: tenantDetailsFromForm(fd, tenantEmail),
       parent_type: parentType,
-      parent_id: parentId,
-      parent_snapshot: parentSnapshot,
+      parent_id: parentSource === "uploaded" ? null : parentId,
+      parent_source: parentSource,
+      parent_document_path: parentSource === "uploaded" ? parentDocumentPath : null,
+      parent_document_name: parentSource === "uploaded" ? s(fd, "parent_document_name") : null,
+      parent_extraction: parentSource === "uploaded" ? parseParentExtraction(fd) : null,
+      parent_snapshot: parseParentSnapshot(fd, parentType, parentSource),
       created_by: user?.id ?? null,
       ...parseTerms(fd),
     })
@@ -331,15 +441,31 @@ export async function updateAddendumTerms(id: string, fd: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: addendum } = await supabase.from("addenda").select("status,tenant_details").eq("id", id).maybeSingle();
+  const { data: addendum } = await supabase
+    .from("addenda")
+    .select("status,tenant_details,parent_type,parent_source")
+    .eq("id", id)
+    .maybeSingle();
   if (!addendum) throw new Error("Addendum not found.");
   if (addendum.status !== "draft" && addendum.status !== "sent") {
     throw new Error("The amendment terms are locked once the tenant has signed against them.");
   }
 
+  // An uploaded parent's identity was AI-read, so staff must be able to correct
+  // it before the tenant signs. A system parent's snapshot came from a real row
+  // and is never re-editable.
+  const parentType = (s(fd, "parent_type") as AddendumParentType | null) ?? (addendum.parent_type as AddendumParentType);
+  const parentSnapshot =
+    addendum.parent_source === "uploaded"
+      ? {
+          parent_type: PARENT_TYPE_TITLE[parentType] ? parentType : addendum.parent_type,
+          parent_snapshot: parseParentSnapshot(fd, parentType, "uploaded"),
+        }
+      : {};
+
   const { landlord_email, landlord_name_hint, ...terms } = parseTerms(fd);
   const { error } = await supabase.from("addenda").update({
-    landlord_email, landlord_name_hint, ...terms,
+    landlord_email, landlord_name_hint, ...terms, ...parentSnapshot,
     tenant_name_hint: s(fd, "tenant_name_hint"),
     tenant_details: tenantDetailsFromForm(fd, s(fd, "tenant_email"), (addendum.tenant_details ?? {}) as Record<string, unknown>),
   }).eq("id", id);
@@ -442,7 +568,7 @@ export async function deleteAddendum(id: string) {
 
   const { data: addendum } = await supabase
     .from("addenda")
-    .select("status,pdf_path,tenant_id_document_path,landlord_id_document_path")
+    .select("status,pdf_path,tenant_id_document_path,landlord_id_document_path,parent_source,parent_document_path")
     .eq("id", id)
     .maybeSingle();
   if (!addendum) throw new Error("Addendum not found.");
@@ -450,8 +576,14 @@ export async function deleteAddendum(id: string) {
     throw new Error("A fully executed addendum can't be deleted — void it instead to preserve the signed record.");
   }
 
-  const paths = [addendum.pdf_path, addendum.tenant_id_document_path, addendum.landlord_id_document_path]
-    .filter((p): p is string => !!p);
+  const paths = [
+    addendum.pdf_path,
+    addendum.tenant_id_document_path,
+    addendum.landlord_id_document_path,
+    // The uploaded original sits outside the addendum/{id}/ prefix (it is
+    // staged before the row exists), so it has to be named explicitly here.
+    addendum.parent_source === "uploaded" ? addendum.parent_document_path : null,
+  ].filter((p): p is string => !!p);
   if (paths.length) {
     await supabase.storage.from(AGREEMENTS_BUCKET).remove(paths);
   }

@@ -154,6 +154,23 @@ export async function completeAddendum(id: string, supabase: SupabaseClient): Pr
     contentType: "application/pdf",
     upsert: true,
   });
+  // An off-system original lives only as the file staff uploaded, so it has to
+  // travel with the addendum — otherwise the tenant's portal shows an amendment
+  // to a contract they can't open.
+  let documentsParentPath: string | null = null;
+  const parentDoc = await downloadAsDataUri(
+    supabase,
+    a.parent_source === "uploaded" ? a.parent_document_path : null,
+  );
+  if (parentDoc.buffer) {
+    const ext = parentDoc.mime === "image/png" ? "png" : parentDoc.mime?.startsWith("image/") ? "jpg" : "pdf";
+    documentsParentPath = `addendum/${a.id}/original-contract.${ext}`;
+    await supabase.storage.from(DOCUMENTS_BUCKET).upload(documentsParentPath, parentDoc.buffer, {
+      contentType: parentDoc.mime || "application/pdf",
+      upsert: true,
+    });
+  }
+
   let documentsIdPath: string | null = null;
   if (tenantIdFile.buffer) {
     const ext = tenantIdFile.mime === "image/png" ? "png" : tenantIdFile.mime === "application/pdf" ? "pdf" : "jpg";
@@ -245,6 +262,20 @@ export async function completeAddendum(id: string, supabase: SupabaseClient): Pr
     is_immutable: true,
     visibility: "tenant",
   });
+  if (documentsParentPath) {
+    await supabase.from("documents").insert({
+      entity_type: "tenant",
+      entity_id: tenantRecordId,
+      document_type: "source_contract",
+      title: `${parentTitle} (original, as amended)`,
+      file_path: documentsParentPath,
+      file_name: a.parent_document_name ?? documentsParentPath.split("/").pop() ?? "original-contract.pdf",
+      file_mime_type: parentDoc.mime || "application/pdf",
+      is_signed: true,
+      is_immutable: true,
+      visibility: "tenant",
+    });
+  }
   if (documentsIdPath) {
     await supabase.from("documents").insert({
       entity_type: "tenant",

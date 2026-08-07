@@ -187,7 +187,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
       {isLeaseBased && s.status === "generated" ? (
         <ActionForm actionKey="save-recalc" action={saveOwnerSoaReview.bind(null, id)} className="mt-6 flex flex-col gap-4">
           <input type="hidden" name="editable_line_ids" value={editableLines.map((l) => l.id).join(",")} />
-          <input type="hidden" name="deleted_line_ids" value="" />
+          <input type="hidden" name="manual_line_ids" value={manualLines.map((l) => l.id).join(",")} />
 
           {/* Income */}
           <div className="overflow-hidden rounded-lg border border-line bg-surface">
@@ -312,11 +312,22 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                 {manualLines.length > 0 && (
                   <tr><td colSpan={3} className="bg-surface-gray px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate">Other expenses (one-time)</td></tr>
                 )}
-                {manualLines.map((l) => (
+                {manualLines.map((l, i) => (
                   <tr key={l.id}>
-                    <td className="px-4 py-2.5 text-ink">{l.description}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate">one-time</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-navy">{peso(Math.abs(l.amount))}</td>
+                    <td className="px-2 py-1.5">
+                      <input name={`manual_desc_${i}`} defaultValue={l.description ?? ""} aria-label="Expense description"
+                        className="h-8 w-full rounded border border-line px-2 text-sm text-ink focus:border-navy-700 focus:outline-none" />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <label className="inline-flex items-center gap-1.5 text-xs text-slate">
+                        <input type="checkbox" name={`manual_delete_${i}`} value="1" className="h-4 w-4 accent-navy" />
+                        Remove
+                      </label>
+                    </td>
+                    <td className="w-36 px-2 py-1.5">
+                      <input name={`manual_amount_${i}`} type="number" step="0.01" min="0" defaultValue={Math.abs(l.amount)} aria-label="Expense amount"
+                        className="h-8 w-full rounded border border-line px-2 text-right text-sm focus:border-navy-700 focus:outline-none" />
+                    </td>
                   </tr>
                 ))}
               </tbody>

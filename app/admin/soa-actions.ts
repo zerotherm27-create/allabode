@@ -402,7 +402,9 @@ export async function regenerateSoaLines(id: string) {
 export async function saveOwnerSoaReview(id: string, formData: FormData) {
   const supabase = await createClient();
 
-  // Update editable line amounts (utility + recurring expense + manual)
+  // Update editable line amounts (utility + recurring expense). One-time
+  // "Other expenses" are handled separately below — the line_type guard here
+  // deliberately excludes them.
   const lineIdsRaw = (str(formData, "editable_line_ids") ?? "").split(",").filter(Boolean);
   for (let i = 0; i < lineIdsRaw.length; i++) {
     const lineId = lineIdsRaw[i];
@@ -416,10 +418,24 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
     }
   }
 
-  // Delete removed one-time expense lines
-  const deletedIds = (str(formData, "deleted_line_ids") ?? "").split(",").filter(Boolean);
-  for (const dId of deletedIds) {
-    await supabase.from("soa_lines").delete().eq("id", dId).eq("line_type", "deduction_expense_manual");
+  // One-time ("Other") expenses: staff-authored, so the description matters as
+  // much as the amount — they get their own loop rather than riding the
+  // editable_line_ids path above, whose line_type guard deliberately protects
+  // auto-computed rows from having their description rewritten.
+  const manualIds = (str(formData, "manual_line_ids") ?? "").split(",").filter(Boolean);
+  for (let i = 0; i < manualIds.length; i++) {
+    const lineId = manualIds[i];
+    if (formData.get(`manual_delete_${i}`)) {
+      await supabase.from("soa_lines").delete().eq("id", lineId).eq("line_type", "deduction_expense_manual");
+      continue;
+    }
+    const desc = ((formData.get(`manual_desc_${i}`) as string | null) ?? "").trim();
+    const amt = parseFloat((formData.get(`manual_amount_${i}`) as string | null) ?? "");
+    if (!desc || isNaN(amt)) continue; // a blank row is a no-op, not a wipe
+    await supabase.from("soa_lines").update({
+      description: desc,
+      amount: -Math.abs(amt),
+    }).eq("id", lineId).eq("line_type", "deduction_expense_manual");
   }
 
   // Add new one-time expense lines

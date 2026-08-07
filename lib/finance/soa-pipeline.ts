@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { recomputeTotalsFromLines, recalcTotals, type SoaType } from "@/lib/finance/soa";
 import { generateSoaSummary } from "@/lib/ai/soa-summary";
 import { renderSoaPdf, renderOwnerSoaPdf } from "@/lib/pdf/soa";
-import { FINANCE_DOCS_BUCKET } from "@/lib/storage";
+import { FINANCE_DOCS_BUCKET, buildOwnerSoaFilename } from "@/lib/storage";
 import { logAudit } from "@/lib/audit";
 import { archiveOwnerSoaToDrive, archiveTenantSoaToDrive } from "@/lib/archive";
 import { createNotification } from "@/lib/notify";
@@ -17,7 +17,9 @@ async function notifyOwner(
   ownerId: string | null,
   statementId: string,
   periodStart: string,
-  periodEnd: string
+  periodEnd: string,
+  /** The statement just published, attached so the owner can read it without signing in. */
+  pdf?: { buffer: Buffer; filename: string }
 ) {
   if (!ownerId) return;
   const { data: owner } = await supabase
@@ -30,8 +32,13 @@ async function notifyOwner(
 
   const period = `${periodStart} to ${periodEnd}`;
   const title = "Statement of Account available";
-  const body = `Your Statement of Account for ${period} is now available. Please check your owner dashboard.`;
+  const body = pdf
+    ? `Your Statement of Account for ${period} is attached to this email. It is also available in your owner dashboard.`
+    : `Your Statement of Account for ${period} is now available. Please check your owner dashboard.`;
   const link = `/dashboard/owner/statements/${statementId}`;
+  const attachments = pdf
+    ? [{ filename: pdf.filename, content: pdf.buffer, contentType: "application/pdf" }]
+    : undefined;
 
   if (row.auth_user_id) {
     await createNotification(supabase, {
@@ -43,6 +50,7 @@ async function notifyOwner(
       entityType: "statement",
       entityId: statementId,
       recipientEmail: row.email ?? undefined,
+      attachments,
     });
     return;
   }
@@ -50,6 +58,7 @@ async function notifyOwner(
     await sendEmail({
       to: row.email,
       subject: title,
+      attachments,
       html: `<p>Hi ${row.name ?? "Owner"},</p><p>${body}</p><p><a href="${siteUrl()}${link}">View in dashboard</a></p>`,
     });
   }
@@ -266,9 +275,23 @@ export async function runSoaPublishPipeline(
       actorId: options?.actorId,
     });
 
-    // Notify owner
+    // Notify owner — with the statement attached, so it can be read straight
+    // from the inbox instead of only behind a portal login.
     if (stored.statement_type === "owner") {
-      await notifyOwner(supabase, stored.owner_id as string | null, soaId, stored.period_start, stored.period_end);
+      const filename = buildOwnerSoaFilename({
+        ownerName: driveOwnerParams?.ownerName ?? "Owner",
+        propertyName: driveOwnerParams?.propertyName,
+        unitLabel: driveOwnerParams?.unitLabel,
+        periodStart: stored.period_start,
+      });
+      await notifyOwner(
+        supabase,
+        stored.owner_id as string | null,
+        soaId,
+        stored.period_start,
+        stored.period_end,
+        { buffer: pdf, filename },
+      );
     }
 
     return { ok: true };

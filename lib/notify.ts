@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, type EmailAttachment } from "@/lib/email";
 
 export interface NotifyOpts {
   recipientUserId: string;
@@ -11,6 +11,8 @@ export interface NotifyOpts {
   entityId?: string;
   /** If provided, also send an email. */
   recipientEmail?: string;
+  /** Files to attach to that email. Ignored when there is no recipientEmail. */
+  attachments?: EmailAttachment[];
 }
 
 /**
@@ -36,6 +38,7 @@ export async function createNotification(
       await sendEmail({
         to:      opts.recipientEmail,
         subject: opts.title,
+        attachments: opts.attachments,
         html: `<p>${opts.body}</p>${
           opts.link
             ? `<p><a href="${process.env.NEXT_PUBLIC_SITE_URL ?? "https://allabodeph.com"}${opts.link}">View in portal</a></p>`

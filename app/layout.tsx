@@ -5,7 +5,6 @@ import { PWARegister } from "@/components/pwa-register";
 import { InstallPrompt } from "@/components/install-prompt";
 import { CookieConsent } from "@/components/cookie-consent";
 import { Analytics } from "@/components/analytics";
-import { SiteContentProtection } from "@/components/site-content-protection";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -85,7 +84,6 @@ export default function RootLayout({
       className={`${interTight.variable} ${inter.variable} h-full`}
     >
       <body className="min-h-full bg-cream text-ink">
-        <SiteContentProtection />
         {children}
         <PWARegister />
         <InstallPrompt />

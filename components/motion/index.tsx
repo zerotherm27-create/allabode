@@ -90,7 +90,7 @@ export function StaggerGroup({
       className={className}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
+      viewport={{ once: true, amount: "some" }}
       variants={{
         hidden: {},
         visible: {

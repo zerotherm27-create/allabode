@@ -3,6 +3,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ChatWidget } from "@/components/chat/chat-widget";
 import { JsonLd, organizationSchema } from "@/components/seo/json-ld";
 import { getSettings, s } from "@/lib/settings";
+import { SiteContentProtection } from "@/components/site-content-protection";
 
 // Applies to every page under this layout (Next.js ISR default), now that
 // getSettings()/getListings() use plain anon clients and no longer force
@@ -19,6 +20,7 @@ export default async function MarketingLayout({
   const settings = await getSettings();
   return (
     <div className="flex min-h-dvh flex-col">
+      <SiteContentProtection />
       <JsonLd
         data={organizationSchema({
           email: s(settings, "contact_email"),

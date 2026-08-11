@@ -154,8 +154,8 @@ export async function runSoaPublishPipeline(
         monthlyRent:  Number(lease?.rent_amount ?? 0),
         payoutDueAt:  stored.payout_due_at ?? null,
         leaseType:    stored.lease_type ?? "long_term",
-        mgmtFeePct:   Number(stored.mgmt_fee_amt && totalIncome
-          ? (Number(stored.mgmt_fee_amt) / totalIncome * 100)
+        mgmtFeePct:   Number(stored.mgmt_fee_amt && lease?.rent_amount
+          ? (Number(stored.mgmt_fee_amt) / Number(lease.rent_amount) * 100)
           : (lease?.mgmt_fee_pct ?? 5)),
         vatPct:       Number(lease?.vat_pct ?? 12),
         adjustments:  Number(stored.adjustments ?? 0),

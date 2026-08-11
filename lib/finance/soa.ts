@@ -166,6 +166,7 @@ export type OwnerSoaByLeaseMeta = {
   propertyId: string;
   unitId: string;
   leaseType: string;
+  monthlyRent: number;
   mgmtFeePct: number;
   vatPct: number;
   mgmtFeeAmt: number;
@@ -370,10 +371,14 @@ export async function computeOwnerSoaByLease(
   const expNames = new Set(expenses.map((e) => (e.description ?? "").toLowerCase().trim()));
   const filteredTpls = templates.filter((t) => !expNames.has(t.name.toLowerCase().trim()));
 
-  // 10. Fees
+  // 10. Fees — the management fee is a percentage of the lease's monthly
+  // rental, not of this period's total income: totalIncome can include
+  // one-time deposit/advance amounts that aren't recurring management
+  // revenue and shouldn't inflate the fee.
+  const monthlyRent = Number(lease.rent_amount ?? 0);
   const mgmtFeePct = Number(lease.mgmt_fee_pct ?? 5);
   const vatPct = Number(lease.vat_pct ?? 12);
-  const mgmtFeeAmt = Math.round(totalIncome * mgmtFeePct) / 100;
+  const mgmtFeeAmt = Math.round(monthlyRent * mgmtFeePct) / 100;
   const vatAmt = Math.round(mgmtFeeAmt * vatPct) / 100;
 
   // 11. Deduction lines
@@ -449,7 +454,7 @@ export async function computeOwnerSoaByLease(
       net_remittance: payout,
     },
     lines: allLines,
-    meta: { ownerId, propertyId, unitId: lease.unit_id, leaseType, mgmtFeePct, vatPct, mgmtFeeAmt, vatAmt },
+    meta: { ownerId, propertyId, unitId: lease.unit_id, leaseType, monthlyRent, mgmtFeePct, vatPct, mgmtFeeAmt, vatAmt },
   };
 }
 

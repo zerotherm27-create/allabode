@@ -117,6 +117,7 @@ export async function POST(req: NextRequest) {
         totalIncome:     computed.totals.total_payments,
         totalDeductions: computed.totals.total_expenses,
         payout:          computed.totals.closing_balance,
+        monthlyRent:     computed.meta.monthlyRent,
         mgmtFeePct:      computed.meta.mgmtFeePct,
         vatPct:          computed.meta.vatPct,
         lines:           computed.lines,

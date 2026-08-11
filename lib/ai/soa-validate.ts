@@ -18,12 +18,13 @@ export async function validateSoaForAutoApproval(input: {
   totalIncome: number;
   totalDeductions: number;
   payout: number;
+  monthlyRent: number;
   mgmtFeePct: number;
   vatPct: number;
   lines: { line_type: string; description: string; amount: number }[];
   prevSoaPayout?: number | null;
 }): Promise<SoaValidationResult> {
-  const { totalIncome, totalDeductions, payout, mgmtFeePct, vatPct, lines, prevSoaPayout } = input;
+  const { totalIncome, totalDeductions, payout, monthlyRent, mgmtFeePct, vatPct, lines, prevSoaPayout } = input;
 
   // ── Deterministic pre-checks — no AI needed ──
   if (payout < 0) {
@@ -32,7 +33,10 @@ export async function validateSoaForAutoApproval(input: {
 
   const mgmtFeeLine = lines.find((l) => l.line_type === "deduction_mgmt_fee");
   const vatLine = lines.find((l) => l.line_type === "deduction_vat");
-  const expectedMgmt = Math.round(totalIncome * (mgmtFeePct / 100) * 100) / 100;
+  // Management fee is a percentage of the lease's monthly rental, not of
+  // this period's total income (which can include one-time deposit/advance
+  // amounts) — see lib/finance/soa.ts::computeOwnerSoaByLease.
+  const expectedMgmt = Math.round(monthlyRent * (mgmtFeePct / 100) * 100) / 100;
   const actualMgmt = mgmtFeeLine ? Math.abs(mgmtFeeLine.amount) : 0;
   const expectedVat = Math.round(actualMgmt * (vatPct / 100) * 100) / 100;
   const actualVat = vatLine ? Math.abs(vatLine.amount) : 0;

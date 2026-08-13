@@ -74,6 +74,8 @@ export type Listing = {
   rentPrice?: string;
   /** Curated search-result description — falls back to an auto-built sentence when absent. */
   seoDescription?: string;
+  /** Full listing description staff write/paste in the admin form, shown under "About this property". */
+  description?: string;
   status: ListingStatus;
   type: "Residential" | "Commercial";
   beds?: number;

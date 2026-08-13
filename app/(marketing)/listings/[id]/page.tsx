@@ -150,15 +150,21 @@ export default async function ListingDetailPage({ params }: Params) {
               <h2 className="font-display text-xl font-semibold text-navy">
                 About this property
               </h2>
-              <p className="mt-3 leading-relaxed text-slate">
-                A rare offering in {listing.location.split(",").slice(-1)},
-                this {listing.type.toLowerCase()} property combines
-                architectural precision with everyday comfort. Generous volumes,
-                premium finishes, and an efficient layout make it equally suited
-                to discerning owner-occupiers and portfolio investors. Every
-                detail has been verified by our PRC-licensed brokerage team, so
-                you can transact with complete confidence.
-              </p>
+              {listing.description ? (
+                <p className="mt-3 whitespace-pre-wrap leading-relaxed text-slate">
+                  {listing.description}
+                </p>
+              ) : (
+                <p className="mt-3 leading-relaxed text-slate">
+                  A rare offering in {listing.location.split(",").slice(-1)},
+                  this {listing.type.toLowerCase()} property combines
+                  architectural precision with everyday comfort. Generous volumes,
+                  premium finishes, and an efficient layout make it equally suited
+                  to discerning owner-occupiers and portfolio investors. Every
+                  detail has been verified by our PRC-licensed brokerage team, so
+                  you can transact with complete confidence.
+                </p>
+              )}
             </div>
 
             {/* Property details (brief: listing/property type, furnishing, parking,

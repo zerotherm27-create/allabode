@@ -19,6 +19,8 @@ type Notice = {
   created_at: string;
 };
 
+type NoticeDoc = { id: string; entity_id: string; file_name: string };
+
 export default async function AdminNoticesPage() {
   const supabase = await createClient();
   const { data } = await supabase.from("notices")
@@ -27,6 +29,17 @@ export default async function AdminNoticesPage() {
 
   const notices = (data ?? []) as Notice[];
   const now = new Date();
+
+  const noticeIds = notices.map((n) => n.id);
+  const { data: docData } = noticeIds.length
+    ? await supabase.from("documents")
+        .select("id,entity_id,file_name")
+        .eq("entity_type", "notice")
+        .in("entity_id", noticeIds)
+    : { data: [] };
+  const attachmentsByNotice = new Map<string, NoticeDoc>(
+    ((docData ?? []) as NoticeDoc[]).map((d) => [d.entity_id, d])
+  );
 
   const isActive = (n: Notice) =>
     !!n.published_at && (!n.expires_at || new Date(n.expires_at) > now);
@@ -57,9 +70,10 @@ export default async function AdminNoticesPage() {
           </p>
         ) : (
           notices.map((n) => {
-            const active  = isActive(n);
-            const draft   = isDraft(n);
-            const expired = isExpired(n);
+            const active     = isActive(n);
+            const draft      = isDraft(n);
+            const expired    = isExpired(n);
+            const attachment = attachmentsByNotice.get(n.id);
             return (
               <div key={n.id} className={`rounded-lg border p-5 ${active ? "border-navy/20 bg-surface" : "border-line bg-surface-gray"}`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -74,6 +88,15 @@ export default async function AdminNoticesPage() {
                         Audience: {n.audience}
                         {n.expires_at ? ` · Expires ${new Date(n.expires_at).toLocaleDateString("en-PH")}` : ""}
                       </p>
+                      {attachment && (
+                        <a
+                          href={`/api/portal/documents/${attachment.id}`}
+                          download={attachment.file_name}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-navy-700 hover:underline"
+                        >
+                          <Icon name="picture_as_pdf" size={16} /> {attachment.file_name}
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

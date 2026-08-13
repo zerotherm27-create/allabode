@@ -53,6 +53,9 @@ export default async function NewNoticePage() {
           <F label="Expires (optional)">
             <input name="expires_at" type="date" className={inputCls} />
           </F>
+          <F label="Attachment — PDF, optional" span>
+            <input type="file" name="attachment" accept="application/pdf" className="w-full text-sm text-slate" />
+          </F>
         </Group>
 
         <div className="flex items-center gap-3">

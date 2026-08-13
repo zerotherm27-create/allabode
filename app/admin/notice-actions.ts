@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
+import { DOCUMENTS_BUCKET } from "@/lib/storage";
+
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -25,6 +28,13 @@ export async function createNotice(fd: FormData) {
 
   if (!title || !body) throw new Error("Title and body are required");
 
+  const attachment = fd.get("attachment") as File | null;
+  const hasAttachment = !!attachment && attachment.size > 0;
+  if (hasAttachment) {
+    if (attachment.type !== "application/pdf") throw new Error("Attachment must be a PDF file.");
+    if (attachment.size > MAX_ATTACHMENT_BYTES) throw new Error("Attachment must be under 10 MB.");
+  }
+
   const { data, error } = await supabase.from("notices").insert({
     title,
     body,
@@ -36,6 +46,28 @@ export async function createNotice(fd: FormData) {
     created_by:  user?.id ?? null,
   }).select("id").single();
   if (error) throw new Error(error.message);
+
+  if (hasAttachment) {
+    const path = `notice/${data.id}/${Date.now()}.pdf`;
+    const { error: uploadErr } = await supabase.storage
+      .from(DOCUMENTS_BUCKET)
+      .upload(path, attachment, { contentType: attachment.type, upsert: false });
+    if (uploadErr) throw new Error(`Notice created, but the attachment failed to upload: ${uploadErr.message}`);
+
+    const { error: docErr } = await supabase.from("documents").insert({
+      entity_type:    "notice",
+      entity_id:      data.id,
+      document_type:  "other",
+      title:          attachment.name,
+      file_path:      path,
+      file_name:      attachment.name,
+      file_mime_type: attachment.type,
+      file_size:      attachment.size,
+      visibility:     "staff",
+      uploaded_by:    user?.id ?? null,
+    });
+    if (docErr) throw new Error(`Notice created, but the attachment failed to save: ${docErr.message}`);
+  }
 
   await logAudit(supabase, { action: "notice.created", entityType: "notice", entityId: data.id });
   redirect("/admin/notices");

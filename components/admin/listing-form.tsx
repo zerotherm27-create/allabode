@@ -86,12 +86,13 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ busy }: { busy?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || busy}
+      title={busy ? "Wait for the AI generation to finish first" : undefined}
       className="inline-flex items-center gap-2 rounded-md bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50"
     >
       {pending ? (
@@ -164,6 +165,10 @@ export function ListingForm({
 
   async function handleGenerateDescription() {
     if (!formRef.current) return;
+    if (descriptionRef.current?.value.trim()) {
+      const ok = window.confirm("This will replace the current description. Continue?");
+      if (!ok) return;
+    }
     setGenError("");
     setGenPending(true);
     try {
@@ -389,11 +394,14 @@ export function ListingForm({
       </Group>
 
       <div className="flex items-center gap-3">
-        <SubmitButton />
+        <SubmitButton busy={genPending || seoPending} />
         <Link href="/admin/listings" className="text-sm font-medium text-slate hover:text-navy">
           Cancel
         </Link>
       </div>
+      {(genPending || seoPending) && (
+        <p className="-mt-4 text-xs text-slate">Waiting for the AI draft to finish before you can save…</p>
+      )}
     </form>
   );
 }

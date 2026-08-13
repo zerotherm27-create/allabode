@@ -403,9 +403,18 @@ export async function recordPaymentOnInvoice(invoiceId: string, fd: FormData) {
     newPaid >= Number(invoice.total_amount) ? "paid" :
     newPaid > 0 ? "partially_paid" : "issued";
 
-  await supabase.from("invoices")
+  // The payment row above is already committed — if this update silently
+  // no-ops (e.g. RLS excludes the row), the invoice would show the old
+  // balance/status while a real payment sits recorded against it, so this
+  // must fail loudly rather than let that drift go unnoticed.
+  const { data: invoiceRows, error: invoiceErr } = await supabase.from("invoices")
     .update({ amount_paid: newPaid, status: newStatus })
-    .eq("id", invoiceId);
+    .eq("id", invoiceId)
+    .select("id");
+  if (invoiceErr) throw new Error(invoiceErr.message);
+  if (!invoiceRows || invoiceRows.length === 0) {
+    throw new Error("Payment was recorded, but the invoice balance could not be updated — no matching invoice was found.");
+  }
 
   await logAudit(supabase, {
     action: "invoice.payment_recorded", entityType: "invoice", entityId: invoiceId,

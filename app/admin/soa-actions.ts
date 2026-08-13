@@ -116,7 +116,10 @@ export async function generateStatement(formData: FormData) {
 export async function submitForReview(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  await supabase.from("statements_of_account").update({ status: "checker_review" }).eq("id", id);
+  const { data, error } = await supabase.from("statements_of_account")
+    .update({ status: "checker_review" }).eq("id", id).select("id");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("Could not submit for review — no statement was updated.");
   await logAudit(supabase, { action: "soa.submitted_for_review", entityType: "statement", entityId: id, actorId: user?.id });
   revalidatePath(`/admin/statements/${id}`);
 }
@@ -133,12 +136,14 @@ export async function approveStatement(id: string) {
   // For legacy SOAs: use ledger recalc.
   if (stored.lease_id) {
     const { totalIncome, totalDeductions, payout } = await recomputeTotalsFromLines(supabase, id);
-    await supabase.from("statements_of_account").update({
+    const { data: recalcRows, error: recalcErr } = await supabase.from("statements_of_account").update({
       total_payments: totalIncome,
       total_expenses: totalDeductions,
       closing_balance: payout,
       net_remittance: payout,
-    }).eq("id", id);
+    }).eq("id", id).select("id");
+    if (recalcErr) throw new Error(recalcErr.message);
+    if (!recalcRows || recalcRows.length === 0) throw new Error("Could not recompute totals — no statement was updated.");
   } else {
     const { match } = await recalcTotals(supabase, stored);
     if (!match) throw new Error("Totals no longer match the ledger — regenerate before approving.");
@@ -153,9 +158,11 @@ export async function approveStatement(id: string) {
     }
   }
 
-  await supabase.from("statements_of_account")
+  const { data: approvedRows, error: approveErr } = await supabase.from("statements_of_account")
     .update({ status: "approved", approved_by: user?.id ?? null, approved_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id).select("id");
+  if (approveErr) throw new Error(approveErr.message);
+  if (!approvedRows || approvedRows.length === 0) throw new Error("Could not approve — no statement was updated.");
   await logAudit(supabase, { action: "soa.approved", entityType: "statement", entityId: id, actorId: user?.id });
   revalidatePath(`/admin/statements/${id}`);
 }
@@ -179,8 +186,12 @@ export async function voidStatement(id: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: s } = await supabase.from("statements_of_account").select("statement_type").eq("id", id).maybeSingle();
+  if (!s) throw new Error("Statement not found.");
   const reason = str(formData, "reason") ?? "Voided";
-  await supabase.from("statements_of_account").update({ status: "voided" }).eq("id", id);
+  const { data: voidedRows, error: voidErr } = await supabase.from("statements_of_account")
+    .update({ status: "voided" }).eq("id", id).select("id");
+  if (voidErr) throw new Error(voidErr.message);
+  if (!voidedRows || voidedRows.length === 0) throw new Error("Could not void — no statement was updated.");
   await logAudit(supabase, { action: "soa.voided", entityType: "statement", entityId: id, actorId: user?.id, metadata: { reason } });
   revalidatePath(`/admin/statements/${id}`);
   revalidatePath("/admin/statements");
@@ -232,7 +243,10 @@ export async function deleteStatement(id: string) {
   }
 
   await supabase.from("soa_lines").delete().eq("statement_id", id);
-  await supabase.from("statements_of_account").delete().eq("id", id);
+  const { data: deletedRows, error: deleteErr } = await supabase.from("statements_of_account")
+    .delete().eq("id", id).select("id");
+  if (deleteErr) throw new Error(deleteErr.message);
+  if (!deletedRows || deletedRows.length === 0) throw new Error("Could not delete — no statement was removed.");
   await logAudit(supabase, { action: "soa.deleted", entityType: "statement", entityId: id, actorId: user?.id });
   revalidatePath("/admin/statements");
   redirect("/admin/statements");
@@ -412,10 +426,12 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
     const amt = parseFloat((formData.get(`line_amount_${i}`) as string | null) ?? "0");
     const note = ((formData.get(`line_note_${i}`) as string | null) ?? "").trim();
     if (!isNaN(amt)) {
-      await supabase.from("soa_lines").update({
+      const { data: lineRows, error: lineErr } = await supabase.from("soa_lines").update({
         amount:       -Math.abs(amt),
         billing_note: note || null,
-      }).eq("id", lineId).in("line_type", ["deduction_utility", "deduction_expense_recurring", "deduction_mgmt_fee", "deduction_vat"]);
+      }).eq("id", lineId).in("line_type", ["deduction_utility", "deduction_expense_recurring", "deduction_mgmt_fee", "deduction_vat"]).select("id");
+      if (lineErr) throw new Error(lineErr.message);
+      if (!lineRows || lineRows.length === 0) throw new Error("Could not save one of the edited line amounts — no matching line was found.");
     }
   }
 
@@ -427,16 +443,21 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
   for (let i = 0; i < manualIds.length; i++) {
     const lineId = manualIds[i];
     if (formData.get(`manual_delete_${i}`)) {
-      await supabase.from("soa_lines").delete().eq("id", lineId).eq("line_type", "deduction_expense_manual");
+      const { data: delRows, error: delErr } = await supabase.from("soa_lines")
+        .delete().eq("id", lineId).eq("line_type", "deduction_expense_manual").select("id");
+      if (delErr) throw new Error(delErr.message);
+      if (!delRows || delRows.length === 0) throw new Error("Could not remove one of the one-time expenses — no matching line was found.");
       continue;
     }
     const desc = ((formData.get(`manual_desc_${i}`) as string | null) ?? "").trim();
     const amt = parseFloat((formData.get(`manual_amount_${i}`) as string | null) ?? "");
     if (!desc || isNaN(amt)) continue; // a blank row is a no-op, not a wipe
-    await supabase.from("soa_lines").update({
+    const { data: manualRows, error: manualErr } = await supabase.from("soa_lines").update({
       description: desc,
       amount: -Math.abs(amt),
-    }).eq("id", lineId).eq("line_type", "deduction_expense_manual");
+    }).eq("id", lineId).eq("line_type", "deduction_expense_manual").select("id");
+    if (manualErr) throw new Error(manualErr.message);
+    if (!manualRows || manualRows.length === 0) throw new Error("Could not save one of the one-time expenses — no matching line was found.");
   }
 
   // Add new one-time expense lines
@@ -466,7 +487,7 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
   const adj = isNaN(adjustments) ? 0 : adjustments;
   const payout = totalIncome - totalDeductions + adj;
 
-  await supabase.from("statements_of_account").update({
+  const { data: totalsRows, error: totalsErr } = await supabase.from("statements_of_account").update({
     total_payments:  totalIncome,
     total_expenses:  totalDeductions,
     closing_balance: payout,
@@ -475,7 +496,9 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
     prev_soa_ref:    prevSoaRef,
     payout_due_at:   payoutDueAt,
     status:          "generated",
-  }).eq("id", id);
+  }).eq("id", id).select("id");
+  if (totalsErr) throw new Error(totalsErr.message);
+  if (!totalsRows || totalsRows.length === 0) throw new Error("Could not save the statement — no matching statement was found.");
 
   revalidatePath(`/admin/statements/${id}`);
 }
@@ -486,7 +509,10 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
 
 export async function markSoaProcessing(id: string) {
   const supabase = await createClient();
-  await supabase.from("statements_of_account").update({ payout_status: "processing" }).eq("id", id);
+  const { data, error } = await supabase.from("statements_of_account")
+    .update({ payout_status: "processing" }).eq("id", id).select("id");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("Could not mark this statement as processing — no matching statement was found.");
   revalidatePath(`/admin/statements/${id}`);
 }
 

@@ -238,9 +238,18 @@ export async function postExpense(expenseId: string) {
 
   await postExpenseToLedger(supabase, e as PostableExpense);
   const now = new Date().toISOString();
-  await supabase.from("expenses")
+  // The ledger entries above are already committed — if this status flip
+  // silently no-ops, the guard at the top of this function (`e.status ===
+  // "posted"`) would never trip, letting the same expense be posted to the
+  // ledger a second time, so a failed write here must be surfaced loudly.
+  const { data: postedRows, error: postErr } = await supabase.from("expenses")
     .update({ status: "posted", approved_by: user?.id ?? null, approved_at: now, posted_by: user?.id ?? null, posted_at: now })
-    .eq("id", expenseId);
+    .eq("id", expenseId)
+    .select("id");
+  if (postErr) throw new Error(postErr.message);
+  if (!postedRows || postedRows.length === 0) {
+    throw new Error("Expense was posted to the ledger, but its status could not be updated — no matching expense was found.");
+  }
   if (e.receipt_upload_id) {
     await supabase.from("receipt_uploads").update({ status: "posted" }).eq("id", e.receipt_upload_id);
   }

@@ -226,10 +226,14 @@ export async function updateDeposit(depositId: string, leaseId: string, formData
   const depositType = str(formData, "deposit_type") === "advance" ? "advance" : "security";
   if (!receivedAt || isNaN(amountHeld) || amountHeld <= 0) throw new Error("Amount and date are required.");
 
-  await supabase.from("security_deposits").update({
+  const { data: depositRows, error: depositErr } = await supabase.from("security_deposits").update({
     amount_held: amountHeld, months_held: monthsHeld, deposit_type: depositType,
     received_at: receivedAt, payment_method: method, notes,
-  }).eq("id", depositId).eq("status", "held");
+  }).eq("id", depositId).eq("status", "held").select("id");
+  if (depositErr) throw new Error(depositErr.message);
+  if (!depositRows || depositRows.length === 0) {
+    throw new Error("Could not save the deposit — no matching held deposit was found (it may have already been returned or forfeited).");
+  }
 
   await logAudit(supabase, {
     action: "deposit.updated", entityType: "security_deposit", entityId: depositId, actorId: user?.id,
@@ -250,9 +254,13 @@ export async function updateCommission(commissionId: string, leaseId: string, fo
   const notes          = str(formData, "notes");
   if (isNaN(amount) || amount <= 0) throw new Error("Amount is required.");
 
-  await supabase.from("lease_commissions").update({
+  const { data: commissionRows, error: commissionErr } = await supabase.from("lease_commissions").update({
     amount, commission_type: commissionType, description, notes,
-  }).eq("id", commissionId).eq("status", "pending");
+  }).eq("id", commissionId).eq("status", "pending").select("id");
+  if (commissionErr) throw new Error(commissionErr.message);
+  if (!commissionRows || commissionRows.length === 0) {
+    throw new Error("Could not save the commission — no matching pending commission was found (it may have already been waived).");
+  }
 
   await logAudit(supabase, {
     action: "commission.updated", entityType: "lease_commission", entityId: commissionId, actorId: user?.id,

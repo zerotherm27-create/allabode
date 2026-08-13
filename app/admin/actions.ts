@@ -114,8 +114,20 @@ export async function createListing(fd: FormData) {
 export async function updateListing(id: string, fd: FormData) {
   const supabase = await createClient();
   const row = listingRow(fd);
-  const { error } = await supabase.from("listings").update(row).eq("id", id);
+  // Supabase returns success with an empty result (no `error`) when RLS's
+  // `using` clause excludes the row from the update set entirely — e.g. a
+  // signed-in account with no matching row in `users` (is_staff() false)
+  // can still SELECT a live listing via the public policy, so the edit form
+  // loads fine, but every save silently no-ops. Requesting the row back and
+  // checking it was actually returned turns that into a loud, explainable
+  // failure instead of a page that looks saved but never changed.
+  const { data, error } = await supabase.from("listings").update(row).eq("id", id).select("id");
   if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error(
+      "The listing wasn't updated — no row matched. This usually means the signed-in account isn't flagged as staff, or the listing was deleted."
+    );
+  }
   revalidatePath("/admin/listings");
   revalidatePublicListingPaths(row.slug);
   redirect("/admin/listings");
@@ -124,20 +136,26 @@ export async function updateListing(id: string, fd: FormData) {
 export async function deleteListing(id: string) {
   const supabase = await createClient();
   await revalidatePublicListingById(supabase, id);
-  await supabase.from("listings").delete().eq("id", id);
+  const { data, error } = await supabase.from("listings").delete().eq("id", id).select("id");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("Could not delete — no matching listing was found.");
   revalidatePath("/admin/listings");
 }
 
 export async function setListingStatus(id: string, status: string) {
   const supabase = await createClient();
-  await supabase.from("listings").update({ status }).eq("id", id);
+  const { data, error } = await supabase.from("listings").update({ status }).eq("id", id).select("id");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("Could not update the listing's status — no matching listing was found.");
   revalidatePath("/admin/listings");
   await revalidatePublicListingById(supabase, id);
 }
 
 export async function toggleFeatured(id: string, value: boolean) {
   const supabase = await createClient();
-  await supabase.from("listings").update({ is_featured: value }).eq("id", id);
+  const { data, error } = await supabase.from("listings").update({ is_featured: value }).eq("id", id).select("id");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("Could not update Featured — no matching listing was found.");
   revalidatePath("/admin/listings");
   await revalidatePublicListingById(supabase, id);
 }

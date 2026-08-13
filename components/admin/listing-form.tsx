@@ -36,6 +36,7 @@ export type ListingValues = {
   sale_terms?: string;
   availability_date?: string;
   is_featured?: boolean;
+  clean_title?: boolean;
   owner_name?: string;
   owner_contact?: string;
   internal_notes?: string;
@@ -336,6 +337,13 @@ export function ListingForm({
           <input type="checkbox" name="is_featured" defaultChecked={v.is_featured} className="h-4 w-4 accent-navy" />
           <span className="text-sm text-navy">Featured (show on homepage)</span>
         </label>
+        <label className="flex items-center gap-2 sm:col-span-2">
+          <input type="checkbox" name="clean_title" defaultChecked={v.clean_title ?? true} className="h-4 w-4 accent-navy" />
+          <span className="text-sm text-navy">Clean title & documents</span>
+        </label>
+        <p className="text-xs text-slate sm:col-span-2 sm:-mt-3">
+          Shows as a public highlight on the listing page — uncheck if this hasn&#x2019;t been verified yet.
+        </p>
       </Group>
 
       <Group title="Location">

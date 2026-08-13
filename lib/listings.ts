@@ -20,7 +20,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const db = url && key ? createClient(url, key) : null;
 
 const COLS =
-  "id,slug,title,location,price,price_label,rent_price,rent_price_label,description,seo_description,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,created_at,nearby_places,nearby_places_updated_at,listing_images(url,alt_text,sort_order)";
+  "id,slug,title,location,price,price_label,rent_price,rent_price_label,description,seo_description,listing_category,lease_type,property_type,status,bedrooms,bathrooms,floor_area,lot_area,parking,furnishing,lease_terms,sale_terms,availability_date,is_featured,clean_title,created_at,nearby_places,nearby_places_updated_at,listing_images(url,alt_text,sort_order)";
 
 type Row = {
   id: string;
@@ -47,6 +47,7 @@ type Row = {
   sale_terms: string | null;
   availability_date: string | null;
   is_featured: boolean;
+  clean_title: boolean;
   nearby_places: NearbyPlace[] | null;
   nearby_places_updated_at: string | null;
   listing_images: { url: string; alt_text: string | null; sort_order: number }[] | null;
@@ -121,6 +122,7 @@ function mapRow(row: Row): Listing {
     rentPrice: fmtRentPrice(row),
     description: row.description ?? undefined,
     seoDescription: row.seo_description ?? undefined,
+    cleanTitle: row.clean_title,
     status: uiStatus(row),
     type: COMMERCIAL.has(row.property_type) ? "Commercial" : "Residential",
     beds: row.bedrooms ?? undefined,

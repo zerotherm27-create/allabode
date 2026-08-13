@@ -90,6 +90,7 @@ function listingRow(fd: FormData) {
     sale_terms: s(fd, "sale_terms"),
     availability_date: date(fd, "availability_date"),
     is_featured: fd.get("is_featured") === "on",
+    clean_title: fd.get("clean_title") === "on",
     owner_name: s(fd, "owner_name"),
     owner_contact: s(fd, "owner_contact"),
     internal_notes: s(fd, "internal_notes"),

@@ -45,12 +45,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-const highlights = [
+const BASE_HIGHLIGHTS = [
   { icon: "verified", label: "Verified by licensed broker" },
-  { icon: "description", label: "Clean title & documents" },
   { icon: "schedule", label: "Flexible viewing schedule" },
   { icon: "handshake", label: "Assisted financing options" },
 ];
+const CLEAN_TITLE_HIGHLIGHT = { icon: "description", label: "Clean title & documents" };
 
 export default async function ListingDetailPage({ params }: Params) {
   const { id } = await params;
@@ -58,6 +58,11 @@ export default async function ListingDetailPage({ params }: Params) {
   if (!listing) notFound();
   const phone = s(settings, "contact_phone");
   const phoneHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
+
+  const highlights =
+    listing.cleanTitle === false
+      ? BASE_HIGHLIGHTS
+      : [BASE_HIGHLIGHTS[0], CLEAN_TITLE_HIGHLIGHT, ...BASE_HIGHLIGHTS.slice(1)];
 
   const specs = listing.specs ?? [
     ...(listing.beds != null

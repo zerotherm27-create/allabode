@@ -45,6 +45,7 @@ function revalidatePublicListingPaths(slug?: string | null) {
   revalidatePath("/listings/office");
   revalidatePath("/listings/industrial-warehouse");
   revalidatePath("/listings/parking");
+  revalidatePath("/listings/lots");
   if (slug) revalidatePath(`/listings/${slug}`);
 }
 

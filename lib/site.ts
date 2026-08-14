@@ -60,6 +60,7 @@ export const mainNav: readonly NavItem[] = [
       { label: "Office", href: "/listings/office" },
       { label: "Industrial and Warehouse", href: "/listings/industrial-warehouse" },
       { label: "Parking", href: "/listings/parking" },
+      { label: "Lots", href: "/listings/lots" },
     ],
   },
   { label: "Valuation", href: "/valuation" },
@@ -83,6 +84,7 @@ export const footerNav = {
     { label: "Office", href: "/listings/office" },
     { label: "Industrial and Warehouse", href: "/listings/industrial-warehouse" },
     { label: "Parking", href: "/listings/parking" },
+    { label: "Lots", href: "/listings/lots" },
   ],
   compliance: [
     { label: "Privacy Policy", href: "/privacy-policy" },

@@ -17,6 +17,7 @@ const MARKETING_ROUTES: { path: string; priority: number }[] = [
   { path: "/listings/office", priority: 0.7 },
   { path: "/listings/industrial-warehouse", priority: 0.7 },
   { path: "/listings/parking", priority: 0.7 },
+  { path: "/listings/lots", priority: 0.7 },
   { path: "/list-your-property", priority: 0.8 },
   { path: "/about", priority: 0.6 },
   { path: "/faq", priority: 0.6 },

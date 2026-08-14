@@ -24,6 +24,7 @@ const categories = [
   { label: "Office", href: "/listings/office" },
   { label: "Industrial and Warehouse", href: "/listings/industrial-warehouse" },
   { label: "Parking", href: "/listings/parking" },
+  { label: "Lots", href: "/listings/lots" },
 ];
 
 export default async function ListingsPage() {

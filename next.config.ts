@@ -55,11 +55,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Baseline security hardening (per the Next.js PWA guide).
+        // Baseline security hardening (per the Next.js PWA guide). Keep
+        // X-Frame-Options at SAMEORIGIN, not DENY: the invoice/statement/
+        // document-preview pages embed the app's own PDF routes in an
+        // <iframe>, and DENY blocks same-origin framing too.
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
       },

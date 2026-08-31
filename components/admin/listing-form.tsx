@@ -61,8 +61,11 @@ export type UnitOption = {
 const LEASE_TYPES = ["", "Short-term", "Long-term", "Bed space"];
 const PROPERTY_TYPES = [
   "Condo", "House and Lot", "Apartment", "Townhouse", "Dorm / Bed Space",
-  "Commercial", "Office", "Lot", "Warehouse", "Other",
+  "Commercial", "Office", "Lot", "Warehouse", "Parking", "Other",
 ];
+// Longer wording for the dropdown only — the stored value stays "Parking",
+// which is what /listings/parking filters on.
+const PROPERTY_TYPE_LABELS: Record<string, string> = { Parking: "Parking Space / Lot" };
 const STATUSES = ["Draft", "Published", "Available", "Reserved", "Leased", "Sold", "Archived"];
 
 const inputCls =
@@ -325,7 +328,7 @@ export function ListingForm({
         </F>
         <F label="Property type">
           <select ref={propertyTypeRef} name="property_type" defaultValue={v.property_type ?? "Condo"} className={inputCls}>
-            {PROPERTY_TYPES.map((o) => <option key={o}>{o}</option>)}
+            {PROPERTY_TYPES.map((o) => <option key={o} value={o}>{PROPERTY_TYPE_LABELS[o] ?? o}</option>)}
           </select>
         </F>
         <F label="Status">

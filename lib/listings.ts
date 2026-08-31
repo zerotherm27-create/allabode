@@ -68,7 +68,7 @@ function gradientFor(slug: string) {
   return GRADIENTS[h % GRADIENTS.length];
 }
 
-const COMMERCIAL = new Set(["Commercial", "Office", "Warehouse", "Lot"]);
+const COMMERCIAL = new Set(["Commercial", "Office", "Warehouse", "Lot", "Parking"]);
 
 function uiStatus(row: Row): ListingStatus {
   if (row.status === "Reserved") return "Reserved";

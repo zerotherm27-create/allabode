@@ -130,7 +130,7 @@ export function ParkingTermsForm({
 
   function generateSchedule() {
     const rent = parseAmount(t.rentAmount);
-    const total = parseAmount(t.signingTotalAmount) ?? (rent != null ? rent * 3 : null);
+    const total = parseAmount(t.signingTotalAmount);
     const start = parseIso(t.leaseStartDate);
     if (!start) return;
     const end = parseIso(t.leaseEndDate) ?? minusDays(addMonths(start, 12), 1);

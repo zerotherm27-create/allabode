@@ -151,7 +151,7 @@ export function TenancyTermsForm({
 
   function generateSchedule() {
     const rent = parseAmount(t.rentAmount);
-    const deposit = parseAmount(t.depositAmount) ?? (rent != null ? rent * 2 : null);
+    const deposit = parseAmount(t.depositAmount);
     const months = Math.min(Math.max(Number(t.leaseMonths) || 12, 1), 12);
     const dueDay = Number(t.rentDueDay) || null;
     const rows: PaymentScheduleRow[] = DEFAULT_PAYMENT_PARTICULARS.slice(0, months + 1).map((particulars, i) => {

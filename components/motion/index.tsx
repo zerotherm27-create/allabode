@@ -58,7 +58,7 @@ export function Reveal({ as = "div", y = 24, delay = 0, className, children }: R
       className={className}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.25 }}
+      viewport={{ once: true, amount: "some" }}
       variants={revealVariants(reduced, y)}
       transition={reduced ? { duration: 0 } : { duration: 0.3, ease: EASE_OUT, delay }}
     >

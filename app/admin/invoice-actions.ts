@@ -463,6 +463,10 @@ export async function recordPaymentOnLease(leaseId: string, fd: FormData) {
     await generateAndSendPaymentReceipt(supabase, payment.id, leaseId, user?.id ?? null);
   } catch (err) {
     console.warn("[receipt] generateAndSendPaymentReceipt failed:", err);
+    await logAudit(supabase, {
+      action: "payment.receipt_failed", entityType: "payment", entityId: payment.id,
+      actorId: user?.id, metadata: { error: err instanceof Error ? err.message : String(err) },
+    });
   }
 
   await logAudit(supabase, {

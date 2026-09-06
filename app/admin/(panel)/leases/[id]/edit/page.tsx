@@ -8,6 +8,7 @@ import { recordDeposit, recordCommission, updateCommission, waiveCommission } fr
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { createClient } from "@/lib/supabase/server";
 import { inputCls, SubmitButton } from "@/components/admin/form-kit";
+import { signedUrlsForPaths, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 
 const peso = (n: number | string) => `₱${Math.round(Number(n)).toLocaleString("en-PH")}`;
 
@@ -36,6 +37,7 @@ type InvoiceRow = {
 type PaymentRow = {
   id: string; amount: number; method: string; reference: string | null;
   received_at: string; status: string; notes: string | null;
+  receipt_pdf_path: string | null;
 };
 
 export default async function EditLeasePage({
@@ -57,7 +59,7 @@ export default async function EditLeasePage({
         .select("id,invoice_number,billing_period_start,billing_period_end,due_date,status,total_amount,amount_paid,voided_at")
         .eq("lease_id", id).order("created_at", { ascending: false }),
       supabase.from("payments")
-        .select("id,amount,method,reference,received_at,status,notes")
+        .select("id,amount,method,reference,received_at,status,notes,receipt_pdf_path")
         .eq("lease_id", id).order("received_at", { ascending: false }),
       supabase.from("security_deposits")
         .select("id,deposit_type,months_held,amount_held,received_at,status,returned_amount,forfeited_amount,payment_method")
@@ -82,6 +84,8 @@ export default async function EditLeasePage({
   const tenants = ((tenantData ?? []) as { id: string; name: string }[]).map((t) => ({ id: t.id, label: t.name }));
   const invoices = (invoiceData ?? []) as InvoiceRow[];
   const payments = (paymentData ?? []) as PaymentRow[];
+  const receiptPaths = payments.map((p) => p.receipt_pdf_path).filter((p): p is string => !!p);
+  const receiptUrls = await signedUrlsForPaths(supabase, FINANCE_DOCS_BUCKET, receiptPaths, 300);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -284,6 +288,18 @@ export default async function EditLeasePage({
                   <td className="px-4 py-3 text-slate">{p.notes ?? "—"}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {receiptUrls.has(p.receipt_pdf_path ?? "") ? (
+                        <a href={receiptUrls.get(p.receipt_pdf_path ?? "")} target="_blank" rel="noopener noreferrer"
+                          aria-label="View receipt" title="View acknowledgement receipt"
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-navy-700 hover:bg-surface-gray">
+                          <Icon name="receipt_long" size={16} />
+                        </a>
+                      ) : (
+                        <span aria-label="Receipt not sent" title="Receipt not sent"
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-slate/40">
+                          <Icon name="receipt_long" size={16} />
+                        </span>
+                      )}
                       <Link href={`/admin/leases/${id}/edit?editPayment=${p.id}`}
                         aria-label="Edit payment"
                         className="flex h-8 w-8 items-center justify-center rounded-md text-navy-700 hover:bg-surface-gray">

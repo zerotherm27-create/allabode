@@ -30,7 +30,7 @@ type Lease = {
   billing_cycle: string; deposit: number | null; status: string;
   units?: Unit | Unit[] | null;
 };
-type Payment = { id: string; received_at: string; amount: number; method: string; status: string };
+type Payment = { id: string; received_at: string; amount: number; method: string; status: string; receipt_pdf_path: string | null };
 type Soa = { id: string; period_start: string; period_end: string; closing_balance: number; status: string };
 
 export default async function TenantDashboard({
@@ -46,7 +46,7 @@ export default async function TenantDashboard({
   const [{ data: leaseData }, { data: payData }, { data: soaData }, { data: tenantRow }] = await Promise.all([
     supabase.from("leases").select("id,start_date,end_date,rent_amount,billing_cycle,deposit,status,units(unit_label,properties(name,address,city))")
       .order("start_date", { ascending: false }),
-    supabase.from("payments").select("id,received_at,amount,method,status").order("received_at", { ascending: false }).limit(6),
+    supabase.from("payments").select("id,received_at,amount,method,status,receipt_pdf_path").order("received_at", { ascending: false }).limit(6),
     supabase.from("statements_of_account").select("id,period_start,period_end,closing_balance,status")
       .eq("statement_type", "tenant").order("period_end", { ascending: false }),
     supabase.from("tenants").select("name").eq("id", tenantId ?? "").maybeSingle(),
@@ -121,6 +121,13 @@ export default async function TenantDashboard({
                             <p className="text-xs text-slate capitalize">{p.method.replace("_", " ")} · {p.status}</p>
                           </div>
                           <span className="text-sm font-semibold text-navy">{peso(Number(p.amount))}</span>
+                          {p.receipt_pdf_path && (
+                            <a href={`/api/portal/payments/${p.id}/receipt`} target="_blank" rel="noopener noreferrer"
+                              aria-label="View acknowledgement receipt" title="View acknowledgement receipt"
+                              className="flex size-8 items-center justify-center rounded-md text-navy-700 hover:bg-surface-gray">
+                              <Icon name="receipt_long" size={18} />
+                            </a>
+                          )}
                         </li>
                       ))}
                     </ul>

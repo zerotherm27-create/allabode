@@ -193,6 +193,7 @@ const ICONS: Record<string, LucideIcon> = {
   groups: Users,
   handshake: Handshake,
   handyman: Hammer,
+  help: HelpCircle,
   history: History,
   history_edu: ScrollText,
   home: Home,

@@ -8,76 +8,11 @@ import { motion, useReducedMotion } from "motion/react";
 import { pressable, Reveal } from "@/components/motion";
 import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/client";
+import { navGroups } from "@/lib/admin/nav-groups";
+import { CommandPalette } from "@/components/admin/command-palette";
+import { HelpPopover } from "@/components/admin/help-popover";
 
 const MotionLink = motion.create(Link);
-
-const navGroups = [
-  {
-    group: null,
-    items: [
-      { label: "Overview", icon: "dashboard", href: "/admin" },
-    ],
-  },
-  {
-    group: "Property Management",
-    items: [
-      { label: "Properties", icon: "apartment",     href: "/admin/properties" },
-      { label: "Units",      icon: "door_front",    href: "/admin/units"      },
-      { label: "Owners",     icon: "person",        href: "/admin/owners"     },
-      { label: "Tenants",    icon: "groups",        href: "/admin/tenants"    },
-      { label: "Leases",     icon: "description",   href: "/admin/leases"     },
-      { label: "Vendors",    icon: "handyman",      href: "/admin/vendors"    },
-      { label: "Maintenance",icon: "build",         href: "/admin/maintenance"},
-      { label: "Work Orders",icon: "handyman",      href: "/admin/work-orders"},
-    ],
-  },
-  {
-    group: "Tickets",
-    items: [
-      { label: "Tickets",   icon: "confirmation_number", href: "/admin/tickets" },
-      { label: "Documents", icon: "folder",              href: "/admin/documents" },
-    ],
-  },
-  {
-    group: "Agreements",
-    items: [
-      { label: "Contracts", icon: "history_edu", href: "/admin/contracts" },
-      { label: "Quotations", icon: "price_check", href: "/admin/quotations" },
-    ],
-  },
-  {
-    group: "Finance",
-    items: [
-      { label: "Invoices",   icon: "request_quote", href: "/admin/invoices"   },
-      { label: "Receipts",   icon: "receipt",       href: "/admin/receipts"   },
-      { label: "Expenses",   icon: "payments",      href: "/admin/expenses"   },
-      { label: "Statements", icon: "receipt_long",  href: "/admin/statements"        },
-      { label: "Deposits",   icon: "savings",       href: "/admin/security-deposits" },
-      { label: "Audit Log",  icon: "history",       href: "/admin/audit"             },
-    ],
-  },
-  {
-    group: "Marketing",
-    items: [
-      { label: "Listings",   icon: "home_work",     href: "/admin/listings"   },
-      { label: "Viewings",   icon: "event_available", href: "/admin/viewings" },
-      { label: "Inquiries",  icon: "forum",         href: "/admin/inquiries"  },
-      { label: "Appraisals", icon: "analytics",     href: "/admin/appraisals" },
-      { label: "PM Leads",   icon: "corporate_fare",href: "/admin/leads"      },
-    ],
-  },
-  {
-    group: "System",
-    items: [
-      { label: "Account",       icon: "manage_accounts", href: "/admin/account"   },
-      { label: "Pending Signups", icon: "person_add", href: "/admin/pending-signups" },
-      { label: "Notices",       icon: "campaign",   href: "/admin/notices"    },
-      { label: "Automation",    icon: "autorenew",  href: "/admin/automation" },
-      { label: "Site Settings", icon: "tune",       href: "/admin/settings"   },
-      { label: "Setup Guide",   icon: "menu_book",  href: "/admin/setup"      },
-    ],
-  },
-];
 
 export function AdminShell({
   email,
@@ -184,6 +119,9 @@ export function AdminShell({
             <Icon name="menu" size={26} />
           </button>
           <div className="ml-auto flex items-center gap-3 text-sm text-slate">
+            <CommandPalette />
+            <HelpPopover />
+            <span className="hidden h-6 w-px bg-line sm:inline-block" />
             <Icon name="account_circle" size={22} className="text-navy-700" />
             <span className="hidden sm:inline">{email}</span>
           </div>

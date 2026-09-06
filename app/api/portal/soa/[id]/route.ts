@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { signedUrl, buildOwnerSoaFilename, FINANCE_DOCS_BUCKET } from "@/lib/storage";
 
 /**
@@ -24,7 +25,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const url = await signedUrl(supabase, FINANCE_DOCS_BUCKET, stmt.pdf_path, 120);
+  // `finance-docs` is a staff-only bucket via RLS (see supabase/setup-storage.sql) —
+  // the `statements_of_account` select above already proved this user owns this
+  // published SOA, so it's safe to use the admin client for just the signed-URL step.
+  const url = await signedUrl(createAdminClient(), FINANCE_DOCS_BUCKET, stmt.pdf_path, 120);
   if (!url) return new NextResponse("Unavailable", { status: 404 });
   const pdf = await fetch(url);
   if (!pdf.ok) return new NextResponse("Unavailable", { status: 404 });

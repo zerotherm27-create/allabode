@@ -74,16 +74,26 @@ export function isImageMime(mime: string | null | undefined) {
   return !!mime && ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"].includes(mime);
 }
 
+/** True for mime types extractReceipt can process — images plus PDF. */
+export function isSupportedReceiptMime(mime: string | null | undefined) {
+  return isImageMime(mime) || mime === "application/pdf";
+}
+
 /**
- * Runs AI extraction on a receipt image. Image inputs only (callers should route
- * PDFs/other to manual review). Returns the raw model JSON plus a lightly
+ * Runs AI extraction on a receipt/bill. Images are sent as `image_url` parts; PDFs
+ * are sent as a `file` part (per the contract-extraction pattern in
+ * lib/ai/contract-extract.ts) so multi-page bills and scanned PDFs are read directly
+ * without a local PDF-parsing dependency. Returns the raw model JSON plus a lightly
  * normalized copy (currency forced to PHP, numbers coerced) — stored separately
  * so the untouched AI output is always auditable (spec §10.6/§10.12).
  */
-export async function extractReceipt(fileBuffer: Buffer, mime: string): Promise<ReceiptExtraction> {
+export async function extractReceipt(fileBuffer: Buffer, mime: string, filename: string): Promise<ReceiptExtraction> {
   if (!isAiConfigured()) throw new Error("AI not configured");
   const client = getOpenAI();
   const dataUrl = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+  const filePart = isImageMime(mime)
+    ? ({ type: "image_url", image_url: { url: dataUrl } } as const)
+    : ({ type: "file", file: { filename, file_data: dataUrl } } as const);
 
   const completion = await client.chat.completions.create({
     model: RECEIPT_MODEL,
@@ -93,7 +103,7 @@ export async function extractReceipt(fileBuffer: Buffer, mime: string): Promise<
         role: "user",
         content: [
           { type: "text", text: "Extract this receipt into the required schema." },
-          { type: "image_url", image_url: { url: dataUrl } },
+          filePart,
         ],
       },
     ],

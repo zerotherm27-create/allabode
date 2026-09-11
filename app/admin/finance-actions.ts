@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAiConfigured } from "@/lib/ai/client";
-import { extractReceipt, isImageMime } from "@/lib/ai/receipts";
+import { extractReceipt, isSupportedReceiptMime } from "@/lib/ai/receipts";
 import { runValidations } from "@/lib/finance/validation";
 import { postExpenseToLedger, type PostableExpense } from "@/lib/finance/ledger";
 import { RECEIPTS_BUCKET } from "@/lib/storage";
@@ -107,10 +107,10 @@ export async function runExtraction(id: string) {
   await supabase.from("receipt_extractions").delete().eq("receipt_upload_id", id);
   await supabase.from("receipt_validation_results").delete().eq("receipt_upload_id", id);
 
-  // No AI key or non-image file → route straight to manual review (never guess).
-  if (!isAiConfigured() || !isImageMime(r.file_mime_type)) {
+  // No AI key or unsupported file type → route straight to manual review (never guess).
+  if (!isAiConfigured() || !isSupportedReceiptMime(r.file_mime_type)) {
     await supabase.from("receipt_uploads")
-      .update({ status: "needs_review", scan_status: isImageMime(r.file_mime_type) ? "pending" : "scan_failed" })
+      .update({ status: "needs_review", scan_status: isSupportedReceiptMime(r.file_mime_type) ? "pending" : "scan_failed" })
       .eq("id", id);
     revalidatePath(`/admin/receipts/${id}`);
     return;
@@ -126,7 +126,7 @@ export async function runExtraction(id: string) {
 
   let extraction;
   try {
-    extraction = await extractReceipt(Buffer.from(await file.arrayBuffer()), r.file_mime_type as string);
+    extraction = await extractReceipt(Buffer.from(await file.arrayBuffer()), r.file_mime_type as string, r.file_name as string);
   } catch {
     await supabase.from("receipt_uploads").update({ status: "scan_failed", scan_status: "scan_failed" }).eq("id", id);
     return;

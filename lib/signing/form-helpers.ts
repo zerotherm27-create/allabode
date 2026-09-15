@@ -64,10 +64,12 @@ export function namedOccupants(occupants: string[]): string[] {
 }
 
 export function missingAdditionalOccupantIdNames(occupants: string[], uploads: OccupantIdUpload[]): string[] {
-  const names = namedOccupants(occupants);
-  return names
-    .map((name, index) => ({ name, index }))
-    .filter(({ index }) => index > 0)
+  // Index by original array position (matches how callers tag uploads with
+  // occupantIndex) — do not compact blanks out first, or a blank slot before
+  // a filled one shifts every later name's index out of alignment.
+  return occupants
+    .map((name, index) => ({ name: name.trim(), index }))
+    .filter(({ name, index }) => index > 0 && name.length > 0)
     .filter(({ index }) => !uploads.some((upload) => upload.occupantIndex === index && upload.path))
     .map(({ name }) => name);
 }

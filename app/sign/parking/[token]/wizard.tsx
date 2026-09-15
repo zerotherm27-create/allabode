@@ -92,7 +92,11 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
           additionalOccupants: additionalOccupants.filter((o) => o.trim()),
           additionalOccupantIds: occupantIdUploads,
         },
-        vehicleDetails: { ...vehicle },
+        vehicleDetails: {
+          makeModel: vehicle.makeModel.trim(),
+          plateNo: vehicle.plateNo.trim(),
+          color: vehicle.color.trim(),
+        },
         tenantIdType: idType,
         tenantIdNumber: idNumber || null,
         tenantIdIssuedDate: idIssuedDate || null,
@@ -117,8 +121,14 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
         setError("Please fill in your name, address, and email.");
         return;
       }
-      if (!vehicle.makeModel || !vehicle.plateNo) {
+      const makeModel = vehicle.makeModel.trim();
+      const plateNo = vehicle.plateNo.trim();
+      if (!makeModel || !plateNo) {
         setError("Please fill in your vehicle's make/model and plate number.");
+        return;
+      }
+      if (makeModel.toLowerCase() === plateNo.toLowerCase()) {
+        setError("Make/model and plate number look identical — please make sure each field has only its own value (one vehicle only).");
         return;
       }
       if (!idNumber || !idIssuedDate) {
@@ -201,7 +211,11 @@ export function ParkingWizard({ token, initial }: { token: string; initial: Park
           additionalOccupants: additionalOccupants.filter((o) => o.trim()),
           additionalOccupantIds: nextUploads,
         },
-        vehicleDetails: { ...vehicle },
+        vehicleDetails: {
+          makeModel: vehicle.makeModel.trim(),
+          plateNo: vehicle.plateNo.trim(),
+          color: vehicle.color.trim(),
+        },
         tenantIdType: idType,
         tenantIdNumber: idNumber || null,
         tenantIdIssuedDate: idIssuedDate || null,

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { PropertyForm } from "@/components/admin/pm-forms";
+import { ErrorBanner } from "@/components/admin/form-kit";
 import { createProperty } from "@/app/admin/pm-actions";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function NewPropertyPage() {
+export default async function NewPropertyPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase.from("owners").select("id,name").order("name");
   const owners = ((data ?? []) as { id: string; name: string }[]).map((o) => ({ id: o.id, label: o.name }));
@@ -15,7 +17,10 @@ export default async function NewPropertyPage() {
         <Icon name="arrow_back" size={18} /> Back to properties
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">New property</h1>
-      <div className="mt-6"><PropertyForm action={createProperty} owners={owners} /></div>
+      <div className="mt-6">
+        <ErrorBanner message={error} />
+        <PropertyForm action={createProperty} owners={owners} />
+      </div>
     </div>
   );
 }

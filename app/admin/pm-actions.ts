@@ -23,17 +23,24 @@ function b(fd: FormData, k: string): boolean {
 }
 
 // ---- generic CRUD over a table ----
+function friendlyDbError(error: { code?: string; message: string }): string {
+  if (error.code === "23505") {
+    const match = error.message.match(/Key \(([^)]+)\)=\(([^)]+)\)/);
+    return match ? `A record with that ${match[1]} (${match[2]}) already exists.` : "A record with those details already exists.";
+  }
+  return error.message;
+}
 async function insertRow(table: string, row: Record<string, unknown>, listPath: string) {
   const supabase = await createClient();
   const { error } = await supabase.from(table).insert(row);
-  if (error) throw new Error(error.message);
+  if (error) redirect(`${listPath}/new?error=${encodeURIComponent(friendlyDbError(error))}`);
   revalidatePath(listPath);
   redirect(listPath);
 }
 async function updateRow(table: string, id: string, row: Record<string, unknown>, listPath: string) {
   const supabase = await createClient();
   const { error } = await supabase.from(table).update(row).eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) redirect(`${listPath}/${id}/edit?error=${encodeURIComponent(friendlyDbError(error))}`);
   revalidatePath(listPath);
   redirect(listPath);
 }

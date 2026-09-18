@@ -2,11 +2,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { TenantForm, type TenantValues } from "@/components/admin/pm-forms";
+import { ErrorBanner } from "@/components/admin/form-kit";
 import { updateTenant } from "@/app/admin/pm-actions";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function EditTenantPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditTenantPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { id } = await params;
+  const { error } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase.from("tenants").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
@@ -19,7 +27,10 @@ export default async function EditTenantPage({ params }: { params: Promise<{ id:
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">Edit tenant</h1>
       <p className="mt-1 text-sm text-slate">{initial.name}</p>
-      <div className="mt-6"><TenantForm action={updateTenant.bind(null, id)} initial={initial} /></div>
+      <div className="mt-6">
+        <ErrorBanner message={error} />
+        <TenantForm action={updateTenant.bind(null, id)} initial={initial} />
+      </div>
     </div>
   );
 }

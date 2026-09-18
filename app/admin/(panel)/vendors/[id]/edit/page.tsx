@@ -2,11 +2,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { VendorForm, type VendorValues } from "@/components/admin/pm-forms";
+import { ErrorBanner } from "@/components/admin/form-kit";
 import { updateVendor } from "@/app/admin/pm-actions";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function EditVendorPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditVendorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { id } = await params;
+  const { error } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase.from("vendors").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
@@ -19,7 +27,10 @@ export default async function EditVendorPage({ params }: { params: Promise<{ id:
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">Edit vendor</h1>
       <p className="mt-1 text-sm text-slate">{initial.name}</p>
-      <div className="mt-6"><VendorForm action={updateVendor.bind(null, id)} initial={initial} /></div>
+      <div className="mt-6">
+        <ErrorBanner message={error} />
+        <VendorForm action={updateVendor.bind(null, id)} initial={initial} />
+      </div>
     </div>
   );
 }

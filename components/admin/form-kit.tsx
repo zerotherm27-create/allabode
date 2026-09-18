@@ -37,6 +37,18 @@ export function Group({ title, children }: { title: string; children: React.Reac
   );
 }
 
+export function ErrorBanner({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <div className="mb-6 rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-ink">
+      <div className="flex gap-2">
+        <Icon name="error" size={18} className="mt-0.5 shrink-0 text-error" />
+        <p>{decodeURIComponent(message)}</p>
+      </div>
+    </div>
+  );
+}
+
 export function SubmitButton({
   label = "Save",
   pendingLabel = "Saving…",

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { UnitForm, type UnitValues } from "@/components/admin/pm-forms";
+import { ErrorBanner } from "@/components/admin/form-kit";
 import { updateUnit, createChargeTemplate, updateChargeTemplate, deleteChargeTemplate, toggleChargeTemplate } from "@/app/admin/pm-actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,8 +13,15 @@ type Template = {
   template_type: string; applies_to: string; sort_order: number; is_active: boolean;
 };
 
-export default async function EditUnitPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditUnitPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { id } = await params;
+  const { error } = await searchParams;
   const supabase = await createClient();
   const [{ data: row }, { data: propData }, { data: templateData }] = await Promise.all([
     supabase.from("units").select("*").eq("id", id).maybeSingle(),
@@ -41,7 +49,10 @@ export default async function EditUnitPage({ params }: { params: Promise<{ id: s
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">Edit unit</h1>
       <p className="mt-1 text-sm text-slate">{initial.unit_label}</p>
-      <div className="mt-6"><UnitForm action={updateUnit.bind(null, id)} initial={initial} properties={properties} /></div>
+      <div className="mt-6">
+        <ErrorBanner message={error} />
+        <UnitForm action={updateUnit.bind(null, id)} initial={initial} properties={properties} />
+      </div>
 
       {/* ── Billing Templates ── */}
       <div className="mt-10 border-t border-line pt-8">

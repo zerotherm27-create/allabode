@@ -32,8 +32,13 @@ async function downloadAsDataUri(
   const { data: file } = await supabase.storage.from(AGREEMENTS_BUCKET).download(storagePath);
   if (!file) return { dataUri: null, buffer: null, mime: "image/jpeg" };
   const buffer = Buffer.from(await file.arrayBuffer());
+  // Prefer the content-type Supabase Storage actually stored (set from the
+  // browser's validated File.type at upload — see uploadToSignedUrl callers)
+  // over guessing from the filename extension, which can disagree with the
+  // real bytes and make @react-pdf/renderer fail to decode the image.
   const ext = storagePath.split(".").pop()?.toLowerCase();
-  const mime = ext === "png" ? "image/png" : ext === "pdf" ? "application/pdf" : "image/jpeg";
+  const extGuess = ext === "png" ? "image/png" : ext === "pdf" ? "application/pdf" : "image/jpeg";
+  const mime = file.type || extGuess;
   // @react-pdf can only embed raster images inline; a PDF-format ID is
   // attached as a document row but not rendered into the IDs page.
   const dataUri = mime === "application/pdf" ? null : `data:${mime};base64,${buffer.toString("base64")}`;

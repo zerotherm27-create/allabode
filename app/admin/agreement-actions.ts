@@ -277,8 +277,13 @@ async function completeAgreement(id: string) {
     const { data: idFile } = await supabase.storage.from(AGREEMENTS_BUCKET).download(a.owner_id_document_path);
     if (idFile) {
       ownerIdFileBuffer = Buffer.from(await idFile.arrayBuffer());
+      // Prefer the content-type Supabase Storage actually stored (set from the
+      // browser's validated File.type at upload) over guessing from the filename
+      // extension, which can disagree with the real bytes and make
+      // @react-pdf/renderer fail to decode the image.
       const ext = a.owner_id_document_path.split(".").pop()?.toLowerCase();
-      ownerIdMime = ext === "png" ? "image/png" : "image/jpeg";
+      const extGuess = ext === "png" ? "image/png" : "image/jpeg";
+      ownerIdMime = idFile.type || extGuess;
       ownerIdImageDataUri = `data:${ownerIdMime};base64,${ownerIdFileBuffer.toString("base64")}`;
     }
   }

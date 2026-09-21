@@ -17,6 +17,21 @@ const PHONE_MAX = 30;
 const MESSAGE_MAX = 4000;
 const LOCATION_MAX = 200;
 const SHORT_FREE_TEXT_MAX = 60; // floorArea, price — free text, not typed numeric columns
+const SOURCE_PATH_MAX = 300;
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Only a same-origin path is ever legitimate here (captured from window.location.pathname). */
+function capSourcePath(v: unknown): string | null {
+  const s = capLen(v, SOURCE_PATH_MAX);
+  if (s == null || !s.startsWith("/")) return null;
+  return s;
+}
+
+/** Valid-looking UUID → the value, else null (so a tampered/garbage id never reaches the FK insert). */
+function uuidOrNull(v: unknown): string | null {
+  return typeof v === "string" && UUID_RE.test(v) ? v : null;
+}
 
 function isEmail(v: unknown): v is string {
   return typeof v === "string" && v.length <= EMAIL_MAX && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -210,9 +225,10 @@ export function validateAndBuildRow(type: LeadType, body: Record<string, unknown
           email,
           phone,
           message,
+          listing_id: uuidOrNull(body.listingId),
           preferred_viewing_date: validDate(body.preferredViewingDate),
           preferred_contact_method: preferredContactMethod.value,
-          details: { listing: capLen(body.listing, 200) },
+          details: { listing: capLen(body.listing, 200), sourcePath: capSourcePath(body.sourcePath) },
         },
       };
     }
@@ -239,6 +255,7 @@ export function validateAndBuildRow(type: LeadType, body: Record<string, unknown
             helpWith: helpWith.value,
             propertyLocation,
             propertyType: propertyType.value,
+            sourcePath: capSourcePath(body.sourcePath),
           },
         },
       };
@@ -267,6 +284,7 @@ export function validateAndBuildRow(type: LeadType, body: Record<string, unknown
             bathrooms: nzInt(body.bathrooms, 0, 50),
             floorArea: capLen(body.floorArea, SHORT_FREE_TEXT_MAX),
             price: capLen(body.price, SHORT_FREE_TEXT_MAX),
+            sourcePath: capSourcePath(body.sourcePath),
           },
         },
       };

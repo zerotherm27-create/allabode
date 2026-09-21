@@ -67,6 +67,7 @@ function FormShell({
           [LEAD_HONEYPOT_FIELD]: data.get(LEAD_HONEYPOT_FIELD),
           elapsedMs: mountedAt.current == null ? undefined : Date.now() - mountedAt.current,
           turnstileToken: data.get("cf-turnstile-response") || undefined,
+          sourcePath: typeof window !== "undefined" ? window.location.pathname : undefined,
           ...payload,
         }),
       });
@@ -162,7 +163,7 @@ function reqEmail(data: FormData, errors: Record<string, string>) {
 }
 
 /* ---------------- Listing inquiry / viewing ---------------- */
-export function InquiryForm({ listingTitle }: { listingTitle?: string }) {
+export function InquiryForm({ listingTitle, listingId }: { listingTitle?: string; listingId?: string }) {
   return (
     <FormShell
       type="inquiry"
@@ -184,6 +185,7 @@ export function InquiryForm({ listingTitle }: { listingTitle?: string }) {
             preferredViewingDate: data.get("preferredViewingDate"),
             preferredContactMethod: data.get("preferredContactMethod"),
             listing: listingTitle,
+            listingId,
           },
         };
       }}

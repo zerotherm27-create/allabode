@@ -310,7 +310,7 @@ export default async function ListingDetailPage({ params }: Params) {
             </p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-6 sm:p-8">
-            <InquiryForm listingTitle={`${listing.title}, ${listing.location}`} />
+            <InquiryForm listingTitle={`${listing.title}, ${listing.location}`} listingId={listing.dbId} />
           </div>
         </Container>
       </section>

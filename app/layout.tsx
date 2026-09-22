@@ -5,6 +5,7 @@ import { PWARegister } from "@/components/pwa-register";
 import { InstallPrompt } from "@/components/install-prompt";
 import { CookieConsent } from "@/components/cookie-consent";
 import { Analytics } from "@/components/analytics";
+import { SiteAnalyticsTracker } from "@/components/site-analytics-tracker";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -89,6 +90,7 @@ export default function RootLayout({
         <InstallPrompt />
         <CookieConsent />
         <Analytics />
+        <SiteAnalyticsTracker />
       </body>
     </html>
   );

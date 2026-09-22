@@ -91,6 +91,30 @@ export default async function PrivacyPolicyPage() {
 
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
+                Website Analytics
+              </h2>
+              <p className="mt-3">
+                We collect anonymous, session-based usage data about visits to
+                our website — pages viewed, approximate location derived from
+                your IP address (without storing the IP address itself),
+                device type, operating system, browser, referring site, and
+                session duration. This is gathered through our own systems,
+                not a third-party analytics service, using a single session
+                cookie that expires after a period of inactivity and is only
+                set if you accept cookies in the banner shown on your first
+                visit (see our{" "}
+                <a href="/cookie-policy" className="text-navy-700 underline underline-offset-2 hover:text-gold-ink">
+                  Cookie Policy
+                </a>
+                ). This data is used only to understand and improve website
+                performance and content, and is not linked to your identity
+                unless you separately identify yourself, such as by
+                submitting an inquiry or booking form.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="font-display text-xl font-bold text-navy">
                 Data Protection
               </h2>
               <p className="mt-3">

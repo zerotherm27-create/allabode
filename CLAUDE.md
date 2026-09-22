@@ -101,6 +101,47 @@ per-task). Read both before any `/impeccable` design command.
 
 ## Build status (updated — resume here)
 
+**DONE — First-party site analytics (no third-party service):**
+- Migration `20260922100000_site_analytics.sql` — `site_sessions` (one row per
+  visit: landing path, page/session counts, device/OS/browser, country/region/
+  city derived from Vercel's `x-vercel-ip-*` headers — never the raw IP,
+  referrer, utm_source) + `site_pageviews` (one row per navigation). RLS
+  enabled with a staff-only `for all` policy on each (no anon policy at all —
+  see below); **user must run it in the SQL editor.**
+- `/api/site/visit` (mint/read the session, insert the pageview) +
+  `/api/site/heartbeat` (bump `last_seen_at`/`duration_seconds` while the tab
+  is visible) both write via `createServiceClient()`, so they need
+  `SUPABASE_SERVICE_ROLE_KEY` set — **already optional-documented in
+  `.env.example`, but load-bearing for this feature**; both no-op (204) when
+  it's absent, and are fully try/catch-wrapped so a tracking failure can never
+  break a real page load. Session id lives in an httpOnly `aa_session` cookie
+  with a 30-min sliding `maxAge`, minted client-request-side
+  (`crypto.randomUUID()`), not a DB default — self-managing session timeout,
+  no cleanup job.
+- `lib/analytics/{ua,geo,session-cookie,aggregate}.ts` — UA parsing + bot
+  detection via `ua-parser-js` v2's `ua-parser-js/bot-detection` submodule
+  (`isBot()` + a short crawler-name regex backstop); geo read directly off
+  Vercel's request headers (absent in local dev, by design); `aggregateAnalytics()`
+  is pure/dependency-free (totals, bounce rate, a day-bucketed timeseries in
+  hardcoded `Asia/Manila` time, and ranked breakdowns) — covered by
+  `tests/site-analytics-aggregate.test.mjs`.
+- `components/site-analytics-tracker.tsx` — mounted once in `app/layout.tsx`
+  next to `<Analytics />`; self-excludes `/admin`, and — like the existing
+  GA/Meta `<Analytics />` component — only fires once the visitor has accepted
+  cookies via `CookieConsent` (reacts live to a mid-session accept). Fires
+  `/api/site/visit` on mount + every route change; a 15s `sendBeacon`
+  heartbeat while the tab is visible, plus one more on `pagehide`.
+- `/admin/analytics` (nav: Marketing → Site Analytics) — `AnalyticsDashboard`
+  (client, `recharts` `AreaChart` for the sessions+pageviews timeseries,
+  `RankedBarList` bar-lists — not pie charts — for device/OS/browser/top
+  pages/top countries/**top regions**/traffic sources) fetches
+  `GET /api/admin/analytics?range=24h|7d|30d|90d`, which re-checks staff via
+  `is_staff()` itself (the table has no RLS path for the session client to
+  ride) before reading through the service-role client.
+- Privacy Policy + Cookie Policy updated to disclose the new first-party
+  analytics cookie (same accept/decline gate as GA/Meta, not "always on").
+- New deps: `recharts`, `ua-parser-js` (v2, for its `/bot-detection` submodule).
+
 **DONE — Addendum can amend an uploaded (off-system) contract:**
 - Migration `20260808100000_addendum_external_parent.sql` — `addenda.parent_id` is now
   nullable; adds `parent_source ('system'|'uploaded')`, `parent_document_path/_name`,

@@ -4,6 +4,7 @@ import { PageHero } from "@/components/sections";
 import { Reveal } from "@/components/motion";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "Cookie Policy | All Abode";
 const description =
@@ -23,6 +24,7 @@ export default async function CookiePolicyPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Cookie Policy" }])} />
       <PageHero
         eyebrow="Legal"
         title="Cookie Policy"

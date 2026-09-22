@@ -67,6 +67,12 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-icon.png?v=20260708", sizes: "180x180" }],
   },
+  // Google Search Console "HTML tag" ownership check — set
+  // GOOGLE_SITE_VERIFICATION in Vercel to the content value Search Console
+  // gives you (not the full <meta> tag). Renders nothing when unset.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export const viewport: Viewport = {

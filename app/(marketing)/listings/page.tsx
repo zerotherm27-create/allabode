@@ -5,6 +5,7 @@ import { PageHero } from "@/components/sections";
 import { ListingsBrowser } from "@/components/listings-browser";
 import { getListings } from "@/lib/listings";
 import { getSettings, s } from "@/lib/settings";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "Property Listings Philippines | All Abode";
 const description =
@@ -31,6 +32,7 @@ export default async function ListingsPage() {
   const [listings, settings] = await Promise.all([getListings(), getSettings()]);
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Listings" }])} />
       <PageHero
         eyebrow="Listings"
         title="Property Listings"

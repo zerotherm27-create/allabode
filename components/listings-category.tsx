@@ -2,6 +2,7 @@ import { Button } from "@/components/ui";
 import { Container } from "@/components/ui";
 import { PageHero } from "@/components/sections";
 import { ListingsBrowser } from "@/components/listings-browser";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 import type { Listing } from "@/lib/data";
 
 type Props = {
@@ -31,6 +32,13 @@ export function CategoryListingsPage({
 }: Props) {
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { label: "Home", href: "/" },
+          { label: "Listings", href: "/listings" },
+          { label: crumbLabel },
+        ])}
+      />
       <PageHero
         eyebrow={eyebrow}
         title={title}

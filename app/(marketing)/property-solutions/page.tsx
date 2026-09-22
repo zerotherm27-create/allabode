@@ -6,6 +6,7 @@ import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { services } from "@/lib/data";
 import { getSettings, s } from "@/lib/settings";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "Real Estate Services by All Abode";
 const description =
@@ -45,6 +46,7 @@ export default async function PropertySolutionsPage() {
   const settings = await getSettings();
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Services" }])} />
       <PageHero
         eyebrow="Services"
         title="Real Estate Services"

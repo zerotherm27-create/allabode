@@ -5,6 +5,7 @@ import { PageHero, SectionHeading } from "@/components/sections";
 import { Reveal } from "@/components/motion";
 import { ListPropertyForm } from "@/components/forms/lead-forms";
 import { getSettings, s } from "@/lib/settings";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "List Your Property";
 const description =
@@ -27,12 +28,14 @@ export default async function ListYourPropertyPage() {
   const settings = await getSettings();
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "List Your Property" }])} />
       <PageHero
         eyebrow="List Your Property"
         title="Put your property in licensed hands."
         subtitle="Whether you want to lease, sell, have it managed, or valued, submit your property below and our team will take it from there."
         image={s(settings, "page_listyour_image") || undefined}
         imagePosition={s(settings, "page_listyour_image_position")}
+        crumbs={[{ label: "Home", href: "/" }, { label: "List Your Property" }]}
       />
 
       {/* How it works */}

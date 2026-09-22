@@ -4,6 +4,7 @@ import { PageHero } from "@/components/sections";
 import { Reveal } from "@/components/motion";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "Terms of Service | All Abode";
 const description =
@@ -23,6 +24,7 @@ export default async function TermsOfServicePage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Terms of Service" }])} />
       <PageHero
         eyebrow="Legal"
         title="Terms of Service"

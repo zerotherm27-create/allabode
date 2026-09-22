@@ -5,6 +5,7 @@ import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
 import { trustPoints } from "@/lib/data";
 import { getSettings, s } from "@/lib/settings";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "About All Abode Property Solutions";
 const description =
@@ -32,6 +33,7 @@ export default async function AboutPage() {
   const settings = await getSettings();
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "About" }])} />
       <PageHero
         eyebrow="About All Abode"
         title="About All Abode"

@@ -5,6 +5,7 @@ import { PageHero, SectionHeading } from "@/components/sections";
 import { Reveal } from "@/components/motion";
 import { ContactForm } from "@/components/forms/lead-forms";
 import { getSettings, s } from "@/lib/settings";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "Contact All Abode Property Solutions";
 const description =
@@ -40,6 +41,7 @@ export default async function ContactPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Contact" }])} />
       <PageHero
         eyebrow="Contact"
         title="Contact All Abode"

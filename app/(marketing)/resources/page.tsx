@@ -5,6 +5,7 @@ import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { Reveal } from "@/components/motion";
 import { getSettings, s } from "@/lib/settings";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/json-ld";
 
 const title = "Property Guides Philippines | All Abode Resources";
 const description =
@@ -79,12 +80,14 @@ export default async function ResourcesPage() {
   const settings = await getSettings();
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ label: "Home", href: "/" }, { label: "Resources" }])} />
       <PageHero
         eyebrow="Resources"
         title="Property guides and practical real estate advice."
         subtitle="Explore guides from All Abode to help you understand leasing, brokerage, property management, appraisal, and property ownership decisions."
         image={s(settings, "page_resources_image") || undefined}
         imagePosition={s(settings, "page_resources_image_position")}
+        crumbs={[{ label: "Home", href: "/" }, { label: "Resources" }]}
       />
 
       {/* Categories */}

@@ -27,7 +27,7 @@ export function CookieConsent() {
         <Icon name="info" size={22} className="hidden shrink-0 text-navy sm:block" />
         <p className="flex-1 text-sm text-slate">
           We use essential cookies for account sign-in, and — only if you accept — analytics cookies
-          (Google Analytics, Meta Pixel) to understand site usage. See our{" "}
+          (Google Analytics, Meta Pixel, and our own first-party site analytics) to understand site usage. See our{" "}
           <a href="/cookie-policy" className="text-navy-700 underline underline-offset-2 hover:text-gold-ink">
             Cookie Policy
           </a>.

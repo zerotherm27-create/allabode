@@ -81,6 +81,18 @@ export default async function CookiePolicyPage() {
                   only load if you accept cookies in the banner shown on your
                   first visit; if you decline, they are never set.
                 </li>
+                <li>
+                  <span className="font-medium text-navy">
+                    First-party site analytics cookie
+                  </span>{" "}
+                  — a single cookie we set ourselves (not shared with Google,
+                  Meta, or any other third party) to anonymously group your
+                  pageviews into one session — pages viewed, approximate
+                  location, device/browser, and how long you stayed — so we
+                  can see how the site is performing. It expires automatically
+                  after 30 minutes of inactivity. Like the cookies above, it
+                  only loads if you accept cookies in the banner.
+                </li>
               </ul>
             </div>
 
@@ -92,7 +104,8 @@ export default async function CookiePolicyPage() {
                 On your first visit, a banner lets you accept or decline
                 cookies; your choice is remembered on your device so the
                 banner won&apos;t show again. Declining blocks Google
-                Analytics and Meta Pixel from loading — it does not affect
+                Analytics, Meta Pixel, and our own site analytics from loading
+                — it does not affect
                 your ability to browse listings, submit inquiries, or sign in
                 to a portal, since the sign-in cookie is essential and always
                 on. Most browsers also let you block or delete cookies

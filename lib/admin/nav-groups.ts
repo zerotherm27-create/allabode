@@ -54,6 +54,7 @@ export const navGroups: AdminNavGroup[] = [
       { label: "Inquiries",  icon: "forum",         href: "/admin/inquiries"  },
       { label: "Appraisals", icon: "analytics",     href: "/admin/appraisals" },
       { label: "PM Leads",   icon: "corporate_fare",href: "/admin/leads"      },
+      { label: "Site Analytics", icon: "monitoring", href: "/admin/analytics" },
     ],
   },
   {

@@ -6,6 +6,14 @@ type IRunReportResponse = protos.google.analytics.data.v1beta.IRunReportResponse
 
 const RANGE_DAYS: Record<string, number> = { "24h": 1, "7d": 7, "30d": 30, "90d": 90 };
 const TOP_N = 8;
+// GA4's batchRunReports caps a single call at 5 requests.
+const BATCH_LIMIT = 5;
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+}
 
 function startDateFor(days: number): string {
   return days <= 1 ? "today" : `${days - 1}daysAgo`;
@@ -32,86 +40,92 @@ export async function shapeGoogleAnalyticsSummary(range: string): Promise<Analyt
   const dateRanges = [{ startDate: startDateFor(days), endDate: "today" }];
 
   const client = getGaClient();
-  const [batch] = await client.batchRunReports({
-    property: `properties/${getPropertyId()}`,
-    requests: [
-      // 0: totals
-      {
-        dateRanges,
-        metrics: [
-          { name: "sessions" },
-          { name: "screenPageViews" },
-          { name: "bounceRate" },
-          { name: "averageSessionDuration" },
-        ],
-      },
-      // 1: timeseries
-      {
-        dateRanges,
-        dimensions: [{ name: "date" }],
-        metrics: [{ name: "sessions" }, { name: "screenPageViews" }],
-        orderBys: [{ dimension: { dimensionName: "date" } }],
-      },
-      // 2: device type
-      {
-        dateRanges,
-        dimensions: [{ name: "deviceCategory" }],
-        metrics: [{ name: "sessions" }],
-        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: TOP_N,
-      },
-      // 3: operating system
-      {
-        dateRanges,
-        dimensions: [{ name: "operatingSystem" }],
-        metrics: [{ name: "sessions" }],
-        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: TOP_N,
-      },
-      // 4: browser
-      {
-        dateRanges,
-        dimensions: [{ name: "browser" }],
-        metrics: [{ name: "sessions" }],
-        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: TOP_N,
-      },
-      // 5: top pages
-      {
-        dateRanges,
-        dimensions: [{ name: "pagePath" }],
-        metrics: [{ name: "screenPageViews" }],
-        orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
-        limit: TOP_N,
-      },
-      // 6: top countries
-      {
-        dateRanges,
-        dimensions: [{ name: "country" }],
-        metrics: [{ name: "sessions" }],
-        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: TOP_N,
-      },
-      // 7: top regions (country + region)
-      {
-        dateRanges,
-        dimensions: [{ name: "country" }, { name: "region" }],
-        metrics: [{ name: "sessions" }],
-        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: TOP_N,
-      },
-      // 8: traffic sources
-      {
-        dateRanges,
-        dimensions: [{ name: "sessionDefaultChannelGroup" }],
-        metrics: [{ name: "sessions" }],
-        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: TOP_N,
-      },
-    ],
-  });
+  const propertyName = `properties/${getPropertyId()}`;
 
-  const reports = batch.reports ?? [];
+  // Indices below (0-8) are relied on when reading the flattened `reports` result.
+  const requests: protos.google.analytics.data.v1beta.IRunReportRequest[] = [
+    // 0: totals
+    {
+      dateRanges,
+      metrics: [
+        { name: "sessions" },
+        { name: "screenPageViews" },
+        { name: "bounceRate" },
+        { name: "averageSessionDuration" },
+      ],
+    },
+    // 1: timeseries
+    {
+      dateRanges,
+      dimensions: [{ name: "date" }],
+      metrics: [{ name: "sessions" }, { name: "screenPageViews" }],
+      orderBys: [{ dimension: { dimensionName: "date" } }],
+    },
+    // 2: device type
+    {
+      dateRanges,
+      dimensions: [{ name: "deviceCategory" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: TOP_N,
+    },
+    // 3: operating system
+    {
+      dateRanges,
+      dimensions: [{ name: "operatingSystem" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: TOP_N,
+    },
+    // 4: browser
+    {
+      dateRanges,
+      dimensions: [{ name: "browser" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: TOP_N,
+    },
+    // 5: top pages
+    {
+      dateRanges,
+      dimensions: [{ name: "pagePath" }],
+      metrics: [{ name: "screenPageViews" }],
+      orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+      limit: TOP_N,
+    },
+    // 6: top countries
+    {
+      dateRanges,
+      dimensions: [{ name: "country" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: TOP_N,
+    },
+    // 7: top regions (country + region)
+    {
+      dateRanges,
+      dimensions: [{ name: "country" }, { name: "region" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: TOP_N,
+    },
+    // 8: traffic sources
+    {
+      dateRanges,
+      dimensions: [{ name: "sessionDefaultChannelGroup" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: TOP_N,
+    },
+  ];
+
+  const batches = await Promise.all(
+    chunk(requests, BATCH_LIMIT).map(async (requestsChunk) => {
+      const [batch] = await client.batchRunReports({ property: propertyName, requests: requestsChunk });
+      return batch.reports ?? [];
+    })
+  );
+  const reports = batches.flat();
   const totalsRow = reports[0]?.rows?.[0];
   const sessions = totalsRow ? metric(totalsRow, 0) : 0;
   const pageviews = totalsRow ? metric(totalsRow, 1) : 0;

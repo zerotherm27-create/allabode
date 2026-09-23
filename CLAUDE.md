@@ -101,6 +101,31 @@ per-task). Read both before any `/impeccable` design command.
 
 ## Build status (updated — resume here)
 
+**DONE — Live Google Analytics (GA4) panel in `/admin/analytics`:**
+- `/admin/analytics` now has a source toggle — "Site Analytics" (the
+  existing first-party Supabase-backed data) vs "Google Analytics" (live
+  GA4 numbers) — sharing the same `AnalyticsSummary` shape so
+  `AnalyticsTimeseriesChart`/`RankedBarList` render either source unchanged.
+- `lib/google-analytics/client.ts` — `isGoogleAnalyticsConfigured()` +
+  `getGaClient()` (`@google-analytics/data`'s `BetaAnalyticsDataClient`),
+  parsing a service-account JSON blob the same way `lib/gdrive.ts` does.
+- `lib/google-analytics/shape.ts` — one `batchRunReports()` call per range
+  (totals, day-bucketed timeseries, device/OS/browser/top pages/top
+  countries/top regions/traffic-source breakdowns), reshaped into
+  `AnalyticsSummary`.
+- `app/api/admin/google-analytics/route.ts` — same staff-auth gate as
+  `/api/admin/analytics`; `runtime = "nodejs"` (GA client isn't
+  edge-compatible); 503 when unconfigured, so the admin panel shows a
+  "not configured" message rather than crashing.
+- New dep `@google-analytics/data`.
+- **Manual setup to activate:** create a GCP service account (dedicated to
+  GA4, separate from the Drive one), enable the "Google Analytics Data
+  API", share the GA4 property with the service account's email as a
+  Viewer, then set `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_KEY` (full JSON key,
+  stringified) and `GA4_PROPERTY_ID` in `.env.local` + Vercel. For the
+  timeseries day-buckets to line up with the first-party panel's, set the
+  GA4 property's reporting timezone to `Asia/Manila` in GA4 Admin.
+
 **DONE — First-party site analytics (no third-party service):**
 - Migration `20260922100000_site_analytics.sql` — `site_sessions` (one row per
   visit: landing path, page/session counts, device/OS/browser, country/region/

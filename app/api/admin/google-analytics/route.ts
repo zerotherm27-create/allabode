@@ -23,7 +23,8 @@ export async function GET(request: Request) {
   try {
     const summary = await shapeGoogleAnalyticsSummary(range);
     return NextResponse.json(summary);
-  } catch {
+  } catch (err) {
+    console.error("GA4 query failed:", err);
     return NextResponse.json({ error: "Query failed" }, { status: 500 });
   }
 }

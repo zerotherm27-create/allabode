@@ -204,6 +204,11 @@ export function TenancyWizard({ token, initial }: { token: string; initial: Tena
       setError("Please confirm you have read and agree to the Agreement.");
       return;
     }
+    const missingNames = missingAdditionalOccupantIdNames(occupants, occupantIdUploads);
+    if (missingNames.length > 0) {
+      setError(`Please upload valid IDs for: ${missingNames.join(", ")}.`);
+      return;
+    }
     setSaving(true);
     try {
       const dataUrl = padRef.current.getDataUrl();

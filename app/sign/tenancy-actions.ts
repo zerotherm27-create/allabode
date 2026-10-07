@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeTenancyAgreement } from "@/lib/tenancy/complete";
+import { missingAdditionalOccupantIdNames, normalizeOccupantIdUploads } from "@/lib/signing/form-helpers";
 import type {
   TenancyLandlordDetails, TenancyTenantDetails, TenancyPropertyDetails,
   PaymentScheduleRow, InventoryRow, TenancyBankDetails,
@@ -167,6 +168,14 @@ export type SubmitSignatureInput = {
 
 export async function submitTenantSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
   const supabase = await createClient();
+  const { data: agreement, error: lookupError } = await supabase.rpc("get_tenancy_agreement_by_token", { p_token: token });
+  if (lookupError || !agreement) return { error: "This link is no longer valid." };
+  const record = agreement as TenancyAgreementRecord;
+  const missing = missingAdditionalOccupantIdNames(
+    record.occupants ?? [],
+    normalizeOccupantIdUploads((record.tenant_details as { additionalOccupantIds?: unknown } | null)?.additionalOccupantIds),
+  );
+  if (missing.length > 0) return { error: `Please upload valid IDs for: ${missing.join(", ")}.` };
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_tenant_signature", {
     p_token: token,

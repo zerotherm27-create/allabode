@@ -62,3 +62,19 @@ test("tenancy occupant clause renders one blank line when no occupants are named
 
   assert.deepEqual(lines.map((line) => line.text), [BLANK]);
 });
+
+test("additional occupants must each have an uploaded ID", async () => {
+  const file = path.join(__dirname, "..", "lib", "signing", "form-helpers.ts");
+  const compiled = ts.transpileModule(fs.readFileSync(file, "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const { missingAdditionalOccupantIdNames } = await import(
+    `data:text/javascript;base64,${Buffer.from(compiled).toString("base64")}`
+  );
+  const up = (occupantIndex) => ({ occupantIndex, occupantName: "x", path: "p" });
+
+  assert.deepEqual(missingAdditionalOccupantIdNames(["Tenant", "Partner"], []), ["Partner"]);
+  assert.deepEqual(missingAdditionalOccupantIdNames(["Tenant", "", "Child"], [up(1)]), ["Child"]);
+  assert.deepEqual(missingAdditionalOccupantIdNames(["Tenant", "", "Child"], [up(2)]), []);
+  assert.deepEqual(missingAdditionalOccupantIdNames(["Tenant"], []), []);
+});

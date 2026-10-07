@@ -424,9 +424,10 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
           {[
             [landlordName, input.landlordIdTypeLabel ?? "", input.landlordIdNumber ?? ""],
             [tenantName, input.tenantIdTypeLabel, input.tenantIdNumber],
-            ["", "", ""],
-            ["", "", ""],
-            ["", "", ""],
+            // Every additional occupant named in the form appears here (ID type/number
+            // left blank — only the ID image is collected, for the notary to complete).
+            ...(input.terms.occupants ?? []).slice(1).map((o) => o.trim()).filter(Boolean).map((o) => [o, "", ""]),
+            ...Array.from({ length: Math.max(0, 3 - Math.max(0, (input.terms.occupants ?? []).slice(1).filter((o) => o.trim()).length)) }, () => ["", "", ""]),
           ].map(([name, type, num], i, arr) => (
             <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
               <Text style={[styles.tdCell, { flex: 1.4 }]}>{name || " "}</Text>

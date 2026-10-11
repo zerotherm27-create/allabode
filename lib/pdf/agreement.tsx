@@ -648,23 +648,19 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Field label="Date Issued:" value={input.managerIdIssuedDate} />
         {input.managerIdImageDataUri ? (
           // eslint-disable-next-line jsx-a11y/alt-text
-          <Image src={input.managerIdImageDataUri} style={{ width: "100%", marginTop: 12, objectFit: "contain" }} />
+          <Image src={input.managerIdImageDataUri} style={{ width: 215, maxHeight: 135, marginTop: 8, objectFit: "contain", alignSelf: "flex-start" }} />
         ) : (
           <Text style={[styles.p, { marginTop: 12, color: SLATE }]}>ID image unavailable.</Text>
         )}
-        <Footer />
-      </Page>
 
-      {/* ── Attachment: Owner Government ID ── */}
-      <Page size="LETTER" style={styles.page}>
-        <PageHeader />
-        <Text style={styles.annexTitle}>ATTACHMENT &#x2014; OWNER GOVERNMENT ID</Text>
+        {/* Owner attachment follows on the same page — each ID is small enough to share it. */}
+        <Text style={[styles.annexTitle, { marginTop: 18 }]} minPresenceAhead={120}>ATTACHMENT &#x2014; OWNER GOVERNMENT ID</Text>
         <Field label="ID Type:" value={input.ownerIdTypeLabel} />
         <Field label="ID Number:" value={input.ownerIdNumber} />
         <Field label="Date Issued:" value={input.ownerIdIssuedDate} />
         {input.ownerIdImageDataUri ? (
           // eslint-disable-next-line jsx-a11y/alt-text
-          <Image src={input.ownerIdImageDataUri} style={{ width: "100%", marginTop: 12, objectFit: "contain" }} />
+          <Image src={input.ownerIdImageDataUri} style={{ width: 215, maxHeight: 135, marginTop: 8, objectFit: "contain", alignSelf: "flex-start" }} />
         ) : (
           <Text style={[styles.p, { marginTop: 12, color: SLATE }]}>ID image unavailable.</Text>
         )}

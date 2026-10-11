@@ -1,0 +1,35 @@
+import { Image, Text, View } from "@react-pdf/renderer";
+
+export type IdCell = {
+  label: string;
+  /** e.g. "Passport No. P1302864B · Issued 2019-04-01" */
+  meta?: string;
+  imageDataUri: string | null;
+  /** Shown instead of the image when there is none. */
+  note?: string;
+};
+
+/**
+ * "COPY OF Valid IDs" body: IDs laid out two per row so a typical contract (landlord, tenant and a few
+ * occupants) fits on one page instead of one ID per half-page. Each cell is unbreakable.
+ */
+export function IdGrid({ cells }: { cells: IdCell[] }) {
+  return (
+    <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 8 }}>
+      {cells.map((c, i) => (
+        <View key={i} style={{ width: "50%", paddingRight: 12, marginBottom: 14 }} wrap={false}>
+          <Text style={{ fontFamily: "Helvetica-Bold", borderBottomWidth: 1, borderBottomColor: "#16202c", paddingBottom: 2, marginBottom: 4 }}>
+            {c.label}
+          </Text>
+          {c.meta ? <Text style={{ fontSize: 8, color: "#5b6573" }}>{c.meta}</Text> : null}
+          {c.imageDataUri ? (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <Image src={c.imageDataUri} style={{ width: 210, maxHeight: 130, objectFit: "contain", marginTop: 4, alignSelf: "flex-start" }} />
+          ) : (
+            <Text style={{ fontSize: 8, color: "#5b6573", marginTop: 4 }}>{c.note ?? "ID image unavailable."}</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}

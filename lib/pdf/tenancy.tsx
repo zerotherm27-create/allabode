@@ -12,6 +12,7 @@ import {
   type PaymentScheduleRow, type InventoryRow, type TenancyBankDetails,
 } from "@/lib/pm/tenancy-clauses";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
+import { IdGrid } from "@/lib/pdf/id-grid";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -380,49 +381,22 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         <Footer />
         <Text style={styles.annexTitle}>COPY OF Valid IDs</Text>
 
-        <Text style={styles.idSectionLabel}>LANDLORD</Text>
-        {input.landlordIdImageDataUri ? (
-          <>
-            <Text style={styles.meta}>
-              {input.landlordIdTypeLabel} No. {input.landlordIdNumber}
-              {input.landlordIdIssuedDate ? ` · Issued ${input.landlordIdIssuedDate}` : ""}
-            </Text>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image src={input.landlordIdImageDataUri} style={{ width: 320, maxHeight: 220, objectFit: "contain", marginTop: 6, alignSelf: "flex-start" }} />
-          </>
-        ) : (
-          <Text style={styles.meta}>
-            {input.landlordSignedVia === "countersign"
-              ? "Signed by an authorized All Abode signatory — landlord ID on file."
-              : "ID image unavailable."}
-          </Text>
-        )}
-
-        <Text style={[styles.idSectionLabel, { marginTop: 24 }]}>TENANTS</Text>
-        {input.tenantIdImageDataUri ? (
-          <>
-            <Text style={styles.meta}>
-              {input.tenantIdTypeLabel} No. {input.tenantIdNumber}
-              {input.tenantIdIssuedDate ? ` · Issued ${input.tenantIdIssuedDate}` : ""}
-            </Text>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image src={input.tenantIdImageDataUri} style={{ width: 320, maxHeight: 220, objectFit: "contain", marginTop: 6, alignSelf: "flex-start" }} />
-          </>
-        ) : (
-          <Text style={styles.meta}>ID image unavailable.</Text>
-        )}
-
-        {input.additionalOccupantIds.map((occupant, i) => (
-          <View key={i} style={{ marginTop: 16 }} wrap={false}>
-            <Text style={styles.meta}>{occupant.name}</Text>
-            {occupant.idImageDataUri ? (
-              // eslint-disable-next-line jsx-a11y/alt-text
-              <Image src={occupant.idImageDataUri} style={{ width: 320, maxHeight: 220, objectFit: "contain", marginTop: 6, alignSelf: "flex-start" }} />
-            ) : (
-              <Text style={styles.meta}>ID image unavailable.</Text>
-            )}
-          </View>
-        ))}
+        <IdGrid
+          cells={[
+            {
+              label: "LANDLORD",
+              meta: input.landlordIdImageDataUri ? `${input.landlordIdTypeLabel} No. ${input.landlordIdNumber}${input.landlordIdIssuedDate ? ` · Issued ${input.landlordIdIssuedDate}` : ""}` : undefined,
+              imageDataUri: input.landlordIdImageDataUri,
+              note: input.landlordSignedVia === "countersign" ? "Signed by an authorized All Abode signatory — landlord ID on file." : undefined,
+            },
+            {
+              label: "TENANT",
+              meta: input.tenantIdImageDataUri ? `${input.tenantIdTypeLabel} No. ${input.tenantIdNumber}${input.tenantIdIssuedDate ? ` · Issued ${input.tenantIdIssuedDate}` : ""}` : undefined,
+              imageDataUri: input.tenantIdImageDataUri,
+            },
+            ...input.additionalOccupantIds.map((o) => ({ label: o.name, imageDataUri: o.idImageDataUri })),
+          ]}
+        />
       </Page>
 
       {/* ── Acknowledgement (notarial portions stay blank — no notary in this flow) ── */}

@@ -7,7 +7,7 @@ import { deleteOwner } from "@/app/admin/pm-actions";
 type Row = { id: string; name: string; email: string; phone: string | null; auth_user_id: string | null };
 
 const columns: Column<Row>[] = [
-  { header: "Name", primary: true, cell: (r) => <Link href={`/admin/owners/${r.id}/edit`} className="font-medium text-navy hover:text-navy-700">{r.name}</Link> },
+  { header: "Name", primary: true, cell: (r) => <Link href={`/admin/owners/${r.id}`} className="font-medium text-navy hover:text-navy-700">{r.name}</Link> },
   { header: "Email", cell: (r) => <span className="text-slate">{r.email}</span> },
   { header: "Phone", cell: (r) => <span className="text-slate">{r.phone ?? "—"}</span> },
   { header: "Portal", cell: (r) => r.auth_user_id

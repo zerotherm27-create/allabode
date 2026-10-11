@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import fs from "fs";
 import path from "path";
@@ -58,7 +59,9 @@ const styles = StyleSheet.create({
   partyRow: { flexDirection: "row", marginBottom: 3, paddingLeft: 40 },
   partyLabel: { width: 110, fontFamily: "Helvetica-Bold" },
   partyValue: { flex: 1, borderBottomWidth: 0.75, borderBottomColor: INK, paddingBottom: 1 },
-  table: { borderWidth: 0.75, borderColor: INK, marginTop: 6, marginBottom: 10 },
+  // No vertical margin on a table: react-pdf mis-splits a bordered View that has margins, shoving the
+  // whole table to the next page (leaving a near-empty page). Spacing comes from <Gap /> siblings instead.
+  table: { borderWidth: 0.75, borderColor: INK },
   trow: { flexDirection: "row", borderBottomWidth: 0.75, borderBottomColor: INK },
   trowLast: { flexDirection: "row" },
   thCell: { padding: 4, fontFamily: "Helvetica-Bold", borderRightWidth: 0.75, borderRightColor: INK },
@@ -66,11 +69,16 @@ const styles = StyleSheet.create({
   tdCellLast: { padding: 4 },
   sigLabelCol: { width: 150 },
   sigLine: { width: 200, borderBottomWidth: 0.75, borderBottomColor: INK },
-  sigImg: { width: 160, height: 46, objectFit: "contain" },
+  sigImg: { width: 150, height: 40, objectFit: "contain" },
   annexTitle: { fontSize: 13, fontFamily: "Helvetica-Bold", color: NAVY, textAlign: "center", marginBottom: 6 },
   idSectionLabel: { fontFamily: "Helvetica-Bold", borderBottomWidth: 1.5, borderBottomColor: INK, paddingBottom: 2, marginBottom: 8, marginTop: 4 },
   meta: { fontSize: 8, color: SLATE },
 });
+
+/** Fixed-height spacer — used instead of margins around tables (see styles.table). */
+function Gap({ h }: { h: number }) {
+  return <View style={{ height: h }} />;
+}
 
 function PageHeader() {
   const logo = getLogo();
@@ -155,11 +163,13 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
 function Clauses({ clauses }: { clauses: TenancyClause[] }) {
   return (
     <>
+      {/* Flat (no wrapper View): react-pdf only honours minPresenceAhead against siblings at the
+          same level, so the heading must sit beside its paragraphs to stay with them. */}
       {clauses.map((c, i) => (
-        <View key={`${c.no}-${i}`}>
-          {c.title ? <Text style={styles.clauseTitle}>{c.no}. {c.title}</Text> : null}
+        <Fragment key={`${c.no}-${i}`}>
+          {c.title ? <Text style={styles.clauseTitle} minPresenceAhead={60}>{c.no}. {c.title}</Text> : null}
           {c.paras.map((p, j) => <Paragraph key={j} para={p} />)}
-        </View>
+        </Fragment>
       ))}
     </>
   );
@@ -276,6 +286,7 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         <Clauses clauses={buildTenancyClausesBeforeTables(terms)} />
 
         {/* Bank details table (clause 3.3 refers to it) */}
+        <Gap h={6} />
         <View style={styles.table}>
           {([
             ["Name", input.bankDetails.name],
@@ -289,8 +300,10 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         {/* Payment schedule table */}
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { width: 110 }]}>Due Date</Text>
@@ -305,51 +318,58 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         <Clauses clauses={buildTenancyClausesAfterTables(terms)} />
 
-        {TENANCY_INTERPRETATION.map((t, i) => (
+        {TENANCY_INTERPRETATION.slice(0, -1).map((t, i) => (
           <Text key={i} style={styles.p}>{t}</Text>
         ))}
 
-        <Text style={[styles.p, { marginTop: 12 }]}>
-          IN WITNESS WHEREOF the parties have hereunto set their hands as shown below.
-        </Text>
+        {/* Closing paragraph + execution blocks travel together, so the signatures can
+            never land alone on an otherwise empty page. */}
+        <View wrap={false}>
+          <Text style={styles.p}>{TENANCY_INTERPRETATION[TENANCY_INTERPRETATION.length - 1]}</Text>
 
-        <View style={{ flexDirection: "row", marginTop: 12 }} wrap={false}>
-          <Text style={styles.sigLabelCol}>SIGNED by the Landlord</Text>
-          <View>
-            {input.landlordSignatureDataUri
-              // eslint-disable-next-line jsx-a11y/alt-text
-              ? <Image src={input.landlordSignatureDataUri} style={styles.sigImg} />
-              : <View style={[styles.sigLine, { height: 46 }]} />}
-            <View style={styles.sigLine} />
-            <Text>{landlordName || " "}</Text>
-            {input.landlordSignedAtManila ? <Text style={styles.meta}>Signed: {input.landlordSignedAtManila}</Text> : null}
+          <Text style={[styles.p, { marginTop: 8 }]}>
+            IN WITNESS WHEREOF the parties have hereunto set their hands as shown below.
+          </Text>
+
+          <View style={{ flexDirection: "row", marginTop: 8 }}>
+            <Text style={styles.sigLabelCol}>SIGNED by the Landlord</Text>
+            <View>
+              {input.landlordSignatureDataUri
+                // eslint-disable-next-line jsx-a11y/alt-text
+                ? <Image src={input.landlordSignatureDataUri} style={styles.sigImg} />
+                : <View style={[styles.sigLine, { height: 40 }]} />}
+              <View style={styles.sigLine} />
+              <Text>{landlordName || " "}</Text>
+              {input.landlordSignedAtManila ? <Text style={styles.meta}>Signed: {input.landlordSignedAtManila}</Text> : null}
+            </View>
           </View>
-        </View>
 
-        <View style={{ flexDirection: "row", marginTop: 14 }} wrap={false}>
-          <Text style={styles.sigLabelCol}>In the presence of:</Text>
-          <View>
-            {input.witnessSignatureDataUri
-              // eslint-disable-next-line jsx-a11y/alt-text
-              ? <Image src={input.witnessSignatureDataUri} style={[styles.sigImg, { width: 130, height: 24 }]} />
-              : <View style={[styles.sigLine, { height: 24 }]} />}
-            {input.witnessName ? <Text>{input.witnessName}</Text> : null}
+          <View style={{ flexDirection: "row", marginTop: 8 }}>
+            <Text style={styles.sigLabelCol}>In the presence of:</Text>
+            <View>
+              {input.witnessSignatureDataUri
+                // eslint-disable-next-line jsx-a11y/alt-text
+                ? <Image src={input.witnessSignatureDataUri} style={[styles.sigImg, { width: 130, height: 24 }]} />
+                : <View style={[styles.sigLine, { height: 24 }]} />}
+              {input.witnessName ? <Text>{input.witnessName}</Text> : null}
+            </View>
           </View>
-        </View>
 
-        <View style={{ flexDirection: "row", marginTop: 14 }} wrap={false}>
-          <Text style={styles.sigLabelCol}>SIGNED by the Tenant</Text>
-          <View>
-            {input.tenantSignatureDataUri
-              // eslint-disable-next-line jsx-a11y/alt-text
-              ? <Image src={input.tenantSignatureDataUri} style={styles.sigImg} />
-              : <View style={[styles.sigLine, { height: 46 }]} />}
-            <View style={styles.sigLine} />
-            <Text>{tenantName || " "}</Text>
-            {input.tenantSignedAtManila ? <Text style={styles.meta}>Signed: {input.tenantSignedAtManila}</Text> : null}
+          <View style={{ flexDirection: "row", marginTop: 8 }}>
+            <Text style={styles.sigLabelCol}>SIGNED by the Tenant</Text>
+            <View>
+              {input.tenantSignatureDataUri
+                // eslint-disable-next-line jsx-a11y/alt-text
+                ? <Image src={input.tenantSignatureDataUri} style={styles.sigImg} />
+                : <View style={[styles.sigLine, { height: 40 }]} />}
+              <View style={styles.sigLine} />
+              <Text>{tenantName || " "}</Text>
+              {input.tenantSignedAtManila ? <Text style={styles.meta}>Signed: {input.tenantSignedAtManila}</Text> : null}
+            </View>
           </View>
         </View>
       </Page>
@@ -415,6 +435,7 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         <Text>______________________) S.S</Text>
         <Text style={[styles.p, { marginTop: 10 }]}>BEFORE ME, personally appeared:</Text>
 
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { flex: 1.4, textAlign: "center" }]}>Name</Text>
@@ -436,6 +457,7 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         <Text style={styles.p}>
           Known to me and to me known to be the same persons who executed the foregoing instrument and acknowledged
@@ -486,6 +508,7 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
           {terms.propertyDetails?.buildingName || "Building"} - {terms.propertyDetails?.floorUnit || "Unit No."}
         </Text>
 
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { width: 58, textAlign: "center" }]}>Quantity</Text>
@@ -494,7 +517,7 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             <Text style={[styles.tdCellLast, styles.bold, { flex: 1.5, textAlign: "center" }]}>Remarks</Text>
           </View>
           {inventoryRows.map((r, i) => (
-            <View key={i} style={i === inventoryRows.length - 1 ? styles.trowLast : styles.trow}>
+            <View key={i} style={i === inventoryRows.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
               <Text style={[styles.tdCell, { width: 58, textAlign: "center" }]}>{r.quantity || " "}</Text>
               <Text style={[styles.tdCell, { flex: 1.2 }]}>{r.particulars || " "}</Text>
               <Text style={[styles.tdCell, { flex: 0.9 }]}>{r.brand || " "}</Text>
@@ -502,8 +525,9 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
-        <Text style={[styles.bold, { marginTop: 6, marginBottom: 4 }]}>Reminders:</Text>
+        <Text style={[styles.bold, { marginBottom: 4 }]} minPresenceAhead={60}>Reminders:</Text>
         {TENANCY_REMINDERS.map((t, i) => (
           <View key={i} style={[styles.numbered, { paddingLeft: 6 }]}>
             <Text style={styles.numMarker}>{i + 1})</Text>

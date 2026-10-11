@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import fs from "fs";
 import path from "path";
@@ -56,7 +57,9 @@ const styles = StyleSheet.create({
   partyRow: { flexDirection: "row", marginBottom: 3, paddingLeft: 40 },
   partyLabel: { width: 110, fontFamily: "Helvetica-Bold" },
   partyValue: { flex: 1, borderBottomWidth: 0.75, borderBottomColor: INK, paddingBottom: 1 },
-  table: { borderWidth: 0.75, borderColor: INK, marginTop: 6, marginBottom: 10 },
+  // No vertical margin on a table: react-pdf mis-splits a bordered View that has margins, shoving the
+  // whole table to the next page (leaving a near-empty page). Spacing comes from <Gap /> siblings instead.
+  table: { borderWidth: 0.75, borderColor: INK },
   trow: { flexDirection: "row", borderBottomWidth: 0.75, borderBottomColor: INK },
   trowLast: { flexDirection: "row" },
   thCell: { padding: 4, fontFamily: "Helvetica-Bold", borderRightWidth: 0.75, borderRightColor: INK },
@@ -69,6 +72,11 @@ const styles = StyleSheet.create({
   meta: { fontSize: 8, color: SLATE },
   recitalParty: { marginBottom: 5, paddingLeft: 20, textAlign: "justify" },
 });
+
+/** Fixed-height spacer — used instead of margins around tables (see styles.table). */
+function Gap({ h }: { h: number }) {
+  return <View style={{ height: h }} />;
+}
 
 function PageHeader() {
   const logo = getLogo();
@@ -147,10 +155,10 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
 
 function ClauseBlock({ clause }: { clause: AddendumClause }) {
   return (
-    <View>
-      {clause.title ? <Text style={styles.clauseTitle}>{clause.no}. {clause.title}</Text> : null}
+    <>
+      {clause.title ? <Text style={styles.clauseTitle} minPresenceAhead={60}>{clause.no}. {clause.title}</Text> : null}
       {clause.paras.map((p, j) => <Paragraph key={j} para={p} />)}
-    </View>
+    </>
   );
 }
 
@@ -249,10 +257,11 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
           // express, so it is split: lead-in paragraph, tables, then the rest.
           if (sections.fees !== null && c.no === sections.fees) {
             return (
-              <View key={i}>
-                <Text style={styles.clauseTitle}>{c.no}. {c.title}</Text>
+              <Fragment key={i}>
+                <Text style={styles.clauseTitle} minPresenceAhead={60}>{c.no}. {c.title}</Text>
                 {c.paras[0] ? <Paragraph para={c.paras[0]} /> : null}
 
+                <Gap h={6} />
                 <View style={styles.table}>
                   <View style={styles.trow}>
                     <Text style={[styles.thCell, { flex: 1 }]}>Item</Text>
@@ -269,9 +278,11 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
                     <Text style={[styles.tdCellLast, styles.bold, { width: 110, textAlign: "right" }]}>{peso(feeTotal)}</Text>
                   </View>
                 </View>
+                <Gap h={10} />
 
                 <Text style={styles.p}>{addendumBankIntro(input.bankDetails)}</Text>
 
+                <Gap h={6} />
                 <View style={styles.table}>
                   {([
                     ["Name", input.bankDetails.name],
@@ -285,8 +296,11 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
                     </View>
                   ))}
                 </View>
+                <Gap h={10} />
 
                 {schedule.length > 0 && (
+                  <>
+                  <Gap h={6} />
                   <View style={styles.table}>
                     <View style={styles.trow}>
                       <Text style={[styles.thCell, { flex: 1 }]}>DATE DUE</Text>
@@ -303,20 +317,24 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
                       </View>
                     ))}
                   </View>
+                  <Gap h={10} />
+                  </>
                 )}
 
                 {c.paras.slice(1).map((p, j) => <Paragraph key={j} para={p} />)}
-              </View>
+              </Fragment>
             );
           }
           return <ClauseBlock key={i} clause={c} />;
         })}
 
-        <Text style={[styles.p, { marginTop: 10 }]}>
+                {/* Closing sentence + signatures stay together so signatures never sit alone on a page. */}
+        <View wrap={false}>
+<Text style={[styles.p, { marginTop: 10 }]}>
           The Parties agree to the terms of this Addendum, as evidenced by the signatures set forth below.
         </Text>
 
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }} wrap={false}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }}>
           <View style={{ width: "44%" }}>
             {input.landlordSignatureDataUri
               // eslint-disable-next-line jsx-a11y/alt-text
@@ -337,6 +355,7 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
             <Text>{roles.counterparty}</Text>
             {input.tenantSignedAtManila ? <Text style={styles.meta}>Signed: {input.tenantSignedAtManila}</Text> : null}
           </View>
+        </View>
         </View>
       </Page>
 
@@ -401,6 +420,7 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
         <Text>______________________________ ) S.S</Text>
         <Text style={[styles.p, { marginTop: 10 }]}>BEFORE ME, personally appeared:</Text>
 
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { flex: 1.3 }]}>Name</Text>
@@ -421,6 +441,7 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         <Text style={styles.p}>
           Known to me and to me known to be the same persons who executed the foregoing instrument and acknowledged

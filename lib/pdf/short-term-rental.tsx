@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import fs from "fs";
 import path from "path";
@@ -56,7 +57,9 @@ const styles = StyleSheet.create({
   partyRow: { flexDirection: "row", marginBottom: 3, paddingLeft: 40 },
   partyLabel: { width: 110, fontFamily: "Helvetica-Bold" },
   partyValue: { flex: 1, borderBottomWidth: 0.75, borderBottomColor: INK, paddingBottom: 1 },
-  table: { borderWidth: 0.75, borderColor: INK, marginTop: 6, marginBottom: 10 },
+  // No vertical margin on a table: react-pdf mis-splits a bordered View that has margins, shoving the
+  // whole table to the next page (leaving a near-empty page). Spacing comes from <Gap /> siblings instead.
+  table: { borderWidth: 0.75, borderColor: INK },
   trow: { flexDirection: "row", borderBottomWidth: 0.75, borderBottomColor: INK },
   trowLast: { flexDirection: "row" },
   thCell: { padding: 4, fontFamily: "Helvetica-Bold", borderRightWidth: 0.75, borderRightColor: INK },
@@ -68,6 +71,11 @@ const styles = StyleSheet.create({
   idSectionLabel: { fontFamily: "Helvetica-Bold", borderBottomWidth: 1.5, borderBottomColor: INK, paddingBottom: 2, marginBottom: 8, marginTop: 4 },
   meta: { fontSize: 8, color: SLATE },
 });
+
+/** Fixed-height spacer — used instead of margins around tables (see styles.table). */
+function Gap({ h }: { h: number }) {
+  return <View style={{ height: h }} />;
+}
 
 function PageHeader() {
   const logo = getLogo();
@@ -147,11 +155,12 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
 function Clauses({ clauses }: { clauses: StrClause[] }) {
   return (
     <>
+      {/* Flat (no wrapper View): minPresenceAhead only counts siblings at the same level. */}
       {clauses.map((c, i) => (
-        <View key={`${c.no}-${i}`}>
-          {c.title ? <Text style={styles.clauseTitle}>{c.no}. {c.title}</Text> : null}
+        <Fragment key={`${c.no}-${i}`}>
+          {c.title ? <Text style={styles.clauseTitle} minPresenceAhead={60}>{c.no}. {c.title}</Text> : null}
           {c.paras.map((p, j) => <Paragraph key={j} para={p} />)}
-        </View>
+        </Fragment>
       ))}
     </>
   );
@@ -220,6 +229,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         <Clauses clauses={buildStrClausesBeforeTable(terms)} />
 
         {/* Fee table (clause 6) */}
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { flex: 1 }]}>Item</Text>
@@ -240,10 +250,12 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             <Text style={[styles.tdCellLast, styles.bold, { width: 110, textAlign: "right" }]}>{peso(feeTotal)}</Text>
           </View>
         </View>
+        <Gap h={10} />
 
         <Text style={styles.p}>{strClause61Intro(input.bankDetails)}</Text>
 
         {/* Bank details table (clause 6.1) */}
+        <Gap h={6} />
         <View style={styles.table}>
           {([
             ["Name", input.bankDetails.name],
@@ -257,15 +269,18 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         <Clauses clauses={buildStrClausesAfterTable()} />
 
-        <Text style={[styles.p, { marginTop: 10 }]}>
+                {/* Closing sentence + signatures stay together so signatures never sit alone on a page. */}
+        <View wrap={false}>
+<Text style={[styles.p, { marginTop: 10 }]}>
           The Parties agree to the terms of this Short Term Rental Agreement, as evidenced by the signatures set
           forth below.
         </Text>
 
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }} wrap={false}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }}>
           <View style={{ width: "44%" }}>
             {input.landlordSignatureDataUri
               // eslint-disable-next-line jsx-a11y/alt-text
@@ -286,6 +301,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             <Text>Tenant</Text>
             {input.tenantSignedAtManila ? <Text style={styles.meta}>Signed: {input.tenantSignedAtManila}</Text> : null}
           </View>
+        </View>
         </View>
       </Page>
 
@@ -338,6 +354,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         <Text>______________________________ ) S.S</Text>
         <Text style={[styles.p, { marginTop: 10 }]}>BEFORE ME, personally appeared:</Text>
 
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { flex: 1.3 }]}>Name</Text>
@@ -358,6 +375,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         <Text style={styles.p}>
           Known to me and to me known to be the same persons who executed the foregoing instrument and acknowledged
@@ -408,6 +426,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
           {terms.propertyDetails?.buildingName || "Building"} - {terms.propertyDetails?.unitNumber || "Unit No."}
         </Text>
 
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { width: 58, textAlign: "center" }]}>Quantity</Text>
@@ -424,6 +443,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             </View>
           ))}
         </View>
+        <Gap h={10} />
       </Page>
 
       {/* ── Annex B — Rental Rules ── */}
@@ -437,13 +457,9 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             <Text style={styles.numText}>{rule}</Text>
           </View>
         ))}
-      </Page>
-
-      {/* ── Annex C — Move-Out Checklist ── */}
-      <Page size="LETTER" style={styles.page}>
-        <PageHeader />
-        <Footer />
-        <Text style={styles.annexTitle}>ANNEX C — MOVE-OUT CHECKLIST</Text>
+      
+        {/* Annex C continues straight after Annex B (no forced page) so a short checklist doesn't get a near-empty page. */}
+        <Text style={[styles.annexTitle, { marginTop: 18 }]} minPresenceAhead={60}>ANNEX C — MOVE-OUT CHECKLIST</Text>
         {STR_MOVE_OUT_CHECKLIST.map((item, i) => (
           <View key={i} style={[styles.numbered, { paddingLeft: 6 }]}>
             <Text style={styles.numMarker}>•</Text>

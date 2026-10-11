@@ -53,7 +53,9 @@ const styles = StyleSheet.create({
   numbered: { flexDirection: "row", marginBottom: 3, paddingLeft: 34 },
   numMarker: { width: 16 },
   numText: { flex: 1 },
-  table: { borderWidth: 0.75, borderColor: INK, marginTop: 6, marginBottom: 10 },
+  // No vertical margin on a table: react-pdf mis-splits a bordered View that has margins, shoving the
+  // whole table to the next page (leaving a near-empty page). Spacing comes from <Gap /> siblings instead.
+  table: { borderWidth: 0.75, borderColor: INK },
   trow: { flexDirection: "row", borderBottomWidth: 0.75, borderBottomColor: INK },
   trowLast: { flexDirection: "row" },
   thCell: { padding: 4, fontFamily: "Helvetica-Bold", borderRightWidth: 0.75, borderRightColor: INK },
@@ -65,6 +67,11 @@ const styles = StyleSheet.create({
   idSectionLabel: { fontFamily: "Helvetica-Bold", borderBottomWidth: 1.5, borderBottomColor: INK, paddingBottom: 2, marginBottom: 8, marginTop: 4 },
   meta: { fontSize: 8, color: SLATE },
 });
+
+/** Fixed-height spacer — used instead of margins around tables (see styles.table). */
+function Gap({ h }: { h: number }) {
+  return <View style={{ height: h }} />;
+}
 
 function PageHeader() {
   const logo = getLogo();
@@ -227,6 +234,7 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
         <Clauses clauses={[parkingClause5Intro(terms, input.bankDetails)]} />
 
         {/* Bank details table (clause 5) */}
+        <Gap h={6} />
         <View style={styles.table}>
           {([
             ["Name", input.bankDetails.name],
@@ -240,8 +248,10 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         {/* Payment schedule table (4 columns per the reference) */}
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { width: 88 }]}>DATE DUE</Text>
@@ -258,15 +268,18 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         <Clauses clauses={buildParkingClausesAfterTables(terms)} />
 
-        <Text style={[styles.p, { marginTop: 10 }]}>
+                {/* Closing sentence + signatures stay together so signatures never sit alone on a page. */}
+        <View wrap={false}>
+<Text style={[styles.p, { marginTop: 10 }]}>
           IN WITNESS WHEREOF, the parties hereto have signed this instrument on the day, year, and place
           hereinbefore mentioned.
         </Text>
 
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }} wrap={false}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }}>
           <View style={{ width: "44%" }}>
             {input.landlordSignatureDataUri
               // eslint-disable-next-line jsx-a11y/alt-text
@@ -290,7 +303,7 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
         </View>
 
         {input.witnessSignatureDataUri && input.witnessName && (
-          <View style={{ marginTop: 16, width: "44%" }} wrap={false}>
+          <View style={{ marginTop: 16, width: "44%" }}>
             <Text style={styles.meta}>Witnessed by:</Text>
             {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image src={input.witnessSignatureDataUri} style={[styles.sigImg, { height: 30 }]} />
@@ -298,6 +311,7 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             <Text>{input.witnessName}</Text>
           </View>
         )}
+        </View>
       </Page>
 
       {/* ── COPY OF Valid IDs ── */}
@@ -364,6 +378,7 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
           {made?.year ?? new Date().getFullYear()}, personally came and appeared the following:
         </Text>
 
+        <Gap h={6} />
         <View style={styles.table}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { flex: 1.3 }]}>NAME</Text>
@@ -381,6 +396,7 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        <Gap h={10} />
 
         <Text style={styles.p}>
           Known to me and to me known to be the same persons who executed the foregoing instrument and acknowledged

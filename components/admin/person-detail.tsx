@@ -4,6 +4,7 @@ import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { DocumentList } from "@/components/admin/document-list";
 import { StatCard } from "@/components/admin/shell";
+import { ReminderButton } from "@/components/admin/reminder-button";
 import {
   buildActivity, countBySide, deriveActionItems, type ActionItem, type Side,
 } from "@/lib/admin/action-items";
@@ -68,7 +69,8 @@ const LinkCell = ({ href, children }: { href: string; children: ReactNode }) => 
   <Link href={href} className="font-medium text-navy hover:text-navy-700">{children}</Link>
 );
 
-function AttentionPanel({ items }: { items: ActionItem[] }) {
+function AttentionPanel({ items, party, personId }: { items: ActionItem[]; party: "tenant" | "owner"; personId: string }) {
+  const mine: Side = party === "tenant" ? "tenant" : "landlord";
   const counts = countBySide(items);
   return (
     <section className="rounded-lg border border-line bg-surface">
@@ -100,9 +102,14 @@ function AttentionPanel({ items }: { items: ActionItem[] }) {
               </>
             );
             const cls = "flex flex-wrap items-center justify-between gap-2 px-5 py-3";
+            // A reminder only makes sense for items waiting on this person (not staff-only or the other party).
+            const canRemind = i.side === mine || i.side === "both";
             return (
-              <li key={i.id}>
-                {i.href ? <Link href={i.href} className={`${cls} hover:bg-surface-gray`}>{body}</Link> : <div className={cls}>{body}</div>}
+              <li key={i.id} className={canRemind ? "flex flex-wrap items-center justify-between gap-2 pr-5" : undefined}>
+                {i.href
+                  ? <Link href={i.href} className={`${cls} hover:bg-surface-gray ${canRemind ? "min-w-0 flex-1" : ""}`}>{body}</Link>
+                  : <div className={`${cls} ${canRemind ? "min-w-0 flex-1" : ""}`}>{body}</div>}
+                {canRemind && <ReminderButton party={party} personId={personId} itemId={i.id} />}
               </li>
             );
           })}
@@ -236,7 +243,7 @@ export function PersonDetail({
 
       {tab === "overview" && (
         <div className="mt-6 flex flex-col gap-8">
-          <AttentionPanel items={items} />
+          <AttentionPanel items={items} party={party} personId={person.id} />
           {party === "owner" && (
             <Section title="Properties" count={history.properties.length}>
               <DataTable

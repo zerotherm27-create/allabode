@@ -84,7 +84,7 @@ function pageStats(pdf: string) {
 const sig = solidPng(320, 90, [40, 60, 120]);
 const idImg = solidPng(640, 400);
 
-async function tenancy() {
+async function tenancyWith(extraIds: number) {
   const { renderTenancyPdf } = await import("@/lib/pdf/tenancy");
   const inventory = [
     ["1", "Aircon", "", "Cleaning upon move out c/o tenant"], ["2", "Bunkbeds w/ drawers", "", "with 4 Mattresses (Single)"],
@@ -113,7 +113,7 @@ async function tenancy() {
     bankDetails: { name: "All Abode Property Management Corp.", bank: "Union Bank of the Philippines", branch: "JTKC Building, Pasong Tamo Branch", accountNumber: "0020 2003 7938" },
     inventory,
     tenantIdTypeLabel: "Government ID", tenantIdNumber: "808942901", tenantIdIssuedDate: "2026-07-13", tenantIdImageDataUri: idImg,
-    additionalOccupantIds: ["Maryrose Gem De Guzman", "Andrhea Nicole Herradura", "Nicole Angela Marcelo"].map((name) => ({ name, idImageDataUri: idImg })),
+    additionalOccupantIds: Array.from({ length: extraIds }, (_, i) => ({ name: `Occupant ${i + 1}`, idImageDataUri: idImg })),
     landlordIdTypeLabel: "Passport", landlordIdNumber: "P1302864B", landlordIdIssuedDate: "2019-04-01", landlordIdImageDataUri: idImg,
     tenantTypedName: "Crisavel H. Daileg", tenantSignatureDataUri: sig, tenantSignedAtManila: "Oct 5, 2026, 10:53 AM", tenantSignedIp: "1.2.3.4",
     landlordTypedName: "Hanzzle Embon", landlordSignatureDataUri: sig, landlordSignedAtManila: "Oct 5, 2026, 3:03 PM", landlordSignedIp: "5.6.7.8",
@@ -135,6 +135,8 @@ const tenant = { name: "Crisavel Daileg", address: "Brgy. Soledad, San Pablo Cit
 const schedule = ["Nov 7, 2026", "Dec 2, 2026", "Jan 2, 2027", "Feb 2, 2027", "Mar 2, 2027", "Apr 2, 2027", "May 2, 2027"].map((d) => ({
   dueDate: d, amount: "3,000.00", bankBranch: "Union Bank / Pasong Tamo", coverage: "1 month rent",
 }));
+
+const tenancy = () => tenancyWith(3);
 
 async function parking() {
   const { renderParkingPdf } = await import("@/lib/pdf/parking");
@@ -227,7 +229,7 @@ async function quotation() {
   });
 }
 
-const RENDERERS: Record<string, () => Promise<Buffer>> = { tenancy, parking, str, addendum, pm, quotation };
+const RENDERERS: Record<string, () => Promise<Buffer>> = { tenancy, "tenancy-2ids": () => tenancyWith(0), "tenancy-4ids": () => tenancyWith(2), "tenancy-6ids": () => tenancyWith(4), "tenancy-8ids": () => tenancyWith(6), parking, str, addendum, pm, quotation };
 
 // ── main ─────────────────────────────────────────────────────────────────────
 

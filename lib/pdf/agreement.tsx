@@ -648,7 +648,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Field label="Date Issued:" value={input.managerIdIssuedDate} />
         {input.managerIdImageDataUri ? (
           // eslint-disable-next-line jsx-a11y/alt-text
-          <Image src={input.managerIdImageDataUri} style={{ width: 215, maxHeight: 135, marginTop: 8, objectFit: "contain", alignSelf: "flex-start" }} />
+          <Image src={input.managerIdImageDataUri} style={{ width: 250, maxHeight: 155, marginTop: 8, objectFit: "contain", alignSelf: "flex-start" }} />
         ) : (
           <Text style={[styles.p, { marginTop: 12, color: SLATE }]}>ID image unavailable.</Text>
         )}
@@ -660,7 +660,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Field label="Date Issued:" value={input.ownerIdIssuedDate} />
         {input.ownerIdImageDataUri ? (
           // eslint-disable-next-line jsx-a11y/alt-text
-          <Image src={input.ownerIdImageDataUri} style={{ width: 215, maxHeight: 135, marginTop: 8, objectFit: "contain", alignSelf: "flex-start" }} />
+          <Image src={input.ownerIdImageDataUri} style={{ width: 250, maxHeight: 155, marginTop: 8, objectFit: "contain", alignSelf: "flex-start" }} />
         ) : (
           <Text style={[styles.p, { marginTop: 12, color: SLATE }]}>ID image unavailable.</Text>
         )}

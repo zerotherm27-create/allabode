@@ -150,8 +150,9 @@ export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null;
     if (tenantByEmail) return { role: "tenant", redirect: "/dashboard/tenant" };
   }
 
-  // Specialists: link by application metadata (no-op for everyone else), then
-  // look up the row. The RPC may not exist yet, so it must never break sign-in.
+  // Specialists (invite-only): link the specialist row staff added for this
+  // confirmed email (no-op for everyone else), then look up the row. The RPC
+  // may not exist yet, so it must never break sign-in.
   try {
     await supabase.rpc("link_specialist_account");
   } catch {

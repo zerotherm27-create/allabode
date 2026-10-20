@@ -9,6 +9,7 @@ export function FileUploadButton({
   onFile,
   onFiles,
   label = "Choose file",
+  className = "",
 }: {
   accept?: string;
   disabled?: boolean;
@@ -18,12 +19,14 @@ export function FileUploadButton({
   /** Called instead of `onFile` when `multiple` is set and files are selected. */
   onFiles?: (files: File[]) => void;
   label?: string;
+  /** Extra classes for the visible button (e.g. a larger touch target). */
+  className?: string;
 }) {
   return (
     <label
       className={`inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-navy bg-surface px-4 py-2.5 text-sm font-semibold text-navy transition hover:bg-surface-gray ${
         disabled ? "pointer-events-none opacity-50" : ""
-      }`}
+      } ${className}`}
     >
       <Icon name="upload_file" size={18} />
       {label}

@@ -30,11 +30,16 @@ export function ListingImagesManager({
   listingId,
   initialImages,
   actions = ADMIN_ACTIONS,
+  variant = "admin",
 }: {
   listingId: string;
   initialImages: ListingImage[];
   actions?: ListingImageActions;
+  /** "specialist": prominent heading, an empty state, and always-visible touch-sized controls. */
+  variant?: "admin" | "specialist";
 }) {
+  const specialist = variant === "specialist";
+  const btnSize = specialist ? "h-11 w-11" : "h-7 w-7";
   const [prevInitialImages, setPrevInitialImages] = useState(initialImages);
   const [images, setImages] = useState(initialImages);
   const [uploading, setUploading] = useState(false);
@@ -91,8 +96,17 @@ export function ListingImagesManager({
 
   return (
     <div className="rounded-lg border border-line bg-surface p-6">
-      <h2 className="font-display text-sm font-semibold text-navy">Photos</h2>
-      <p className="mt-1 text-xs text-slate">The first photo is used as the cover image on listing cards.</p>
+      <h2 className={specialist ? "font-display text-lg font-semibold text-navy" : "font-display text-sm font-semibold text-navy"}>
+        Photos
+      </h2>
+      <p className={specialist ? "mt-1 text-sm text-slate" : "mt-1 text-xs text-slate"}>
+        The first photo is used as the cover image on listing cards.
+      </p>
+      {specialist && images.length === 0 && (
+        <p className="mt-4 rounded-md border border-dashed border-line bg-cream px-4 py-6 text-center text-sm text-slate">
+          No photos yet — add at least one before submitting
+        </p>
+      )}
 
       {images.length > 0 && (
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
@@ -105,14 +119,14 @@ export function ListingImagesManager({
                   Cover
                 </span>
               )}
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-navy/70 p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className={`absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-navy/70 p-1.5 transition-opacity ${specialist ? "" : "opacity-0 group-hover:opacity-100"}`}>
                 <div className="flex gap-1">
                   <button
                     type="button"
                     aria-label="Move earlier"
                     disabled={i === 0}
                     onClick={() => handleMove(i, -1)}
-                    className="flex h-7 w-7 items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30"
+                    className={`flex ${btnSize} items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30`}
                   >
                     <Icon name="arrow_back" size={16} />
                   </button>
@@ -121,7 +135,7 @@ export function ListingImagesManager({
                     aria-label="Move later"
                     disabled={i === images.length - 1}
                     onClick={() => handleMove(i, 1)}
-                    className="flex h-7 w-7 items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30"
+                    className={`flex ${btnSize} items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30`}
                   >
                     <Icon name="arrow_forward" size={16} />
                   </button>
@@ -130,7 +144,7 @@ export function ListingImagesManager({
                   type="button"
                   aria-label="Remove photo"
                   onClick={() => handleRemove(img.id)}
-                  className="flex h-7 w-7 items-center justify-center rounded text-white hover:bg-error/80"
+                  className={`flex ${btnSize} items-center justify-center rounded text-white hover:bg-error/80`}
                 >
                   <Icon name="delete" size={16} />
                 </button>
@@ -148,6 +162,7 @@ export function ListingImagesManager({
           onFile={() => {}}
           onFiles={handleFiles}
           label={uploading ? "Uploading…" : "Add photos"}
+          className={specialist ? "min-h-11" : ""}
         />
         <GoogleDrivePickerButton disabled={uploading} onFiles={handleFiles} onError={setError} />
       </div>

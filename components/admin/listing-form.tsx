@@ -123,6 +123,7 @@ export function ListingForm({
   units = [],
   variant = "staff",
   cancelHref = "/admin/listings",
+  photoCount,
 }: {
   action: (fd: FormData) => void | Promise<void>;
   initial?: ListingValues;
@@ -134,6 +135,8 @@ export function ListingForm({
    *  details, the Published status) and swaps the save button for draft/submit actions. */
   variant?: "staff" | "specialist";
   cancelHref?: string;
+  /** Specialist edit page: how many photos the listing has, for a non-blocking reminder. */
+  photoCount?: number;
 }) {
   const v = initial;
   const specialist = variant === "specialist";
@@ -439,7 +442,7 @@ export function ListingForm({
       )}
 
       {specialist ? (
-        <SpecialistActions approval={approval} isNew={!v.id} busy={genPending || seoPending} cancelHref={cancelHref} />
+        <SpecialistActions approval={approval} isNew={!v.id} busy={genPending || seoPending} cancelHref={cancelHref} noPhotos={photoCount === 0} />
       ) : (
         <div className="flex items-center gap-3">
           <SubmitButton busy={genPending || seoPending} />

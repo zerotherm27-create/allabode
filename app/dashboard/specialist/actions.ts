@@ -206,7 +206,7 @@ export async function createSpecialistListing(fd: FormData): Promise<void> {
   if (res.error) throw new Error(res.error.message);
 
   refreshListingViews(res.data.id, res.data.slug);
-  redirect(`${LISTINGS_PATH}/${res.data.id}/edit`);
+  redirect(`${LISTINGS_PATH}/${res.data.id}/edit?created=1`);
 }
 
 export async function updateSpecialistListing(id: string, fd: FormData): Promise<void> {

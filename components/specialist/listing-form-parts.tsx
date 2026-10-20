@@ -14,11 +14,14 @@ export function SpecialistActions({
   isNew,
   busy,
   cancelHref,
+  noPhotos = false,
 }: {
   approval: string;
   isNew: boolean;
   busy: boolean;
   cancelHref: string;
+  /** The listing exists but has no photos yet. */
+  noPhotos?: boolean;
 }) {
   const { pending } = useFormStatus();
   const [clicked, setClicked] = useState("");
@@ -30,6 +33,15 @@ export function SpecialistActions({
   const spinner = <Icon name="progress_activity" size={18} className="animate-spin" />;
   return (
     <div className="flex flex-wrap items-center gap-3">
+      {isNew && (
+        <p className="flex w-full items-center gap-2 text-sm text-slate">
+          <Icon name="photo_camera" size={18} />
+          You&rsquo;ll add photos right after you save the draft.
+        </p>
+      )}
+      {canSubmit && noPhotos && (
+        <p className="w-full text-sm text-slate">Listings with photos get more inquiries.</p>
+      )}
       <button
         type="submit"
         name="intent"

@@ -32,10 +32,13 @@ const imageActions = {
 
 export default async function EditSpecialistListingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ created?: string }>;
 }) {
   const { id } = await params;
+  const { created } = await searchParams;
   const { specialistId } = await getCurrentRole();
   if (!specialistId) notFound();
 
@@ -75,14 +78,20 @@ export default async function EditSpecialistListingPage({
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">Edit listing</h1>
       <p className="mt-1 text-sm text-slate">{initial.title}</p>
+      {created === "1" && (
+        <p role="status" className="mt-4 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-navy">
+          Draft saved. Add your photos below, then submit it for approval.
+        </p>
+      )}
       <div className="mt-6">
-        <ListingImagesManager listingId={id} initialImages={resolvedImages} actions={imageActions} />
+        <ListingImagesManager listingId={id} initialImages={resolvedImages} actions={imageActions} variant="specialist" />
       </div>
       <div className="mt-6">
         <ListingForm
           variant="specialist"
           action={updateSpecialistListing.bind(null, id)}
           initial={initial}
+          photoCount={resolvedImages.length}
           aiEnabled={isAiConfigured()}
           cancelHref="/dashboard/specialist/listings"
         />

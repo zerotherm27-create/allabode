@@ -58,6 +58,11 @@ export function SiteHeader() {
       let current: Element | null = element;
       while (current && current !== document.documentElement) {
         if (current instanceof HTMLElement) {
+          // Sections can declare their surface explicitly (data-surface="dark" | "light")
+          // — more reliable than guessing from class names (e.g. hero images, gradients).
+          const declared = current.dataset.surface;
+          if (declared === "dark") return false;
+          if (declared === "light") return true;
           const classes = current.className.toString();
           if (/\b(bg-navy|from-navy|via-navy|to-navy)\b/.test(classes)) return false;
           if (/\b(bg-cream|bg-surface|bg-surface-gray|bg-white)\b/.test(classes)) return true;

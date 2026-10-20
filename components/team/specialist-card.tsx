@@ -85,7 +85,7 @@ export function SpecialistCard({ specialist }: { specialist: PublicSpecialist })
   return (
     <Link
       href={`/team/${specialist.slug}`}
-      className="group flex h-full flex-col overflow-hidden border border-line bg-surface transition-shadow duration-[var(--dur-mid)] hover:shadow-[var(--shadow-card)]"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-shadow duration-[var(--dur-mid)] hover:shadow-[var(--shadow-card)]"
     >
       <Headshot name={specialist.name} photoUrl={specialist.photoUrl} />
       <div className="flex flex-1 flex-col p-6">

@@ -4,11 +4,13 @@
 -- broker. Specialists are NEVER rows in `users`, so `is_staff()` can never be
 -- true for them; they get their own table, helpers and RLS policies here.
 --
---   * `specialists` — one row per applicant/specialist, linked to auth.users.
---     Rows are created only by `link_specialist_account()` (status 'pending')
---     or by staff. Staff approve/reject/suspend; a specialist may read and
---     edit their own profile but never their status, subdomain, email or
---     auth link (trigger `guard_specialist_update`).
+--   * `specialists` — invite-only. Staff add each specialist by email (status
+--     'approved', accredited under the broker, no auth link yet). The person
+--     then signs up at /team/join with that same email; once it is confirmed,
+--     `link_specialist_account()` links their auth user to the row. Nothing
+--     else ever creates a row. Staff suspend/reinstate; a specialist may read
+--     and edit their own profile but never their status, subdomain, email,
+--     auth link or licence details (trigger `guard_specialist_update`).
 --   * `listings.specialist_id` / `approval_status` / `rejection_note` — an
 --     approved specialist manages their own listings; the public site only
 --     shows listings that are live AND approved. Existing rows default to
@@ -54,6 +56,8 @@ create table if not exists specialists (
   updated_at           timestamptz not null default now()
 );
 create index if not exists specialists_status_idx on specialists (status);
+-- One row per email, case-insensitively: accounts are linked by email.
+create unique index if not exists specialists_email_lower_key on specialists (lower(email));
 
 -- The only portrait key the app writes is "{id}/portrait.jpg" (lib/team/profile.ts
 -- portraitKey). Pinning it here stops a specialist pointing photo_path at
@@ -161,52 +165,39 @@ create trigger specialists_guard_not_staff before insert or update of auth_user_
   for each row execute function guard_specialist_not_staff();
 
 -- ---------- link_specialist_account ----------
--- Called after sign-up/sign-in. Creates the caller's own 'pending' specialist
--- row from their sign-up metadata, but only when they applied through the
--- specialist form (raw_user_meta_data.specialist_application = 'true').
--- Returns the specialist's status, or null when the caller is not an
--- applicant. Only ever touches the CALLER's row; never approves anyone.
+-- Called after sign-in. Links the CALLER's auth user to the specialist row
+-- staff added for their email — only when that email is CONFIRMED, the row is
+-- approved and not linked to anyone yet. Returns the row's status when it
+-- links, otherwise null. Never creates a row, never re-links a linked row,
+-- never links staff, and reads no user-editable sign-up metadata.
 create or replace function link_specialist_account()
 returns text language plpgsql security definer set search_path = public, pg_temp as $$
 declare
-  v_uid    uuid := auth.uid();
-  v_email  text;
-  v_meta   jsonb;
-  v_mode   text;
-  v_status text;
+  v_uid       uuid := auth.uid();
+  v_email     text;
+  v_confirmed timestamptz;
+  v_status    text;
 begin
   if v_uid is null then return null; end if;
-
-  select u.email, coalesce(u.raw_user_meta_data, '{}'::jsonb)
-    into v_email, v_meta
-    from auth.users u where u.id = v_uid;
-  if v_email is null then return null; end if;
-
-  if coalesce(v_meta ->> 'specialist_application', '') <> 'true' then
-    return null;
-  end if;
 
   -- Staff accounts are never specialists.
   if exists (select 1 from users where id = v_uid) then return null; end if;
 
-  v_mode := case when v_meta ->> 'license_mode' in ('own', 'accredited')
-                 then v_meta ->> 'license_mode' else 'accredited' end;
+  select u.email, u.email_confirmed_at
+    into v_email, v_confirmed
+    from auth.users u where u.id = v_uid;
+  if v_email is null or v_confirmed is null then return null; end if;
 
-  insert into specialists (
-    auth_user_id, email, display_name, phone,
-    requested_subdomain, license_mode, license_no
-  ) values (
-    v_uid,
-    lower(v_email),
-    left(coalesce(nullif(btrim(v_meta ->> 'full_name'), ''), split_part(v_email, '@', 1)), 120),
-    nullif(btrim(left(v_meta ->> 'phone', 40)), ''),
-    nullif(lower(btrim(left(v_meta ->> 'requested_subdomain', 63))), ''),
-    v_mode,
-    nullif(btrim(left(v_meta ->> 'license_no', 40)), '')
-  )
-  on conflict (auth_user_id) do nothing;
+  -- Already linked to a row (this one or another): nothing to do.
+  if exists (select 1 from specialists where auth_user_id = v_uid) then return null; end if;
 
-  select status into v_status from specialists where auth_user_id = v_uid;
+  update specialists
+     set auth_user_id = v_uid
+   where lower(email) = lower(v_email)
+     and auth_user_id is null
+     and status = 'approved'
+  returning status into v_status;
+
   return v_status;
 end $$;
 

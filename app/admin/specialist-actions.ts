@@ -138,13 +138,13 @@ export async function addSpecialist(
     ok: true,
     message: result.emailSent
       ? `Invitation sent to ${v.email}.`
-      : `${v.displayName} was added, but the invitation email could not be sent (${result.emailError ?? "unknown error"}). Use "Resend invite".`,
+      : `${v.displayName} was added, but the invitation email could not be sent (${result.emailError ?? "unknown error"}). Use "Resend sign-in link".`,
     emailSent: result.emailSent,
     specialistId: result.specialistId,
   };
 }
 
-/** Staff-only: email a fresh set-password invitation (only while the account has never signed in). */
+/** Staff-only: email a fresh sign-in (set/reset password) link to any approved, linked specialist. */
 export async function resendSpecialistInviteAction(specialistId: string): Promise<SpecialistActionState> {
   const guard = await staffClient();
   if (guard.error) return guard.error;

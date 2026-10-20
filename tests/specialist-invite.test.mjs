@@ -3,7 +3,7 @@ import test from "node:test";
 import { loadTs } from "./helpers/load-ts.mjs";
 
 const {
-  escapeHtml, setPasswordLink, invitationEmailHtml, decideExistingUser, hasNeverSignedIn, INVITE_SUBJECT,
+  escapeHtml, setPasswordLink, invitationEmailHtml, decideExistingUser, hasNeverSignedIn, INVITE_SUBJECT, RESEND_SUBJECT,
 } = await loadTs("lib/team/invite.ts");
 
 test("existing-account decision: refuse other roles, link confirmed, replace unconfirmed, else create", () => {
@@ -41,4 +41,11 @@ test("never signed in = no last_sign_in_at", () => {
   assert.equal(hasNeverSignedIn(undefined), true);
   assert.equal(hasNeverSignedIn(""), true);
   assert.equal(hasNeverSignedIn("2026-10-21T00:00:00Z"), false);
+});
+
+test("resend email for a returning specialist says set or reset, not invited", () => {
+  const html = invitationEmailHtml({ name: "Ram", link: "https://x.test/a", loginUrl: "https://x.test/portal/login", returning: true });
+  assert.match(html, /new link to set or reset your password/);
+  assert.doesNotMatch(html, /You've been invited/);
+  assert.ok(RESEND_SUBJECT.length > 0);
 });

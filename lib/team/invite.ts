@@ -24,17 +24,22 @@ export function setPasswordLink(siteUrl: string, hashedToken: string): string {
 
 export const INVITE_SUBJECT = "You've been invited to join the All Abode team as a property specialist";
 
-/** Brand-consistent invitation email (inline styles: email clients ignore CSS variables). */
-export function invitationEmailHtml(input: { name: string; link: string; loginUrl: string }): string {
+export const RESEND_SUBJECT = "Your All Abode sign-in link";
+
+/** Brand-consistent invitation email (inline styles: email clients ignore CSS variables).
+ *  `returning` is for a resend to someone who has already signed in before. */
+export function invitationEmailHtml(input: { name: string; link: string; loginUrl: string; returning?: boolean }): string {
   const name = escapeHtml(input.name.trim() || "there");
   const link = escapeHtml(input.link);
   const login = escapeHtml(input.loginUrl);
   return `
 <div style="font-family:Inter,Arial,sans-serif;color:#1f2933;max-width:560px;margin:0 auto;padding:24px">
   <p style="font-family:Montserrat,Arial,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8a6d32;margin:0 0 8px">All Abode Property Solutions</p>
-  <h1 style="font-family:Montserrat,Arial,sans-serif;font-size:22px;color:#0a2540;margin:0 0 16px">Welcome to the team</h1>
+  <h1 style="font-family:Montserrat,Arial,sans-serif;font-size:22px;color:#0a2540;margin:0 0 16px">${input.returning ? "Your sign-in link" : "Welcome to the team"}</h1>
   <p>Hi ${name},</p>
-  <p>You've been invited to join the All Abode team as a property specialist. We've created your account. Set your password to sign in, complete your profile and start listing properties.</p>
+  <p>${input.returning
+    ? "Here is a new link to set or reset your password for your All Abode property specialist account."
+    : "You've been invited to join the All Abode team as a property specialist. We've created your account. Set your password to sign in, complete your profile and start listing properties."}</p>
   <p style="margin:24px 0">
     <a href="${link}" style="display:inline-block;background:#0a2540;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:4px">Set your password</a>
   </p>
@@ -42,7 +47,7 @@ export function invitationEmailHtml(input: { name: string; link: string; loginUr
     <li>Click the button above and choose a password.</li>
     <li>Next time, sign in at <a href="${login}" style="color:#0d518c">${login}</a> with this email address.</li>
   </ol>
-  <p style="font-size:13px;color:#52606d">This link works once and expires after a short time. If it has expired, ask All Abode to resend your invitation. If you weren't expecting this email, you can ignore it.</p>
+  <p style="font-size:13px;color:#52606d">This link works once and expires after a short time. If it has expired, ask All Abode to send you a new link. If you weren't expecting this email, you can ignore it.</p>
 </div>`.trim();
 }
 

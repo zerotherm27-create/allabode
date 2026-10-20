@@ -9,10 +9,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { createClient } from "@/lib/supabase/server";
 import { sendEmailResult } from "@/lib/email";
 import { getPublicSiteUrl } from "@/lib/url";
+import { canResendSignInLink } from "@/lib/team/admin-status";
 import {
   decideExistingUser,
   hasNeverSignedIn,
   INVITE_SUBJECT,
+  RESEND_SUBJECT,
   invitationEmailHtml,
   setPasswordLink,
 } from "@/lib/team/invite";
@@ -89,6 +91,7 @@ async function emailInvitation(
   admin: AdminClient,
   email: string,
   name: string,
+  returning = false,
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   try {
     const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email });
@@ -100,8 +103,8 @@ async function emailInvitation(
     const site = getPublicSiteUrl();
     return await sendEmailResult({
       to: email,
-      subject: INVITE_SUBJECT,
-      html: invitationEmailHtml({ name, link: setPasswordLink(site, hashed), loginUrl: `${site}/portal/login` }),
+      subject: returning ? RESEND_SUBJECT : INVITE_SUBJECT,
+      html: invitationEmailHtml({ name, link: setPasswordLink(site, hashed), loginUrl: `${site}/portal/login`, returning }),
     });
   } catch (err) {
     console.warn("[specialists] invitation email failed:", err instanceof Error ? err.message : err);
@@ -268,26 +271,24 @@ async function readRow(supabase: SessionClient, specialistId: string): Promise<{
 
 export type AccountActionResult = { ok: boolean; message: string };
 
-/** Re-sends the set-password invitation, only while the account has never signed in. */
+/** Emails a fresh set/reset-password link to an approved, linked specialist,
+ *  whether or not they have signed in (the link only goes to their own address). */
 export async function resendSpecialistInvite(supabase: SessionClient, specialistId: string): Promise<AccountActionResult> {
   const { row, error } = await readRow(supabase, specialistId);
   if (error) return { ok: false, message: error };
   if (!row) return { ok: false, message: "Specialist not found." };
-  if (row.status !== "approved") return { ok: false, message: "Only active specialists can be sent an invitation." };
-  if (!row.auth_user_id) return { ok: false, message: "This specialist has no login account. Remove them and add them again." };
+  if (row.status !== "approved") return { ok: false, message: "Only active specialists can be sent a sign-in link." };
+  if (!canResendSignInLink(row)) return { ok: false, message: "This specialist has no login account. Remove them and add them again." };
 
   const got = adminOrError();
   if (!got.admin) return { ok: false, message: got.error };
-  const state = await signInState(got.admin, row.auth_user_id);
+  const state = await signInState(got.admin, row.auth_user_id!);
   if (!state.ok) return { ok: false, message: `Could not check the account: ${state.message}` };
-  if (!hasNeverSignedIn(state.lastSignInAt)) {
-    return { ok: false, message: `${row.display_name} has already signed in, so there is no invitation to resend.` };
-  }
 
-  const sent = await emailInvitation(got.admin, row.email, row.display_name);
+  const sent = await emailInvitation(got.admin, row.email, row.display_name, !hasNeverSignedIn(state.lastSignInAt));
   return sent.ok
-    ? { ok: true, message: `Invitation sent to ${row.email}.` }
-    : { ok: false, message: `The invitation could not be sent: ${sent.reason}` };
+    ? { ok: true, message: `Sign-in link sent to ${row.email}.` }
+    : { ok: false, message: `The sign-in link could not be sent: ${sent.reason}` };
 }
 
 /**

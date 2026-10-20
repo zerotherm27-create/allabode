@@ -35,7 +35,7 @@ test("detects missing table errors", () => {
 
 const {
   specialistAccountState, ACCOUNT_STATE_LABEL, normalizeSpecialistEmail, validateNewSpecialist,
-  specialistConflictMessage,
+  specialistConflictMessage, canResendSignInLink, canRemoveSpecialist,
 } = await loadTs("lib/team/admin-status.ts");
 
 test("an approved row whose login has never been used is an invitation", () => {
@@ -141,4 +141,18 @@ test("detects missing column and relationship errors", () => {
   assert.equal(isMissingColumn({ message: "column listings.approval_status does not exist" }), true);
   assert.equal(isMissingColumn({ code: "42501", message: "permission denied" }), false);
   assert.equal(isMissingColumn(null), false);
+});
+
+test("resend sign-in link: approved + linked only, signed in or not", () => {
+  assert.equal(canResendSignInLink({ status: "approved", auth_user_id: "u1" }), true);
+  assert.equal(canResendSignInLink({ status: "approved", auth_user_id: null }), false);
+  assert.equal(canResendSignInLink({ status: "suspended", auth_user_id: "u1" }), false);
+  assert.equal(canResendSignInLink({ status: "rejected", auth_user_id: "u1" }), false);
+  assert.equal(canResendSignInLink({ status: "pending", auth_user_id: "u1" }), false);
+});
+
+test("remove specialist: only while the login has never been used", () => {
+  assert.equal(canRemoveSpecialist({ status: "approved" }, false), true);
+  assert.equal(canRemoveSpecialist({ status: "approved" }, true), false);
+  assert.equal(canRemoveSpecialist({ status: "suspended" }, false), false);
 });

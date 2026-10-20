@@ -58,18 +58,22 @@ export function StatusControls({
   );
 }
 
-/** Invited specialists (never signed in): resend the set-password email, or
- *  remove the specialist entirely (the typo case). */
-export function InviteControls({ id, email, canResend }: { id: string; email: string; canResend: boolean }) {
+/** Resend the sign-in link (any approved, linked specialist); remove the
+ *  specialist entirely only while they have never signed in (the typo case). */
+export function InviteControls({ id, email, canResend, canRemove }: { id: string; email: string; canResend: boolean; canRemove: boolean }) {
   const [pending, start] = useTransition();
   const [busy, setBusy] = useState<"resend" | "remove" | null>(null);
   const [state, setState] = useState<SpecialistActionState | null>(null);
   return (
     <div className="rounded-lg border border-line bg-surface p-6">
-      <h2 className="font-display text-sm font-semibold text-navy">Invitation</h2>
+      <h2 className="font-display text-sm font-semibold text-navy">{canRemove ? "Invitation" : "Sign-in link"}</h2>
       <p className="mt-1 text-sm text-slate">
-        An invitation to set a password was emailed to <span className="break-all font-medium text-ink">{email}</span>.
-        They haven&rsquo;t signed in yet. Added the wrong email? Remove them and add them again.
+        {canRemove ? (
+          <>An invitation to set a password was emailed to <span className="break-all font-medium text-ink">{email}</span>.
+          They haven&rsquo;t signed in yet. Added the wrong email? Remove them and add them again.</>
+        ) : (
+          <>Stuck without a password? Email a new link to set or reset it to <span className="break-all font-medium text-ink">{email}</span>.</>
+        )}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {canResend && (
@@ -78,9 +82,10 @@ export function InviteControls({ id, email, canResend }: { id: string; email: st
               start(async () => setState(await resendSpecialistInviteAction(id)));
             }}
             className="min-h-11 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50">
-            {pending && busy === "resend" ? "Sending…" : "Resend invite"}
+            {pending && busy === "resend" ? "Sending…" : "Resend sign-in link"}
           </button>
         )}
+        {canRemove && (
         <button type="button" disabled={pending} onClick={() => {
             if (!window.confirm(`Remove this specialist and delete the login for ${email}? This can't be undone.`)) return;
             setBusy("remove");
@@ -89,6 +94,7 @@ export function InviteControls({ id, email, canResend }: { id: string; email: st
           className="min-h-11 rounded-md border border-line px-5 py-3 text-sm font-semibold text-error hover:bg-error-bg disabled:opacity-50">
           {pending && busy === "remove" ? "Removing…" : "Remove specialist"}
         </button>
+        )}
         <Notice state={state} />
         {state?.ok && busy === "remove" && (
           <Link href="/admin/specialists" className="inline-flex min-h-11 items-center text-sm font-medium text-navy-700 hover:underline">

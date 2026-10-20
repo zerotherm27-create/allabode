@@ -15,7 +15,7 @@ function LoginForm() {
   const params = useSearchParams();
   const initError =
     params.get("error") === "link_expired"
-      ? "Confirmation link has expired. Please sign in to continue."
+      ? "That link has expired or was already used. Ask All Abode to send you a new one."
       : "";
   const [error, setError] = useState(initError);
   const [loading, setLoading] = useState(false);

@@ -7,6 +7,8 @@ import {
   availableActions,
   isMissingTable,
   specialistAccountState,
+  canResendSignInLink,
+  canRemoveSpecialist,
 } from "@/lib/team/admin-status";
 import { getNeverSignedIn } from "@/lib/team/provision";
 import { InviteControls, StatusControls } from "./controls";
@@ -90,12 +92,17 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
         {s.bio && <p className="mt-4 whitespace-pre-line text-sm text-ink">{s.bio}</p>}
       </section>
 
-      {state === "invited" && (
-        <InviteControls id={s.id} email={s.email} canResend={s.status === "approved" && !!s.auth_user_id} />
+      {(state === "invited" || state === "active") && (state === "invited" || canResendSignInLink(s)) && (
+        <InviteControls
+          id={s.id}
+          email={s.email}
+          canResend={canResendSignInLink(s)}
+          canRemove={canRemoveSpecialist(s, state === "active")}
+        />
       )}
       {neverSignedIn === null && (
         <p className="text-sm text-slate">
-          Sign-in status is unavailable (the server can&rsquo;t reach the account service), so invitation controls are hidden.
+          Sign-in status is unavailable (the server can&rsquo;t reach the account service), so removal is unavailable.
         </p>
       )}
       <StatusControls id={s.id} canSuspend={act.suspend} canReinstate={act.reinstate} />

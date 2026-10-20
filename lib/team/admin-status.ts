@@ -50,6 +50,20 @@ export function specialistAccountState(
   return neverSignedIn?.has(row.auth_user_id) ? "invited" : "active";
 }
 
+/** Staff can email a fresh sign-in (set/reset password) link to any approved
+ *  specialist with a login, whether or not they have signed in: the link only
+ *  ever goes to the specialist's own address. Suspended/rejected/pending or
+ *  unlinked rows are refused. */
+export function canResendSignInLink(row: { status: string; auth_user_id?: string | null }): boolean {
+  return row.status === "approved" && !!row.auth_user_id;
+}
+
+/** Removal is only for mistakes: an approved account that has never signed in
+ *  (or a legacy row with no login). `signedIn` is true once the login has been used. */
+export function canRemoveSpecialist(row: { status: string }, signedIn: boolean): boolean {
+  return row.status === "approved" && !signedIn;
+}
+
 export const ACCOUNT_STATE_LABEL: Record<SpecialistAccountState, string> = {
   invited: "Invited — hasn't signed in yet",
   active: "Active",

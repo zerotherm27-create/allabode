@@ -123,9 +123,9 @@ accounts, a public profile, and can list properties (owner-approved).
   upload with cropper, listings) → creates a listing and submits → owner
   approves it in the admin Listings approval queue → listing shows "Listed by"
   on cards + detail. Admin shows "Invited — hasn't signed in yet" (from the
-  Admin API's `last_sign_in_at`) with **Resend invite** and **Remove
-  specialist** (only while the login has never been used; deletes the row,
-  then the auth user); also suspend/reinstate. A specialist appears on `/team`
+  Admin API's `last_sign_in_at`) with **Resend sign-in link** (any approved, linked specialist, even
+  after they have signed in) and **Remove specialist** (only while the login
+  has never been used; deletes the row, then the auth user); also suspend/reinstate. A specialist appears on `/team`
   as soon as they are added, so add them when ready. Public `/team` directory
   and `/team/<slug>` profile; "About" nav dropdown.
 - **Design rules:** specialists are NEVER rows in `users` (that table is staff);
@@ -153,7 +153,7 @@ accounts, a public profile, and can list properties (owner-approved).
   `supabase/setup-storage.sql`; (3) confirm `SUPABASE_SERVICE_ROLE_KEY`
   (already load-bearing for owner provisioning) and `RESEND_API_KEY` are set
   in `.env.local` + Vercel — provisioning refuses without the service key, and
-  without Resend the account is created but the owner sees a "Resend invite"
+  without Resend the account is created but the owner sees a "Resend sign-in link"
   warning; (4) walk it: add a specialist in `/admin/specialists` → they get
   the invitation email → set a password → sign in at `/portal/login` → fill
   profile + portrait → create a listing and submit → approve it in Listings →

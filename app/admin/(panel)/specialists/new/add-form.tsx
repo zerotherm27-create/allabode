@@ -66,7 +66,7 @@ function ResendInvite({ id }: { id: string }) {
         className="press inline-flex min-h-11 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium text-navy hover:bg-surface-gray disabled:opacity-60"
       >
         <Icon name="send" size={18} />
-        {pending ? "Sending…" : "Resend invite"}
+        {pending ? "Sending…" : "Resend sign-in link"}
       </button>
       {result && (
         <p role={result.ok ? "status" : "alert"} className={`text-sm ${result.ok ? "text-available" : "text-error"}`}>

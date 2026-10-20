@@ -346,9 +346,14 @@ create policy "specialist updates own listings" on listings
   for update to authenticated
   using      (specialist_id = (select current_specialist_id()))
   with check (specialist_id = (select current_specialist_id()));
+-- Never an APPROVED (live) listing: deleting cascades to staff-owned data
+-- (viewing_bookings ON DELETE CASCADE, inquiries SET NULL) and FK actions
+-- bypass RLS. Specialists take a live listing down by setting status
+-- 'Archived' instead; staff can still delete anything.
 create policy "specialist deletes own listings" on listings
   for delete to authenticated
-  using (specialist_id = (select current_specialist_id()));
+  using (specialist_id = (select current_specialist_id())
+         and approval_status <> 'approved');
 
 -- ---------- listing_images: via the parent listing's specialist ----------
 drop policy if exists "specialist reads own listing images"   on listing_images;

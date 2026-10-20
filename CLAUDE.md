@@ -101,7 +101,7 @@ per-task). Read both before any `/impeccable` design command.
 
 ## Build status (updated — resume here)
 
-**DONE — Property specialists (Phase 1 of 4):** licensed agents get their own
+**DONE — Property specialists (Phase 1 of 4):** property specialists get their own
 accounts, a public profile, and can list properties (owner-approved).
 - Migration `supabase/migrations/20261020100000_specialists.sql` — `specialists`
   table + RLS + triggers, the `public_specialists` view, listing approval columns.

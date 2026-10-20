@@ -111,22 +111,25 @@ export default async function PendingSignupsPage() {
 
   try {
     const admin = createAdminClient();
-    const [authUsers, ownersResult, tenantsResult, staffResult] = await Promise.all([
+    const [authUsers, ownersResult, tenantsResult, staffResult, specialistsResult] = await Promise.all([
       listAllAuthUsers(),
       admin.from("owners").select("id,email,auth_user_id"),
       admin.from("tenants").select("id,email,auth_user_id"),
       admin.from("users").select("id,email"),
+      admin.from("specialists").select("id,email,auth_user_id"),
     ]);
 
     if (ownersResult.error) throw new Error(ownersResult.error.message);
     if (tenantsResult.error) throw new Error(tenantsResult.error.message);
     if (staffResult.error) throw new Error(staffResult.error.message);
+    if (specialistsResult.error) throw new Error(specialistsResult.error.message);
 
     rows = buildPendingSignups({
       authUsers,
       owners: (ownersResult.data ?? []) as LinkedRecord[],
       tenants: (tenantsResult.data ?? []) as LinkedRecord[],
       staff: (staffResult.data ?? []) as LinkedRecord[],
+      specialists: (specialistsResult.data ?? []) as LinkedRecord[],
     });
   } catch (error) {
     loadError = error instanceof Error ? error.message : "Unknown Supabase admin error";

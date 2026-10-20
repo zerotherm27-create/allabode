@@ -67,3 +67,25 @@ test("buildPendingSignups returns auth users with no staff, owner, or tenant lin
   ]);
 });
 
+
+test("buildPendingSignups excludes specialist applicants", async () => {
+  const { buildPendingSignups } = await loadPendingSignupsModule();
+
+  const authUsers = [
+    { id: "auth-spec", email: "spec@example.com", created_at: "2026-10-01T00:00:00Z" },
+    { id: "auth-spec2", email: "other@example.com", created_at: "2026-10-02T00:00:00Z" },
+    { id: "auth-new", email: "new@example.com", created_at: "2026-10-03T00:00:00Z" },
+  ];
+  const pending = buildPendingSignups({
+    authUsers,
+    owners: [],
+    tenants: [],
+    staff: [],
+    specialists: [
+      { id: "sp-1", email: "spec@example.com", auth_user_id: "auth-spec" },
+      { id: "sp-2", email: "other@example.com", auth_user_id: null },
+    ],
+  });
+
+  assert.deepEqual(pending.map((p) => p.id), ["auth-new"]);
+});

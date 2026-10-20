@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
-export type PortalRole = "staff" | "owner" | "tenant";
+export type PortalRole = "staff" | "owner" | "tenant" | "specialist";
 
 export type RoleContext = {
   role: PortalRole | null;
@@ -8,6 +8,7 @@ export type RoleContext = {
   email: string | null;
   ownerId: string | null;
   tenantId: string | null;
+  specialistId: string | null;
 };
 
 function sameEmail(a?: string | null, b?: string | null) {
@@ -29,7 +30,7 @@ export async function getCurrentRole(): Promise<RoleContext> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { role: null, userId: null, email: null, ownerId: null, tenantId: null };
+    return { role: null, userId: null, email: null, ownerId: null, tenantId: null, specialistId: null };
   }
   const base = { userId: user.id, email: user.email ?? null };
 
@@ -39,7 +40,7 @@ export async function getCurrentRole(): Promise<RoleContext> {
     .eq("auth_user_id", user.id)
     .maybeSingle();
   if (owner && sameEmail((owner as { email?: string | null }).email, user.email)) {
-    return { role: "owner", ownerId: owner.id as string, tenantId: null, ...base };
+    return { role: "owner", ownerId: owner.id as string, tenantId: null, specialistId: null, ...base };
   }
 
   const { data: tenant } = await supabase
@@ -48,7 +49,7 @@ export async function getCurrentRole(): Promise<RoleContext> {
     .eq("auth_user_id", user.id)
     .maybeSingle();
   if (tenant && sameEmail((tenant as { email?: string | null }).email, user.email)) {
-    return { role: "tenant", ownerId: null, tenantId: tenant.id as string, ...base };
+    return { role: "tenant", ownerId: null, tenantId: tenant.id as string, specialistId: null, ...base };
   }
 
   // Dual-role/staff fallback: if the auth UUID is in public.users, the
@@ -62,7 +63,7 @@ export async function getCurrentRole(): Promise<RoleContext> {
       .ilike("email", user.email)
       .maybeSingle();
     if (ownerByEmail) {
-      return { role: "owner", ownerId: ownerByEmail.id as string, tenantId: null, ...base };
+      return { role: "owner", ownerId: ownerByEmail.id as string, tenantId: null, specialistId: null, ...base };
     }
 
     const { data: tenantByEmail } = await supabase
@@ -71,14 +72,23 @@ export async function getCurrentRole(): Promise<RoleContext> {
       .ilike("email", user.email)
       .maybeSingle();
     if (tenantByEmail) {
-      return { role: "tenant", ownerId: null, tenantId: tenantByEmail.id as string, ...base };
+      return { role: "tenant", ownerId: null, tenantId: tenantByEmail.id as string, specialistId: null, ...base };
     }
   }
 
-  const { data: isStaff } = await supabase.rpc("is_staff");
-  if (isStaff) return { role: "staff", ownerId: null, tenantId: null, ...base };
+  const { data: specialist } = await supabase
+    .from("specialists")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  if (specialist) {
+    return { role: "specialist", ownerId: null, tenantId: null, specialistId: specialist.id as string, ...base };
+  }
 
-  return { role: null, ownerId: null, tenantId: null, ...base };
+  const { data: isStaff } = await supabase.rpc("is_staff");
+  if (isStaff) return { role: "staff", ownerId: null, tenantId: null, specialistId: null, ...base };
+
+  return { role: null, ownerId: null, tenantId: null, specialistId: null, ...base };
 }
 
 /**
@@ -138,6 +148,20 @@ export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null;
     if (tenantByEmail) return { role: "tenant", redirect: "/dashboard/tenant" };
   }
 
+  // Specialists: link by application metadata (no-op for everyone else), then
+  // look up the row. The RPC may not exist yet, so it must never break sign-in.
+  try {
+    await supabase.rpc("link_specialist_account");
+  } catch {
+    // ignore
+  }
+  const { data: specialist } = await supabase
+    .from("specialists")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  if (specialist) return { role: "specialist", redirect: "/dashboard/specialist" };
+
   // Fall back to staff — they should use /admin directly, not the portal.
   const { data: isStaff } = await supabase.rpc("is_staff");
   if (isStaff) return { role: "staff", redirect: "/admin" };
@@ -154,6 +178,8 @@ export function homeForRole(role: PortalRole | null): string {
       return "/dashboard/owner";
     case "tenant":
       return "/dashboard/tenant";
+    case "specialist":
+      return "/dashboard/specialist";
     default:
       return "/portal";
   }

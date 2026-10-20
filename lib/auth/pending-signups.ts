@@ -59,11 +59,13 @@ export function buildPendingSignups({
   owners,
   tenants,
   staff,
+  specialists = [],
 }: {
   authUsers: AuthUser[];
   owners: LinkedRecord[];
   tenants: LinkedRecord[];
   staff: LinkedRecord[];
+  specialists?: LinkedRecord[];
 }): PendingSignup[] {
   return authUsers
     .filter((user) => {
@@ -72,7 +74,8 @@ export function buildPendingSignups({
       return !(
         hasRecordForUser(owners, user.id, email) ||
         hasRecordForUser(tenants, user.id, email) ||
-        hasRecordForUser(staff, user.id, email)
+        hasRecordForUser(staff, user.id, email) ||
+        hasRecordForUser(specialists, user.id, email)
       );
     })
     .map((user) => {

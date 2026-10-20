@@ -14,6 +14,7 @@ export function resolvePostAuthRedirect(
   if (role === "staff" && requestedNext.startsWith("/admin")) return requestedNext;
   if (role === "owner" && requestedNext.startsWith("/dashboard/owner")) return requestedNext;
   if (role === "tenant" && requestedNext.startsWith("/dashboard/tenant")) return requestedNext;
+  if (role === "specialist" && requestedNext.startsWith("/dashboard/specialist")) return requestedNext;
   if (!role && requestedNext === "/portal") return requestedNext;
 
   return fallback;

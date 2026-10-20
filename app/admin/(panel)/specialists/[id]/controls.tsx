@@ -2,11 +2,13 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { visibilityCopy } from "@/lib/team/admin-status";
 import {
   attachSpecialistDomainAction,
   reinstateSpecialist,
   removeSpecialistAction,
   resendSpecialistInviteAction,
+  setSpecialistVisibility,
   suspendSpecialistAction,
   type SpecialistActionState,
 } from "@/app/admin/specialist-actions";
@@ -141,6 +143,42 @@ export function SubdomainControls({ id, slug, state }: { id: string; slug: strin
         </button>
         <Notice state={result} />
       </div>
+    </div>
+  );
+}
+
+/** Staff switch: hide a specialist from the public website, or show them again.
+ *  `available` is false until the visibility migration has been run. */
+export function VisibilityControls({ id, visible, available }: { id: string; visible: boolean; available: boolean }) {
+  const [pending, start] = useTransition();
+  const [state, setState] = useState<SpecialistActionState | null>(null);
+  const copy = visibilityCopy(visible);
+  return (
+    <div className="rounded-lg border border-line bg-surface p-6">
+      <h2 className="font-display text-sm font-semibold text-navy">Website visibility</h2>
+      {!available ? (
+        <p className="mt-1 text-sm text-slate">Run the visibility migration to use this option.</p>
+      ) : (
+        <>
+          <p className="mt-1 text-sm text-ink">
+            <strong>{copy.state}</strong>
+          </p>
+          <p className="mt-1 text-sm text-slate">{copy.explanation}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button type="button" disabled={pending}
+              onClick={() => {
+                if (copy.confirm && !window.confirm(copy.confirm)) return;
+                start(async () => setState(await setSpecialistVisibility(id, !visible)));
+              }}
+              className={visible
+                ? "rounded-md border border-line px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray disabled:opacity-50"
+                : "rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50"}>
+              {pending ? "Saving…" : copy.button}
+            </button>
+            <Notice state={state} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

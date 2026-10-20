@@ -217,3 +217,37 @@ export function isMissingColumn(error: { code?: string; message?: string } | nul
   return error.code === "42703" || error.code === "PGRST204" || error.code === "PGRST200"
     || /column .* does not exist|Could not find (the )?['"]?\w+['"]? column|Could not find a relationship/i.test(error.message ?? "");
 }
+
+// ---------- website visibility (staff) ----------
+/** A row is visible unless is_visible is explicitly false. null/undefined means
+ *  the column does not exist yet (migration not run), which counts as visible. */
+export function isSpecialistVisible(row: { is_visible?: boolean | null }): boolean {
+  return row.is_visible !== false;
+}
+
+/** Whether the visibility control can be offered: the column must exist
+ *  (is_visible is a boolean, not undefined). */
+export function visibilityAvailable(row: { is_visible?: boolean | null }): boolean {
+  return typeof row.is_visible === "boolean";
+}
+
+/** Copy for the detail-page control, by current state. */
+export function visibilityCopy(visible: boolean): {
+  state: string; button: string; explanation: string; confirm: string | null;
+} {
+  return visible
+    ? {
+        state: "Visible on the website",
+        button: "Hide from website",
+        explanation:
+          "Hiding removes this specialist from the team page, their profile and web address (it shows as not found), the sitemap and the \u201cListed by\u201d line on their listings, which then show as house listings. They can still sign in, edit their profile and manage their listings, and nothing is deleted.",
+        confirm: "Hide this specialist from the public website? Their listings stay live as house listings.",
+      }
+    : {
+        state: "Hidden from the website",
+        button: "Show on website",
+        explanation:
+          "This specialist is not shown anywhere on the public website and their listings show as house listings. They can still sign in and manage their profile and listings. Showing them again restores their profile, web address and \u201cListed by\u201d line.",
+        confirm: null,
+      };
+}

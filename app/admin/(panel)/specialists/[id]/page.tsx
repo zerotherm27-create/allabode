@@ -9,11 +9,13 @@ import {
   specialistAccountState,
   canResendSignInLink,
   canRemoveSpecialist,
+  isSpecialistVisible,
+  visibilityAvailable,
 } from "@/lib/team/admin-status";
 import { getNeverSignedIn } from "@/lib/team/provision";
 import { checkSpecialistDomain } from "@/lib/team/vercel-domains";
 import { subdomainState } from "@/lib/team/domain-status";
-import { InviteControls, StatusControls, SubdomainControls } from "./controls";
+import { InviteControls, StatusControls, SubdomainControls, VisibilityControls } from "./controls";
 
 type Row = {
   id: string; display_name: string; email: string; phone: string | null; status: string;
@@ -22,6 +24,8 @@ type Row = {
   areas: string[]; specialties: string[]; languages: string[];
   years_experience: number | null;
   created_at: string;
+  /** Absent until the visibility migration is run. */
+  is_visible?: boolean | null;
 };
 
 function Item({ label, value }: { label: string; value: string | null | undefined }) {
@@ -71,6 +75,7 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
         <h1 className="mt-2 font-display text-2xl font-bold text-navy">{s.display_name}</h1>
         <p className="mt-1 text-sm text-slate">
           Status: <strong className="text-ink">{ACCOUNT_STATE_LABEL[state]}</strong>
+          {!isSpecialistVisible(s) && <> · <strong className="text-ink">Hidden from the website</strong></>}
           {s.status === "approved" && s.subdomain && (
             <>
               {" · "}
@@ -112,6 +117,7 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
         </p>
       )}
       {s.subdomain && domainState && <SubdomainControls id={s.id} slug={s.subdomain} state={domainState} />}
+      <VisibilityControls id={s.id} visible={isSpecialistVisible(s)} available={visibilityAvailable(s)} />
       <StatusControls id={s.id} canSuspend={act.suspend} canReinstate={act.reinstate} />
     </div>
   );

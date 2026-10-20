@@ -4,7 +4,9 @@ import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import {
   ACCOUNT_STATE_LABEL,
+  isMissingColumn,
   isMissingTable,
+  isSpecialistVisible,
   sortSpecialists,
   specialistAccountState,
   type SpecialistAccountState,
@@ -19,6 +21,7 @@ type Row = {
   auth_user_id: string | null;
   subdomain: string | null;
   created_at: string;
+  is_visible?: boolean | null;
 };
 
 type ViewRow = Row & { state: SpecialistAccountState };
@@ -37,7 +40,12 @@ const columns: Column<ViewRow>[] = [
   {
     header: "Status",
     cell: (r) => (
-      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${stateStyle[r.state]}`}>{ACCOUNT_STATE_LABEL[r.state]}</span>
+      <span className="inline-flex flex-wrap items-center gap-1.5">
+        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${stateStyle[r.state]}`}>{ACCOUNT_STATE_LABEL[r.state]}</span>
+        {!isSpecialistVisible(r) && (
+          <span className="rounded-full bg-surface-gray px-2.5 py-1 text-xs font-medium text-slate">Hidden</span>
+        )}
+      </span>
     ),
   },
   { header: "Web address", cell: (r) => <span className="text-slate">{r.subdomain ?? "—"}</span> },
@@ -45,9 +53,12 @@ const columns: Column<ViewRow>[] = [
 
 export default async function AdminSpecialistsPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("specialists")
-    .select("id,display_name,email,status,auth_user_id,subdomain,created_at");
+  const BASE_COLS = "id,display_name,email,status,auth_user_id,subdomain,created_at";
+  let { data, error } = await supabase.from("specialists").select(`${BASE_COLS},is_visible`);
+  if (isMissingColumn(error)) {
+    // Visibility migration not run yet: list without the Hidden badge.
+    ({ data, error } = await supabase.from("specialists").select(BASE_COLS));
+  }
   const missing = isMissingTable(error);
   const raw = (data ?? []) as Row[];
   // Sign-in status comes from the Auth Admin API (last_sign_in_at); null when

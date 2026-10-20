@@ -253,6 +253,35 @@ export async function reinstateSpecialist(specialistId: string): Promise<Special
   return done("Reinstated. Their earlier listings stay as house listings.");
 }
 
+/**
+ * Staff-only: hide a specialist from the public website, or show them again.
+ * Only flips specialists.is_visible (the public_specialists view does the
+ * rest); login, profile editing and listings are untouched. `.select('id')`
+ * detects a zero-row update (missing row / RLS).
+ */
+export async function setSpecialistVisibility(specialistId: string, visible: boolean): Promise<SpecialistActionState> {
+  const guard = await staffClient();
+  if (guard.error) return guard.error;
+  if (!specialistId || typeof visible !== "boolean") return fail("Missing specialist.");
+
+  const { data, error } = await guard.supabase
+    .from("specialists")
+    .update({ is_visible: visible })
+    .eq("id", specialistId)
+    .select("id,subdomain");
+  if (error) {
+    return fail(isMissingColumn(error) ? "Run the visibility migration to use this option." : error.message);
+  }
+  if (!data || data.length === 0) return fail("Specialist not found.");
+
+  refresh((data[0] as { subdomain: string | null }).subdomain ?? undefined);
+  revalidatePublicListingPaths();
+  revalidatePath(`/admin/specialists/${specialistId}`);
+  return done(visible
+    ? "Now visible on the website."
+    : "Hidden from the website. Their listings show as house listings.");
+}
+
 function refreshListing(id: string, slug?: string | null) {
   revalidatePath("/admin");
   revalidatePath("/admin/listings");

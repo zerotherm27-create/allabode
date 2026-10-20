@@ -156,3 +156,20 @@ test("remove specialist: only while the login has never been used", () => {
   assert.equal(canRemoveSpecialist({ status: "approved" }, true), false);
   assert.equal(canRemoveSpecialist({ status: "suspended" }, false), false);
 });
+
+test("website visibility helpers", async () => {
+  const { isSpecialistVisible, visibilityAvailable, visibilityCopy } = await loadTs("lib/team/admin-status.ts");
+  assert.equal(isSpecialistVisible({ is_visible: true }), true);
+  assert.equal(isSpecialistVisible({ is_visible: false }), false);
+  assert.equal(isSpecialistVisible({}), true);
+  assert.equal(isSpecialistVisible({ is_visible: null }), true);
+  assert.equal(visibilityAvailable({ is_visible: false }), true);
+  assert.equal(visibilityAvailable({ is_visible: true }), true);
+  assert.equal(visibilityAvailable({}), false);
+  assert.equal(visibilityAvailable({ is_visible: null }), false);
+  assert.equal(visibilityCopy(true).button, "Hide from website");
+  assert.equal(visibilityCopy(true).state, "Visible on the website");
+  assert.equal(visibilityCopy(false).button, "Show on website");
+  assert.equal(visibilityCopy(false).state, "Hidden from the website");
+  assert.equal(visibilityCopy(false).confirm, null);
+});

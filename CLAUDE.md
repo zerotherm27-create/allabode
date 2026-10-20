@@ -128,6 +128,13 @@ accounts, a public profile, and can list properties (owner-approved).
   has never been used; deletes the row, then the auth user); also suspend/reinstate. A specialist appears on `/team`
   as soon as they are added, so add them when ready. Public `/team` directory
   and `/team/<slug>` profile; "About" nav dropdown.
+- **Website visibility:** staff can **Hide from website** / **Show on website** per
+  specialist (`specialists.is_visible`, default true; staff-only via the guard trigger).
+  Hidden = gone from `/team`, the profile + subdomain (404), sitemap and "Listed by"
+  (their listings show as house listings); unlike Suspend they keep their login,
+  profile and listings. Public code reads only `public_specialists`, which filters it.
+  **User must run `supabase/migrations/20261021100000_specialist_visibility.sql` in the
+  SQL editor (after the first one);** the admin control is fail-soft until then.
 - **Design rules:** specialists are NEVER rows in `users` (that table is staff);
   new `specialist` role in `lib/auth/role.ts`. `public_specialists` is the only
   public window onto the table. Every specialist shows the fixed label

@@ -42,12 +42,16 @@ export function JoinForm() {
   const [loading, setLoading] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [signedInAs, setSignedInAs] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
 
   useEffect(() => {
     createClient()
       .auth.getUser()
       .then(({ data }) => setSignedInAs(data.user?.email ?? (data.user ? "your account" : null)))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setChecking(false));
   }, []);
 
   function setErr(name: keyof Errors, msg: string) {
@@ -59,7 +63,14 @@ export function JoinForm() {
   }
 
   async function signOut() {
-    await createClient().auth.signOut();
+    setSignOutError("");
+    setSigningOut(true);
+    const { error } = await createClient().auth.signOut();
+    setSigningOut(false);
+    if (error) {
+      setSignOutError("Could not sign out. Try again.");
+      return;
+    }
     setSignedInAs(null);
   }
 
@@ -119,8 +130,16 @@ export function JoinForm() {
           <Link href="/portal/login" className="font-medium text-navy-700 hover:text-gold">sign in</Link>.
           Your application stays pending until our team approves it.
         </p>
+        <p className="mt-3 text-sm text-slate">
+          Already have an account?{" "}
+          <Link href="/portal/login" className="font-medium text-navy-700 hover:text-gold">Sign in</Link>
+        </p>
       </div>
     );
+  }
+
+  if (checking) {
+    return <div aria-hidden className="h-96 animate-pulse rounded-md bg-surface-gray" />;
   }
 
   if (signedInAs) {
@@ -133,9 +152,22 @@ export function JoinForm() {
         <p className="mt-2 text-sm text-slate">
           You are signed in as {signedInAs}. Apply with a different email address, or sign out first.
         </p>
-        <Button type="button" variant="ghost" size="lg" className="mt-6 w-full" onClick={signOut}>
-          Sign out
+        <Button type="button" variant="ghost" size="lg" className="mt-6 w-full" onClick={signOut} disabled={signingOut}>
+          {signingOut ? (
+            <>
+              <Icon name="progress_activity" size={20} className="animate-spin" />
+              Signing out
+            </>
+          ) : (
+            "Sign out"
+          )}
         </Button>
+        {signOutError && (
+          <p role="alert" className="mt-3 flex items-center justify-center gap-1.5 text-sm text-error">
+            <Icon name="error" size={18} />
+            {signOutError}
+          </p>
+        )}
       </div>
     );
   }
@@ -143,7 +175,7 @@ export function JoinForm() {
   const radio =
     "flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-line px-4 py-2 text-sm text-ink " +
     "transition-colors hover:border-navy-700 has-[:checked]:border-navy has-[:checked]:bg-surface-gray " +
-    "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2";
+    "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus";
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
@@ -174,7 +206,7 @@ export function JoinForm() {
           value={subdomain}
           onChange={(e) => {
             setSubdomain(e.target.value);
-            if (errors.subdomain) setErr("subdomain", check("subdomain", e.target.value, mode));
+            if (e.target.value || errors.subdomain) setErr("subdomain", check("subdomain", e.target.value, mode));
           }}
           onBlur={onBlur("subdomain")}
         />

@@ -22,7 +22,7 @@ const statusStyle: Record<string, string> = {
   rejected: "bg-surface-gray text-slate",
 };
 
-export const specialistStatusLabel = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const specialistStatusLabel = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const columns: Column<Row>[] = [
   { header: "Name", primary: true, cell: (r) => <Link href={`/admin/specialists/${r.id}`} className="font-medium text-navy hover:text-navy-700">{r.display_name}</Link> },

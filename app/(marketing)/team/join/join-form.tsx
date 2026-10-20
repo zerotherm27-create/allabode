@@ -47,8 +47,8 @@ export function JoinForm() {
   const [signOutError, setSignOutError] = useState("");
 
   useEffect(() => {
-    createClient()
-      .auth.getUser()
+    Promise.resolve()
+      .then(() => createClient().auth.getUser())
       .then(({ data }) => setSignedInAs(data.user?.email ?? (data.user ? "your account" : null)))
       .catch(() => {})
       .finally(() => setChecking(false));
@@ -178,51 +178,51 @@ export function JoinForm() {
   return (
     <form onSubmit={onSubmit} noValidate aria-busy={checking} className="flex flex-col gap-5">
       <fieldset disabled={checking} className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
-      <Field label="Full name" required error={errors.full_name}>
-        <Input name="full_name" autoComplete="name" placeholder="Ram Santos" onBlur={onBlur("full_name")} />
-      </Field>
-      <Field label="Email" required error={errors.email}>
-        <Input name="email" type="email" autoComplete="email" placeholder="you@example.com" onBlur={onBlur("email")} />
-      </Field>
-      <Field label="Password" required hint="At least 6 characters." error={errors.password}>
-        <Input name="password" type="password" autoComplete="new-password" onBlur={onBlur("password")} />
-      </Field>
-      <Field label="Mobile number" required error={errors.phone}>
-        <Input name="phone" type="tel" autoComplete="tel" placeholder="0917 123 4567" onBlur={onBlur("phone")} />
-      </Field>
-      <Field
-        label="Requested web address"
-        required
-        hint={`Your page will be ${subdomain.trim().toLowerCase() || "yourname"}.allabodeph.com`}
-        error={errors.subdomain}
-      >
-        <Input
-          name="subdomain"
-          autoComplete="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          placeholder="ramsantos"
-          value={subdomain}
-          onChange={(e) => {
-            setSubdomain(e.target.value);
-            if (e.target.value || errors.subdomain) setErr("subdomain", check("subdomain", e.target.value, mode));
-          }}
-          onBlur={onBlur("subdomain")}
-        />
-      </Field>
+        <Field label="Full name" required error={errors.full_name}>
+          <Input name="full_name" autoComplete="name" placeholder="Ram Santos" onBlur={onBlur("full_name")} />
+        </Field>
+        <Field label="Email" required error={errors.email}>
+          <Input name="email" type="email" autoComplete="email" placeholder="you@example.com" onBlur={onBlur("email")} />
+        </Field>
+        <Field label="Password" required hint="At least 6 characters." error={errors.password}>
+          <Input name="password" type="password" autoComplete="new-password" onBlur={onBlur("password")} />
+        </Field>
+        <Field label="Mobile number" required error={errors.phone}>
+          <Input name="phone" type="tel" autoComplete="tel" placeholder="0917 123 4567" onBlur={onBlur("phone")} />
+        </Field>
+        <Field
+          label="Requested web address"
+          required
+          hint={`Your page will be ${subdomain.trim().toLowerCase() || "yourname"}.allabodeph.com`}
+          error={errors.subdomain}
+        >
+          <Input
+            name="subdomain"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="ramsantos"
+            value={subdomain}
+            onChange={(e) => {
+              setSubdomain(e.target.value);
+              if (e.target.value || errors.subdomain) setErr("subdomain", check("subdomain", e.target.value, mode));
+            }}
+            onBlur={onBlur("subdomain")}
+          />
+        </Field>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1.5 text-sm font-medium text-navy">Licence</legend>
-        <label className={radio}>
-          <input type="radio" name="license_mode" value="own" checked={mode === "own"}
-            onChange={() => setMode("own")} className="size-4 accent-navy" />
-          I hold my own PRC licence
-        </label>
-        <label className={radio}>
-          <input type="radio" name="license_mode" value="under_broker" checked={mode === "under_broker"}
-            onChange={() => { setMode("under_broker"); setErr("license_no", ""); }} className="size-4 accent-navy" />
-          I am accredited under a licensed broker
-        </label>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-sm font-medium text-navy">Licence</legend>
+          <label className={radio}>
+            <input type="radio" name="license_mode" value="own" checked={mode === "own"}
+              onChange={() => setMode("own")} className="size-4 accent-navy" />
+            I hold my own PRC licence
+          </label>
+          <label className={radio}>
+            <input type="radio" name="license_mode" value="under_broker" checked={mode === "under_broker"}
+              onChange={() => { setMode("under_broker"); setErr("license_no", ""); }} className="size-4 accent-navy" />
+            I am accredited under a licensed broker
+          </label>
       </fieldset>
 
       {mode === "own" && (

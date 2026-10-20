@@ -95,8 +95,10 @@ begin
   end if;
 
   -- The public licence line ("PRC License No." / "Accredited under …") is a
-  -- compliance statement: once approved, only staff may change it.
-  if old.status = 'approved'
+  -- compliance statement: once the application has left 'pending' (approved,
+  -- rejected or suspended), only staff may change it — so staff never
+  -- re-approve a licence line they did not review.
+  if old.status <> 'pending'
      and (new.license_mode   is distinct from old.license_mode
        or new.license_no     is distinct from old.license_no
        or new.license_expiry is distinct from old.license_expiry) then
@@ -213,8 +215,8 @@ create index if not exists listings_specialist_idx      on listings (specialist_
 create index if not exists listings_approval_status_idx on listings (approval_status);
 
 -- For anyone who is not staff (i.e. a specialist via the session client):
---   insert → always the caller's own, unfeatured draft (and never linked to
---            a property-management unit);
+--   insert → always the caller's own, unfeatured draft with a server-chosen
+--            id (and never linked to a property-management unit);
 --   update → ownership, featuring, staff's rejection note and the PM unit link
 --            are kept as they were; approval may only go draft|rejected →
 --            submitted (anything else raises).
@@ -234,6 +236,8 @@ begin
       raise exception 'Only approved specialists can create listings'
         using errcode = '42501';
     end if;
+    -- Never a caller-chosen id (it is also the listing-images storage folder).
+    new.id              := gen_random_uuid();
     new.specialist_id   := v_sid;
     new.approval_status := 'draft';
     new.is_featured     := false;

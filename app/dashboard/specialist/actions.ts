@@ -30,6 +30,13 @@ export type SpecialistProfileState = { ok: boolean; message: string };
 const fail = (message: string): SpecialistProfileState => ({ ok: false, message });
 const done = (message: string): SpecialistProfileState => ({ ok: true, message });
 
+/** Public profile pages are ISR-cached (300s): invalidate all of them and the specialist's own. */
+function revalidateProfilePages(subdomain: string | null) {
+  revalidatePath("/team");
+  revalidatePath("/team/[slug]", "page");
+  if (subdomain) revalidatePath(`/team/${subdomain}`);
+}
+
 function text(fd: FormData, key: string, max: number) {
   const v = fd.get(key);
   return typeof v === "string" ? v.trim().slice(0, max) : "";
@@ -42,11 +49,16 @@ async function ownSpecialist() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("specialists")
-    .select("id,status")
+    .select("id,status,subdomain")
     .eq("id", specialistId)
     .maybeSingle();
   if (!data) return null;
-  return { supabase, id: data.id as string, status: data.status as string };
+  return {
+    supabase,
+    id: data.id as string,
+    status: data.status as string,
+    subdomain: (data.subdomain as string | null) ?? null,
+  };
 }
 
 export async function updateSpecialistProfile(
@@ -100,7 +112,7 @@ export async function updateSpecialistProfile(
 
   revalidatePath("/dashboard/specialist/profile");
   revalidatePath("/dashboard/specialist");
-  revalidatePath("/team");
+  revalidateProfilePages(me.subdomain);
   return done("Profile saved. Changes are live now.");
 }
 
@@ -149,7 +161,7 @@ export async function uploadSpecialistPhoto(
   if (!data || data.length === 0) return fail("The photo uploaded but wasn't linked to your profile. Try again.");
 
   revalidatePath("/dashboard/specialist/profile");
-  revalidatePath("/team");
+  revalidateProfilePages(me.subdomain);
   return done("Photo updated.");
 }
 

@@ -23,9 +23,13 @@ function field(fd: FormData, key: string) {
   return typeof v === "string" ? v.trim() : "";
 }
 
-function refresh() {
+function refresh(subdomain?: string) {
   revalidatePath("/admin/specialists");
   revalidatePath("/team");
+  // Public profiles are ISR-cached (300s); invalidate every /team/<slug> page,
+  // plus the concrete path when the subdomain is known.
+  revalidatePath("/team/[slug]", "page");
+  if (subdomain) revalidatePath(`/team/${subdomain}`);
   revalidatePath("/listings");
 }
 
@@ -79,7 +83,7 @@ export async function approveSpecialist(
     return fail("Only pending or rejected applications can be approved.");
   }
 
-  refresh();
+  refresh(parsed.value);
   revalidatePath(`/admin/specialists/${id}`);
   return done(`Approved. Their address is ${parsed.value}.`);
 }

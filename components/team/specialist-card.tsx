@@ -46,6 +46,35 @@ export function SpecialistPortrait({
 }
 
 /**
+ * Square headshot for the directory: the stored portrait is a tall 4:5 photo, so
+ * it is zoomed in on the top of the frame (face and shoulders) instead of
+ * showing the whole picture. The full portrait stays on the profile page.
+ */
+function Headshot({ name, photoUrl }: { name: string; photoUrl: string | null }) {
+  return (
+    <div className="relative aspect-square overflow-hidden bg-navy">
+      {photoUrl ? (
+        <Image
+          src={photoUrl}
+          alt={`Headshot of ${name}`}
+          fill
+          sizes="(min-width: 1024px) 300px, (min-width: 640px) 33vw, 100vw"
+          unoptimized
+          className="origin-[50%_14%] scale-[1.45] object-cover object-top transition-transform duration-700 group-hover:scale-[1.52]"
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex h-full w-full items-center justify-center bg-gradient-to-br from-navy via-navy-800 to-navy-700 font-display text-5xl font-bold text-gold"
+        >
+          {initialsOf(name)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
  * Directory card. The whole card is one link to the profile (no nested
  * anchors) so the focus ring wraps the card; the "View profile" row is a
  * visual cue and a 44px-high target. Phone/email are private, so there is no
@@ -58,12 +87,7 @@ export function SpecialistCard({ specialist }: { specialist: PublicSpecialist })
       href={`/team/${specialist.slug}`}
       className="group flex h-full flex-col overflow-hidden border border-line bg-surface transition-shadow duration-[var(--dur-mid)] hover:shadow-[var(--shadow-card)]"
     >
-      <SpecialistPortrait
-        name={specialist.name}
-        photoUrl={specialist.photoUrl}
-        sizes="(min-width: 1024px) 300px, (min-width: 640px) 33vw, 100vw"
-        className="[&_img]:transition-transform [&_img]:duration-700 group-hover:[&_img]:scale-105"
-      />
+      <Headshot name={specialist.name} photoUrl={specialist.photoUrl} />
       <div className="flex flex-1 flex-col p-6">
         <h3 className="font-display text-lg font-semibold leading-tight text-navy">
           {specialist.name}

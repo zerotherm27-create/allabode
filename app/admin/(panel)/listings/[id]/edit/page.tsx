@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { ListingForm, type ListingValues } from "@/components/admin/listing-form";
+import { ListingApprovalPanel } from "@/components/admin/listing-approval-panel";
 import { ListingImagesManager } from "@/components/admin/listing-images-manager";
 import { RefreshNearbyPlacesButton } from "@/components/admin/refresh-nearby-places-button";
 import { updateListing } from "@/app/admin/actions";
@@ -40,6 +41,18 @@ export default async function EditListingPage({
   });
 
   const initial = data as ListingValues;
+  // Specialist-owned listings get a review panel. These columns only exist once the
+  // specialists migration has run; before that they are undefined and the panel is skipped.
+  const owned = data as { specialist_id?: string | null; approval_status?: string; rejection_note?: string | null; status?: string };
+  let specialistName: string | null = null;
+  if (owned.specialist_id) {
+    const { data: sp } = await supabase
+      .from("specialists")
+      .select("display_name")
+      .eq("id", owned.specialist_id)
+      .maybeSingle();
+    specialistName = (sp as { display_name?: string } | null)?.display_name ?? null;
+  }
   const nearbyPlacesUpdatedAt = (data as { nearby_places_updated_at: string | null }).nearby_places_updated_at;
   const action = updateListing.bind(null, id);
 
@@ -54,6 +67,15 @@ export default async function EditListingPage({
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">Edit listing</h1>
       <p className="mt-1 text-sm text-slate">{initial.title}</p>
+      {owned.specialist_id && (
+        <ListingApprovalPanel
+          listingId={id}
+          specialistName={specialistName}
+          approvalStatus={owned.approval_status ?? "draft"}
+          rejectionNote={owned.rejection_note ?? null}
+          status={owned.status ?? ""}
+        />
+      )}
       <div className="mt-6">
         <ListingImagesManager listingId={id} initialImages={resolvedImages} />
       </div>

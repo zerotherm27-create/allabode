@@ -6,12 +6,15 @@ import { Icon } from "@/components/icon";
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
 
-  const [listingsRes, inquiriesRes, appraisalsRes, leadsRes] = await Promise.all([
+  const [listingsRes, inquiriesRes, appraisalsRes, leadsRes, awaitingRes] = await Promise.all([
     supabase.from("listings").select("status"),
     supabase.from("inquiries").select("type,status"),
     supabase.from("appraisal_requests").select("status"),
     supabase.from("property_management_leads").select("status"),
+    // Errors (e.g. column missing before the specialists migration) just hide the pointer.
+    supabase.from("listings").select("id", { count: "exact", head: true }).eq("approval_status", "submitted"),
   ]);
+  const awaiting = awaitingRes.error ? 0 : (awaitingRes.count ?? 0);
 
   const listings = (listingsRes.data ?? []) as { status: string }[];
   const inquiries = (inquiriesRes.data ?? []) as { type: string; status: string }[];
@@ -62,6 +65,17 @@ export default async function AdminOverviewPage() {
     <div className="mx-auto max-w-6xl">
       <h1 className="font-display text-2xl font-bold text-navy">Overview</h1>
       <p className="mt-1 text-sm text-slate">Snapshot of listings and incoming leads.</p>
+
+      {awaiting > 0 && (
+        <Link
+          href="/admin/listings?approval=submitted"
+          className="press mt-6 flex min-h-11 items-center gap-3 rounded-lg border border-gold/40 bg-surface px-4 py-3 text-sm font-medium text-navy hover:bg-surface-gray"
+        >
+          <Icon name="hourglass_top" size={20} className="text-gold" />
+          {awaiting} specialist {awaiting === 1 ? "listing" : "listings"} awaiting approval
+          <Icon name="arrow_forward" size={18} className="ml-auto" />
+        </Link>
+      )}
 
       <h2 className="mt-8 font-display text-lg font-semibold text-navy">Listings</h2>
       <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

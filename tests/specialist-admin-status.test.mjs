@@ -33,3 +33,56 @@ test("suspend only from approved; approve never from approved or suspended", () 
   for (const s of ["approved", "suspended"]) assert.equal(availableActions(s).approve, false);
   assert.equal(availableActions("approved").suspend, true);
 });
+
+const {
+  canApproveListing, canRejectListing, normalizeRejectionNote, statusAfterApproval,
+  parseApprovalFilter, approvalCounts, filterByApproval, isMissingColumn,
+} = await loadTs("lib/team/admin-status.ts");
+
+test("listings can be approved or rejected only from submitted", () => {
+  assert.equal(canApproveListing("submitted"), true);
+  assert.equal(canRejectListing("submitted"), true);
+  for (const s of ["draft", "approved", "rejected", null, undefined]) {
+    assert.equal(canApproveListing(s), false);
+    assert.equal(canRejectListing(s), false);
+  }
+});
+
+test("rejection note is required, trimmed and capped", () => {
+  assert.deepEqual(normalizeRejectionNote("  Add photos  "), { ok: true, value: "Add photos" });
+  assert.equal(normalizeRejectionNote("   ").ok, false);
+  assert.equal(normalizeRejectionNote(undefined).ok, false);
+  assert.equal(normalizeRejectionNote("x".repeat(501)).ok, false);
+  assert.equal(normalizeRejectionNote("x".repeat(500)).ok, true);
+});
+
+test("approval moves a Draft listing to Available and leaves other statuses alone", () => {
+  assert.equal(statusAfterApproval("Draft"), "Available");
+  assert.equal(statusAfterApproval("Published"), null);
+  assert.equal(statusAfterApproval("Available"), null);
+});
+
+test("approval filter parsing, counts and ordering", () => {
+  assert.equal(parseApprovalFilter("submitted"), "submitted");
+  assert.equal(parseApprovalFilter("nope"), "all");
+  assert.equal(parseApprovalFilter(["rejected", "x"]), "rejected");
+  assert.equal(parseApprovalFilter(undefined), "all");
+  const rows = [
+    { id: "a", approval_status: "approved" },
+    { id: "b", approval_status: "submitted" },
+    { id: "c" },
+    { id: "d", approval_status: "submitted" },
+    { id: "e", approval_status: "rejected" },
+  ];
+  assert.deepEqual(approvalCounts(rows), { all: 5, submitted: 2, approved: 2, rejected: 1, draft: 0 });
+  assert.deepEqual(filterByApproval(rows, "all").map((r) => r.id), ["b", "d", "a", "c", "e"]);
+  assert.deepEqual(filterByApproval(rows, "approved").map((r) => r.id), ["a", "c"]);
+});
+
+test("detects missing column and relationship errors", () => {
+  assert.equal(isMissingColumn({ code: "42703" }), true);
+  assert.equal(isMissingColumn({ code: "PGRST200", message: "Could not find a relationship between 'listings' and 'specialists'" }), true);
+  assert.equal(isMissingColumn({ message: "column listings.approval_status does not exist" }), true);
+  assert.equal(isMissingColumn({ code: "42501", message: "permission denied" }), false);
+  assert.equal(isMissingColumn(null), false);
+});

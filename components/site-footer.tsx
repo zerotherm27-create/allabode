@@ -61,7 +61,7 @@ export async function SiteFooter() {
           <div className="flex flex-col gap-1.5">
             <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1">
-              {footerNav.compliance.map((item) => (
+              {[...footerNav.compliance, ...footerNav.team].map((item) => (
                 <Link key={item.label} href={item.href} className="transition-colors hover:text-white/60">
                   {item.label}
                 </Link>

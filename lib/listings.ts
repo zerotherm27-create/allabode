@@ -6,8 +6,7 @@ import {
 } from "@/lib/data";
 import type { NearbyPlace } from "@/lib/nearby-places";
 import { LISTING_IMAGES_BUCKET, storagePathFromUrl, signedUrlsForPaths } from "@/lib/storage";
-import { getBroker } from "@/lib/team/broker";
-import { licenseLine } from "@/lib/team/license";
+import { specialistTitleLine } from "@/lib/team/license";
 import { specialistPhotoUrl } from "@/lib/team/queries";
 import { listingMarkets, listingStatusLabel, listingTypeLabels, type ListingCategory } from "@/lib/listing-category";
 
@@ -184,8 +183,6 @@ type SpecialistRow = {
   slug: string;
   display_name: string;
   photo_path: string | null;
-  license_mode: "own" | "accredited";
-  license_no: string | null;
 };
 
 /** Attach the listing specialist, fail-soft. Deliberately a separate step from
@@ -194,7 +191,7 @@ type SpecialistRow = {
  *  column to the main select would error the whole query and swap the live
  *  site to mock data. Any failure here (missing column/view, network) is
  *  swallowed and the listings are returned unchanged. Two small queries at
- *  most (the PRC broker lookup only runs for the detail page). */
+ *  most. */
 async function attachSpecialists(
   listings: Listing[],
   opts: { withLicense?: boolean } = {},
@@ -220,15 +217,10 @@ async function attachSpecialists(
     const specialistIds = [...new Set(wanted.map((id) => bySpecialist.get(id)!))];
     const { data: people, error: peopleErr } = await db
       .from("public_specialists")
-      .select("id,slug,display_name,photo_path,license_mode,license_no")
+      .select("id,slug,display_name,photo_path")
       .in("id", specialistIds);
     if (peopleErr || !Array.isArray(people) || people.length === 0) return listings;
     const byId = new Map((people as SpecialistRow[]).map((p) => [p.id, p]));
-
-    const broker =
-      opts.withLicense && (people as SpecialistRow[]).some((p) => p.license_mode === "accredited")
-        ? await getBroker()
-        : null;
 
     return listings.map((l) => {
       const sid = l.dbId ? bySpecialist.get(l.dbId) : undefined;
@@ -240,9 +232,7 @@ async function attachSpecialists(
           slug: p.slug,
           name: p.display_name,
           photoUrl: specialistPhotoUrl(p.photo_path),
-          licenseLine: opts.withLicense
-            ? licenseLine({ licenseMode: p.license_mode, licenseNo: p.license_no }, broker)
-            : null,
+          licenseLine: opts.withLicense ? specialistTitleLine() : null,
         },
       };
     });

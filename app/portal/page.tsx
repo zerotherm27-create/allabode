@@ -15,7 +15,7 @@ export default async function PortalIndexPage() {
   const { role, redirect: dest } = await linkAndGetPortalRole();
   if (role) redirect(dest);
 
-  // Signed in but no matching owner/tenant record yet → pending.
+  // Signed in but no matching owner/tenant record or specialist invitation yet → pending.
   return (
     <div className="flex min-h-dvh items-center justify-center bg-navy px-5">
       <div className="w-full max-w-md rounded-lg border border-line bg-surface p-8 text-center">
@@ -27,6 +27,11 @@ export default async function PortalIndexPage() {
           Your account <span className="font-medium text-navy">{email}</span> isn’t linked to a
           property record yet. Please ask your All Abode property manager to add you, then refresh
           this page.
+        </p>
+        <p className="mt-3 text-sm text-slate">
+          Your account isn’t linked to a team invitation yet. If you were invited as a property
+          specialist, make sure you signed up with the same email address you gave All Abode, and
+          that you confirmed it.
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link

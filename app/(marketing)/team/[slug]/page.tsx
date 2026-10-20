@@ -7,8 +7,7 @@ import { SectionHeading, CtaBand } from "@/components/sections";
 import { PropertyCard } from "@/components/property-card";
 import { SpecialistPortrait } from "@/components/team/specialist-card";
 import { getPublicSpecialist } from "@/lib/team/public-queries";
-import { getBrokerProfile } from "@/lib/team/broker";
-import { licenseLine } from "@/lib/team/license";
+import { specialistTitleLine } from "@/lib/team/license";
 import { isValidSpecialistSlug, metaDescription } from "@/lib/team/queries";
 import { getListings } from "@/lib/listings";
 import { site } from "@/lib/site";
@@ -85,11 +84,8 @@ export default async function SpecialistProfilePage({ params }: { params: Params
   const specialist = await getPublicSpecialist(slug);
   if (!specialist) notFound();
 
-  const [broker, allListings] = await Promise.all([getBrokerProfile(), getListings()]);
-  const licence = licenseLine(
-    { licenseMode: specialist.licenseMode, licenseNo: specialist.licenseNo },
-    broker.licenseNo ? { name: broker.name, licenseNo: broker.licenseNo } : null,
-  );
+  const allListings = await getListings();
+  const licence = specialistTitleLine();
   const listings = allListings.filter(
     (l) => l.specialist?.slug === specialist.slug && l.status !== "Sold",
   );

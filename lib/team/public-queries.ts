@@ -14,7 +14,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const db = url && key ? createClient(url, key) : null;
 
 const COLS =
-  "id,slug,display_name,tagline,bio,areas,specialties,languages,years_experience,photo_path,license_mode,license_no";
+  "id,slug,display_name,tagline,bio,areas,specialties,languages,years_experience,photo_path";
 
 type Row = {
   id: string;
@@ -27,8 +27,6 @@ type Row = {
   languages: string[] | null;
   years_experience: number | null;
   photo_path: string | null;
-  license_mode: "own" | "accredited";
-  license_no: string | null;
 };
 
 export type PublicSpecialist = {
@@ -42,8 +40,6 @@ export type PublicSpecialist = {
   languages: string[];
   yearsExperience: number | null;
   photoUrl: string | null;
-  licenseMode: "own" | "accredited";
-  licenseNo: string | null;
 };
 
 function mapRow(r: Row): PublicSpecialist {
@@ -58,8 +54,6 @@ function mapRow(r: Row): PublicSpecialist {
     languages: r.languages ?? [],
     yearsExperience: r.years_experience,
     photoUrl: specialistPhotoUrl(r.photo_path),
-    licenseMode: r.license_mode,
-    licenseNo: r.license_no,
   };
 }
 

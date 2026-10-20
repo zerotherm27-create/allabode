@@ -98,7 +98,6 @@ export const footerNav = {
     { label: "Cookie Policy", href: "/cookie-policy" },
   ],
   team: [
-    { label: "Become a property specialist", href: "/team/join" },
     { label: "Property specialist login", href: "/portal/login" },
   ],
 } as const;

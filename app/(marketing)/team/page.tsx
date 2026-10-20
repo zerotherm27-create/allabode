@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import { Container, Button } from "@/components/ui";
-import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
-import { Reveal } from "@/components/motion";
 import { SpecialistCard } from "@/components/team/specialist-card";
 import { getPublicSpecialists } from "@/lib/team/public-queries";
-import { getBrokerProfile } from "@/lib/team/broker";
 import { shuffled } from "@/lib/team/shuffle";
 
 // The marketing layout sets `revalidate = 300`. The directory is shuffled on
@@ -14,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 const title = "Our team";
 const description =
-  "Meet the licensed broker and the property specialists accredited under All Abode Property Solutions.";
+  "Meet the property specialists of All Abode Property Solutions.";
 
 export const metadata: Metadata = {
   title,
@@ -24,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TeamPage() {
-  const [broker, specialists] = await Promise.all([getBrokerProfile(), getPublicSpecialists()]);
+  const specialists = await getPublicSpecialists();
   const ordered = shuffled(specialists);
 
   return (
@@ -32,35 +29,9 @@ export default async function TeamPage() {
       <PageHero
         eyebrow="Our team"
         title="Meet the All Abode team"
-        lead="A licensed broker and a growing group of property specialists, working together to help you rent, buy, sell, and manage property with clarity."
+        lead="A growing group of property specialists helping you rent, buy, sell, and manage property with clarity."
         crumbs={[{ label: "Home", href: "/" }, { label: "Our team" }]}
       />
-
-      {/* Licensed broker — pinned first */}
-      <section className="py-section">
-        <Container>
-          <Reveal>
-            <div className="flex flex-col gap-5 border border-line bg-surface p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-8">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center bg-navy/5 text-navy-700">
-                <Icon name="verified" size={28} />
-              </span>
-              <div className="min-w-0">
-                <p className="label-caps text-gold-ink">Licensed broker</p>
-                <h2 className="mt-2 font-display text-2xl font-bold text-navy sm:text-3xl">
-                  {broker.name}
-                </h2>
-                {broker.licenseNo && (
-                  <p className="mt-2 text-sm text-slate">PRC License No. {broker.licenseNo}</p>
-                )}
-                <p className="mt-3 max-w-2xl text-slate">
-                  Every property specialist below is accredited under our licensed broker, so
-                  your transaction is backed by licensed practice.
-                </p>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
 
       {/* Property specialists */}
       <section className="bg-surface-gray py-section">

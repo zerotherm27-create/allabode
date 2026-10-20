@@ -4,9 +4,9 @@ import { PageHero } from "@/components/sections";
 import { JoinForm } from "./join-form";
 
 export const metadata: Metadata = {
-  title: "Become a property specialist",
+  title: "Activate your specialist account",
   description:
-    "Apply to join All Abode as a property specialist and get your own listings page.",
+    "For property specialists invited by All Abode: activate your account with the email address you gave us.",
   robots: { index: false, follow: true },
 };
 
@@ -14,10 +14,10 @@ export default function JoinPage() {
   return (
     <>
       <PageHero
-        eyebrow="Join the team"
-        title="Become a property specialist"
-        subtitle="Apply for a profile and your own listings page on All Abode. We review every application before it goes live."
-        crumbs={[{ label: "Home", href: "/" }, { label: "Join the team" }]}
+        eyebrow="Property specialists"
+        title="Activate your specialist account"
+        subtitle="For property specialists invited by All Abode. Sign up with the same email address you gave us, confirm it, and your account opens."
+        crumbs={[{ label: "Home", href: "/" }, { label: "Activate account" }]}
       />
       <section className="py-section">
         <Container>

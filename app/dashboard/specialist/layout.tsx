@@ -20,7 +20,7 @@ const STATE_COPY: Record<string, { icon: string; title: string; body: string }> 
   pending: {
     icon: "hourglass_top",
     title: "We're reviewing your application",
-    body: "Our team checks every application against the broker's accreditation requirements. We'll email you as soon as a decision is made. You don't need to do anything else.",
+    body: "Our team checks every application against our accreditation requirements. We'll email you as soon as a decision is made. You don't need to do anything else.",
   },
   rejected: {
     icon: "block",

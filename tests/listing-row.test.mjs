@@ -84,6 +84,14 @@ test("specialists can only hard-delete non-live listings", () => {
   assert.equal(specialistCanDelete(undefined), true);
 });
 
+test("a listing that was ever approved can never be deleted by its specialist", () => {
+  for (const s of ["draft", "submitted", "rejected", "approved"]) {
+    assert.equal(specialistCanDelete(s, true), false, s);
+  }
+  assert.equal(specialistCanDelete("rejected", false), true);
+  assert.equal(specialistCanDelete("rejected", null), true);
+});
+
 test("specialistPhotoError allows JPEG/PNG/WebP up to 10 MB and 10 files", () => {
   const f = (over = {}) => ({ name: "a.jpg", type: "image/jpeg", size: 1000, ...over });
   assert.equal(specialistPhotoError([f(), f({ type: "image/png" }), f({ type: "image/webp" })]), null);

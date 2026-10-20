@@ -76,7 +76,14 @@ export const RESERVED_LISTING_ROUTES = [
  *  listing is archived instead: deleting it would cascade into staff-owned records. */
 export const SPECIALIST_DELETABLE_APPROVALS = ["draft", "submitted", "rejected"] as const;
 
-export function specialistCanDelete(approvalStatus: string | null | undefined): boolean {
+/** A specialist may hard-delete only a listing that has never been live: not
+ *  approved now, and not approved at any point (`ever_approved`, which also
+ *  covers a listing staff took down). Mirrors the DB delete policy. */
+export function specialistCanDelete(
+  approvalStatus: string | null | undefined,
+  everApproved: boolean | null | undefined = false,
+): boolean {
+  if (everApproved) return false;
   return (SPECIALIST_DELETABLE_APPROVALS as readonly string[]).includes(approvalStatus ?? "draft");
 }
 

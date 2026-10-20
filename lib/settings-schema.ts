@@ -88,19 +88,6 @@ export const settingsSchema = [
     ],
   },
   {
-    // Licensed broker that property specialists are accredited under
-    // (lib/team/broker.ts). Saving upserts the rows, so this works even if
-    // the specialists migration's seed rows were never inserted.
-    group: "broker",
-    title: "Licensed Broker",
-    icon: "verified",
-    fields: [
-      { key: "broker_name",        label: "Licensed broker name",               type: "text" },
-      { key: "broker_prc_license", label: "Licensed broker PRC licence number", type: "text" },
-      { key: "broker_prc_expiry",  label: "PRC licence expiry",                 type: "text" },
-    ],
-  },
-  {
     group: "hero",
     title: "Home Page Hero",
     icon: "home",

@@ -18,7 +18,6 @@ import { deleteListingImage, reorderListingImages, uploadListingImages } from "@
 import { PHOTO_W, PHOTO_H, jpegDimensions } from "@/lib/team/photo";
 import {
   PROFILE_LIMITS,
-  parseDateOnly,
   parseList,
   parseYears,
   portraitError,
@@ -88,19 +87,8 @@ export async function updateSpecialistProfile(
     languages: parseList(text(fd, "languages", 2000)),
   };
 
-  // Licence details are only editable while the application is pending; after
-  // approval they are locked (a DB trigger enforces the same rule).
-  if (me.status === "pending") {
-    const mode = text(fd, "license_mode", 20);
-    if (mode !== "own" && mode !== "accredited") return fail("Choose how you're licensed.");
-    const expiry = parseDateOnly(text(fd, "license_expiry", 10));
-    if (expiry === undefined) return fail("Enter the licence expiry as a valid date.");
-    const licenseNo = text(fd, "license_no", PROFILE_LIMITS.licenseNo) || null;
-    if (mode === "own" && !licenseNo) return fail("Enter your PRC licence number.");
-    update.license_mode = mode;
-    update.license_no = licenseNo;
-    update.license_expiry = expiry;
-  }
+  // Licence details are never sent from here: they are set by All Abode and
+  // locked for the specialist (a DB trigger enforces the same rule).
 
   const { data, error } = await me.supabase
     .from("specialists")
@@ -188,12 +176,12 @@ async function approvedSpecialistId(supabase: Db): Promise<string> {
 async function ownListing(supabase: Db, specialistId: string, id: string) {
   const { data } = await supabase
     .from("listings")
-    .select("id,slug,approval_status")
+    .select("id,slug,approval_status,ever_approved")
     .eq("id", id)
     .eq("specialist_id", specialistId)
     .maybeSingle();
   if (!data) throw new Error("That listing wasn't found, or it isn't yours.");
-  return data as { id: string; slug: string | null; approval_status: string };
+  return data as { id: string; slug: string | null; approval_status: string; ever_approved: boolean };
 }
 
 function refreshListingViews(id?: string, slug?: string | null) {
@@ -287,9 +275,10 @@ export async function deleteSpecialistListing(id: string): Promise<void> {
   const supabase = await createClient();
   const specialistId = await approvedSpecialistId(supabase);
   const listing = await ownListing(supabase, specialistId, id);
-  // A live listing is archived, not deleted: deleting it would cascade into
-  // bookings and inquiries that staff own. Checked before any photo is touched.
-  if (!specialistCanDelete(listing.approval_status)) {
+  // A listing that is or ever was live is archived, not deleted: deleting it
+  // would cascade into bookings and inquiries that staff own. Checked before
+  // any photo is touched.
+  if (!specialistCanDelete(listing.approval_status, listing.ever_approved)) {
     throw new Error("Live listings can't be deleted. Archive it instead.");
   }
 
@@ -326,6 +315,7 @@ export async function deleteSpecialistListing(id: string): Promise<void> {
     .eq("id", id)
     .eq("specialist_id", specialistId)
     .in("approval_status", [...SPECIALIST_DELETABLE_APPROVALS])
+    .eq("ever_approved", false)
     .select("id,slug");
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) {

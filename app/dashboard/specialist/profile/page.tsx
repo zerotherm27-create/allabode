@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Panel } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
-import { getBroker } from "@/lib/team/broker";
+import { specialistTitleLine } from "@/lib/team/license";
 import { SpecialistProfileForm, type ProfileValues } from "@/components/team/profile-form";
 import { PhotoUploader } from "@/components/team/photo-uploader";
 
@@ -15,9 +15,6 @@ type Row = {
   areas: string[] | null;
   specialties: string[] | null;
   languages: string[] | null;
-  license_mode: "own" | "accredited";
-  license_no: string | null;
-  license_expiry: string | null;
   photo_path: string | null;
   status: string;
   updated_at: string;
@@ -31,14 +28,12 @@ export default async function SpecialistProfilePage() {
   const { data } = await supabase
     .from("specialists")
     .select(
-      "display_name,tagline,bio,phone,years_experience,areas,specialties,languages,license_mode,license_no,license_expiry,photo_path,status,updated_at",
+      "display_name,tagline,bio,phone,years_experience,areas,specialties,languages,photo_path,status,updated_at",
     )
     .eq("id", specialistId)
     .maybeSingle();
   const row = data as Row | null;
   if (!row) redirect(homeForRole(role));
-
-  const broker = await getBroker();
 
   let photoUrl: string | null = null;
   if (row.photo_path) {
@@ -55,10 +50,9 @@ export default async function SpecialistProfilePage() {
     areas: (row.areas ?? []).join(", "),
     specialties: (row.specialties ?? []).join(", "),
     languages: (row.languages ?? []).join(", "),
-    licenseMode: row.license_mode,
-    licenseNo: row.license_no ?? "",
-    licenseExpiry: row.license_expiry ?? "",
   };
+  // Read-only: the same fixed label every specialist shows publicly.
+  const licence = specialistTitleLine();
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -72,11 +66,7 @@ export default async function SpecialistProfilePage() {
           <PhotoUploader currentUrl={photoUrl} />
         </Panel>
         <Panel title="Your details">
-          <SpecialistProfileForm
-            values={values}
-            licenseLocked={row.status === "approved"}
-            broker={broker}
-          />
+          <SpecialistProfileForm values={values} licenceLine={licence} />
         </Panel>
       </div>
     </div>

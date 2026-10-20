@@ -13,6 +13,7 @@ type Row = {
   title: string;
   status: string;
   approval_status: string;
+  ever_approved: boolean;
   rejection_note: string | null;
   listing_category: string | null;
   property_type: string | null;
@@ -84,7 +85,7 @@ const columns: Column<Row>[] = [
         >
           <Icon name="edit" size={18} />
         </Link>
-        {specialistCanDelete(l.approval_status) ? (
+        {specialistCanDelete(l.approval_status, l.ever_approved) ? (
           <ConfirmActionForm
             action={deleteSpecialistListing.bind(null, l.id)}
             message={`Delete "${l.title}" and its photos? This can't be undone.`}
@@ -121,7 +122,7 @@ export default async function SpecialistListingsPage({
   const { data, error } = specialistId
     ? await supabase
         .from("listings")
-        .select("id,title,status,approval_status,rejection_note,listing_category,property_type,city,updated_at")
+        .select("id,title,status,approval_status,ever_approved,rejection_note,listing_category,property_type,city,updated_at")
         .eq("specialist_id", specialistId)
         .order("updated_at", { ascending: false })
     : { data: [], error: null };

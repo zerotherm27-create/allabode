@@ -67,9 +67,38 @@ export function listingRow(fd: FormData) {
   };
 }
 
-export function specialistListingRow(fd: FormData) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { is_featured, unit_id, status, ...rest } = listingRow(fd);
-  const allowed = (SPECIALIST_STATUSES as readonly string[]).includes(status);
-  return { ...rest, status: allowed ? status : "Draft" };
+/** /listings/<slug> must never shadow a static listings route. */
+const RESERVED_SLUGS = ["for-rent", "for-sale", "commercial", "office", "industrial-warehouse", "parking", "lots"];
+
+/**
+ * Slug for a new specialist listing, derived from the title (specialists never
+ * type one). A reserved word always gets the suffix; pass `suffix` to retry
+ * after a unique-constraint collision.
+ */
+export function specialistListingSlug(title: string, suffix?: string): string {
+  const base = slugify(title) || "listing";
+  return suffix || RESERVED_SLUGS.includes(base) ? `${base}-${suffix ?? "listing"}` : base;
+}
+
+/**
+ * Row for a specialist's insert/update. It never carries anything staff-only
+ * or privileged: owner/seller details, internal notes, the exact address, the
+ * PM unit link, featuring and the slug (the live URL is kept on update and
+ * derived server-side on create). The published-status option is never
+ * offered, so a status that is not in SPECIALIST_STATUSES (e.g. "Published",
+ * set by staff) is left untouched on update and falls back to "Draft" on
+ * create. The DB trigger enforces the same rules; the app just never sends them.
+ */
+export function specialistListingRow(fd: FormData, mode: "create" | "update" = "update") {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const {
+    is_featured, unit_id, status, slug,
+    owner_name, owner_contact, internal_notes, private_address,
+    ...rest
+  } = listingRow(fd);
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  const requested = s(fd, "status");
+  const allowed = requested != null && (SPECIALIST_STATUSES as readonly string[]).includes(requested);
+  if (allowed) return { ...rest, status: requested };
+  return mode === "create" ? { ...rest, status: "Draft" } : rest;
 }

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTs } from "./helpers/load-ts.mjs";
 
-const { listingRow, specialistListingRow, SPECIALIST_STATUSES, slugify } = await loadTs(
+const { listingRow, specialistListingRow, specialistListingSlug, SPECIALIST_STATUSES, slugify } = await loadTs(
   "lib/admin/listing-row.ts"
 );
 
@@ -25,27 +25,51 @@ test("slugify", () => {
   assert.equal(slugify("  Hello, World! "), "hello-world");
 });
 
-test("specialistListingRow strips privileged fields and Published status", () => {
-  const row = specialistListingRow(
-    form({
-      title: "A",
-      is_featured: "on",
-      specialist_id: "other",
-      approval_status: "approved",
-      unit_id: "x",
-      status: "Published",
-    })
-  );
-  for (const k of ["is_featured", "specialist_id", "approval_status", "unit_id"]) {
-    assert.equal(k in row, false, k);
+const PRIVATE_KEYS = [
+  "is_featured", "specialist_id", "approval_status", "unit_id", "slug",
+  "owner_name", "owner_contact", "internal_notes", "private_address",
+];
+
+test("specialistListingRow strips privileged and staff-only fields", () => {
+  const entries = {
+    title: "A",
+    is_featured: "on",
+    specialist_id: "other",
+    approval_status: "approved",
+    unit_id: "x",
+    slug: "custom",
+    owner_name: "Seller",
+    owner_contact: "0917",
+    internal_notes: "secret",
+    private_address: "1 Hidden St",
+    status: "Available",
+  };
+  for (const mode of ["create", "update"]) {
+    const row = specialistListingRow(form(entries), mode);
+    for (const k of PRIVATE_KEYS) assert.equal(k in row, false, `${mode}: ${k}`);
+    assert.equal(row.title, "A");
+    assert.equal(row.status, "Available");
   }
-  assert.equal(row.status, "Draft");
+});
+
+test("specialistListingRow: Published or missing status falls back on create, is left alone on update", () => {
+  assert.equal(specialistListingRow(form({ title: "A", status: "Published" }), "create").status, "Draft");
+  assert.equal(specialistListingRow(form({ title: "A" }), "create").status, "Draft");
+  assert.equal("status" in specialistListingRow(form({ title: "A", status: "Published" }), "update"), false);
+  assert.equal("status" in specialistListingRow(form({ title: "A" })), false);
 });
 
 test("specialistListingRow keeps allowed statuses and defaults title", () => {
   assert.equal(specialistListingRow(form({ status: "Sold" })).status, "Sold");
-  const row = specialistListingRow(form({}));
+  const row = specialistListingRow(form({}), "create");
   assert.equal(row.title, "Untitled");
-  assert.equal(row.slug, "untitled");
   assert.deepEqual([...SPECIALIST_STATUSES], ["Draft", "Available", "Reserved", "Leased", "Sold", "Archived"]);
+});
+
+test("specialistListingSlug derives from the title and avoids route collisions", () => {
+  assert.equal(specialistListingSlug("2BR Condo in BGC!"), "2br-condo-in-bgc");
+  assert.equal(specialistListingSlug(""), "listing");
+  assert.equal(specialistListingSlug("Parking"), "parking-listing");
+  assert.equal(specialistListingSlug("Lots"), "lots-listing");
+  assert.equal(specialistListingSlug("2BR Condo", "a1b2c3"), "2br-condo-a1b2c3");
 });

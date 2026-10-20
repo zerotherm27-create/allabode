@@ -1,8 +1,14 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
+import { LISTING_IMAGES_BUCKET, storagePathFromUrl } from "@/lib/storage";
+import { specialistListingRow, specialistListingSlug } from "@/lib/admin/listing-row";
+import { revalidatePublicListingPaths } from "@/lib/admin/revalidate";
+import { deleteListingImage, reorderListingImages, uploadListingImages } from "@/app/admin/actions";
 import { PHOTO_W, PHOTO_H, jpegDimensions } from "@/lib/team/photo";
 import {
   PROFILE_LIMITS,
@@ -139,4 +145,177 @@ export async function uploadSpecialistPhoto(
   revalidatePath("/dashboard/specialist/profile");
   revalidatePath("/team");
   return done("Photo updated.");
+}
+
+/* ---- Listings ---- */
+
+const LISTINGS_PATH = "/dashboard/specialist/listings";
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+type Db = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * The caller's specialist id, from the server (never the form). The RPC only
+ * returns an id while the account is APPROVED, so a pending, rejected or
+ * suspended specialist is refused here as well as by RLS.
+ */
+async function approvedSpecialistId(supabase: Db): Promise<string> {
+  const { data, error } = await supabase.rpc("current_specialist_id");
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Only approved property specialists can manage listings.");
+  return data as string;
+}
+
+/** A listing that belongs to the caller. Others' listings may be readable (live ones are
+ *  public), so ownership is checked explicitly rather than left to RLS alone. */
+async function ownListing(supabase: Db, specialistId: string, id: string) {
+  const { data } = await supabase
+    .from("listings")
+    .select("id,slug")
+    .eq("id", id)
+    .eq("specialist_id", specialistId)
+    .maybeSingle();
+  if (!data) throw new Error("That listing wasn't found, or it isn't yours.");
+  return data as { id: string; slug: string | null };
+}
+
+function refreshListingViews(id?: string, slug?: string | null) {
+  revalidatePath(LISTINGS_PATH);
+  revalidatePath("/dashboard/specialist");
+  if (id) revalidatePath(`${LISTINGS_PATH}/${id}/edit`);
+  revalidatePublicListingPaths(slug);
+}
+
+export async function createSpecialistListing(fd: FormData): Promise<void> {
+  const supabase = await createClient();
+  const specialistId = await approvedSpecialistId(supabase);
+  const row = { ...specialistListingRow(fd, "create"), specialist_id: specialistId, approval_status: "draft" };
+
+  const insert = (slug: string) =>
+    supabase.from("listings").insert({ ...row, slug }).select("id,slug").single();
+  let res = await insert(specialistListingSlug(row.title));
+  // A taken slug (23505) is retried once with a short random suffix.
+  if (res.error?.code === "23505") {
+    res = await insert(specialistListingSlug(row.title, randomUUID().slice(0, 6)));
+  }
+  if (res.error) throw new Error(res.error.message);
+
+  refreshListingViews(res.data.id, res.data.slug);
+  redirect(`${LISTINGS_PATH}/${res.data.id}/edit`);
+}
+
+export async function updateSpecialistListing(id: string, fd: FormData): Promise<void> {
+  const supabase = await createClient();
+  const specialistId = await approvedSpecialistId(supabase);
+  const { data, error } = await supabase
+    .from("listings")
+    .update(specialistListingRow(fd, "update"))
+    .eq("id", id)
+    .eq("specialist_id", specialistId)
+    .select("id,slug");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error("The listing wasn't updated, so it may have been removed or isn't yours.");
+  }
+  refreshListingViews(id, data[0].slug as string | null);
+
+  if (fd.get("intent") === "submit") {
+    await submitListingForApproval(id);
+    redirect(`${LISTINGS_PATH}?notice=submitted`);
+  }
+  redirect(`${LISTINGS_PATH}?notice=saved`);
+}
+
+/** Moves a draft or rejected listing into review. Anything else is left alone. */
+export async function submitListingForApproval(id: string): Promise<void> {
+  const supabase = await createClient();
+  const specialistId = await approvedSpecialistId(supabase);
+  const { data, error } = await supabase
+    .from("listings")
+    .update({ approval_status: "submitted" })
+    .eq("id", id)
+    .eq("specialist_id", specialistId)
+    .in("approval_status", ["draft", "rejected"])
+    .select("id,slug");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error("This listing can't be submitted. It may already be in review or approved, or it isn't yours.");
+  }
+  refreshListingViews(id, data[0].slug as string | null);
+}
+
+export async function deleteSpecialistListing(id: string): Promise<void> {
+  const supabase = await createClient();
+  const specialistId = await approvedSpecialistId(supabase);
+  await ownListing(supabase, specialistId, id);
+
+  // Photo rows go with the listing (cascade), so note the files first.
+  const { data: images } = await supabase.from("listing_images").select("url").eq("listing_id", id);
+  const { data, error } = await supabase
+    .from("listings")
+    .delete()
+    .eq("id", id)
+    .eq("specialist_id", specialistId)
+    .select("id,slug");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error("The listing wasn't deleted, so it may have been removed already or isn't yours.");
+  }
+
+  const paths = (images ?? [])
+    .map((img) => storagePathFromUrl(LISTING_IMAGES_BUCKET, (img as { url: string }).url))
+    .filter((p): p is string => p != null);
+  if (paths.length > 0) await supabase.storage.from(LISTING_IMAGES_BUCKET).remove(paths);
+
+  refreshListingViews(undefined, data[0].slug as string | null);
+  redirect(`${LISTINGS_PATH}?notice=deleted`);
+}
+
+/* ---- Listing photos ----
+ * Thin wrappers over the shared admin image actions (same session client, so the
+ * specialist storage and listing_images policies apply). They add what the admin
+ * versions leave to staff trust: an explicit ownership check, an image-only/size
+ * check on upload, and revalidation of the specialist's own edit page. */
+
+export async function specialistUploadImages(listingId: string, fd: FormData): Promise<void> {
+  const supabase = await createClient();
+  const specialistId = await approvedSpecialistId(supabase);
+  await ownListing(supabase, specialistId, listingId);
+
+  const files = fd.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
+  for (const f of files) {
+    if (!f.type.startsWith("image/")) throw new Error(`"${f.name}" isn't an image.`);
+    if (f.size > MAX_PHOTO_BYTES) throw new Error(`"${f.name}" is over 10 MB. Choose a smaller image.`);
+  }
+  await uploadListingImages(listingId, fd);
+  revalidatePath(`${LISTINGS_PATH}/${listingId}/edit`);
+}
+
+export async function specialistDeleteImage(imageId: string, listingId: string): Promise<void> {
+  const supabase = await createClient();
+  const specialistId = await approvedSpecialistId(supabase);
+  await ownListing(supabase, specialistId, listingId);
+  const { data } = await supabase
+    .from("listing_images")
+    .select("id")
+    .eq("id", imageId)
+    .eq("listing_id", listingId)
+    .maybeSingle();
+  if (!data) throw new Error("That photo wasn't found on this listing.");
+  await deleteListingImage(imageId, listingId);
+  revalidatePath(`${LISTINGS_PATH}/${listingId}/edit`);
+}
+
+export async function specialistReorderImages(listingId: string, orderedIds: string[]): Promise<void> {
+  const supabase = await createClient();
+  const specialistId = await approvedSpecialistId(supabase);
+  await ownListing(supabase, specialistId, listingId);
+  const { data } = await supabase
+    .from("listing_images")
+    .select("id")
+    .eq("listing_id", listingId)
+    .in("id", orderedIds);
+  if ((data?.length ?? 0) !== orderedIds.length) throw new Error("Some of those photos aren't on this listing.");
+  await reorderListingImages(listingId, orderedIds);
+  revalidatePath(`${LISTINGS_PATH}/${listingId}/edit`);
 }

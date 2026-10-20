@@ -9,14 +9,31 @@ import { optimizeImageFile } from "@/lib/image-optimize";
 
 export type ListingImage = { id: string; url: string; alt_text: string | null; sort_order: number };
 
+/** The server actions behind the manager. Defaults to the admin ones; the
+ *  specialist pages pass their own, which check ownership and revalidate their
+ *  own paths. */
+export type ListingImageActions = {
+  upload: (listingId: string, fd: FormData) => Promise<unknown>;
+  remove: (imageId: string, listingId: string) => Promise<unknown>;
+  reorder: (listingId: string, orderedIds: string[]) => Promise<unknown>;
+};
+
+const ADMIN_ACTIONS: ListingImageActions = {
+  upload: uploadListingImages,
+  remove: deleteListingImage,
+  reorder: reorderListingImages,
+};
+
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
 
 export function ListingImagesManager({
   listingId,
   initialImages,
+  actions = ADMIN_ACTIONS,
 }: {
   listingId: string;
   initialImages: ListingImage[];
+  actions?: ListingImageActions;
 }) {
   const [prevInitialImages, setPrevInitialImages] = useState(initialImages);
   const [images, setImages] = useState(initialImages);
@@ -42,7 +59,7 @@ export function ListingImagesManager({
         const blob = await optimizeImageFile(file);
         fd.append("files", blob, file.name.replace(/\.\w+$/, ".jpg"));
       }
-      await uploadListingImages(listingId, fd);
+      await actions.upload(listingId, fd);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed — please try again.");
     } finally {
@@ -52,7 +69,7 @@ export function ListingImagesManager({
 
   async function handleRemove(id: string) {
     setImages((prev) => prev.filter((img) => img.id !== id));
-    await deleteListingImage(id, listingId);
+    await actions.remove(id, listingId);
   }
 
   async function handleMove(index: number, dir: -1 | 1) {
@@ -61,7 +78,7 @@ export function ListingImagesManager({
     const next = images.slice();
     [next[index], next[target]] = [next[target], next[index]];
     setImages(next);
-    await reorderListingImages(
+    await actions.reorder(
       listingId,
       next.map((img) => img.id)
     );

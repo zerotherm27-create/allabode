@@ -6,6 +6,8 @@ import { useFormStatus } from "react-dom";
 import { Icon } from "@/components/icon";
 import { generateListingDescription, generateListingSeo } from "@/app/admin/actions";
 import { LISTING_CATEGORIES } from "@/lib/listing-category";
+import { SPECIALIST_STATUSES } from "@/lib/admin/listing-row";
+import { ApprovalNotice, SpecialistActions } from "@/components/specialist/listing-form-parts";
 
 export type ListingValues = {
   id?: string;
@@ -41,6 +43,9 @@ export type ListingValues = {
   owner_contact?: string;
   internal_notes?: string;
   unit_id?: string | null;
+  /** Specialist listings only: where the listing stands in All Abode's review. */
+  approval_status?: string;
+  rejection_note?: string | null;
 };
 
 /** A property-management unit, offered as an optional auto-fill source for a listing. */
@@ -116,6 +121,8 @@ export function ListingForm({
   initial = {},
   aiEnabled = false,
   units = [],
+  variant = "staff",
+  cancelHref = "/admin/listings",
 }: {
   action: (fd: FormData) => void | Promise<void>;
   initial?: ListingValues;
@@ -123,8 +130,18 @@ export function ListingForm({
   aiEnabled?: boolean;
   /** Property-management units offered as an optional auto-fill source. */
   units?: UnitOption[];
+  /** "specialist" hides everything staff-only (slug, featured, unit link, private seller
+   *  details, the Published status) and swaps the save button for draft/submit actions. */
+  variant?: "staff" | "specialist";
+  cancelHref?: string;
 }) {
   const v = initial;
+  const specialist = variant === "specialist";
+  const approval = v.approval_status ?? "draft";
+  const statusOptions: readonly string[] = specialist ? SPECIALIST_STATUSES : STATUSES;
+  // A status the specialist cannot choose (e.g. "Published", set by staff) is
+  // shown read-only and not submitted, so saving never changes it.
+  const statusLocked = specialist && !!v.status && !statusOptions.includes(v.status);
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -246,7 +263,8 @@ export function ListingForm({
 
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-6">
-      {units.length > 0 && (
+      {specialist && !!v.id && <ApprovalNotice approval={approval} note={v.rejection_note} />}
+      {!specialist && units.length > 0 && (
         <Group title="Link to a unit">
           <F label="Property-management unit" hint="Auto-fills location, price, and specs below — you can still edit them after picking." span>
             <select
@@ -284,9 +302,11 @@ export function ListingForm({
             </div>
           )}
         </F>
-        <F label="Slug" hint="Auto-generated from title if left blank">
-          <input name="slug" defaultValue={v.slug} className={inputCls} />
-        </F>
+        {!specialist && (
+          <F label="Slug" hint="Auto-generated from title if left blank">
+            <input name="slug" defaultValue={v.slug} className={inputCls} />
+          </F>
+        )}
         <F label="Description" span>
           <textarea ref={descriptionRef} name="description" defaultValue={v.description} rows={4} className={`${inputCls} h-auto py-2`} />
           {aiEnabled && (
@@ -331,15 +351,25 @@ export function ListingForm({
             {PROPERTY_TYPES.map((o) => <option key={o} value={o}>{PROPERTY_TYPE_LABELS[o] ?? o}</option>)}
           </select>
         </F>
-        <F label="Status">
-          <select name="status" defaultValue={v.status ?? "Draft"} className={inputCls}>
-            {STATUSES.map((o) => <option key={o}>{o}</option>)}
-          </select>
-        </F>
-        <label className="flex items-center gap-2 sm:col-span-2">
-          <input type="checkbox" name="is_featured" defaultChecked={v.is_featured} className="h-4 w-4 accent-navy" />
-          <span className="text-sm text-navy">Featured (show on homepage)</span>
-        </label>
+        {statusLocked ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-navy">Status</span>
+            <p className="flex h-11 items-center text-sm text-ink">{v.status}</p>
+            <span className="text-xs text-slate">Set by All Abode</span>
+          </div>
+        ) : (
+          <F label="Status">
+            <select name="status" defaultValue={v.status ?? "Draft"} className={inputCls}>
+              {statusOptions.map((o) => <option key={o}>{o}</option>)}
+            </select>
+          </F>
+        )}
+        {!specialist && (
+          <label className="flex items-center gap-2 sm:col-span-2">
+            <input type="checkbox" name="is_featured" defaultChecked={v.is_featured} className="h-4 w-4 accent-navy" />
+            <span className="text-sm text-navy">Featured (show on homepage)</span>
+          </label>
+        )}
         <label className="flex items-center gap-2 sm:col-span-2">
           <input type="checkbox" name="clean_title" defaultChecked={v.clean_title ?? true} className="h-4 w-4 accent-navy" />
           <span className="text-sm text-navy">Clean title & documents</span>
@@ -353,9 +383,11 @@ export function ListingForm({
         <F label="Location (public)"><input ref={locationRef} name="location" defaultValue={v.location} className={inputCls} /></F>
         <F label="City"><input ref={cityRef} name="city" defaultValue={v.city} className={inputCls} /></F>
         <F label="Province"><input ref={provinceRef} name="province" defaultValue={v.province} className={inputCls} /></F>
-        <F label="Exact address" hint="Private — admin only">
-          <input ref={privateAddressRef} name="private_address" defaultValue={v.private_address} className={inputCls} />
-        </F>
+        {!specialist && (
+          <F label="Exact address" hint="Private — admin only">
+            <input ref={privateAddressRef} name="private_address" defaultValue={v.private_address} className={inputCls} />
+          </F>
+        )}
       </Group>
 
       <Group title="Pricing & specs">
@@ -383,7 +415,7 @@ export function ListingForm({
             {["", "Fully furnished", "Semi-furnished", "Unfurnished"].map((o) => <option key={o} value={o}>{o || "—"}</option>)}
           </select>
         </F>
-        <F label="Availability date" hint="Use a calendar date. Put notes like RFO in lease/sale terms or internal notes.">
+        <F label="Availability date" hint={specialist ? "Use a calendar date. Put notes like RFO in lease or sale terms." : "Use a calendar date. Put notes like RFO in lease/sale terms or internal notes."}>
           <input name="availability_date" type="date" defaultValue={v.availability_date} className={inputCls} />
         </F>
       </Group>
@@ -396,20 +428,26 @@ export function ListingForm({
         </F>
       </Group>
 
-      <Group title="Private (admin only)">
-        <F label="Owner name"><input name="owner_name" defaultValue={v.owner_name} className={inputCls} /></F>
-        <F label="Owner contact"><input name="owner_contact" defaultValue={v.owner_contact} className={inputCls} /></F>
-        <F label="Internal notes" span>
-          <textarea name="internal_notes" defaultValue={v.internal_notes} rows={3} className={`${inputCls} h-auto py-2`} />
-        </F>
-      </Group>
+      {!specialist && (
+        <Group title="Private (admin only)">
+          <F label="Owner name"><input name="owner_name" defaultValue={v.owner_name} className={inputCls} /></F>
+          <F label="Owner contact"><input name="owner_contact" defaultValue={v.owner_contact} className={inputCls} /></F>
+          <F label="Internal notes" span>
+            <textarea name="internal_notes" defaultValue={v.internal_notes} rows={3} className={`${inputCls} h-auto py-2`} />
+          </F>
+        </Group>
+      )}
 
-      <div className="flex items-center gap-3">
-        <SubmitButton busy={genPending || seoPending} />
-        <Link href="/admin/listings" className="text-sm font-medium text-slate hover:text-navy">
-          Cancel
-        </Link>
-      </div>
+      {specialist ? (
+        <SpecialistActions approval={approval} isNew={!v.id} busy={genPending || seoPending} cancelHref={cancelHref} />
+      ) : (
+        <div className="flex items-center gap-3">
+          <SubmitButton busy={genPending || seoPending} />
+          <Link href={cancelHref} className="text-sm font-medium text-slate hover:text-navy">
+            Cancel
+          </Link>
+        </div>
+      )}
       {(genPending || seoPending) && (
         <p className="-mt-4 text-xs text-slate">Waiting for the AI draft to finish before you can save…</p>
       )}

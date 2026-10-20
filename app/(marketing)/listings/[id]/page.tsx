@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 const BASE_HIGHLIGHTS = [
-  { icon: "verified", label: "Verified by licensed broker" },
+  { icon: "verified", label: "Verified by All Abode" },
   { icon: "schedule", label: "Flexible viewing schedule" },
   { icon: "handshake", label: "Assisted financing options" },
 ];
@@ -258,7 +258,9 @@ export default async function ListingDetailPage({ params }: Params) {
               <div className="my-6 h-px w-full bg-gold/30" />
               <ListedBy specialist={listing.specialist} size="lg" />
               <p className="mt-4 text-sm text-slate">
-                Speak with the licensed broker handling this property.
+                {listing.specialist
+                  ? "Speak with the specialist handling this property."
+                  : "Speak with our team about this property."}
               </p>
               <div className="mt-5 flex flex-col gap-3">
                 <Button href={listing.dbId ? "#schedule" : "#inquire"}>Schedule a Viewing</Button>

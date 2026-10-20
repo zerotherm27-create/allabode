@@ -107,16 +107,27 @@ accounts, a public profile, and can list properties (owner-approved).
   table + RLS + triggers, the `public_specialists` view, listing approval columns.
   **User must run it in the SQL editor, THEN re-run `supabase/setup-storage.sql`**
   (the storage policies depend on the migration).
-- Flow (**invite-only**; there is no public sign-up): the owner adds each
-  specialist by email at `/admin/specialists/new` (name, email, optional mobile,
-  web address/subdomain, optional tagline; created approved + accredited, shown
-  as "Invited — not activated yet") → the person activates at `/team/join` by
-  signing up with that same email → once the email is confirmed,
-  `link_specialist_account()` links it on sign-in (also suspend/reinstate in
-  `/admin/specialists`) → specialist uses `/dashboard/specialist` (overview, profile + 4:5 portrait upload with
-  cropper, listings) → creates a listing and submits → owner approves it in the
-  admin Listings approval queue → listing shows "Listed by" on cards + detail.
-  Public `/team` directory and `/team/<slug>` profile; "About" nav dropdown.
+- Flow (**invite-only**; there is no public sign-up or self-link path): the
+  owner adds each specialist by email at `/admin/specialists/new` (name, email,
+  optional mobile, web address/subdomain, optional tagline) → the server
+  (`lib/team/provision.ts`, the ONLY specialists code that uses the
+  service-role client) creates the confirmed auth user (or reuses a confirmed
+  one; an UNCONFIRMED pre-registered one is deleted and recreated, defeating
+  email squatting; owner/tenant/staff emails are refused), inserts the row
+  already linked (approved + accredited) through the staff session client
+  (compensating auth-user delete if the insert fails) and emails a
+  set-password invitation via Resend → the link goes to
+  `/auth/callback?token_hash=…&type=recovery&next=/auth/set-password` → the
+  specialist sets a password (then `/portal` routes them) and later signs in at
+  `/portal/login` → `/dashboard/specialist` (overview, profile + 4:5 portrait
+  upload with cropper, listings) → creates a listing and submits → owner
+  approves it in the admin Listings approval queue → listing shows "Listed by"
+  on cards + detail. Admin shows "Invited — hasn't signed in yet" (from the
+  Admin API's `last_sign_in_at`) with **Resend invite** and **Remove
+  specialist** (only while the login has never been used; deletes the row,
+  then the auth user); also suspend/reinstate. A specialist appears on `/team`
+  as soon as they are added, so add them when ready. Public `/team` directory
+  and `/team/<slug>` profile; "About" nav dropdown.
 - **Design rules:** specialists are NEVER rows in `users` (that table is staff);
   new `specialist` role in `lib/auth/role.ts`. `public_specialists` is the only
   public window onto the table. Every specialist shows the fixed label
@@ -125,8 +136,9 @@ accounts, a public profile, and can list properties (owner-approved).
   unused). Live listing edits go live without re-review (owner can revert or
   take down); specialists can never hard-delete a listing that was ever approved
   (`listings.ever_approved`). Non-invited sign-ups land on the `/portal`
-  pending page. `/team/join` is linked from nowhere (noindex); interested people
-  are pointed to `/contact`. `/team/[slug]` is 300s ISR with `revalidatePath`
+  pending page. `/team/join` is now just an informational "Specialist sign-in"
+  page (→ `/portal/login`, interested people → `/contact`), linked from
+  nowhere (noindex). `/team/[slug]` is 300s ISR with `revalidatePath`
   on lifecycle/profile changes (`lib/admin/revalidate.ts`). The attach step in
   `lib/listings.ts` is fail-soft, so the site works before the migration is run.
 - **Known exposure (follow-up):** the specialist listing form hides private
@@ -138,11 +150,15 @@ accounts, a public profile, and can list properties (owner-approved).
   `components/specialist/*`, `components/admin/listing-approval-panel.tsx`.
   Tests: `tests/specialist-*.test.mjs`, `listing-row`, `auth-destination`.
 - **Manual setup to activate:** (1) run the migration; (2) re-run
-  `supabase/setup-storage.sql`; (3) walk it: add a specialist in
-  `/admin/specialists` → they activate at `/team/join` with that email →
-  confirm email → sign in → fill profile + portrait → create a listing and
-  submit → approve it in Listings → check "Listed by" and `/team`. Not yet
-  walked live (needs the migration).
+  `supabase/setup-storage.sql`; (3) confirm `SUPABASE_SERVICE_ROLE_KEY`
+  (already load-bearing for owner provisioning) and `RESEND_API_KEY` are set
+  in `.env.local` + Vercel — provisioning refuses without the service key, and
+  without Resend the account is created but the owner sees a "Resend invite"
+  warning; (4) walk it: add a specialist in `/admin/specialists` → they get
+  the invitation email → set a password → sign in at `/portal/login` → fill
+  profile + portrait → create a listing and submit → approve it in Listings →
+  check "Listed by" and `/team`. Not yet walked live (needs the migration);
+  the Admin API calls are only type-checked.
 - **Deferred (later phases):** subdomain routing (`ram.allabodeph.com`),
   customization/looks, lead routing + email automation, owner overview reports,
   SEO structured data.

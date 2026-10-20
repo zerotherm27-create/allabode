@@ -29,9 +29,8 @@ export default async function PortalIndexPage() {
           this page.
         </p>
         <p className="mt-3 text-sm text-slate">
-          Your account isn’t linked to a team invitation yet. If you were invited as a property
-          specialist, make sure you signed up with the same email address you gave All Abode, and
-          that you confirmed it.
+          Invited as a property specialist? Use the set-password link in your invitation email
+          instead of signing up. If it has expired, ask All Abode to resend it.
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link

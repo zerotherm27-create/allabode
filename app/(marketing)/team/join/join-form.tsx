@@ -65,13 +65,15 @@ export function JoinForm() {
   async function signOut() {
     setSignOutError("");
     setSigningOut(true);
-    const { error } = await createClient().auth.signOut();
-    setSigningOut(false);
-    if (error) {
+    try {
+      const { error } = await createClient().auth.signOut();
+      if (error) throw error;
+      setSignedInAs(null);
+    } catch {
       setSignOutError("Could not sign out. Try again.");
-      return;
+    } finally {
+      setSigningOut(false);
     }
-    setSignedInAs(null);
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -138,10 +140,6 @@ export function JoinForm() {
     );
   }
 
-  if (checking) {
-    return <div aria-hidden className="h-96 animate-pulse rounded-md bg-surface-gray" />;
-  }
-
   if (signedInAs) {
     return (
       <div role="status" className="text-center">
@@ -178,7 +176,8 @@ export function JoinForm() {
     "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus";
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} noValidate aria-busy={checking} className="flex flex-col gap-5">
+      <fieldset disabled={checking} className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
       <Field label="Full name" required error={errors.full_name}>
         <Input name="full_name" autoComplete="name" placeholder="Ram Santos" onBlur={onBlur("full_name")} />
       </Field>
@@ -249,6 +248,7 @@ export function JoinForm() {
           "Submit application"
         )}
       </Button>
+      </fieldset>
 
       <p className="text-center text-sm text-slate">
         Already applied?{" "}

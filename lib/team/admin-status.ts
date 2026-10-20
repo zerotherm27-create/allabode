@@ -13,16 +13,85 @@ export function sortSpecialists<T extends { status: string; created_at: string }
   });
 }
 
-/** Which controls the detail page offers for a status. */
-export function availableActions(status: string): {
-  approve: boolean; reject: boolean; suspend: boolean; reinstate: boolean;
-} {
+/** Which controls the detail page offers for a status. Accounts are invite-only
+ *  (staff add them already approved), so there is no approve/reject step. */
+export function availableActions(status: string): { suspend: boolean; reinstate: boolean } {
   return {
-    approve: status === "pending" || status === "rejected",
-    reject: status === "pending",
     suspend: status === "approved",
     reinstate: status === "suspended",
   };
+}
+
+/** What the admin list shows for a row: an approved row nobody has linked yet
+ *  is an invitation still waiting to be activated at /team/join. */
+export type SpecialistAccountState = "invited" | "active" | "suspended" | "pending" | "rejected";
+
+export function specialistAccountState(row: { status: string; auth_user_id?: string | null }): SpecialistAccountState {
+  if (row.status === "suspended") return "suspended";
+  if (row.status === "pending") return "pending";
+  if (row.status === "rejected") return "rejected";
+  return row.auth_user_id ? "active" : "invited";
+}
+
+export const ACCOUNT_STATE_LABEL: Record<SpecialistAccountState, string> = {
+  invited: "Invited — not activated yet",
+  active: "Active",
+  suspended: "Suspended",
+  pending: "Pending",
+  rejected: "Rejected",
+};
+
+// ---------- adding a specialist (staff) ----------
+export const NEW_SPECIALIST_LIMITS = { name: 120, email: 254, phone: 40, tagline: 140 } as const;
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Trimmed, lower-cased email, or null when it isn't a plausible address. */
+export function normalizeSpecialistEmail(raw: unknown): string | null {
+  const v = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  if (!v || v.length > NEW_SPECIALIST_LIMITS.email || !EMAIL_RE.test(v)) return null;
+  return v;
+}
+
+export type NewSpecialistFields = { displayName: string; email: string; phone: string | null; tagline: string | null };
+export type NewSpecialistErrors = Partial<Record<"full_name" | "email" | "phone" | "tagline", string>>;
+
+/** Validates the add-specialist form (except the web address, which the action
+ *  checks with validateSubdomain plus a uniqueness lookup). */
+export function validateNewSpecialist(input: {
+  full_name?: unknown; email?: unknown; phone?: unknown; tagline?: unknown;
+}): { ok: true; value: NewSpecialistFields } | { ok: false; errors: NewSpecialistErrors } {
+  const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const errors: NewSpecialistErrors = {};
+  const displayName = str(input.full_name);
+  if (displayName.length < 2) errors.full_name = "Enter the specialist's full name.";
+  else if (displayName.length > NEW_SPECIALIST_LIMITS.name) errors.full_name = `Keep the name under ${NEW_SPECIALIST_LIMITS.name} characters.`;
+  const email = normalizeSpecialistEmail(input.email);
+  if (!email) errors.email = "Enter a valid email address.";
+  const phone = str(input.phone);
+  if (phone && phone.replace(/\D/g, "").length < 10) errors.phone = "Enter a mobile number with at least 10 digits, or leave it blank.";
+  else if (phone.length > NEW_SPECIALIST_LIMITS.phone) errors.phone = "That mobile number is too long.";
+  const tagline = str(input.tagline);
+  if (tagline.length > NEW_SPECIALIST_LIMITS.tagline) errors.tagline = `Keep the tagline under ${NEW_SPECIALIST_LIMITS.tagline} characters.`;
+  if (Object.keys(errors).length) return { ok: false, errors };
+  return { ok: true, value: { displayName, email: email!, phone: phone || null, tagline: tagline || null } };
+}
+
+/** Friendly message for a unique violation on insert (Postgres 23505), by constraint. */
+export function specialistConflictMessage(
+  error: { code?: string; message?: string; details?: string } | null | undefined,
+  values: { email: string; subdomain: string },
+): string | null {
+  if (!error || error.code !== "23505") return null;
+  const text = `${error.message ?? ""} ${error.details ?? ""}`;
+  if (/subdomain/i.test(text)) return `The web address "${values.subdomain}" is already taken. Choose a different one.`;
+  if (/email/i.test(text)) return `${values.email} has already been added as a specialist.`;
+  return "That specialist already exists.";
+}
+
+/** The owner's copy-friendly activation instructions after adding someone. */
+export function activationInstructions(name: string, email: string, joinUrl: string): string {
+  return `Ask ${name} to go to ${joinUrl} and sign up with ${email}. Their account opens once they confirm that email.`;
 }
 
 /** True when a Postgres/PostgREST error means the specialists table is missing. */

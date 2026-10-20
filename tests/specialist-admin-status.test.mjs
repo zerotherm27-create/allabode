@@ -14,11 +14,12 @@ test("pending first, newest first within status", () => {
   assert.deepEqual(sortSpecialists(rows).map((r) => r.id), ["c", "b", "a", "d"]);
 });
 
-test("available actions per status", () => {
-  assert.deepEqual(availableActions("pending"), { approve: true, reject: true, suspend: false, reinstate: false });
-  assert.equal(availableActions("approved").suspend, true);
-  assert.equal(availableActions("suspended").reinstate, true);
-  assert.equal(availableActions("rejected").approve, true);
+test("available actions per status: suspend/reinstate only", () => {
+  assert.deepEqual(availableActions("approved"), { suspend: true, reinstate: false });
+  assert.deepEqual(availableActions("suspended"), { suspend: false, reinstate: true });
+  for (const s of ["pending", "rejected"]) {
+    assert.deepEqual(availableActions(s), { suspend: false, reinstate: false });
+  }
 });
 
 test("detects missing table errors", () => {
@@ -28,10 +29,47 @@ test("detects missing table errors", () => {
   assert.equal(isMissingTable(null), false);
 });
 
-test("suspend only from approved; approve never from approved or suspended", () => {
-  for (const s of ["pending", "rejected", "suspended"]) assert.equal(availableActions(s).suspend, false);
-  for (const s of ["approved", "suspended"]) assert.equal(availableActions(s).approve, false);
-  assert.equal(availableActions("approved").suspend, true);
+const {
+  specialistAccountState, ACCOUNT_STATE_LABEL, normalizeSpecialistEmail, validateNewSpecialist,
+  specialistConflictMessage, activationInstructions,
+} = await loadTs("lib/team/admin-status.ts");
+
+test("an approved row with no linked account is an invitation", () => {
+  assert.equal(specialistAccountState({ status: "approved", auth_user_id: null }), "invited");
+  assert.equal(specialistAccountState({ status: "approved", auth_user_id: "u1" }), "active");
+  assert.equal(specialistAccountState({ status: "suspended", auth_user_id: null }), "suspended");
+  assert.equal(ACCOUNT_STATE_LABEL.invited, "Invited — not activated yet");
+});
+
+test("specialist email is trimmed, lower-cased and validated", () => {
+  assert.equal(normalizeSpecialistEmail("  Ram.Santos@Example.COM "), "ram.santos@example.com");
+  for (const bad of ["", "ram", "ram@", "a b@x.com", null, 3]) assert.equal(normalizeSpecialistEmail(bad), null);
+});
+
+test("add-specialist form validation", () => {
+  assert.deepEqual(
+    validateNewSpecialist({ full_name: " Ram Santos ", email: "RAM@x.com", phone: "", tagline: "" }),
+    { ok: true, value: { displayName: "Ram Santos", email: "ram@x.com", phone: null, tagline: null } },
+  );
+  const r = validateNewSpecialist({ full_name: "R", email: "nope", phone: "123", tagline: "x".repeat(141) });
+  assert.equal(r.ok, false);
+  assert.deepEqual(Object.keys(r.errors).sort(), ["email", "full_name", "phone", "tagline"]);
+  assert.equal(validateNewSpecialist({ full_name: "Ram", email: "r@x.com", phone: "0917 123 4567" }).ok, true);
+});
+
+test("unique violations map to friendly messages", () => {
+  const v = { email: "ram@x.com", subdomain: "ram" };
+  assert.match(specialistConflictMessage({ code: "23505", message: 'duplicate key value violates unique constraint "specialists_email_lower_key"' }, v), /ram@x\.com has already been added/);
+  assert.match(specialistConflictMessage({ code: "23505", message: 'duplicate key value violates unique constraint "specialists_subdomain_key"' }, v), /"ram" is already taken/);
+  assert.equal(specialistConflictMessage({ code: "42501" }, v), null);
+  assert.equal(specialistConflictMessage(null, v), null);
+});
+
+test("activation instructions name the person, the link and the email", () => {
+  assert.equal(
+    activationInstructions("Ram", "ram@x.com", "https://allabodeph.com/team/join"),
+    "Ask Ram to go to https://allabodeph.com/team/join and sign up with ram@x.com. Their account opens once they confirm that email.",
+  );
 });
 
 const {

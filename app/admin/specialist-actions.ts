@@ -3,8 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validateSubdomain } from "@/lib/team/subdomain";
+import { getPublicSiteUrl } from "@/lib/url";
 import {
+  activationInstructions,
   availableActions,
+  isMissingTable,
+  specialistConflictMessage,
+  validateNewSpecialist,
   APPROVABLE_FROM,
   REJECTABLE_FROM,
   canApproveListing,
@@ -45,72 +50,98 @@ async function staffClient() {
   return { error: null, supabase } as const;
 }
 
-export async function approveSpecialist(
-  _prev: SpecialistActionState | null,
+export type AddSpecialistState = {
+  ok: boolean;
+  message: string;
+  /** Per-field errors, keyed by form field name. */
+  errors?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline", string>>;
+  /** On failure: what was submitted, so the form can keep it (React resets the form after an action). */
+  values?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline", string>>;
+  /** On success: the copy-friendly activation instructions for the owner. */
+  instructions?: string;
+  specialistId?: string;
+};
+
+/**
+ * Staff-only: add a property specialist by email (invite-only accounts). The row
+ * is created approved (license_mode "accredited") and unlinked; the person
+ * activates it by signing up at /team/join with the same email, which
+ * link_specialist_account() links once the email is confirmed.
+ * Form fields: full_name, email, phone (optional), subdomain, tagline (optional).
+ */
+export async function addSpecialist(
+  _prev: AddSpecialistState | null,
   fd: FormData,
-): Promise<SpecialistActionState> {
+): Promise<AddSpecialistState> {
   const guard = await staffClient();
   if (guard.error) return guard.error;
   const { supabase } = guard;
 
-  const id = field(fd, "specialist_id");
-  if (!id) return fail("Missing specialist.");
+  const values = {
+    full_name: field(fd, "full_name"),
+    email: field(fd, "email"),
+    phone: field(fd, "phone"),
+    subdomain: field(fd, "subdomain"),
+    tagline: field(fd, "tagline"),
+  };
+  const invalid = (
+    errors: AddSpecialistState["errors"],
+    message = "Check the highlighted fields.",
+  ): AddSpecialistState => ({ ok: false, message, errors, values });
 
-  const parsed = validateSubdomain(field(fd, "subdomain"));
-  if (!parsed.ok) return fail(parsed.error);
+  const checked = validateNewSpecialist({
+    full_name: fd.get("full_name"),
+    email: fd.get("email"),
+    phone: fd.get("phone"),
+    tagline: fd.get("tagline"),
+  });
+  const sub = validateSubdomain(field(fd, "subdomain"));
+  const errors = { ...(checked.ok ? {} : checked.errors), ...(sub.ok ? {} : { subdomain: sub.error }) };
+  if (!checked.ok || !sub.ok) return invalid(errors);
+  const v = checked.value;
 
-  const { data: taken, error: takenErr } = await supabase
+  const [emailTaken, subTaken] = await Promise.all([
+    // Emails are stored lower-cased; the lower(email) unique index catches any
+    // other casing at insert time (mapped to the same message below).
+    supabase.from("specialists").select("id").eq("email", v.email).limit(1),
+    supabase.from("specialists").select("id").eq("subdomain", sub.value).limit(1),
+  ]);
+  const readErr = emailTaken.error ?? subTaken.error;
+  if (readErr) return invalid({}, isMissingTable(readErr) ? MIGRATION_HINT : readErr.message);
+  if (emailTaken.data && emailTaken.data.length > 0) {
+    return invalid({ email: `${v.email} has already been added as a specialist.` });
+  }
+  if (subTaken.data && subTaken.data.length > 0) {
+    return invalid({ subdomain: `The web address "${sub.value}" is already taken. Choose a different one.` });
+  }
+
+  const { data, error } = await supabase
     .from("specialists")
+    .insert({
+      email: v.email,
+      display_name: v.displayName,
+      phone: v.phone,
+      tagline: v.tagline,
+      subdomain: sub.value,
+      status: "approved",
+      license_mode: "accredited",
+      auth_user_id: null,
+    })
     .select("id")
-    .eq("subdomain", parsed.value)
-    .neq("id", id)
-    .limit(1);
-  if (takenErr) return fail(takenErr.message);
-  if (taken && taken.length > 0) {
-    return fail(`"${parsed.value}" is already taken by another specialist. Choose a different one.`);
-  }
-
-  const { data: updated, error } = await supabase
-    .from("specialists")
-    .update({ status: "approved", subdomain: parsed.value })
-    .eq("id", id)
-    .in("status", ["pending", "rejected"])
-    .select("id");
+    .single();
   if (error) {
-    return fail(error.code === "23505"
-      ? `"${parsed.value}" is already taken by another specialist.`
-      : error.message);
-  }
-  if (!updated || updated.length === 0) {
-    return fail("Only pending or rejected applications can be approved.");
+    const conflict = specialistConflictMessage(error, { email: v.email, subdomain: sub.value });
+    if (conflict) return invalid({}, conflict);
+    return invalid({}, isMissingTable(error) ? MIGRATION_HINT : error.message);
   }
 
-  refresh(parsed.value);
-  revalidatePath(`/admin/specialists/${id}`);
-  return done(`Approved. Their address is ${parsed.value}.`);
-}
-
-export async function rejectSpecialist(
-  _prev: SpecialistActionState | null,
-  fd: FormData,
-): Promise<SpecialistActionState> {
-  const guard = await staffClient();
-  if (guard.error) return guard.error;
-  const id = field(fd, "specialist_id");
-  if (!id) return fail("Missing specialist.");
-
-  const { data, error } = await guard.supabase
-    .from("specialists")
-    .update({ status: "rejected" })
-    .eq("id", id)
-    .eq("status", "pending")
-    .select("id");
-  if (error) return fail(error.message);
-  if (!data || data.length === 0) return fail("Only pending applications can be rejected.");
-
-  refresh();
-  revalidatePath(`/admin/specialists/${id}`);
-  return done("Application rejected.");
+  refresh(sub.value);
+  return {
+    ok: true,
+    message: `${v.displayName} was added.`,
+    instructions: activationInstructions(v.displayName, v.email, `${getPublicSiteUrl()}/team/join`),
+    specialistId: (data as { id: string }).id,
+  };
 }
 
 export async function suspendSpecialistAction(specialistId: string): Promise<SpecialistActionState> {
@@ -154,36 +185,6 @@ export async function reinstateSpecialist(specialistId: string): Promise<Special
   refresh();
   revalidatePath(`/admin/specialists/${specialistId}`);
   return done("Reinstated. Their earlier listings stay as house listings.");
-}
-
-/** Staff-only: specialists cannot edit licence details once past 'pending'. */
-export async function updateSpecialistLicence(
-  _prev: SpecialistActionState | null,
-  fd: FormData,
-): Promise<SpecialistActionState> {
-  const guard = await staffClient();
-  if (guard.error) return guard.error;
-  const id = field(fd, "specialist_id");
-  if (!id) return fail("Missing specialist.");
-
-  const mode = field(fd, "license_mode");
-  if (mode !== "own" && mode !== "accredited") return fail("Choose a licence type.");
-  const no = field(fd, "license_no").slice(0, 40);
-  const expiry = field(fd, "license_expiry");
-  if (expiry && !/^\d{4}-\d{2}-\d{2}$/.test(expiry)) return fail("Enter the expiry as a valid date.");
-  if (mode === "own" && !no) return fail("Enter the specialist's PRC licence number.");
-
-  const { data, error } = await guard.supabase
-    .from("specialists")
-    .update({ license_mode: mode, license_no: no || null, license_expiry: expiry || null })
-    .eq("id", id)
-    .select("id");
-  if (error) return fail(error.message);
-  if (!data || data.length === 0) return fail("Specialist not found.");
-
-  refresh();
-  revalidatePath(`/admin/specialists/${id}`);
-  return done("Licence details saved.");
 }
 
 function refreshListing(id: string, slug?: string | null) {

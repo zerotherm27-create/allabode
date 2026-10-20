@@ -157,8 +157,8 @@ export function ListingApprovalPanel({
               state={approveState}
               listingId={listingId}
               status={status}
-              intro={submitted ? "Approving makes the listing public." : "Approving again makes the listing public."}
-              label={submitted ? "Approve listing" : "Approve again"}
+              intro={approvalStatus === "rejected" ? "Approving again makes the listing public." : "Approving makes the listing public."}
+              label={approvalStatus === "rejected" ? "Approve again" : "Approve listing"}
             />
           )}
           {canReject && (

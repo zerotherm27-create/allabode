@@ -89,8 +89,12 @@ export function AddSpecialistForm() {
   // A blur check (even a passing one, "") takes over from the last server error.
   const err = (n: FieldName) => (n in blurErrors ? blurErrors[n] : serverErrors[n]) || undefined;
   const kept = state && !state.ok && state !== dismissed ? state.values ?? {} : {};
-  const onBlur = (n: FieldName) => (e: React.FocusEvent<HTMLInputElement>) =>
-    setBlurErrors((prev) => ({ ...prev, [n]: checkField(n, e.currentTarget.value) }));
+  // Read the value before queueing the update: React nulls `currentTarget` once the
+  // handler returns, and a functional updater can run later, during render.
+  const onBlur = (n: FieldName) => (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.currentTarget.value;
+    setBlurErrors((prev) => ({ ...prev, [n]: checkField(n, value) }));
+  };
 
   if (success) {
     return (

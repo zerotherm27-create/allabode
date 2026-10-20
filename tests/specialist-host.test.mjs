@@ -18,7 +18,7 @@ test("everything else is null", () => {
     "allabodeph.com", "www.allabodeph.com", "admin.allabodeph.com", "join.allabodeph.com",
     "a.b.allabodeph.com", "allabode.vercel.app", "jojo.allabode.vercel.app", "jojo.example.com",
     "-ab.allabodeph.com", "ab-.allabodeph.com", "a.allabodeph.com", "x_y.allabodeph.com",
-    "localhost:3000", "www.localhost", "", null, undefined,
+    "localhost:3000", "www.localhost", "webmail.allabodeph.com", "mx.allabodeph.com", "shop.allabodeph.com", "", null, undefined,
   ]) assert.equal(f(h), null, String(h));
 });
 
@@ -35,7 +35,11 @@ test("domain name + status interpretation", () => {
   assert.deepEqual(ds.interpretCheck(404, null), { ok: true, attached: false, verified: false });
   assert.deepEqual(ds.interpretCheck(200, { verified: true }), { ok: true, attached: true, verified: true });
   assert.equal(ds.subdomainState(ds.interpretCheck(200, { verified: false })), "waiting");
-  assert.equal(ds.subdomainState(ds.interpretCheck(200, { verified: true })), "live");
+  assert.equal(ds.subdomainState(ds.interpretCheck(200, { verified: true })), "waiting");
+  assert.equal(ds.subdomainState({ ok: true, attached: true, verified: true, misconfigured: true }), "waiting");
+  assert.equal(ds.subdomainState({ ok: true, attached: true, verified: true, misconfigured: false }), "live");
+  assert.equal(ds.interpretDomainConfig(200, { misconfigured: false }), false);
+  assert.equal(ds.interpretDomainConfig(404, {}), null);
   assert.equal(ds.subdomainState(ds.interpretCheck(404, null)), "not-attached");
   assert.equal(ds.subdomainState({ ok: false, reason: "not-configured", message: "" }), "not-configured");
 });

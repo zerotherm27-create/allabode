@@ -4,6 +4,7 @@ const RESERVED = [
   "www", "admin", "api", "app", "mail", "portal", "dashboard", "specialist",
   "specialists", "team", "ftp", "smtp", "static", "assets", "cdn", "dev",
   "staging", "test", "blog", "help", "support", "login", "signup", "join",
+  "webmail", "email", "autodiscover", "cpanel", "mx", "ns1", "ns2", "imap", "pop", "shop", "m",
 ];
 
 const LABEL = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;

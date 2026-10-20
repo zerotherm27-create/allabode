@@ -36,7 +36,7 @@ export function interpretDetach(httpStatus: number): DomainResult {
 }
 
 export type DomainCheck =
-  | { ok: true; attached: boolean; verified: boolean }
+  | { ok: true; attached: boolean; verified: boolean; misconfigured?: boolean }
   | { ok: false; reason: "not-configured" | "api-error"; message: string };
 
 /** Interpret GET /v9/projects/{id}/domains/{domain}. */
@@ -52,10 +52,19 @@ export function interpretCheck(httpStatus: number, body: unknown): DomainCheck {
   return { ok: false, reason: "api-error", message: `Vercel API error (HTTP ${httpStatus}).` };
 }
 
+/** Interpret GET /v6/domains/{domain}/config; null when unknown (treated as not live). */
+export function interpretDomainConfig(httpStatus: number, body: unknown): boolean | null {
+  if (httpStatus < 200 || httpStatus >= 300 || !body || typeof body !== "object") return null;
+  const m = (body as { misconfigured?: unknown }).misconfigured;
+  return typeof m === "boolean" ? m : null;
+}
+
 export type SubdomainState = "not-configured" | "not-attached" | "waiting" | "live";
 
 export function subdomainState(check: DomainCheck): SubdomainState {
   if (!check.ok) return check.reason === "not-configured" ? "not-configured" : "waiting";
   if (!check.attached) return "not-attached";
-  return check.verified ? "live" : "waiting";
+  // Project-domain `verified` is true at once (the apex is verified), so DNS
+  // correctness (`misconfigured === false` from /v6/domains/{d}/config) is the live signal.
+  return check.verified && check.misconfigured === false ? "live" : "waiting";
 }

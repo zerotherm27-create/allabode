@@ -61,7 +61,7 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
   const state = specialistAccountState(s, neverSignedIn);
 
   const domainState = s.subdomain && s.status === "approved"
-    ? subdomainState(await checkSpecialistDomain(s.subdomain))
+    ? subdomainState(await checkSpecialistDomain(s.subdomain, 3000))
     : null;
 
   return (

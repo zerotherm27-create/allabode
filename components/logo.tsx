@@ -5,14 +5,16 @@ import { cn } from "@/lib/utils";
 export function Logo({
   variant = "color",
   className = "",
+  href = "/",
 }: {
   variant?: "color" | "white";
   className?: string;
+  href?: string;
 }) {
   const src = variant === "white" ? "/logo/logo-2-white.png" : "/logo/logo-primary.png";
   return (
     <Link
-      href="/"
+      href={href}
       aria-label="All Abode Property Solutions home"
       className="inline-flex items-center"
     >

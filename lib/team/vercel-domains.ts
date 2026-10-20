@@ -4,6 +4,7 @@
 import {
   interpretAttach,
   interpretCheck,
+  interpretDomainConfig,
   interpretDetach,
   specialistDomainName,
   type DomainCheck,
@@ -28,7 +29,7 @@ function url(cfg: { project: string; team?: string }, path: string) {
   return `https://api.vercel.com${path.replace("{project}", encodeURIComponent(cfg.project))}${q}`;
 }
 
-async function call(token: string, method: string, target: string, body?: unknown) {
+async function call(token: string, method: string, target: string, body?: unknown, timeoutMs = 10000) {
   const res = await fetch(target, {
     method,
     headers: {
@@ -36,7 +37,7 @@ async function call(token: string, method: string, target: string, body?: unknow
       ...(body ? { "Content-Type": "application/json" } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(10000),
+    signal: AbortSignal.timeout(timeoutMs),
     cache: "no-store",
   });
   const json: unknown = await res.json().catch(() => null);
@@ -63,14 +64,22 @@ export async function attachSpecialistDomain(slug: string): Promise<DomainResult
   }
 }
 
-export async function checkSpecialistDomain(slug: string): Promise<DomainCheck> {
+export async function checkSpecialistDomain(slug: string, timeoutMs = 10000): Promise<DomainCheck> {
   const cfg = config();
   if (!cfg) return NOT_CONFIGURED;
   const domain = specialistDomainName(slug);
   if (!domain) return { ok: false, reason: "api-error", message: "Invalid subdomain." };
   try {
-    const r = await call(cfg.token, "GET", url(cfg, `/v9/projects/{project}/domains/${domain}`));
-    return interpretCheck(r.status, r.json);
+    const [r, c] = await Promise.all([
+      call(cfg.token, "GET", url(cfg, `/v9/projects/{project}/domains/${domain}`), undefined, timeoutMs),
+      call(cfg.token, "GET", url(cfg, `/v6/domains/${domain}/config`), undefined, timeoutMs).catch(() => null),
+    ]);
+    const check = interpretCheck(r.status, r.json);
+    if (check.ok && check.attached && c) {
+      const misconfigured = interpretDomainConfig(c.status, c.json);
+      if (misconfigured !== null) return { ...check, misconfigured };
+    }
+    return check;
   } catch (e) {
     return apiFail(e);
   }

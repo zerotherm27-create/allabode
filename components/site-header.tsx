@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { DUR_FAST, DUR_MID, EASE_OUT } from "@/components/motion";
-import { mainNav, isDropdown, type NavDropdown } from "@/lib/site";
+import { mainNav, isDropdown, site, type NavDropdown } from "@/lib/site";
+import { specialistSlugFromHost } from "@/lib/team/host";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui";
 import { Logo } from "@/components/logo";
@@ -19,6 +20,16 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 
+const subscribeNoop = () => () => {};
+
+function currentHomeHref() {
+  const { host, hostname, protocol, port } = window.location;
+  if (!specialistSlugFromHost(host, site.domain)) return "/";
+  return hostname.endsWith(".localhost")
+    ? `${protocol}//localhost${port ? `:${port}` : ""}/`
+    : `https://${site.domain}/`;
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -26,6 +37,11 @@ export function SiteHeader() {
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const [mobileLoginOpen, setMobileLoginOpen] = useState(false);
   const reduced = useReducedMotion() ?? false;
+  // On <name>.allabodeph.com "/" is rewritten to that specialist's profile, so
+  // links to the site home must point at the apex. Decided client-side after
+  // hydration so the shared layout/pages stay statically rendered.
+  const homeHref = useSyncExternalStore(subscribeNoop, currentHomeHref, () => "/");
+  const hrefFor = (href: string) => (href === "/" ? homeHref : href);
   const close = () => {
     setOpen(false);
     setLoginMenuOpen(false);
@@ -90,7 +106,7 @@ export function SiteHeader() {
             : "border-line/70 bg-cream/85 shadow-[0_8px_24px_-16px_rgba(15,20,30,0.25)]"
         )}
       >
-        <Logo variant={overLightSurface ? "white" : "color"} className="h-10" />
+        <Logo variant={overLightSurface ? "white" : "color"} className="h-10" href={homeHref} />
 
         {/* Desktop nav — Radix NavigationMenu */}
         <nav aria-label="Primary" className="hidden lg:flex">
@@ -142,7 +158,7 @@ export function SiteHeader() {
                   <NavigationMenuItem key={item.href}>
                     <NavigationMenuLink asChild>
                       <Link
-                        href={item.href}
+                        href={hrefFor(item.href)}
                         aria-current={isActive(item.href) ? "page" : undefined}
                         className={cn(
                           "inline-flex h-9 items-center rounded-full px-3.5 text-sm font-medium transition-colors",
@@ -244,7 +260,7 @@ export function SiteHeader() {
               transition={{ duration: reduced ? 0 : DUR_MID, ease: EASE_OUT }}
             >
             <div className="flex h-16 items-center justify-between border-b border-line px-5">
-              <Logo />
+              <Logo href={homeHref} />
               <button
                 type="button"
                 aria-label="Close menu"
@@ -282,7 +298,7 @@ export function SiteHeader() {
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={hrefFor(item.href)}
                     onClick={close}
                     aria-current={isActive(item.href) ? "page" : undefined}
                     className={cn(

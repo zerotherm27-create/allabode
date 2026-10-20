@@ -2,6 +2,8 @@ export const RESERVED_SUBDOMAINS = [
   "www", "admin", "api", "app", "mail", "portal", "dashboard", "specialist",
   "specialists", "team", "ftp", "smtp", "static", "assets", "cdn", "dev",
   "staging", "test", "blog", "help", "support", "login", "signup",
+  // Names that may collide with explicit DNS records (mail, hosting, etc.).
+  "webmail", "email", "autodiscover", "cpanel", "mx", "ns1", "ns2", "imap", "pop", "shop", "m",
   // Static routes under /team/* (app/(marketing)/team) that a profile slug would shadow.
   "join",
 ];

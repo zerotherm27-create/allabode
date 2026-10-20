@@ -199,6 +199,9 @@ export async function attachSpecialistDomainAction(specialistId: string): Promis
   if (!attached.ok) return fail(attached.message);
   const check = await checkSpecialistDomain(sub);
   revalidatePath(`/admin/specialists/${specialistId}`);
+  if (check.ok && !check.attached) {
+    return fail("That address is already in use by another Vercel project.");
+  }
   const state = subdomainState(check);
   return done(
     state === "live"

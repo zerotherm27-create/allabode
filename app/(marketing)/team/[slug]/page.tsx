@@ -99,9 +99,10 @@ export default async function SpecialistProfilePage({ params }: { params: Params
             aria-label="Breadcrumb"
             className="mb-8 flex flex-wrap items-center gap-2 text-sm text-slate"
           >
-            <Link href="/" className="inline-flex min-h-[44px] items-center hover:text-navy-700">
+            {/* Absolute: on <name>.allabodeph.com "/" is rewritten back to this profile. */}
+            <a href={`https://${site.domain}/`} className="inline-flex min-h-[44px] items-center hover:text-navy-700">
               Home
-            </Link>
+            </a>
             <Icon name="chevron_right" size={16} />
             <Link href="/team" className="inline-flex min-h-[44px] items-center hover:text-navy-700">
               Our team

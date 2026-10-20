@@ -5,6 +5,7 @@ import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
 import { Reveal } from "@/components/motion";
+import { ListedBy } from "@/components/team/listed-by";
 import { ListingGallery } from "@/components/listing-gallery";
 import { ListingMap } from "@/components/listing-map";
 import { ListingNearbyPlaces } from "@/components/listing-nearby-places";
@@ -255,7 +256,8 @@ export default async function ListingDetailPage({ params }: Params) {
                 </>
               )}
               <div className="my-6 h-px w-full bg-gold/30" />
-              <p className="text-sm text-slate">
+              <ListedBy specialist={listing.specialist} size="lg" />
+              <p className="mt-4 text-sm text-slate">
                 Speak with the licensed broker handling this property.
               </p>
               <div className="mt-5 flex flex-col gap-3">

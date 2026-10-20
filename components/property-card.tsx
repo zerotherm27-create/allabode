@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { ListedBy } from "@/components/team/listed-by";
 import { SaveListingButton } from "@/components/save-listing-button";
 import { type Listing, formatBeds, statusStyles } from "@/lib/data";
 
@@ -107,6 +108,8 @@ export function PropertyCard({
           View Details
           <Icon name="arrow_forward" size={16} />
         </Link>
+        {/* Sibling of the links above (never nested); renders nothing for house listings. */}
+        <ListedBy specialist={listing.specialist} size="sm" />
       </div>
     </article>
   );

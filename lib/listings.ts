@@ -6,6 +6,9 @@ import {
 } from "@/lib/data";
 import type { NearbyPlace } from "@/lib/nearby-places";
 import { LISTING_IMAGES_BUCKET, storagePathFromUrl, signedUrlsForPaths } from "@/lib/storage";
+import { getBroker } from "@/lib/team/broker";
+import { licenseLine } from "@/lib/team/license";
+import { specialistPhotoUrl } from "@/lib/team/queries";
 import { listingMarkets, listingStatusLabel, listingTypeLabels, type ListingCategory } from "@/lib/listing-category";
 
 /**
@@ -176,6 +179,78 @@ async function resolveImageUrls(listings: Listing[]): Promise<Listing[]> {
   return listings;
 }
 
+type SpecialistRow = {
+  id: string;
+  slug: string;
+  display_name: string;
+  photo_path: string | null;
+  license_mode: "own" | "accredited";
+  license_no: string | null;
+};
+
+/** Attach the listing specialist, fail-soft. Deliberately a separate step from
+ *  the main `COLS` query: until the specialists migration is applied,
+ *  `listings.specialist_id` / `public_specialists` don't exist, and adding the
+ *  column to the main select would error the whole query and swap the live
+ *  site to mock data. Any failure here (missing column/view, network) is
+ *  swallowed and the listings are returned unchanged. Two small queries at
+ *  most (the PRC broker lookup only runs for the detail page). */
+async function attachSpecialists(
+  listings: Listing[],
+  opts: { withLicense?: boolean } = {},
+): Promise<Listing[]> {
+  try {
+    if (!db) return listings;
+    const dbIds = listings.map((l) => l.dbId).filter((v): v is string => !!v);
+    if (dbIds.length === 0) return listings;
+
+    // Only rows that have a specialist come back, so this stays small. For a
+    // handful of listings (detail page, featured) narrow by id; for the full
+    // list skip the `in (...)` filter to avoid an oversized URL.
+    const q = db.from("listings").select("id,specialist_id").not("specialist_id", "is", null);
+    const { data: links, error: linkErr } = await (dbIds.length <= 20 ? q.in("id", dbIds) : q);
+    if (linkErr || !Array.isArray(links) || links.length === 0) return listings;
+    const bySpecialist = new Map<string, string>();
+    for (const r of links as { id: string; specialist_id: string | null }[]) {
+      if (r.specialist_id) bySpecialist.set(r.id, r.specialist_id);
+    }
+    const wanted = dbIds.filter((id) => bySpecialist.has(id));
+    if (wanted.length === 0) return listings;
+
+    const specialistIds = [...new Set(wanted.map((id) => bySpecialist.get(id)!))];
+    const { data: people, error: peopleErr } = await db
+      .from("public_specialists")
+      .select("id,slug,display_name,photo_path,license_mode,license_no")
+      .in("id", specialistIds);
+    if (peopleErr || !Array.isArray(people) || people.length === 0) return listings;
+    const byId = new Map((people as SpecialistRow[]).map((p) => [p.id, p]));
+
+    const broker =
+      opts.withLicense && (people as SpecialistRow[]).some((p) => p.license_mode === "accredited")
+        ? await getBroker()
+        : null;
+
+    return listings.map((l) => {
+      const sid = l.dbId ? bySpecialist.get(l.dbId) : undefined;
+      const p = sid ? byId.get(sid) : undefined;
+      if (!p) return l;
+      return {
+        ...l,
+        specialist: {
+          slug: p.slug,
+          name: p.display_name,
+          photoUrl: specialistPhotoUrl(p.photo_path),
+          licenseLine: opts.withLicense
+            ? licenseLine({ licenseMode: p.license_mode, licenseNo: p.license_no }, broker)
+            : null,
+        },
+      };
+    });
+  } catch {
+    return listings;
+  }
+}
+
 export async function getListings(): Promise<Listing[]> {
   if (!db) return mockListings;
   const { data, error } = await db
@@ -185,7 +260,7 @@ export async function getListings(): Promise<Listing[]> {
     .order("created_at", { ascending: false })
     .order("sort_order", { referencedTable: "listing_images", ascending: true });
   if (error || !data || data.length === 0) return mockListings;
-  return resolveImageUrls((data as Row[]).map(mapRow));
+  return attachSpecialists(await resolveImageUrls((data as Row[]).map(mapRow)));
 }
 
 export async function getFeaturedListings(limit = 3): Promise<Listing[]> {
@@ -197,7 +272,7 @@ export async function getFeaturedListings(limit = 3): Promise<Listing[]> {
     .order("sort_order", { referencedTable: "listing_images", ascending: true })
     .limit(limit);
   if (error || !data || data.length === 0) return mockListings.slice(0, limit);
-  return resolveImageUrls((data as Row[]).map(mapRow));
+  return attachSpecialists(await resolveImageUrls((data as Row[]).map(mapRow)));
 }
 
 export async function getListing(slug: string): Promise<Listing | null> {
@@ -209,6 +284,7 @@ export async function getListing(slug: string): Promise<Listing | null> {
     .order("sort_order", { referencedTable: "listing_images", ascending: true })
     .maybeSingle();
   if (error || !data) return mockListings.find((l) => l.id === slug) ?? null;
-  const [listing] = await resolveImageUrls([mapRow(data as Row)]);
+  const [resolved] = await resolveImageUrls([mapRow(data as Row)]);
+  const [listing] = await attachSpecialists([resolved], { withLicense: true });
   return listing;
 }

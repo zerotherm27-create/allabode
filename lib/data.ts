@@ -103,6 +103,14 @@ export type Listing = {
   /** AI-assisted nearby-places cache, refreshed on demand by staff. */
   nearbyPlaces?: { name: string; category: string; distanceM: number; blurb?: string }[];
   nearbyPlacesUpdatedAt?: string;
+  /** Approved property specialist who listed this property. Absent for house listings and mock rows. */
+  specialist?: {
+    slug: string;
+    name: string;
+    photoUrl: string | null;
+    /** Licence line for the detail page; null on cards and when licence data is missing. */
+    licenseLine: string | null;
+  };
 };
 
 /** "Studio" for 0 bedrooms, "N Bedroom(s)" otherwise, undefined when unspecified. */

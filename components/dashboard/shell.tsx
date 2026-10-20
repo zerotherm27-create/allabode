@@ -17,7 +17,7 @@ export function DashboardShell({
   userName,
   children,
 }: {
-  role: "Owner" | "Tenant";
+  role: "Owner" | "Tenant" | "Specialist";
   nav: NavItem[];
   userName: string;
   children: React.ReactNode;
@@ -36,7 +36,12 @@ export function DashboardShell({
     router.refresh();
   }
 
-  const accountHref = role === "Owner" ? "/dashboard/owner/account" : "/dashboard/tenant/account";
+  const accountHref =
+    role === "Owner"
+      ? "/dashboard/owner/account"
+      : role === "Specialist"
+        ? "/dashboard/specialist/profile"
+        : "/dashboard/tenant/account";
 
   return (
     <div className="min-h-screen bg-surface-gray lg:grid lg:grid-cols-[260px_1fr]">
@@ -73,13 +78,15 @@ export function DashboardShell({
         </nav>
 
         <div className="border-t border-white/10 p-3">
-          <Link
-            href="/valuation"
-            className="label-caps flex items-center justify-center gap-2 bg-gold py-2.5 text-navy transition-colors hover:bg-gold-bright"
-          >
-            <Icon name="analytics" size={18} />
-            Request Appraisal
-          </Link>
+          {role !== "Specialist" && (
+            <Link
+              href="/valuation"
+              className="label-caps flex items-center justify-center gap-2 bg-gold py-2.5 text-navy transition-colors hover:bg-gold-bright"
+            >
+              <Icon name="analytics" size={18} />
+              Request Appraisal
+            </Link>
+          )}
           <Link
             href={accountHref}
             onClick={() => setOpen(false)}
@@ -135,7 +142,9 @@ export function DashboardShell({
           </label>
 
           <div className="ml-auto flex items-center gap-2">
-            <NotificationBell role={role.toLowerCase() as "owner" | "tenant"} />
+            {role !== "Specialist" && (
+              <NotificationBell role={role.toLowerCase() as "owner" | "tenant"} />
+            )}
             <div className="flex items-center gap-2 rounded-md px-2 py-1">
               <span className="flex size-9 items-center justify-center rounded-full bg-navy text-sm font-semibold text-white">
                 {userName.charAt(0)}

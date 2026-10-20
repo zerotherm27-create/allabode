@@ -72,7 +72,11 @@ export function StatusControls({
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {canSuspend && (
-          <button type="button" disabled={pending} onClick={() => run(suspendSpecialistAction)}
+          <button type="button" disabled={pending} onClick={() => {
+              if (window.confirm("Suspend this specialist? Their profile is removed and their listings become house listings.")) {
+                run(suspendSpecialistAction);
+              }
+            }}
             className="rounded-md border border-line px-5 py-3 text-sm font-semibold text-error hover:bg-error-bg disabled:opacity-50">
             {pending ? "Suspending…" : "Suspend"}
           </button>

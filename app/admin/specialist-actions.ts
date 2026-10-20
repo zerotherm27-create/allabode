@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validateSubdomain } from "@/lib/team/subdomain";
+import { availableActions } from "@/lib/team/admin-status";
 
 export type SpecialistActionState = { ok: boolean; message: string };
 
@@ -59,13 +60,16 @@ export async function approveSpecialist(
     .from("specialists")
     .update({ status: "approved", subdomain: parsed.value })
     .eq("id", id)
+    .in("status", ["pending", "rejected"])
     .select("id");
   if (error) {
     return fail(error.code === "23505"
       ? `"${parsed.value}" is already taken by another specialist.`
       : error.message);
   }
-  if (!updated || updated.length === 0) return fail("Specialist not found.");
+  if (!updated || updated.length === 0) {
+    return fail("Only pending or rejected applications can be approved.");
+  }
 
   refresh();
   revalidatePath(`/admin/specialists/${id}`);
@@ -99,6 +103,17 @@ export async function suspendSpecialistAction(specialistId: string): Promise<Spe
   const guard = await staffClient();
   if (guard.error) return guard.error;
   if (!specialistId) return fail("Missing specialist.");
+
+  const { data: current, error: readErr } = await guard.supabase
+    .from("specialists")
+    .select("status")
+    .eq("id", specialistId)
+    .maybeSingle();
+  if (readErr) return fail(readErr.message);
+  if (!current) return fail("Specialist not found.");
+  if (!availableActions(current.status).suspend) {
+    return fail("Only approved specialists can be suspended.");
+  }
 
   const { error } = await guard.supabase.rpc("suspend_specialist", { p_specialist: specialistId });
   if (error) return fail(error.message);

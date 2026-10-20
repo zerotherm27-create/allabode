@@ -27,3 +27,9 @@ test("detects missing table errors", () => {
   assert.equal(isMissingTable({ code: "42501", message: "denied" }), false);
   assert.equal(isMissingTable(null), false);
 });
+
+test("suspend only from approved; approve never from approved or suspended", () => {
+  for (const s of ["pending", "rejected", "suspended"]) assert.equal(availableActions(s).suspend, false);
+  for (const s of ["approved", "suspended"]) assert.equal(availableActions(s).approve, false);
+  assert.equal(availableActions("approved").suspend, true);
+});

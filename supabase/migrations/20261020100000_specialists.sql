@@ -55,6 +55,19 @@ create table if not exists specialists (
 );
 create index if not exists specialists_status_idx on specialists (status);
 
+-- The only portrait key the app writes is "{id}/portrait.jpg" (lib/team/profile.ts
+-- portraitKey). Pinning it here stops a specialist pointing photo_path at
+-- another specialist's portrait through the REST API.
+do $$
+begin
+  if not exists (select 1 from pg_constraint
+                  where conname = 'specialists_photo_path_check'
+                    and conrelid = 'public.specialists'::regclass) then
+    alter table specialists add constraint specialists_photo_path_check
+      check (photo_path is null or photo_path = id::text || '/portrait.jpg');
+  end if;
+end $$;
+
 drop trigger if exists specialists_updated_at on specialists;
 create trigger specialists_updated_at before update on specialists
   for each row execute function set_updated_at();
@@ -271,8 +284,11 @@ create trigger listings_guard_specialist before insert or update on listings
 -- ---------- suspend_specialist ----------
 -- Staff only. The specialist loses access (current_specialist_id() → null),
 -- their profile drops out of public_specialists, and their listings become
--- house listings (specialist_id cleared; approval state unchanged, so
--- approved ones stay live). The subdomain is kept so it cannot be re-claimed.
+-- house listings (specialist_id cleared). Approved ones stay live as they
+-- are; unapproved ones (draft/submitted/rejected) become hidden house Drafts
+-- marked 'approved', so staff can publish them through the normal admin form
+-- instead of being stranded in a specialist approval state nobody owns.
+-- The subdomain is kept so it cannot be re-claimed.
 create or replace function suspend_specialist(p_specialist uuid)
 returns void language plpgsql security definer set search_path = public, pg_temp as $$
 begin
@@ -285,11 +301,37 @@ begin
     raise exception 'Specialist not found' using errcode = 'P0002';
   end if;
 
-  update listings set specialist_id = null where specialist_id = p_specialist;
+  update listings
+     set specialist_id   = null,
+         status          = case when approval_status = 'approved' then status else 'Draft' end,
+         approval_status = 'approved'
+   where specialist_id = p_specialist;
 end $$;
 
 revoke execute on function suspend_specialist(uuid) from public, anon;
 grant  execute on function suspend_specialist(uuid) to authenticated;
+
+-- ---------- deleting a specialist row (staff delete, or auth user deleted) ----------
+-- The listings FK would only null specialist_id, stranding unapproved listings.
+-- Before the row goes, give its listings the same house-listing treatment as
+-- suspend_specialist(). SECURITY DEFINER so it also works when the delete
+-- arrives as an FK cascade from auth.users (run by the auth service).
+create or replace function release_specialist_listings()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  update listings
+     set specialist_id   = null,
+         status          = case when approval_status = 'approved' then status else 'Draft' end,
+         approval_status = 'approved'
+   where specialist_id = old.id;
+  return old;
+end $$;
+
+revoke execute on function release_specialist_listings() from public, anon, authenticated;
+
+drop trigger if exists specialists_release_listings on specialists;
+create trigger specialists_release_listings before delete on specialists
+  for each row execute function release_specialist_listings();
 
 -- ========================================================================
 -- Row Level Security

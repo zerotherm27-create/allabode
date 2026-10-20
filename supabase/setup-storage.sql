@@ -15,6 +15,16 @@ values
   ('listing-images', 'listing-images', false)
 on conflict (id) do nothing;
 
+-- listing-images: approved specialists can write here too, so cap the size and
+-- accept images only. Staff uploads are re-encoded to JPEG in the browser
+-- (lib/image-optimize.ts) and the admin form caps files at 10 MB, so they pass.
+-- An UPDATE (not part of the insert above) so re-running applies it to the
+-- existing bucket.
+update storage.buckets
+   set file_size_limit    = 10485760,
+       allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp']
+ where id = 'listing-images';
+
 -- Public bucket for specialist portrait photos (served straight from the CDN).
 -- Restricted to images with a size cap, since specialists can write to it.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

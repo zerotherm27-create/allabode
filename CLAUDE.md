@@ -101,6 +101,43 @@ per-task). Read both before any `/impeccable` design command.
 
 ## Build status (updated — resume here)
 
+**DONE — Property specialists (Phase 1 of 4):** licensed agents get their own
+accounts, a public profile, and can list properties (owner-approved).
+- Migration `supabase/migrations/20261020100000_specialists.sql` — `specialists`
+  table + RLS + triggers, the `public_specialists` view, listing approval columns.
+  **User must run it in the SQL editor, THEN re-run `supabase/setup-storage.sql`**
+  (the storage policies depend on the migration).
+- Flow: apply at `/team/join` (email-confirm signup) → owner approves at
+  `/admin/specialists` (assigns a subdomain; also suspend/reinstate) → specialist
+  uses `/dashboard/specialist` (overview, profile + 4:5 portrait upload with
+  cropper, listings) → creates a listing and submits → owner approves it in the
+  admin Listings approval queue → listing shows "Listed by" on cards + detail.
+  Public `/team` directory and `/team/<slug>` profile; "About" nav dropdown.
+- **Design rules:** specialists are NEVER rows in `users` (that table is staff);
+  new `specialist` role in `lib/auth/role.ts`. `public_specialists` is the only
+  public window onto the table. Licence fields lock after approval. Live listing
+  edits go live without re-review (owner can revert); specialists cannot
+  hard-delete approved listings. `/team/[slug]` is 300s ISR with `revalidatePath`
+  on lifecycle/profile changes (`lib/admin/revalidate.ts`). The attach step in
+  `lib/listings.ts` is fail-soft, so the site works before the migration is run.
+- **Known exposure (follow-up):** the specialist listing form hides private
+  seller fields because anon can read ALL columns of live listings — a
+  pre-existing leak worth closing via column grants or a public listings view.
+- Key files: `lib/team/*` (queries, profile/licence/photo/subdomain validation,
+  broker, admin-status), `app/admin/specialist-actions.ts`,
+  `app/dashboard/specialist/*`, `app/(marketing)/team/*`, `components/team/*`,
+  `components/specialist/*`, `components/admin/listing-approval-panel.tsx`.
+  Tests: `tests/specialist-*.test.mjs`, `listing-row`, `auth-destination`.
+- **Manual setup to activate:** (1) run the migration; (2) re-run
+  `supabase/setup-storage.sql`; (3) Settings → Licensed Broker: enter the
+  broker's PRC licence number (name defaults to Aremchel M. Cruzado); (4) walk it:
+  apply at `/team/join` → confirm email → approve with a subdomain → specialist
+  fills profile + portrait → creates a listing and submits → approve it in
+  Listings → check "Listed by" and `/team`. Not yet walked live (needs the migration).
+- **Deferred (later phases):** subdomain routing (`ram.allabodeph.com`),
+  customization/looks, lead routing + email automation, owner overview reports,
+  SEO structured data.
+
 **DONE — Live Google Analytics (GA4) panel in `/admin/analytics`:**
 - `/admin/analytics` now has a source toggle — "Site Analytics" (the
   existing first-party Supabase-backed data) vs "Google Analytics" (live

@@ -46,9 +46,9 @@ The redesigned specialist page reads like a real portfolio, but a profile today 
 - One YouTube or Vimeo link. The site stores only the provider and video id and rebuilds the embed itself.
 - The video shows as a poster with a play button; the third-party player only loads after the visitor clicks, so profile views set no tracking cookies.
 
-## Approval model (the one open question)
+## Approval model (confirmed by the owner, 2026-10-21)
 
-My recommendation: testimonials and closed deals need the owner's approval, because they are claims made under the firm's brand. Social links and the video go live immediately, because they are constrained (allow-listed domains, fixed embed) and easy to remove. This matches the earlier rule that profile edits go live without re-review, with the exception of things that make claims.
+Testimonials and closed deals need approval; social links and the intro video go live immediately. Reasoning: testimonials and closed deals need the owner's approval, because they are claims made under the firm's brand. Social links and the video go live immediately, because they are constrained (allow-listed domains, fixed embed) and easy to remove. This matches the earlier rule that profile edits go live without re-review, with the exception of things that make claims.
 
 ## How it is built
 

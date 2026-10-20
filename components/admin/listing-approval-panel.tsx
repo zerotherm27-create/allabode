@@ -103,6 +103,7 @@ export function ListingApprovalPanel({
   approvalStatus,
   rejectionNote,
   status,
+  everApproved,
 }: {
   listingId: string;
   specialistName: string | null;
@@ -111,6 +112,8 @@ export function ListingApprovalPanel({
   approvalStatus: string;
   rejectionNote: string | null;
   status: string;
+  /** listings.ever_approved; undefined when unknown (then a rejected listing counts as re-approval). */
+  everApproved?: boolean;
 }) {
   const [approveState, approveAction] = useActionState(approveListing, null);
   const [rejectState, rejectAction] = useActionState(rejectListing, null);
@@ -118,6 +121,8 @@ export function ListingApprovalPanel({
   const canApprove = canApproveListing(approvalStatus, { house });
   const canReject = canRejectListing(approvalStatus);
   const submitted = approvalStatus === "submitted";
+  // "Approve again" only for a listing that has been live before.
+  const reapproval = everApproved ?? approvalStatus === "rejected";
 
   return (
     <section aria-labelledby="approval-heading" className="mt-6 rounded-lg border border-line bg-surface p-6">
@@ -157,8 +162,8 @@ export function ListingApprovalPanel({
               state={approveState}
               listingId={listingId}
               status={status}
-              intro={approvalStatus === "rejected" ? "Approving again makes the listing public." : "Approving makes the listing public."}
-              label={approvalStatus === "rejected" ? "Approve again" : "Approve listing"}
+              intro={reapproval ? "Approving again makes the listing public." : "Approving makes the listing public."}
+              label={reapproval ? "Approve again" : "Approve listing"}
             />
           )}
           {canReject && (

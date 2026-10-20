@@ -3,9 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validateSubdomain } from "@/lib/team/subdomain";
-import { getPublicSiteUrl } from "@/lib/url";
 import {
-  activationInstructions,
+  provisionSpecialist,
+  removeNeverSignedInSpecialist,
+  resendSpecialistInvite,
+} from "@/lib/team/provision";
+import {
   availableActions,
   isMissingTable,
   specialistConflictMessage,
@@ -57,16 +60,17 @@ export type AddSpecialistState = {
   errors?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline", string>>;
   /** On failure: what was submitted, so the form can keep it (React resets the form after an action). */
   values?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline", string>>;
-  /** On success: the copy-friendly activation instructions for the owner. */
-  instructions?: string;
+  /** On success: false when the account was created but the invitation email failed. */
+  emailSent?: boolean;
   specialistId?: string;
 };
 
 /**
- * Staff-only: add a property specialist by email (invite-only accounts). The row
- * is created approved (license_mode "accredited") and unlinked; the person
- * activates it by signing up at /team/join with the same email, which
- * link_specialist_account() links once the email is confirmed.
+ * Staff-only: add a property specialist by email (invite-only accounts). After
+ * the staff check and validation, lib/team/provision.ts creates (or safely
+ * reuses) the confirmed auth user, inserts the row already linked to it
+ * (approved, license_mode "accredited") through this staff session client,
+ * and emails a set-password invitation.
  * Form fields: full_name, email, phone (optional), subdomain, tagline (optional).
  */
 export async function addSpecialist(
@@ -115,33 +119,50 @@ export async function addSpecialist(
     return invalid({ subdomain: `The web address "${sub.value}" is already taken. Choose a different one.` });
   }
 
-  const { data, error } = await supabase
-    .from("specialists")
-    .insert({
-      email: v.email,
-      display_name: v.displayName,
-      phone: v.phone,
-      tagline: v.tagline,
-      subdomain: sub.value,
-      status: "approved",
-      license_mode: "accredited",
-      auth_user_id: null,
-    })
-    .select("id")
-    .single();
-  if (error) {
-    const conflict = specialistConflictMessage(error, { email: v.email, subdomain: sub.value });
+  const result = await provisionSpecialist(supabase, {
+    email: v.email,
+    displayName: v.displayName,
+    phone: v.phone,
+    tagline: v.tagline,
+    subdomain: sub.value,
+  });
+  if (!result.ok) {
+    const conflict = specialistConflictMessage(result.dbError, { email: v.email, subdomain: sub.value });
     if (conflict) return invalid({}, conflict);
-    return invalid({}, isMissingTable(error) ? MIGRATION_HINT : error.message);
+    return invalid({}, isMissingTable(result.dbError) ? MIGRATION_HINT : result.message);
   }
 
   refresh(sub.value);
+  revalidatePath(`/admin/specialists/${result.specialistId}`);
   return {
     ok: true,
-    message: `${v.displayName} was added.`,
-    instructions: activationInstructions(v.displayName, v.email, `${getPublicSiteUrl()}/team/join`),
-    specialistId: (data as { id: string }).id,
+    message: result.emailSent
+      ? `Invitation sent to ${v.email}.`
+      : `${v.displayName} was added, but the invitation email could not be sent (${result.emailError ?? "unknown error"}). Use "Resend invite".`,
+    emailSent: result.emailSent,
+    specialistId: result.specialistId,
   };
+}
+
+/** Staff-only: email a fresh set-password invitation (only while the account has never signed in). */
+export async function resendSpecialistInviteAction(specialistId: string): Promise<SpecialistActionState> {
+  const guard = await staffClient();
+  if (guard.error) return guard.error;
+  if (!specialistId) return fail("Missing specialist.");
+  const r = await resendSpecialistInvite(guard.supabase, specialistId);
+  revalidatePath("/admin/specialists");
+  revalidatePath(`/admin/specialists/${specialistId}`);
+  return r.ok ? done(r.message) : fail(r.message);
+}
+
+/** Staff-only: remove a specialist added by mistake — only while their account has never signed in. */
+export async function removeSpecialistAction(specialistId: string): Promise<SpecialistActionState> {
+  const guard = await staffClient();
+  if (guard.error) return guard.error;
+  if (!specialistId) return fail("Missing specialist.");
+  const r = await removeNeverSignedInSpecialist(guard.supabase, specialistId);
+  if (r.ok) refresh(r.subdomain ?? undefined);
+  return r.ok ? done(r.message) : fail(r.message);
 }
 
 export async function suspendSpecialistAction(specialistId: string): Promise<SpecialistActionState> {

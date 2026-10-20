@@ -9,6 +9,7 @@ import {
   specialistAccountState,
   type SpecialistAccountState,
 } from "@/lib/team/admin-status";
+import { getNeverSignedIn } from "@/lib/team/provision";
 
 type Row = {
   id: string;
@@ -20,6 +21,8 @@ type Row = {
   created_at: string;
 };
 
+type ViewRow = Row & { state: SpecialistAccountState };
+
 const stateStyle: Record<SpecialistAccountState, string> = {
   invited: "bg-reserved/10 text-reserved",
   active: "bg-available/10 text-available",
@@ -28,15 +31,14 @@ const stateStyle: Record<SpecialistAccountState, string> = {
   rejected: "bg-surface-gray text-slate",
 };
 
-const columns: Column<Row>[] = [
+const columns: Column<ViewRow>[] = [
   { header: "Name", primary: true, cell: (r) => <Link href={`/admin/specialists/${r.id}`} className="font-medium text-navy hover:text-navy-700">{r.display_name}</Link> },
   { header: "Email", cell: (r) => <span className="break-all text-slate">{r.email}</span> },
   {
     header: "Status",
-    cell: (r) => {
-      const state = specialistAccountState(r);
-      return <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${stateStyle[state]}`}>{ACCOUNT_STATE_LABEL[state]}</span>;
-    },
+    cell: (r) => (
+      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${stateStyle[r.state]}`}>{ACCOUNT_STATE_LABEL[r.state]}</span>
+    ),
   },
   { header: "Web address", cell: (r) => <span className="text-slate">{r.subdomain ?? "—"}</span> },
 ];
@@ -47,15 +49,22 @@ export default async function AdminSpecialistsPage() {
     .from("specialists")
     .select("id,display_name,email,status,auth_user_id,subdomain,created_at");
   const missing = isMissingTable(error);
-  const rows = sortSpecialists((data ?? []) as Row[]);
-  const invited = rows.filter((r) => specialistAccountState(r) === "invited").length;
+  const raw = (data ?? []) as Row[];
+  // Sign-in status comes from the Auth Admin API (last_sign_in_at); null when
+  // it is unavailable, in which case linked rows simply show as Active.
+  const neverSignedIn = await getNeverSignedIn(raw.map((r) => r.auth_user_id).filter((v): v is string => !!v));
+  const rows: ViewRow[] = sortSpecialists(
+    raw.map((r) => ({ ...r, state: specialistAccountState(r, neverSignedIn) })),
+    (r) => r.state === "invited",
+  );
+  const invited = rows.filter((r) => r.state === "invited").length;
 
   return (
     <div className="mx-auto max-w-5xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-navy">Property specialists</h1>
-          <p className="mt-1 text-sm text-slate">{rows.length} total{invited ? ` · ${invited} not activated yet` : ""}</p>
+          <p className="mt-1 text-sm text-slate">{rows.length} total{invited ? ` · ${invited} not signed in yet` : ""}{neverSignedIn === null && !missing ? " · sign-in status unavailable" : ""}</p>
         </div>
         {!missing && (
           <Link

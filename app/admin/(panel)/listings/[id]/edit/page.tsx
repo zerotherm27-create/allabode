@@ -44,7 +44,7 @@ export default async function EditListingPage({
   // Specialist-owned listings, and any listing not yet approved, get a review panel so
   // no listing is left without a control. These columns only exist once the specialists
   // migration has run; before that they are undefined and the panel is skipped.
-  const owned = data as { specialist_id?: string | null; approval_status?: string; rejection_note?: string | null; status?: string };
+  const owned = data as { specialist_id?: string | null; approval_status?: string; rejection_note?: string | null; status?: string; ever_approved?: boolean };
   let specialistName: string | null = null;
   if (owned.specialist_id) {
     const { data: sp } = await supabase
@@ -77,6 +77,7 @@ export default async function EditListingPage({
           approvalStatus={owned.approval_status}
           rejectionNote={owned.rejection_note ?? null}
           status={owned.status ?? ""}
+          everApproved={owned.ever_approved}
         />
       )}
       <div className="mt-6">

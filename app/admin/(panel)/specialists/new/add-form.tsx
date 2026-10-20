@@ -1,11 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { Field, Input } from "@/components/forms/fields";
-import { addSpecialist, type AddSpecialistState } from "@/app/admin/specialist-actions";
+import {
+  addSpecialist,
+  resendSpecialistInviteAction,
+  type AddSpecialistState,
+  type SpecialistActionState,
+} from "@/app/admin/specialist-actions";
 import { validateSubdomain } from "@/lib/team/subdomain";
 import { NEW_SPECIALIST_LIMITS, validateNewSpecialist } from "@/lib/team/admin-status";
 
@@ -22,7 +27,7 @@ function SubmitButton() {
       {pending ? (
         <>
           <Icon name="progress_activity" size={18} className="animate-spin" />
-          Adding…
+          Sending invitation…
         </>
       ) : (
         <>
@@ -49,23 +54,25 @@ function checkField(name: FieldName, value: string): string {
   return r.ok ? "" : (r.errors[name as keyof typeof r.errors] ?? "");
 }
 
-function CopyLine({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
+function ResendInvite({ id }: { id: string }) {
+  const [pending, start] = useTransition();
+  const [result, setResult] = useState<SpecialistActionState | null>(null);
   return (
-    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
-      <p className="min-w-0 flex-1 select-all break-words rounded-md border border-line bg-cream px-3 py-2 text-sm text-ink">
-        {text}
-      </p>
+    <div className="mt-3 flex flex-wrap items-center gap-3">
       <button
         type="button"
-        onClick={() => {
-          navigator.clipboard?.writeText(text).then(() => setCopied(true)).catch(() => setCopied(false));
-        }}
-        className="press inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-line px-4 text-sm font-medium text-navy hover:bg-surface-gray"
+        disabled={pending}
+        onClick={() => start(async () => setResult(await resendSpecialistInviteAction(id)))}
+        className="press inline-flex min-h-11 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium text-navy hover:bg-surface-gray disabled:opacity-60"
       >
-        <Icon name={copied ? "check_circle" : "content_copy"} size={18} />
-        {copied ? "Copied" : "Copy"}
+        <Icon name="send" size={18} />
+        {pending ? "Sending…" : "Resend invite"}
       </button>
+      {result && (
+        <p role={result.ok ? "status" : "alert"} className={`text-sm ${result.ok ? "text-available" : "text-error"}`}>
+          {result.message}
+        </p>
+      )}
     </div>
   );
 }
@@ -88,12 +95,26 @@ export function AddSpecialistForm() {
   if (success) {
     return (
       <div role="status">
-        <p className="flex items-center gap-2 font-display text-lg font-semibold text-navy">
-          <Icon name="check_circle" size={22} className="text-navy-700" />
-          {success.message}
-        </p>
-        <p className="mt-3 text-sm text-slate">Send them these activation instructions:</p>
-        {success.instructions && <CopyLine text={success.instructions} />}
+        {success.emailSent === false ? (
+          <>
+            <p role="alert" className="flex items-start gap-2 text-sm font-medium text-error">
+              <Icon name="warning" size={20} className="mt-0.5 shrink-0" />
+              {success.message}
+            </p>
+            {success.specialistId && <ResendInvite id={success.specialistId} />}
+          </>
+        ) : (
+          <>
+            <p className="flex items-center gap-2 font-display text-lg font-semibold text-navy">
+              <Icon name="check_circle" size={22} className="text-navy-700" />
+              {success.message}
+            </p>
+            <p className="mt-3 text-sm text-slate">
+              They&rsquo;ll get an email with a link to set their password, then sign in at /portal/login.
+              Their profile is already listed on the Team page.
+            </p>
+          </>
+        )}
         <div className="mt-6 flex flex-wrap gap-3">
           {success.specialistId && (
             <Link
@@ -128,7 +149,7 @@ export function AddSpecialistForm() {
       <Field
         label="Email"
         required
-        hint="They must sign up at /team/join with exactly this address."
+        hint="We'll create their account and email them a link to set a password."
         error={err("email")}
       >
         <Input name="email" type="email" defaultValue={kept.email} autoComplete="off" maxLength={NEW_SPECIALIST_LIMITS.email} onBlur={onBlur("email")} />

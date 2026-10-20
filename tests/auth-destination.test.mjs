@@ -26,3 +26,11 @@ test("other roles cannot follow next into /dashboard/specialist", async () => {
     assert.equal(resolvePostAuthRedirect(role, "/dashboard/specialist", "/x"), "/x");
   }
 });
+
+test("any verified session may continue to /auth/set-password (invitation links)", async () => {
+  const { resolvePostAuthRedirect } = await loadTs("lib/auth/destination.ts");
+  for (const role of ["specialist", "owner", "tenant", "staff", null]) {
+    assert.equal(resolvePostAuthRedirect(role, "/auth/set-password", "/x"), "/auth/set-password");
+  }
+  assert.equal(resolvePostAuthRedirect("specialist", "/auth/set-password/../../admin", "/x"), "/x");
+});

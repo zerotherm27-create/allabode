@@ -4,13 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import {
   ACCOUNT_STATE_LABEL,
-  activationInstructions,
   availableActions,
   isMissingTable,
   specialistAccountState,
 } from "@/lib/team/admin-status";
-import { getPublicSiteUrl } from "@/lib/url";
-import { StatusControls } from "./controls";
+import { getNeverSignedIn } from "@/lib/team/provision";
+import { InviteControls, StatusControls } from "./controls";
 
 type Row = {
   id: string; display_name: string; email: string; phone: string | null; status: string;
@@ -53,7 +52,9 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
   if (!data) notFound();
   const s = data as Row;
   const act = availableActions(s.status);
-  const state = specialistAccountState(s);
+  // Sign-in status from the Auth Admin API (null when unavailable).
+  const neverSignedIn = s.auth_user_id ? await getNeverSignedIn([s.auth_user_id]) : new Set<string>();
+  const state = specialistAccountState(s, neverSignedIn);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -90,13 +91,12 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
       </section>
 
       {state === "invited" && (
-        <section className="rounded-lg border border-line bg-surface p-6">
-          <h2 className="font-display text-sm font-semibold text-navy">Not activated yet</h2>
-          <p className="mt-2 text-sm text-slate">Send them these activation instructions:</p>
-          <p className="mt-3 select-all break-words rounded-md border border-line bg-cream px-3 py-2 text-sm text-ink">
-            {activationInstructions(s.display_name, s.email, `${getPublicSiteUrl()}/team/join`)}
-          </p>
-        </section>
+        <InviteControls id={s.id} email={s.email} canResend={s.status === "approved" && !!s.auth_user_id} />
+      )}
+      {neverSignedIn === null && (
+        <p className="text-sm text-slate">
+          Sign-in status is unavailable (the server can&rsquo;t reach the account service), so invitation controls are hidden.
+        </p>
       )}
       <StatusControls id={s.id} canSuspend={act.suspend} canReinstate={act.reinstate} />
     </div>

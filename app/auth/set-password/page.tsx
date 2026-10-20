@@ -34,7 +34,8 @@ export default function SetPasswordPage() {
       setError(updateError.message);
       return;
     }
-    router.replace("/dashboard/owner");
+    // /portal routes owners, tenants and specialists to their own dashboard.
+    router.replace("/portal");
   }
 
   return (
@@ -42,11 +43,11 @@ export default function SetPasswordPage() {
       <div className="w-full max-w-sm rounded-lg border border-line bg-surface p-8">
         <div className="flex flex-col items-center gap-2">
           <Image src="/logo/logo-primary.png" alt="All Abode Property Solutions" width={160} height={80} className="h-16 w-auto" />
-          <p className="label-caps text-gold">Owner Portal</p>
+          <p className="label-caps text-gold">Client Portal</p>
         </div>
         <h1 className="mt-6 text-center font-display text-2xl font-bold text-navy">Set your password</h1>
         <p className="mt-2 text-center text-sm text-slate">
-          Your account is ready. Choose a password to access your owner dashboard.
+          Your account is ready. Choose a password to access your dashboard.
         </p>
 
         <form onSubmit={onSubmit} noValidate className="mt-7 flex flex-col gap-5">

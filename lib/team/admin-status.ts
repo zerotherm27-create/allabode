@@ -2,12 +2,23 @@
 // unit tested directly).
 export type SpecialistStatus = "pending" | "approved" | "rejected" | "suspended";
 
-const ORDER: Record<string, number> = { pending: 0, approved: 1, suspended: 2, rejected: 3 };
-
-/** Pending applications first, then approved/suspended/rejected; newest first within a status. */
-export function sortSpecialists<T extends { status: string; created_at: string }>(rows: T[]): T[] {
+/** Not-yet-signed-in invitees first, then pending/active, then suspended
+ *  (rejected last); newest first within a group. Pass the invitee test from
+ *  specialistAccountState so the list and the badges agree. */
+export function sortSpecialists<T extends { status: string; created_at: string }>(
+  rows: T[],
+  isInvited: (row: T) => boolean = () => false,
+): T[] {
+  const rank = (r: T) => {
+    if (r.status === "suspended") return 3;
+    if (r.status === "rejected") return 4;
+    if (r.status === "approved" && isInvited(r)) return 0;
+    if (r.status === "pending") return 1;
+    if (r.status === "approved") return 2;
+    return 9;
+  };
   return [...rows].sort((a, b) => {
-    const d = (ORDER[a.status] ?? 9) - (ORDER[b.status] ?? 9);
+    const d = rank(a) - rank(b);
     if (d !== 0) return d;
     return a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0;
   });
@@ -22,19 +33,25 @@ export function availableActions(status: string): { suspend: boolean; reinstate:
   };
 }
 
-/** What the admin list shows for a row: an approved row nobody has linked yet
- *  is an invitation still waiting to be activated at /team/join. */
+/** What the admin list shows for a row. An approved row is "invited" while its
+ *  login has never been used (or, for a legacy row, has no login at all).
+ *  `neverSignedIn` comes from the Admin API (lib/team/provision.ts
+ *  getNeverSignedIn); null means unknown, which shows as Active. */
 export type SpecialistAccountState = "invited" | "active" | "suspended" | "pending" | "rejected";
 
-export function specialistAccountState(row: { status: string; auth_user_id?: string | null }): SpecialistAccountState {
+export function specialistAccountState(
+  row: { status: string; auth_user_id?: string | null },
+  neverSignedIn: ReadonlySet<string> | null = null,
+): SpecialistAccountState {
   if (row.status === "suspended") return "suspended";
   if (row.status === "pending") return "pending";
   if (row.status === "rejected") return "rejected";
-  return row.auth_user_id ? "active" : "invited";
+  if (!row.auth_user_id) return "invited";
+  return neverSignedIn?.has(row.auth_user_id) ? "invited" : "active";
 }
 
 export const ACCOUNT_STATE_LABEL: Record<SpecialistAccountState, string> = {
-  invited: "Invited — not activated yet",
+  invited: "Invited — hasn't signed in yet",
   active: "Active",
   suspended: "Suspended",
   pending: "Pending",
@@ -84,14 +101,16 @@ export function specialistConflictMessage(
 ): string | null {
   if (!error || error.code !== "23505") return null;
   const text = `${error.message ?? ""} ${error.details ?? ""}`;
-  if (/subdomain/i.test(text)) return `The web address "${values.subdomain}" is already taken. Choose a different one.`;
-  if (/email/i.test(text)) return `${values.email} has already been added as a specialist.`;
+  // Match the constraint / key column (not just a word, which a submitted
+  // value could contain), and test the email before the subdomain.
+  const email = `${values.email} has already been added as a specialist.`;
+  const sub = `The web address "${values.subdomain}" is already taken. Choose a different one.`;
+  if (/specialists_email_lower_key|Key \(lower\(email\)\)/i.test(text)) return email;
+  if (/specialists_subdomain_key|Key \(subdomain\)/i.test(text)) return sub;
+  if (/specialists_auth_user_id_key|Key \(auth_user_id\)/i.test(text)) return `${values.email} is already linked to another specialist.`;
+  if (/email/i.test(error.message ?? "")) return email;
+  if (/subdomain/i.test(error.message ?? "")) return sub;
   return "That specialist already exists.";
-}
-
-/** The owner's copy-friendly activation instructions after adding someone. */
-export function activationInstructions(name: string, email: string, joinUrl: string): string {
-  return `Ask ${name} to go to ${joinUrl} and sign up with ${email}. Their account opens once they confirm that email.`;
 }
 
 /** True when a Postgres/PostgREST error means the specialists table is missing. */

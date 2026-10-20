@@ -4,14 +4,18 @@ import { loadTs } from "./helpers/load-ts.mjs";
 
 const { sortSpecialists, availableActions, isMissingTable } = await loadTs("lib/team/admin-status.ts");
 
-test("pending first, newest first within status", () => {
+test("invitees first, then pending/active, then suspended; newest first within a group", () => {
   const rows = [
     { id: "a", status: "approved", created_at: "2026-01-01" },
     { id: "b", status: "pending", created_at: "2026-01-01" },
     { id: "c", status: "pending", created_at: "2026-02-01" },
     { id: "d", status: "rejected", created_at: "2026-03-01" },
+    { id: "s", status: "suspended", created_at: "2026-04-01" },
+    { id: "i", status: "approved", created_at: "2025-01-01", invited: true },
   ];
-  assert.deepEqual(sortSpecialists(rows).map((r) => r.id), ["c", "b", "a", "d"]);
+  assert.deepEqual(sortSpecialists(rows, (r) => !!r.invited).map((r) => r.id), ["i", "c", "b", "a", "s", "d"]);
+  // Without an invitee test, approved rows sort with the active group.
+  assert.deepEqual(sortSpecialists(rows).map((r) => r.id), ["c", "b", "a", "i", "s", "d"]);
 });
 
 test("available actions per status: suspend/reinstate only", () => {
@@ -31,14 +35,18 @@ test("detects missing table errors", () => {
 
 const {
   specialistAccountState, ACCOUNT_STATE_LABEL, normalizeSpecialistEmail, validateNewSpecialist,
-  specialistConflictMessage, activationInstructions,
+  specialistConflictMessage,
 } = await loadTs("lib/team/admin-status.ts");
 
-test("an approved row with no linked account is an invitation", () => {
+test("an approved row whose login has never been used is an invitation", () => {
+  const never = new Set(["u1"]);
+  assert.equal(specialistAccountState({ status: "approved", auth_user_id: "u1" }, never), "invited");
+  assert.equal(specialistAccountState({ status: "approved", auth_user_id: "u2" }, never), "active");
   assert.equal(specialistAccountState({ status: "approved", auth_user_id: null }), "invited");
-  assert.equal(specialistAccountState({ status: "approved", auth_user_id: "u1" }), "active");
-  assert.equal(specialistAccountState({ status: "suspended", auth_user_id: null }), "suspended");
-  assert.equal(ACCOUNT_STATE_LABEL.invited, "Invited — not activated yet");
+  // Unknown sign-in status (Admin API unavailable) shows as Active.
+  assert.equal(specialistAccountState({ status: "approved", auth_user_id: "u1" }, null), "active");
+  assert.equal(specialistAccountState({ status: "suspended", auth_user_id: "u1" }, never), "suspended");
+  assert.equal(ACCOUNT_STATE_LABEL.invited, "Invited — hasn't signed in yet");
 });
 
 test("specialist email is trimmed, lower-cased and validated", () => {
@@ -61,15 +69,12 @@ test("unique violations map to friendly messages", () => {
   const v = { email: "ram@x.com", subdomain: "ram" };
   assert.match(specialistConflictMessage({ code: "23505", message: 'duplicate key value violates unique constraint "specialists_email_lower_key"' }, v), /ram@x\.com has already been added/);
   assert.match(specialistConflictMessage({ code: "23505", message: 'duplicate key value violates unique constraint "specialists_subdomain_key"' }, v), /"ram" is already taken/);
+  // Email is tested before the subdomain keyword: a value can contain either word.
+  const tricky = { email: "subdomain@x.com", subdomain: "email-ram" };
+  assert.match(specialistConflictMessage({ code: "23505", message: 'duplicate key value violates unique constraint "specialists_email_lower_key"', details: "Key (lower(email))=(subdomain@x.com) already exists." }, tricky), /subdomain@x\.com has already been added/);
+  assert.match(specialistConflictMessage({ code: "23505", message: 'duplicate key value violates unique constraint "specialists_subdomain_key"', details: "Key (subdomain)=(email-ram) already exists." }, tricky), /"email-ram" is already taken/);
   assert.equal(specialistConflictMessage({ code: "42501" }, v), null);
   assert.equal(specialistConflictMessage(null, v), null);
-});
-
-test("activation instructions name the person, the link and the email", () => {
-  assert.equal(
-    activationInstructions("Ram", "ram@x.com", "https://allabodeph.com/team/join"),
-    "Ask Ram to go to https://allabodeph.com/team/join and sign up with ram@x.com. Their account opens once they confirm that email.",
-  );
 });
 
 const {

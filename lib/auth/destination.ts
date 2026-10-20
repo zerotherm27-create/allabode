@@ -11,6 +11,10 @@ export function resolvePostAuthRedirect(
 ) {
   if (!requestedNext || !isSafeRelativePath(requestedNext)) return fallback;
 
+  // Invitation / recovery links verify a session first, then the person picks
+  // a password. The page itself routes on to the right dashboard afterwards.
+  if (requestedNext === "/auth/set-password") return requestedNext;
+
   if (role === "staff" && requestedNext.startsWith("/admin")) return requestedNext;
   if (role === "owner" && requestedNext.startsWith("/dashboard/owner")) return requestedNext;
   if (role === "tenant" && requestedNext.startsWith("/dashboard/tenant")) return requestedNext;

@@ -159,7 +159,26 @@ accounts, a public profile, and can list properties (owner-approved).
   profile + portrait → create a listing and submit → approve it in Listings →
   check "Listed by" and `/team`. Not yet walked live (needs the migration);
   the Admin API calls are only type-checked.
-- **Deferred (later phases):** subdomain routing (`ram.allabodeph.com`),
+- **Subdomains (`<name>.allabodeph.com`):** a wildcard `*` CNAME at GoDaddy points
+  to Vercel (DNS is not moved, no wildcard cert); the app attaches each approved
+  specialist's exact subdomain to the Vercel project through the REST API
+  (`lib/team/vercel-domains.ts`, pure parts in `lib/team/domain-status.ts`; each
+  domain gets its own cert by HTTP challenge). `proxy.ts` rewrites `/` on a
+  specialist host to `/team/<name>`, passes that profile page and static assets
+  through, and 307-redirects everything else to the main domain (fixed origin;
+  `<name>.localhost:3000` redirects to `http://localhost:3000` for local testing).
+  Host parsing: `lib/team/host.ts`. The canonical URL stays `allabodeph.com/team/<name>`.
+  Attach runs after Add specialist (failure only warns), detach after Remove; the
+  admin detail page has a Subdomain status row + "Set up / re-check subdomain".
+  Manual setup: (a) GoDaddy DNS: CNAME, Name `*`, Value
+  `e0d337f27e744d71.vercel-dns-017.com.` (`cname.vercel-dns.com` also works), default TTL;
+  (b) Vercel > Account Settings > Tokens: create a token scoped to the team;
+  (c) Project allabode > Settings > Environment Variables (Production, then
+  redeploy): `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID=prj_z8Qe4yhmIpbBPqocCJEoavT7VsFp`,
+  `VERCEL_TEAM_ID=team_I6jgfHPrez0G1ZvYMOkNQhRn` (also document them, names only, in
+  `.env.example`); (d) for specialists added before the setup, open them in
+  `/admin/specialists` and press "Set up subdomain".
+- **Deferred (later phases):**
   customization/looks, lead routing + email automation, owner overview reports,
   SEO structured data.
 

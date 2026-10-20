@@ -214,9 +214,23 @@ alter table listings
     check (approval_status in ('draft', 'submitted', 'approved', 'rejected'));
 alter table listings
   add column if not exists rejection_note text;
+-- Sticky "this listing has been live at some point" marker. Once a listing is
+-- approved it may have staff-owned bookings/inquiries attached, so a specialist
+-- may never delete it again — even after a staff takedown (approved → rejected).
+-- A marker on the row is used rather than a check against those tables, which
+-- RLS would hide from the specialist (an exists() would silently pass).
+alter table listings
+  add column if not exists ever_approved boolean not null default false;
 
 create index if not exists listings_specialist_idx      on listings (specialist_id);
 create index if not exists listings_approval_status_idx on listings (approval_status);
+
+-- Backfill (idempotent). The updated_at trigger is paused so marking existing
+-- listings does not look like an edit to every one of them.
+alter table listings disable trigger listings_updated_at;
+update listings set ever_approved = true
+ where approval_status = 'approved' and not ever_approved;
+alter table listings enable trigger listings_updated_at;
 
 -- For anyone who is not staff (i.e. a specialist via the session client):
 --   insert → always the caller's own, unfeatured draft with a server-chosen
@@ -247,6 +261,7 @@ begin
     new.is_featured     := false;
     new.rejection_note  := null;
     new.unit_id         := null;
+    new.ever_approved   := false;
     return new;
   end if;
 
@@ -256,6 +271,7 @@ begin
   new.is_featured    := old.is_featured;
   new.rejection_note := old.rejection_note;
   new.unit_id        := old.unit_id;
+  new.ever_approved  := old.ever_approved;
   new.created_at     := old.created_at;
 
   if new.approval_status is distinct from old.approval_status
@@ -271,6 +287,23 @@ end $$;
 drop trigger if exists listings_guard_specialist on listings;
 create trigger listings_guard_specialist before insert or update on listings
   for each row execute function guard_specialist_listing();
+
+-- Sets the sticky marker for every caller (staff included) whenever a row is
+-- approved, and never lets it go back to false. Fires after
+-- listings_guard_specialist (trigger names run in alphabetical order).
+create or replace function mark_listing_ever_approved()
+returns trigger language plpgsql set search_path = public, pg_temp as $$
+begin
+  if new.approval_status = 'approved'
+     or (tg_op = 'UPDATE' and old.ever_approved) then
+    new.ever_approved := true;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists listings_mark_ever_approved on listings;
+create trigger listings_mark_ever_approved before insert or update on listings
+  for each row execute function mark_listing_ever_approved();
 
 -- ---------- suspend_specialist ----------
 -- Staff only. The specialist loses access (current_specialist_id() → null),
@@ -379,14 +412,16 @@ create policy "specialist updates own listings" on listings
   for update to authenticated
   using      (specialist_id = (select current_specialist_id()))
   with check (specialist_id = (select current_specialist_id()));
--- Never an APPROVED (live) listing: deleting cascades to staff-owned data
--- (viewing_bookings ON DELETE CASCADE, inquiries SET NULL) and FK actions
--- bypass RLS. Specialists take a live listing down by setting status
--- 'Archived' instead; staff can still delete anything.
+-- Never a listing that is or has ever been APPROVED (live): deleting cascades
+-- to staff-owned data (viewing_bookings ON DELETE CASCADE, inquiries SET NULL)
+-- and FK actions bypass RLS. `ever_approved` also covers a listing staff took
+-- down (approved → rejected). Specialists archive (status 'Archived') instead;
+-- staff can still delete anything.
 create policy "specialist deletes own listings" on listings
   for delete to authenticated
   using (specialist_id = (select current_specialist_id())
-         and approval_status <> 'approved');
+         and approval_status <> 'approved'
+         and not ever_approved);
 
 -- ---------- listing_images: via the parent listing's specialist ----------
 drop policy if exists "specialist reads own listing images"   on listing_images;

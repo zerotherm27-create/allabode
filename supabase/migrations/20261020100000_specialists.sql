@@ -94,6 +94,16 @@ begin
       using errcode = '42501';
   end if;
 
+  -- The public licence line ("PRC License No." / "Accredited under …") is a
+  -- compliance statement: once approved, only staff may change it.
+  if old.status = 'approved'
+     and (new.license_mode   is distinct from old.license_mode
+       or new.license_no     is distinct from old.license_no
+       or new.license_expiry is distinct from old.license_expiry) then
+    raise exception 'Licence details can only be changed by All Abode.'
+      using errcode = '42501';
+  end if;
+
   new.created_at := old.created_at;
   return new;
 end $$;

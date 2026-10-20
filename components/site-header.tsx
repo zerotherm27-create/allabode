@@ -213,6 +213,14 @@ export function SiteHeader() {
                 Owner / Tenant Login
               </Link>
               <Link
+                href="/portal/login"
+                role="menuitem"
+                onClick={() => setLoginMenuOpen(false)}
+                className="block rounded-md px-3 py-2.5 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
+              >
+                Property Specialist Login
+              </Link>
+              <Link
                 href="/admin/login"
                 role="menuitem"
                 onClick={() => setLoginMenuOpen(false)}
@@ -339,6 +347,13 @@ export function SiteHeader() {
                       className="block rounded-lg px-4 py-3 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
                     >
                       Owner / Tenant Login
+                    </Link>
+                    <Link
+                      href="/portal/login"
+                      onClick={close}
+                      className="block rounded-lg px-4 py-3 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
+                    >
+                      Property Specialist Login
                     </Link>
                     <Link
                       href="/admin/login"

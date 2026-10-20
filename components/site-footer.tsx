@@ -80,9 +80,9 @@ export async function SiteFooter() {
                 alt="BIR Registered 2026 — All Abode Brokerage and Valuation OPC, Bureau of Internal Revenue"
                 width={507}
                 height={172}
-                sizes="(min-width: 768px) 300px, 240px"
+                sizes="(min-width: 768px) 224px, 192px"
                 unoptimized
-                className="block h-auto w-60 max-w-full md:w-75 rounded-sm"
+                className="block h-auto w-48 max-w-full md:w-56 rounded-sm"
               />
             </a>
           </div>

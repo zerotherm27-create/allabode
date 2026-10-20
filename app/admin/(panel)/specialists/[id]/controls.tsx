@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
+  attachSpecialistDomainAction,
   reinstateSpecialist,
   removeSpecialistAction,
   resendSpecialistInviteAction,
@@ -101,6 +102,44 @@ export function InviteControls({ id, email, canResend, canRemove }: { id: string
             Back to specialists
           </Link>
         )}
+      </div>
+    </div>
+  );
+}
+
+export type SubdomainUiState = "not-configured" | "not-attached" | "waiting" | "live";
+
+const SUBDOMAIN_LABEL: Record<SubdomainUiState, string> = {
+  "not-configured": "Not configured (Vercel API variables are missing)",
+  "not-attached": "Not set up yet",
+  waiting: "Waiting for DNS or certificate",
+  live: "Live",
+};
+
+/** Subdomain status row + set up / re-check button. */
+export function SubdomainControls({ id, slug, state }: { id: string; slug: string; state: SubdomainUiState }) {
+  const [pending, start] = useTransition();
+  const [result, setResult] = useState<SpecialistActionState | null>(null);
+  const address = `${slug}.allabodeph.com`;
+  return (
+    <div className="rounded-lg border border-line bg-surface p-6">
+      <h2 className="font-display text-sm font-semibold text-navy">Subdomain</h2>
+      <p className="mt-1 text-sm text-slate">
+        Status: <strong className="text-ink">{SUBDOMAIN_LABEL[state]}</strong>
+        {state === "live" && (
+          <>
+            {" · "}
+            <a href={`https://${address}`} className="break-all text-navy-700 hover:underline">https://{address}</a>
+          </>
+        )}
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" disabled={pending || state === "not-configured"}
+          onClick={() => start(async () => setResult(await attachSpecialistDomainAction(id)))}
+          className="min-h-11 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50">
+          {pending ? "Checking…" : state === "live" ? "Re-check subdomain" : "Set up / re-check subdomain"}
+        </button>
+        <Notice state={result} />
       </div>
     </div>
   );

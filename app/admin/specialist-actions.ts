@@ -22,6 +22,12 @@ import {
   statusAfterApproval,
 } from "@/lib/team/admin-status";
 import { revalidatePublicListingPaths } from "@/lib/admin/revalidate";
+import {
+  attachSpecialistDomain,
+  checkSpecialistDomain,
+  detachSpecialistDomain,
+} from "@/lib/team/vercel-domains";
+import { subdomainState } from "@/lib/team/domain-status";
 
 export type SpecialistActionState = { ok: boolean; message: string };
 
@@ -132,13 +138,19 @@ export async function addSpecialist(
     return invalid({}, isMissingTable(result.dbError) ? MIGRATION_HINT : result.message);
   }
 
+  // Best effort: a Vercel failure never fails the add.
+  const domain = await attachSpecialistDomain(sub.value);
+  const domainWarning = domain.ok
+    ? ""
+    : ` Subdomain not attached automatically — ${domain.message} Open the specialist and press "Set up subdomain".`;
+
   refresh(sub.value);
   revalidatePath(`/admin/specialists/${result.specialistId}`);
   return {
     ok: true,
-    message: result.emailSent
+    message: (result.emailSent
       ? `Invitation sent to ${v.email}.`
-      : `${v.displayName} was added, but the invitation email could not be sent (${result.emailError ?? "unknown error"}). Use "Resend sign-in link".`,
+      : `${v.displayName} was added, but the invitation email could not be sent (${result.emailError ?? "unknown error"}). Use "Resend sign-in link".`) + domainWarning,
     emailSent: result.emailSent,
     specialistId: result.specialistId,
   };
@@ -161,8 +173,38 @@ export async function removeSpecialistAction(specialistId: string): Promise<Spec
   if (guard.error) return guard.error;
   if (!specialistId) return fail("Missing specialist.");
   const r = await removeNeverSignedInSpecialist(guard.supabase, specialistId);
-  if (r.ok) refresh(r.subdomain ?? undefined);
+  if (r.ok) {
+    refresh(r.subdomain ?? undefined);
+    if (r.subdomain) await detachSpecialistDomain(r.subdomain); // best effort
+  }
   return r.ok ? done(r.message) : fail(r.message);
+}
+
+/** Staff-only: attach the specialist's <name>.allabodeph.com to the Vercel project, then re-check it. */
+export async function attachSpecialistDomainAction(specialistId: string): Promise<SpecialistActionState> {
+  const guard = await staffClient();
+  if (guard.error) return guard.error;
+  if (!specialistId) return fail("Missing specialist.");
+
+  const { data, error } = await guard.supabase
+    .from("specialists")
+    .select("subdomain")
+    .eq("id", specialistId)
+    .maybeSingle();
+  if (error) return fail(error.message);
+  const sub = (data as { subdomain: string | null } | null)?.subdomain;
+  if (!sub) return fail("This specialist has no web address.");
+
+  const attached = await attachSpecialistDomain(sub);
+  if (!attached.ok) return fail(attached.message);
+  const check = await checkSpecialistDomain(sub);
+  revalidatePath(`/admin/specialists/${specialistId}`);
+  const state = subdomainState(check);
+  return done(
+    state === "live"
+      ? `${sub}.allabodeph.com is live.`
+      : "Subdomain attached. Waiting for DNS or the certificate; check again in a few minutes.",
+  );
 }
 
 export async function suspendSpecialistAction(specialistId: string): Promise<SpecialistActionState> {

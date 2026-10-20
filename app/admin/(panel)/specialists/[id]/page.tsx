@@ -11,7 +11,9 @@ import {
   canRemoveSpecialist,
 } from "@/lib/team/admin-status";
 import { getNeverSignedIn } from "@/lib/team/provision";
-import { InviteControls, StatusControls } from "./controls";
+import { checkSpecialistDomain } from "@/lib/team/vercel-domains";
+import { subdomainState } from "@/lib/team/domain-status";
+import { InviteControls, StatusControls, SubdomainControls } from "./controls";
 
 type Row = {
   id: string; display_name: string; email: string; phone: string | null; status: string;
@@ -57,6 +59,10 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
   // Sign-in status from the Auth Admin API (null when unavailable).
   const neverSignedIn = s.auth_user_id ? await getNeverSignedIn([s.auth_user_id]) : new Set<string>();
   const state = specialistAccountState(s, neverSignedIn);
+
+  const domainState = s.subdomain && s.status === "approved"
+    ? subdomainState(await checkSpecialistDomain(s.subdomain))
+    : null;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -105,6 +111,7 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
           Sign-in status is unavailable (the server can&rsquo;t reach the account service), so removal is unavailable.
         </p>
       )}
+      {s.subdomain && domainState && <SubdomainControls id={s.id} slug={s.subdomain} state={domainState} />}
       <StatusControls id={s.id} canSuspend={act.suspend} canReinstate={act.reinstate} />
     </div>
   );

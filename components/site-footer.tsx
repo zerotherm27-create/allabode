@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { footerNav, site } from "@/lib/site";
 import { Logo } from "@/components/logo";
@@ -67,6 +68,23 @@ export async function SiteFooter() {
                 </Link>
               ))}
             </div>
+            <a
+              href="https://verify.bir.gov.ph/correspondence/9ddd360e9d924f559a515cd20b6f587b"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Verify BIR registration (opens in a new tab)"
+              className="mt-2 block w-fit rounded-md border border-white/10 bg-surface p-1 outline-offset-4 focus-visible:outline-gold!"
+            >
+              <Image
+                src="/bir-registered-2026.jpeg"
+                alt="BIR Registered 2026 — All Abode Brokerage and Valuation OPC, Bureau of Internal Revenue"
+                width={507}
+                height={172}
+                sizes="(min-width: 768px) 300px, 240px"
+                unoptimized
+                className="block h-auto w-60 max-w-full md:w-75 rounded-sm"
+              />
+            </a>
           </div>
           <p className="max-w-2xl text-white/30 md:text-right">
             All Abode is operated by All Abode Brokerage and Valuation OPC, a

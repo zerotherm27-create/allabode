@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getListings } from "@/lib/listings";
 import { getPublicSiteUrl } from "@/lib/url";
+import { getPublicSpecialists } from "@/lib/team/public-queries";
 
 const MARKETING_ROUTES: { path: string; priority: number }[] = [
   { path: "/", priority: 1 },
@@ -20,6 +21,7 @@ const MARKETING_ROUTES: { path: string; priority: number }[] = [
   { path: "/listings/lots", priority: 0.7 },
   { path: "/list-your-property", priority: 0.8 },
   { path: "/about", priority: 0.6 },
+  { path: "/team", priority: 0.6 },
   { path: "/faq", priority: 0.6 },
   { path: "/contact", priority: 0.7 },
   { path: "/resources", priority: 0.4 },
@@ -52,5 +54,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Listings are optional in the sitemap; static routes still ship.
   }
 
-  return [...pages, ...listingPages];
+  let specialistPages: MetadataRoute.Sitemap = [];
+  try {
+    const specialists = await getPublicSpecialists();
+    specialistPages = specialists.map((p) => ({
+      url: `${base}/team/${p.slug}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    }));
+  } catch {
+    // Specialists are optional in the sitemap (and absent until the migration runs).
+  }
+
+  return [...pages, ...listingPages, ...specialistPages];
 }

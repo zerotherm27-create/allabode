@@ -64,7 +64,13 @@ export const mainNav: readonly NavItem[] = [
     ],
   },
   { label: "Valuation", href: "/valuation" },
-  { label: "About", href: "/about" },
+  {
+    label: "About",
+    children: [
+      { label: "About us", href: "/about" },
+      { label: "Our team", href: "/team" },
+    ],
+  },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ];

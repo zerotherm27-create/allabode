@@ -267,7 +267,7 @@ export function SiteHeader() {
                           onClick={close}
                           aria-current={isActive(child.href) ? "page" : undefined}
                           className={cn(
-                            "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
+                            "flex min-h-[44px] items-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
                             isActive(child.href)
                               ? "bg-surface-gray text-navy"
                               : "text-slate hover:bg-surface-gray hover:text-navy"

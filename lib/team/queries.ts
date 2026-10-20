@@ -30,3 +30,26 @@ export function initialsOf(name: string | null | undefined): string {
   const last = Array.from(words[words.length - 1].replace(/^[^\p{L}\p{N}]+/u, ""))[0] ?? "";
   return (first + last).toUpperCase();
 }
+
+/** Shape every approved specialist's subdomain/slug takes (matches the DB check). */
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
+
+/** True when a route param could be an approved specialist slug; lets pages 404 without a query. */
+export function isValidSpecialistSlug(slug: unknown): slug is string {
+  return typeof slug === "string" && SLUG_PATTERN.test(slug);
+}
+
+/** Meta description from a specialist's tagline/bio: whitespace collapsed, cut at a word boundary near `max` chars. */
+export function metaDescription(
+  tagline: string | null | undefined,
+  bio: string | null | undefined,
+  fallback: string,
+  max = 155,
+): string {
+  const source = ((tagline ?? "").trim() || (bio ?? "").trim()).replace(/\s+/g, " ");
+  if (!source) return fallback;
+  if (source.length <= max) return source;
+  const cut = source.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s.,;:!-]+$/, "")}…`;
+}

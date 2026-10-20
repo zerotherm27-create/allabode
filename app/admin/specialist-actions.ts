@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { validateSubdomain } from "@/lib/team/subdomain";
 import {
   availableActions,
+  APPROVABLE_FROM,
+  REJECTABLE_FROM,
   canApproveListing,
   canRejectListing,
   isMissingColumn,
@@ -196,9 +198,10 @@ function refreshListing(id: string, slug?: string | null) {
 const MIGRATION_HINT = "Run the specialists migration in the Supabase SQL editor first.";
 
 /**
- * Staff-only: approve a submitted listing. A Draft listing goes live as Available;
- * any other status is kept. One guarded UPDATE, so a listing the specialist withdrew
- * or staff already handled between page load and click matches zero rows and errors.
+ * Staff-only: approve a submitted listing, or reinstate one that was sent back or
+ * taken down (a house listing left in draft can be approved too). A Draft listing
+ * goes live as Available; any other status is kept. One guarded UPDATE, so a
+ * listing that changed between page load and click matches zero rows and errors.
  * Form fields: listing_id. (prevState, FormData) shape for useActionState.
  */
 export async function approveListing(
@@ -214,14 +217,16 @@ export async function approveListing(
 
   const { data: current, error: readErr } = await supabase
     .from("listings")
-    .select("status,approval_status")
+    .select("status,approval_status,specialist_id")
     .eq("id", id)
     .maybeSingle();
   if (readErr) return fail(isMissingColumn(readErr) ? MIGRATION_HINT : readErr.message);
   if (!current) return fail("Listing not found.");
-  if (!canApproveListing(current.approval_status)) {
-    return fail("Only listings submitted for approval can be approved.");
+  const house = !current.specialist_id;
+  if (!canApproveListing(current.approval_status, { house })) {
+    return fail("Only listings submitted for approval, sent back or taken down can be approved.");
   }
+  const approvableFrom: string[] = house ? [...APPROVABLE_FROM, "draft"] : [...APPROVABLE_FROM];
 
   const update: { approval_status: string; rejection_note: null; status?: string } = {
     approval_status: "approved",
@@ -234,7 +239,7 @@ export async function approveListing(
     .from("listings")
     .update(update)
     .eq("id", id)
-    .eq("approval_status", "submitted")
+    .in("approval_status", approvableFrom)
     .eq("status", current.status)
     .select("id,slug");
   if (error) return fail(error.message);
@@ -245,11 +250,13 @@ export async function approveListing(
   refreshListing(id, (updated[0] as { slug?: string | null }).slug);
   return done(nextStatus
     ? "Approved. The listing is now live as Available."
-    : "Approved. The specialist's listing keeps its current status.");
+    : "Approved. The listing keeps its current status.");
 }
 
 /**
- * Staff-only: send a submitted listing back with a required note.
+ * Staff-only: send a submitted listing back, or take down an approved one, with a
+ * required note. A takedown sticks: the specialist can only resubmit it
+ * (rejected → submitted), and only staff can approve it again.
  * Form fields: listing_id, note.
  */
 export async function rejectListing(
@@ -273,14 +280,15 @@ export async function rejectListing(
   if (readErr) return fail(isMissingColumn(readErr) ? MIGRATION_HINT : readErr.message);
   if (!current) return fail("Listing not found.");
   if (!canRejectListing(current.approval_status)) {
-    return fail("Only listings submitted for approval can be sent back.");
+    return fail("Only submitted or approved listings can be sent back or taken down.");
   }
+  const takedown = current.approval_status === "approved";
 
   const { data: updated, error } = await supabase
     .from("listings")
     .update({ approval_status: "rejected", rejection_note: note.value })
     .eq("id", id)
-    .eq("approval_status", "submitted")
+    .in("approval_status", [...REJECTABLE_FROM])
     .select("id,slug");
   if (error) return fail(error.message);
   if (!updated || updated.length === 0) {
@@ -288,5 +296,7 @@ export async function rejectListing(
   }
 
   refreshListing(id, (updated[0] as { slug?: string | null }).slug);
-  return done("Sent back to the specialist with your note.");
+  return done(takedown
+    ? "Taken down. The listing is hidden until you approve it again."
+    : "Sent back to the specialist with your note.");
 }

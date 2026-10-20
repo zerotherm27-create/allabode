@@ -10,6 +10,8 @@ export function revalidatePublicListingPaths(slug?: string | null) {
   revalidatePath("/listings");
   for (const route of RESERVED_LISTING_ROUTES) revalidatePath(`/listings/${route}`);
   if (slug) revalidatePath(`/listings/${slug}`);
+  // Specialist profile pages list that specialist's live listings.
+  revalidatePath("/team/[slug]", "page");
 }
 
 /** Same as revalidatePublicListingPaths, but looks the slug up by id first —

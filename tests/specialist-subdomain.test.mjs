@@ -25,3 +25,9 @@ test("rejects reserved names", () => {
     assert.match(r.error, new RegExp(`${name}.*reserved`, "i"));
   }
 });
+
+test("rejects static /team/* route names", () => {
+  const r = validateSubdomain("join");
+  assert.equal(r.ok, false);
+  assert.match(r.error, /join.*reserved/i);
+});

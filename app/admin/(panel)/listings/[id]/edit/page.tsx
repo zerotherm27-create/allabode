@@ -41,8 +41,9 @@ export default async function EditListingPage({
   });
 
   const initial = data as ListingValues;
-  // Specialist-owned listings get a review panel. These columns only exist once the
-  // specialists migration has run; before that they are undefined and the panel is skipped.
+  // Specialist-owned listings, and any listing not yet approved, get a review panel so
+  // no listing is left without a control. These columns only exist once the specialists
+  // migration has run; before that they are undefined and the panel is skipped.
   const owned = data as { specialist_id?: string | null; approval_status?: string; rejection_note?: string | null; status?: string };
   let specialistName: string | null = null;
   if (owned.specialist_id) {
@@ -67,11 +68,13 @@ export default async function EditListingPage({
       </Link>
       <h1 className="font-display text-2xl font-bold text-navy">Edit listing</h1>
       <p className="mt-1 text-sm text-slate">{initial.title}</p>
-      {owned.specialist_id && (
+      {owned.approval_status !== undefined
+        && (owned.specialist_id || owned.approval_status !== "approved") && (
         <ListingApprovalPanel
           listingId={id}
           specialistName={specialistName}
-          approvalStatus={owned.approval_status ?? "draft"}
+          house={!owned.specialist_id}
+          approvalStatus={owned.approval_status}
           rejectionNote={owned.rejection_note ?? null}
           status={owned.status ?? ""}
         />

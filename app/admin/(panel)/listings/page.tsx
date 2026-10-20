@@ -61,7 +61,7 @@ const baseColumns: Column<Row>[] = [
   { header: "Actions", align: "right", cell: (l) => (
     <div className="flex items-center justify-end gap-1">
       {l.approval_status === "submitted" && (
-        <Link href={`/admin/listings/${l.id}/edit`} className="rounded-md bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800 press">Review</Link>
+        <Link href={`/admin/listings/${l.id}/edit`} className="inline-flex min-h-11 items-center rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-800 press">Review</Link>
       )}
       <Link href={`/admin/listings/${l.id}/edit`} aria-label="Edit" className="flex h-9 w-9 items-center justify-center rounded-md text-navy hover:bg-surface-gray press"><Icon name="edit" size={18} /></Link>
       {l.status !== "Published" && (

@@ -2,6 +2,8 @@ export const RESERVED_SUBDOMAINS = [
   "www", "admin", "api", "app", "mail", "portal", "dashboard", "specialist",
   "specialists", "team", "ftp", "smtp", "static", "assets", "cdn", "dev",
   "staging", "test", "blog", "help", "support", "login", "signup",
+  // Static routes under /team/* (app/(marketing)/team) that a profile slug would shadow.
+  "join",
 ];
 
 export type SubdomainResult = { ok: true; value: string } | { ok: false; error: string };

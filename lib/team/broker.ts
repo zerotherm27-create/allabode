@@ -1,4 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import { DEFAULT_BROKER_NAME, resolveBrokerName } from "@/lib/team/license";
+
+export { DEFAULT_BROKER_NAME };
 
 /**
  * The licensed broker the specialists are accredited under. Read from
@@ -21,13 +24,11 @@ export async function getBroker(): Promise<{ name: string; licenseNo: string } |
       data.map((r: { key: string; value: string | null }) => [r.key, (r.value ?? "").trim()]),
     );
     if (!map.broker_prc_license) return null;
-    return { name: map.broker_name || "", licenseNo: map.broker_prc_license };
+    return { name: resolveBrokerName(map.broker_name), licenseNo: map.broker_prc_license };
   } catch {
     return null;
   }
 }
-
-export const DEFAULT_BROKER_NAME = "Aremchel M. Cruzado";
 
 /**
  * Broker name + (optional) PRC licence number for display on /team and
@@ -51,7 +52,7 @@ export async function getBrokerProfile(): Promise<{ name: string; licenseNo: str
       data.map((r: { key: string; value: string | null }) => [r.key, (r.value ?? "").trim()]),
     );
     return {
-      name: map.broker_name || DEFAULT_BROKER_NAME,
+      name: resolveBrokerName(map.broker_name),
       licenseNo: map.broker_prc_license || null,
     };
   } catch {

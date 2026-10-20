@@ -39,14 +39,28 @@ export const APPROVAL_FILTERS: readonly ApprovalFilter[] = ["all", "submitted", 
 
 export const REJECTION_NOTE_MAX = 500;
 
-/** Staff can approve only what a specialist has submitted. */
-export function canApproveListing(approvalStatus: string | null | undefined): boolean {
-  return approvalStatus === "submitted";
+/** Approval states staff can approve from: a submission, or a listing they sent
+ *  back or took down earlier (reinstating it). */
+export const APPROVABLE_FROM = ["submitted", "rejected"] as const;
+
+/** Approval states staff can reject from: a submission (send back), or a live
+ *  approved listing (take down). */
+export const REJECTABLE_FROM = ["submitted", "approved"] as const;
+
+/** Staff can approve a submitted listing, or reinstate a rejected/taken-down one.
+ *  A house listing (no specialist) left in draft can also be approved, so it is
+ *  never stranded with no control. */
+export function canApproveListing(
+  approvalStatus: string | null | undefined,
+  opts: { house?: boolean } = {},
+): boolean {
+  if (opts.house && approvalStatus === "draft") return true;
+  return (APPROVABLE_FROM as readonly unknown[]).includes(approvalStatus);
 }
 
-/** Staff can send back only what a specialist has submitted. */
+/** Staff can send back a submission, or take down an approved listing (note required). */
 export function canRejectListing(approvalStatus: string | null | undefined): boolean {
-  return approvalStatus === "submitted";
+  return (REJECTABLE_FROM as readonly unknown[]).includes(approvalStatus);
 }
 
 /** Required, trimmed, length-capped note shown to the specialist. */

@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { Icon } from "@/components/icon";
 import { ApprovalBadge } from "@/components/specialist/approval-badge";
 import { approveListing, rejectListing, type SpecialistActionState } from "@/app/admin/specialist-actions";
-import { REJECTION_NOTE_MAX } from "@/lib/team/admin-status";
+import { REJECTION_NOTE_MAX, canApproveListing, canRejectListing } from "@/lib/team/admin-status";
 
 function Notice({ state }: { state: SpecialistActionState | null }) {
   if (!state) return null;
@@ -38,80 +38,155 @@ function Submit({ label, pendingLabel, tone }: { label: string; pendingLabel: st
   );
 }
 
-/** Staff review panel for a specialist-owned listing. */
+function ApproveForm({
+  action, state, listingId, status, intro, label,
+}: {
+  action: (fd: FormData) => void;
+  state: SpecialistActionState | null;
+  listingId: string;
+  status: string;
+  intro: string;
+  label: string;
+}) {
+  return (
+    <form action={action}>
+      <input type="hidden" name="listing_id" value={listingId} />
+      <p className="text-sm text-slate">
+        {intro}{status === "Draft" ? " Its Draft status becomes Available." : ""}
+      </p>
+      <div className="mt-3">
+        <Submit label={label} pendingLabel="Approving…" tone="primary" />
+      </div>
+      <Notice state={state} />
+    </form>
+  );
+}
+
+function NoteForm({
+  action, state, listingId, heading, placeholder, label, pendingLabel,
+}: {
+  action: (fd: FormData) => void;
+  state: SpecialistActionState | null;
+  listingId: string;
+  heading: string;
+  placeholder: string;
+  label: string;
+  pendingLabel: string;
+}) {
+  return (
+    <form action={action}>
+      <input type="hidden" name="listing_id" value={listingId} />
+      <label htmlFor="rejection-note" className="text-sm font-medium text-navy">{heading}</label>
+      <textarea
+        id="rejection-note"
+        name="note"
+        required
+        rows={3}
+        maxLength={REJECTION_NOTE_MAX}
+        placeholder={placeholder}
+        className="mt-1.5 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+      />
+      <div className="mt-3">
+        <Submit label={label} pendingLabel={pendingLabel} tone="danger" />
+      </div>
+      <Notice state={state} />
+    </form>
+  );
+}
+
+/** Staff review panel for a specialist-owned listing, or any listing whose
+ *  approval state is not 'approved' (so none is left without a control). */
 export function ListingApprovalPanel({
   listingId,
   specialistName,
+  house,
   approvalStatus,
   rejectionNote,
   status,
 }: {
   listingId: string;
   specialistName: string | null;
+  /** No specialist owns the listing (a house listing). */
+  house: boolean;
   approvalStatus: string;
   rejectionNote: string | null;
   status: string;
 }) {
   const [approveState, approveAction] = useActionState(approveListing, null);
   const [rejectState, rejectAction] = useActionState(rejectListing, null);
-  const submitted = approvalStatus === "submitted";
   const settled = approveState?.ok || rejectState?.ok;
+  const canApprove = canApproveListing(approvalStatus, { house });
+  const canReject = canRejectListing(approvalStatus);
+  const submitted = approvalStatus === "submitted";
 
   return (
     <section aria-labelledby="approval-heading" className="mt-6 rounded-lg border border-line bg-surface p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id="approval-heading" className="font-display text-sm font-semibold text-navy">Specialist approval</h2>
-          <p className="mt-1 text-xs text-slate">Listed by {specialistName ?? "a property specialist"}</p>
+          <h2 id="approval-heading" className="font-display text-sm font-semibold text-navy">
+            {house ? "Listing approval" : "Specialist approval"}
+          </h2>
+          <p className="mt-1 text-xs text-slate">
+            {house ? "House listing" : `Listed by ${specialistName ?? "a property specialist"}`}
+          </p>
         </div>
         <ApprovalBadge status={approvalStatus} />
       </div>
 
       {approvalStatus === "rejected" && rejectionNote && (
         <div className="mt-4 rounded-md bg-error-bg px-3 py-2 text-sm text-ink">
-          <p className="text-xs font-medium text-error">Your note to the specialist</p>
+          <p className="text-xs font-medium text-error">{house ? "Staff note" : "Your note to the specialist"}</p>
           <p className="mt-1 whitespace-pre-line">{rejectionNote}</p>
         </div>
       )}
-      {approvalStatus === "draft" && (
+      {approvalStatus === "draft" && !house && (
         <p className="mt-4 text-sm text-slate">The specialist has not submitted this listing for review yet.</p>
       )}
       {approvalStatus === "approved" && (
         <p className="mt-4 text-sm text-slate">Approved. The listing is visible to the public while its status is not Draft or Archived.</p>
       )}
+      {approvalStatus === "rejected" && (
+        <p className="mt-4 text-sm text-slate">Hidden from the public until it is approved again.</p>
+      )}
 
-      {submitted && !settled && (
-        <div className="mt-5 grid gap-6 md:grid-cols-2">
-          <form action={approveAction}>
-            <input type="hidden" name="listing_id" value={listingId} />
-            <p className="text-sm text-slate">
-              Approving makes the listing public.{status === "Draft" ? " Its Draft status becomes Available." : ""}
-            </p>
-            <div className="mt-3">
-              <Submit label="Approve listing" pendingLabel="Approving…" tone="primary" />
-            </div>
-            <Notice state={approveState} />
-          </form>
-          <form action={rejectAction}>
-            <input type="hidden" name="listing_id" value={listingId} />
-            <label htmlFor="rejection-note" className="text-sm font-medium text-navy">Send back with a note</label>
-            <textarea
-              id="rejection-note"
-              name="note"
-              required
-              rows={3}
-              maxLength={REJECTION_NOTE_MAX}
-              placeholder="What should the specialist change?"
-              className="mt-1.5 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"
+      {!settled && (canApprove || canReject) && (
+        <div className={`mt-5 grid gap-6 ${canApprove && canReject ? "md:grid-cols-2" : ""}`}>
+          {canApprove && (
+            <ApproveForm
+              action={approveAction}
+              state={approveState}
+              listingId={listingId}
+              status={status}
+              intro={submitted ? "Approving makes the listing public." : "Approving again makes the listing public."}
+              label={submitted ? "Approve listing" : "Approve again"}
             />
-            <div className="mt-3">
-              <Submit label="Send back" pendingLabel="Sending…" tone="danger" />
-            </div>
-            <Notice state={rejectState} />
-          </form>
+          )}
+          {canReject && (
+            submitted ? (
+              <NoteForm
+                action={rejectAction}
+                state={rejectState}
+                listingId={listingId}
+                heading="Send back with a note"
+                placeholder="What should the specialist change?"
+                label="Send back"
+                pendingLabel="Sending…"
+              />
+            ) : (
+              <NoteForm
+                action={rejectAction}
+                state={rejectState}
+                listingId={listingId}
+                heading="Take down with a note"
+                placeholder={house ? "Why is this listing coming down?" : "Why is this listing coming down? The specialist sees this note."}
+                label="Take down"
+                pendingLabel="Taking down…"
+              />
+            )
+          )}
         </div>
       )}
-      {submitted && settled && (
+      {settled && (
         <div className="mt-4">
           <Notice state={approveState?.ok ? approveState : rejectState} />
         </div>

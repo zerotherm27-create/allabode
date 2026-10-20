@@ -39,12 +39,25 @@ const {
   parseApprovalFilter, approvalCounts, filterByApproval, isMissingColumn,
 } = await loadTs("lib/team/admin-status.ts");
 
-test("listings can be approved or rejected only from submitted", () => {
+test("staff approve from submitted, or reinstate from rejected", () => {
   assert.equal(canApproveListing("submitted"), true);
+  assert.equal(canApproveListing("rejected"), true);
+  for (const s of ["draft", "approved", null, undefined]) {
+    assert.equal(canApproveListing(s), false, String(s));
+  }
+});
+
+test("a house listing left in draft can be approved, a specialist draft cannot", () => {
+  assert.equal(canApproveListing("draft", { house: true }), true);
+  assert.equal(canApproveListing("draft", { house: false }), false);
+  assert.equal(canApproveListing("approved", { house: true }), false);
+});
+
+test("staff send back a submission or take down an approved listing", () => {
   assert.equal(canRejectListing("submitted"), true);
-  for (const s of ["draft", "approved", "rejected", null, undefined]) {
-    assert.equal(canApproveListing(s), false);
-    assert.equal(canRejectListing(s), false);
+  assert.equal(canRejectListing("approved"), true);
+  for (const s of ["draft", "rejected", null, undefined]) {
+    assert.equal(canRejectListing(s), false, String(s));
   }
 });
 

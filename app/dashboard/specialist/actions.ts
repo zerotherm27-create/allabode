@@ -261,6 +261,28 @@ export async function submitListingForApproval(id: string): Promise<void> {
   refreshListingViews(id, data[0].slug as string | null);
 }
 
+/** Which of `paths` still exist in the bucket, by listing each parent folder.
+ *  Null when a listing call fails (treated as "can't tell"). */
+async function objectsStillPresent(
+  bucket: ReturnType<Awaited<ReturnType<typeof createClient>>["storage"]["from"]>,
+  paths: string[],
+): Promise<string[] | null> {
+  const byFolder = new Map<string, string[]>();
+  for (const p of paths) {
+    const cut = p.lastIndexOf("/");
+    const folder = cut === -1 ? "" : p.slice(0, cut);
+    byFolder.set(folder, [...(byFolder.get(folder) ?? []), p]);
+  }
+  const present: string[] = [];
+  for (const [folder, inFolder] of byFolder) {
+    const { data, error } = await bucket.list(folder, { limit: 1000 });
+    if (error) return null;
+    const names = new Set((data ?? []).map((o) => (folder ? `${folder}/${o.name}` : o.name)));
+    present.push(...inFolder.filter((p) => names.has(p)));
+  }
+  return present;
+}
+
 export async function deleteSpecialistListing(id: string): Promise<void> {
   const supabase = await createClient();
   const specialistId = await approvedSpecialistId(supabase);
@@ -278,10 +300,22 @@ export async function deleteSpecialistListing(id: string): Promise<void> {
     .map((img) => storagePathFromUrl(LISTING_IMAGES_BUCKET, (img as { url: string }).url))
     .filter((p): p is string => p != null);
   if (paths.length > 0) {
-    const { data: removed, error: rmErr } = await supabase.storage.from(LISTING_IMAGES_BUCKET).remove(paths);
+    const bucket = supabase.storage.from(LISTING_IMAGES_BUCKET);
+    const { data: removed, error: rmErr } = await bucket.remove(paths);
     if (rmErr) throw new Error(`The photos couldn't be removed, so the listing was kept. ${rmErr.message}`);
-    if ((removed?.length ?? 0) < new Set(paths).size) {
-      throw new Error("Some photos couldn't be removed, so the listing was kept. Try again.");
+    // remove() only reports the objects it deleted, so a photo whose file is
+    // already gone looks the same as one it couldn't delete. Look again: only a
+    // file that is still there counts as a failure.
+    const removedNames = new Set((removed ?? []).map((o) => o.name));
+    const notRemoved = [...new Set(paths)].filter((p) => !removedNames.has(p));
+    if (notRemoved.length > 0) {
+      const stillThere = await objectsStillPresent(bucket, notRemoved);
+      if (stillThere === null) {
+        throw new Error("The photos couldn't be checked, so the listing was kept. Try again.");
+      }
+      if (stillThere.length > 0) {
+        throw new Error("Some photos couldn't be removed, so the listing was kept. Try again.");
+      }
     }
   }
 

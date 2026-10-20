@@ -12,6 +12,7 @@ const idle: SpecialistProfileState = { ok: false, message: "" };
 export function PhotoUploader({ currentUrl }: { currentUrl: string | null }) {
   const [state, action, pending] = useActionState(uploadSpecialistPhoto, idle);
   const [blob, setBlob] = useState<Blob | null>(null);
+  const [showMessage, setShowMessage] = useState(false);
 
   return (
     <div className="flex flex-col gap-5 sm:flex-row">
@@ -40,12 +41,22 @@ export function PhotoUploader({ currentUrl }: { currentUrl: string | null }) {
         </ul>
 
         <div className="mt-4">
-          <PhotoCropper onCropped={setBlob} />
+          <PhotoCropper
+            onCropped={(b) => {
+              setBlob(b);
+              setShowMessage(false);
+            }}
+            onReset={() => {
+              setBlob(null);
+              setShowMessage(false);
+            }}
+          />
         </div>
 
         <form
           action={(fd) => {
             if (!blob) return;
+            setShowMessage(true);
             fd.set("photo", new File([blob], "portrait.jpg", { type: "image/jpeg" }));
             action(fd);
           }}
@@ -59,10 +70,10 @@ export function PhotoUploader({ currentUrl }: { currentUrl: string | null }) {
             {pending ? "Uploading…" : "Save photo"}
           </button>
           <p
-            role={state.message ? (state.ok ? "status" : "alert") : undefined}
+            role={showMessage && state.message ? (state.ok ? "status" : "alert") : undefined}
             className={`text-sm ${state.ok ? "text-available" : "text-error"}`}
           >
-            {state.message}
+            {showMessage ? state.message : ""}
           </p>
         </form>
       </div>

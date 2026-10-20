@@ -13,7 +13,13 @@ type Loaded = { img: HTMLImageElement; w: number; h: number };
  * File input, fixed 4:5 frame, drag to reposition, zoom slider. "Use this
  * crop" hands an 800 x 1000 JPEG blob to onCropped.
  */
-export function PhotoCropper({ onCropped }: { onCropped: (blob: Blob) => void }) {
+export function PhotoCropper({
+  onCropped,
+  onReset,
+}: {
+  onCropped: (blob: Blob) => void;
+  onReset?: () => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const urlRef = useRef<string | null>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
@@ -61,6 +67,7 @@ export function PhotoCropper({ onCropped }: { onCropped: (blob: Blob) => void })
     setDone(false);
     setError("");
     setSrc(null);
+    onReset?.();
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       setError("Choose an image file.");
@@ -71,6 +78,7 @@ export function PhotoCropper({ onCropped }: { onCropped: (blob: Blob) => void })
     urlRef.current = url;
     const img = new Image();
     img.onload = () => {
+      if (urlRef.current !== url) return; // a newer pick replaced this one
       const w = img.naturalWidth;
       const h = img.naturalHeight;
       if (w <= 0 || h <= 0) {
@@ -86,12 +94,15 @@ export function PhotoCropper({ onCropped }: { onCropped: (blob: Blob) => void })
       setZoom(1);
       setSrc({ img, w, h });
     };
-    img.onerror = () => setError("That image couldn't be read.");
+    img.onerror = () => {
+      if (urlRef.current === url) setError("That image couldn't be read.");
+    };
     img.src = url;
   }
 
   function moveBy(dxSrc: number, dySrc: number) {
     if (!src) return;
+    if (done) onReset?.();
     setDone(false);
     setCenter((c) => {
       const r = rect(src, zoom, c);
@@ -202,6 +213,7 @@ export function PhotoCropper({ onCropped }: { onCropped: (blob: Blob) => void })
               value={zoom}
               disabled={maxZoom <= 1}
               onChange={(e) => {
+                if (done) onReset?.();
                 setDone(false);
                 setZoom(Number(e.currentTarget.value));
               }}

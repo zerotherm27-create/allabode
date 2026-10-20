@@ -6,6 +6,7 @@ import { DashboardShell, type NavItem } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 import { site } from "@/lib/site";
+import { SignOutButton } from "@/components/team/sign-out-button";
 
 export const metadata: Metadata = { title: "Specialist dashboard", robots: { index: false } };
 
@@ -76,6 +77,7 @@ export default async function SpecialistLayout({ children }: { children: React.R
               Back to the website
             </Link>
           </div>
+          <SignOutButton />
         </section>
       </main>
     );

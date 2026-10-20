@@ -4,13 +4,14 @@
 -- broker. Specialists are NEVER rows in `users`, so `is_staff()` can never be
 -- true for them; they get their own table, helpers and RLS policies here.
 --
---   * `specialists` — invite-only. Staff add each specialist by email (status
---     'approved', accredited under the broker, no auth link yet). The person
---     then signs up at /team/join with that same email; once it is confirmed,
---     `link_specialist_account()` links their auth user to the row. Nothing
---     else ever creates a row. Staff suspend/reinstate; a specialist may read
---     and edit their own profile but never their status, subdomain, email,
---     auth link or licence details (trigger `guard_specialist_update`).
+--   * `specialists` — invite-only. Staff add each specialist by email from
+--     /admin/specialists: the server creates (or reuses) the confirmed auth
+--     user through the Admin API, inserts the row ALREADY LINKED to it
+--     (status 'approved') and emails a set-password invitation. There is no
+--     public sign-up or self-link path, and nothing else ever creates a row.
+--     Staff suspend/reinstate; a specialist may read and edit their own
+--     profile but never their status, subdomain, email, auth link or licence
+--     details (trigger `guard_specialist_update`).
 --   * `listings.specialist_id` / `approval_status` / `rejection_note` — an
 --     approved specialist manages their own listings; the public site only
 --     shows listings that are live AND approved. Existing rows default to
@@ -111,10 +112,10 @@ begin
       using errcode = '42501';
   end if;
 
-  -- The public licence line ("PRC License No." / "Accredited under …") is a
-  -- compliance statement: once the application has left 'pending' (approved,
-  -- rejected or suspended), only staff may change it — so staff never
-  -- re-approve a licence line they did not review.
+  -- The licence columns are records only: the site shows every specialist
+  -- with the fixed label "Accredited real estate salesperson" and never a
+  -- broker name or licence number. Once a row has left 'pending' (approved,
+  -- rejected or suspended), only staff may change them.
   if old.status <> 'pending'
      and (new.license_mode   is distinct from old.license_mode
        or new.license_no     is distinct from old.license_no
@@ -164,45 +165,11 @@ drop trigger if exists specialists_guard_not_staff on specialists;
 create trigger specialists_guard_not_staff before insert or update of auth_user_id on specialists
   for each row execute function guard_specialist_not_staff();
 
--- ---------- link_specialist_account ----------
--- Called after sign-in. Links the CALLER's auth user to the specialist row
--- staff added for their email — only when that email is CONFIRMED, the row is
--- approved and not linked to anyone yet. Returns the row's status when it
--- links, otherwise null. Never creates a row, never re-links a linked row,
--- never links staff, and reads no user-editable sign-up metadata.
-create or replace function link_specialist_account()
-returns text language plpgsql security definer set search_path = public, pg_temp as $$
-declare
-  v_uid       uuid := auth.uid();
-  v_email     text;
-  v_confirmed timestamptz;
-  v_status    text;
-begin
-  if v_uid is null then return null; end if;
-
-  -- Staff accounts are never specialists.
-  if exists (select 1 from users where id = v_uid) then return null; end if;
-
-  select u.email, u.email_confirmed_at
-    into v_email, v_confirmed
-    from auth.users u where u.id = v_uid;
-  if v_email is null or v_confirmed is null then return null; end if;
-
-  -- Already linked to a row (this one or another): nothing to do.
-  if exists (select 1 from specialists where auth_user_id = v_uid) then return null; end if;
-
-  update specialists
-     set auth_user_id = v_uid
-   where lower(email) = lower(v_email)
-     and auth_user_id is null
-     and status = 'approved'
-  returning status into v_status;
-
-  return v_status;
-end $$;
-
-revoke execute on function link_specialist_account() from public, anon;
-grant  execute on function link_specialist_account() to authenticated;
+-- ---------- no self-link path ----------
+-- Rows are linked to their auth user at creation (server-side provisioning),
+-- so there is no sign-in-time linking function. Dropped in case an earlier
+-- draft of this migration was applied.
+drop function if exists link_specialist_account();
 
 -- ========================================================================
 -- listings: specialist ownership + approval
@@ -219,6 +186,9 @@ alter table listings
 -- may never delete it again — even after a staff takedown (approved → rejected).
 -- A marker on the row is used rather than a check against those tables, which
 -- RLS would hide from the specialist (an exists() would silently pass).
+-- Set when a listing reaches 'approved'; house drafts released by
+-- suspend_specialist()/a specialist delete (marked 'approved' while hidden as
+-- Draft) also get it, which is harmless — only staff manage those.
 alter table listings
   add column if not exists ever_approved boolean not null default false;
 
@@ -465,8 +435,11 @@ create policy "specialist deletes own listing images" on listing_images
 -- ========================================================================
 -- Owner-run (security_invoker = false), so it reads `specialists` past RLS —
 -- which is why it exposes an explicit, PII-free column list and only
--- approved specialists that have been given a subdomain.
-create or replace view public_specialists
+-- approved specialists that have been given a subdomain. Dropped and
+-- recreated (not `create or replace`, which cannot remove columns) so a
+-- re-run always lands on exactly this column list.
+drop view if exists public_specialists;
+create view public_specialists
   with (security_invoker = false) as
   select
     id,
@@ -478,9 +451,7 @@ create or replace view public_specialists
     specialties,
     languages,
     years_experience,
-    photo_path,
-    license_mode,
-    license_no
+    photo_path
   from specialists
   where status = 'approved' and subdomain is not null;
 
@@ -491,7 +462,8 @@ revoke all on public_specialists from public, anon, authenticated;
 grant select on public_specialists to anon, authenticated;
 
 -- ========================================================================
--- Broker settings (licence line: "Accredited under <broker>, PRC Lic. No. …")
+-- Broker settings — records only. Nothing on the site displays a broker name
+-- or licence number (specialists show a fixed accreditation label).
 -- ========================================================================
 insert into site_settings (key, value, label, group_name, type, sort_order) values
   ('broker_name',        'Aremchel M. Cruzado', 'Broker name',               'broker', 'text', 1),

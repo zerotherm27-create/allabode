@@ -150,14 +150,8 @@ export async function linkAndGetPortalRole(): Promise<{ role: PortalRole | null;
     if (tenantByEmail) return { role: "tenant", redirect: "/dashboard/tenant" };
   }
 
-  // Specialists (invite-only): link the specialist row staff added for this
-  // confirmed email (no-op for everyone else), then look up the row. The RPC
-  // may not exist yet, so it must never break sign-in.
-  try {
-    await supabase.rpc("link_specialist_account");
-  } catch {
-    // ignore
-  }
+  // Specialists (invite-only): staff create the row already linked to the
+  // auth user (lib/team/provision.ts), so this is a plain lookup.
   const { data: specialist } = await supabase
     .from("specialists")
     .select("id")

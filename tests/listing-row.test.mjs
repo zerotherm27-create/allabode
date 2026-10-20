@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTs } from "./helpers/load-ts.mjs";
 
-const { listingRow, specialistListingRow, specialistListingSlug, SPECIALIST_STATUSES, slugify } = await loadTs(
+const {
+  listingRow, specialistListingRow, specialistListingSlug, SPECIALIST_STATUSES, slugify,
+  specialistCanDelete, specialistPhotoError, RESERVED_LISTING_ROUTES,
+} = await loadTs(
   "lib/admin/listing-row.ts"
 );
 
@@ -72,4 +75,25 @@ test("specialistListingSlug derives from the title and avoids route collisions",
   assert.equal(specialistListingSlug("Parking"), "parking-listing");
   assert.equal(specialistListingSlug("Lots"), "lots-listing");
   assert.equal(specialistListingSlug("2BR Condo", "a1b2c3"), "2br-condo-a1b2c3");
+});
+
+test("specialists can only hard-delete non-live listings", () => {
+  for (const ok of ["draft", "submitted", "rejected"]) assert.equal(specialistCanDelete(ok), true, ok);
+  assert.equal(specialistCanDelete("approved"), false);
+  assert.equal(specialistCanDelete("something-else"), false);
+  assert.equal(specialistCanDelete(undefined), true);
+});
+
+test("specialistPhotoError allows JPEG/PNG/WebP up to 10 MB and 10 files", () => {
+  const f = (over = {}) => ({ name: "a.jpg", type: "image/jpeg", size: 1000, ...over });
+  assert.equal(specialistPhotoError([f(), f({ type: "image/png" }), f({ type: "image/webp" })]), null);
+  assert.match(specialistPhotoError([f({ type: "image/svg+xml", name: "x.svg" })]), /x\.svg/);
+  assert.match(specialistPhotoError([f({ type: "text/html" })]), /JPEG, PNG or WebP/);
+  assert.match(specialistPhotoError([f({ size: 10 * 1024 * 1024 + 1 })]), /10 MB/);
+  assert.equal(specialistPhotoError(Array.from({ length: 10 }, () => f())), null);
+  assert.match(specialistPhotoError(Array.from({ length: 11 }, () => f())), /up to 10/);
+});
+
+test("reserved listing routes are shared with the slug helper", () => {
+  for (const r of RESERVED_LISTING_ROUTES) assert.equal(specialistListingSlug(r), `${r}-listing`);
 });

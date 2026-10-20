@@ -6,7 +6,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
 import { LISTING_IMAGES_BUCKET, storagePathFromUrl } from "@/lib/storage";
-import { specialistListingRow, specialistListingSlug } from "@/lib/admin/listing-row";
+import {
+  SPECIALIST_DELETABLE_APPROVALS,
+  specialistCanDelete,
+  specialistListingRow,
+  specialistListingSlug,
+  specialistPhotoError,
+} from "@/lib/admin/listing-row";
 import { revalidatePublicListingPaths } from "@/lib/admin/revalidate";
 import { deleteListingImage, reorderListingImages, uploadListingImages } from "@/app/admin/actions";
 import { PHOTO_W, PHOTO_H, jpegDimensions } from "@/lib/team/photo";
@@ -150,7 +156,6 @@ export async function uploadSpecialistPhoto(
 /* ---- Listings ---- */
 
 const LISTINGS_PATH = "/dashboard/specialist/listings";
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
 type Db = Awaited<ReturnType<typeof createClient>>;
 
@@ -171,12 +176,12 @@ async function approvedSpecialistId(supabase: Db): Promise<string> {
 async function ownListing(supabase: Db, specialistId: string, id: string) {
   const { data } = await supabase
     .from("listings")
-    .select("id,slug")
+    .select("id,slug,approval_status")
     .eq("id", id)
     .eq("specialist_id", specialistId)
     .maybeSingle();
   if (!data) throw new Error("That listing wasn't found, or it isn't yours.");
-  return data as { id: string; slug: string | null };
+  return data as { id: string; slug: string | null; approval_status: string };
 }
 
 function refreshListingViews(id?: string, slug?: string | null) {
@@ -247,25 +252,39 @@ export async function submitListingForApproval(id: string): Promise<void> {
 export async function deleteSpecialistListing(id: string): Promise<void> {
   const supabase = await createClient();
   const specialistId = await approvedSpecialistId(supabase);
-  await ownListing(supabase, specialistId, id);
+  const listing = await ownListing(supabase, specialistId, id);
+  // A live listing is archived, not deleted: deleting it would cascade into
+  // bookings and inquiries that staff own. Checked before any photo is touched.
+  if (!specialistCanDelete(listing.approval_status)) {
+    throw new Error("Live listings can't be deleted. Archive it instead.");
+  }
 
-  // Photo rows go with the listing (cascade), so note the files first.
+  // The storage delete policy depends on the listing row existing, so the photos
+  // go first. If they can't all be removed, the listing is kept.
   const { data: images } = await supabase.from("listing_images").select("url").eq("listing_id", id);
+  const paths = (images ?? [])
+    .map((img) => storagePathFromUrl(LISTING_IMAGES_BUCKET, (img as { url: string }).url))
+    .filter((p): p is string => p != null);
+  if (paths.length > 0) {
+    const { data: removed, error: rmErr } = await supabase.storage.from(LISTING_IMAGES_BUCKET).remove(paths);
+    if (rmErr) throw new Error(`The photos couldn't be removed, so the listing was kept. ${rmErr.message}`);
+    if ((removed?.length ?? 0) < new Set(paths).size) {
+      throw new Error("Some photos couldn't be removed, so the listing was kept. Try again.");
+    }
+  }
+
+  // Atomic guard: the status filter stops a listing approved in the meantime.
   const { data, error } = await supabase
     .from("listings")
     .delete()
     .eq("id", id)
     .eq("specialist_id", specialistId)
+    .in("approval_status", [...SPECIALIST_DELETABLE_APPROVALS])
     .select("id,slug");
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) {
-    throw new Error("The listing wasn't deleted, so it may have been removed already or isn't yours.");
+    throw new Error("The listing wasn't deleted. Live listings can't be deleted, so archive it instead.");
   }
-
-  const paths = (images ?? [])
-    .map((img) => storagePathFromUrl(LISTING_IMAGES_BUCKET, (img as { url: string }).url))
-    .filter((p): p is string => p != null);
-  if (paths.length > 0) await supabase.storage.from(LISTING_IMAGES_BUCKET).remove(paths);
 
   refreshListingViews(undefined, data[0].slug as string | null);
   redirect(`${LISTINGS_PATH}?notice=deleted`);
@@ -274,7 +293,7 @@ export async function deleteSpecialistListing(id: string): Promise<void> {
 /* ---- Listing photos ----
  * Thin wrappers over the shared admin image actions (same session client, so the
  * specialist storage and listing_images policies apply). They add what the admin
- * versions leave to staff trust: an explicit ownership check, an image-only/size
+ * versions leave to staff trust: an explicit ownership check, an JPEG/PNG/WebP, size and count
  * check on upload, and revalidation of the specialist's own edit page. */
 
 export async function specialistUploadImages(listingId: string, fd: FormData): Promise<void> {
@@ -283,10 +302,8 @@ export async function specialistUploadImages(listingId: string, fd: FormData): P
   await ownListing(supabase, specialistId, listingId);
 
   const files = fd.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
-  for (const f of files) {
-    if (!f.type.startsWith("image/")) throw new Error(`"${f.name}" isn't an image.`);
-    if (f.size > MAX_PHOTO_BYTES) throw new Error(`"${f.name}" is over 10 MB. Choose a smaller image.`);
-  }
+  const problem = specialistPhotoError(files);
+  if (problem) throw new Error(problem);
   await uploadListingImages(listingId, fd);
   revalidatePath(`${LISTINGS_PATH}/${listingId}/edit`);
 }

@@ -68,7 +68,36 @@ export function listingRow(fd: FormData) {
 }
 
 /** /listings/<slug> must never shadow a static listings route. */
-const RESERVED_SLUGS = ["for-rent", "for-sale", "commercial", "office", "industrial-warehouse", "parking", "lots"];
+export const RESERVED_LISTING_ROUTES = [
+  "for-rent", "for-sale", "commercial", "office", "industrial-warehouse", "parking", "lots",
+] as const;
+
+/** Approval states in which a specialist may hard-delete a listing. A live (approved)
+ *  listing is archived instead: deleting it would cascade into staff-owned records. */
+export const SPECIALIST_DELETABLE_APPROVALS = ["draft", "submitted", "rejected"] as const;
+
+export function specialistCanDelete(approvalStatus: string | null | undefined): boolean {
+  return (SPECIALIST_DELETABLE_APPROVALS as readonly string[]).includes(approvalStatus ?? "draft");
+}
+
+/** Photo upload limits for specialists (stricter than staff). */
+export const SPECIALIST_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const SPECIALIST_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+export const SPECIALIST_PHOTO_MAX_FILES = 10;
+
+/** First problem with a batch of photos to upload, or null when they are fine. */
+export function specialistPhotoError(files: { name: string; type: string; size: number }[]): string | null {
+  if (files.length > SPECIALIST_PHOTO_MAX_FILES) {
+    return `Add up to ${SPECIALIST_PHOTO_MAX_FILES} photos at a time.`;
+  }
+  for (const f of files) {
+    if (!(SPECIALIST_PHOTO_TYPES as readonly string[]).includes(f.type)) {
+      return `"${f.name}" isn't a JPEG, PNG or WebP image.`;
+    }
+    if (f.size > SPECIALIST_PHOTO_MAX_BYTES) return `"${f.name}" is over 10 MB. Choose a smaller image.`;
+  }
+  return null;
+}
 
 /**
  * Slug for a new specialist listing, derived from the title (specialists never
@@ -77,7 +106,7 @@ const RESERVED_SLUGS = ["for-rent", "for-sale", "commercial", "office", "industr
  */
 export function specialistListingSlug(title: string, suffix?: string): string {
   const base = slugify(title) || "listing";
-  return suffix || RESERVED_SLUGS.includes(base) ? `${base}-${suffix ?? "listing"}` : base;
+  return suffix || (RESERVED_LISTING_ROUTES as readonly string[]).includes(base) ? `${base}-${suffix ?? "listing"}` : base;
 }
 
 /**

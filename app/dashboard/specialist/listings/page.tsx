@@ -5,6 +5,7 @@ import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { ApprovalBadge } from "@/components/specialist/approval-badge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
+import { specialistCanDelete } from "@/lib/admin/listing-row";
 import { deleteSpecialistListing } from "@/app/dashboard/specialist/actions";
 
 type Row = {
@@ -83,14 +84,26 @@ const columns: Column<Row>[] = [
         >
           <Icon name="edit" size={18} />
         </Link>
-        <ConfirmActionForm
-          action={deleteSpecialistListing.bind(null, l.id)}
-          message={`Delete "${l.title}" and its photos? This can't be undone.`}
-        >
-          <button type="submit" aria-label={`Delete ${l.title}`} className={`${iconLink} text-error hover:bg-error-bg`}>
-            <Icon name="delete" size={18} />
-          </button>
-        </ConfirmActionForm>
+        {specialistCanDelete(l.approval_status) ? (
+          <ConfirmActionForm
+            action={deleteSpecialistListing.bind(null, l.id)}
+            message={`Delete "${l.title}" and its photos? This can't be undone.`}
+          >
+            <button type="submit" aria-label={`Delete ${l.title}`} className={`${iconLink} text-error hover:bg-error-bg`}>
+              <Icon name="delete" size={18} />
+            </button>
+          </ConfirmActionForm>
+        ) : (
+          <Link
+            href={`/dashboard/specialist/listings/${l.id}/edit`}
+            title="Live listings can't be deleted. Open it and set the status to Archived."
+            aria-label={`Archive ${l.title}: open it and set the status to Archived`}
+            className="flex min-h-11 items-center gap-1 rounded-md px-2 text-xs font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+          >
+            <Icon name="archive" size={16} />
+            Archive
+          </Link>
+        )}
       </div>
     ),
   },

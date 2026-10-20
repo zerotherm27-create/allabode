@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import type { createClient } from "@/lib/supabase/server";
+import { RESERVED_LISTING_ROUTES } from "@/lib/admin/listing-row";
 
 /** Public marketing pages that show listing data — revalidate after any
  *  listing mutation so ISR (app/(marketing)/layout.tsx) doesn't serve stale
@@ -7,13 +8,7 @@ import type { createClient } from "@/lib/supabase/server";
 export function revalidatePublicListingPaths(slug?: string | null) {
   revalidatePath("/");
   revalidatePath("/listings");
-  revalidatePath("/listings/for-rent");
-  revalidatePath("/listings/for-sale");
-  revalidatePath("/listings/commercial");
-  revalidatePath("/listings/office");
-  revalidatePath("/listings/industrial-warehouse");
-  revalidatePath("/listings/parking");
-  revalidatePath("/listings/lots");
+  for (const route of RESERVED_LISTING_ROUTES) revalidatePath(`/listings/${route}`);
   if (slug) revalidatePath(`/listings/${slug}`);
 }
 

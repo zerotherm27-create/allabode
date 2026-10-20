@@ -68,8 +68,13 @@ export function ListingImagesManager({
   }
 
   async function handleRemove(id: string) {
-    setImages((prev) => prev.filter((img) => img.id !== id));
-    await actions.remove(id, listingId);
+    setError("");
+    try {
+      await actions.remove(id, listingId);
+      setImages((prev) => prev.filter((img) => img.id !== id));
+    } catch {
+      setError("Couldn't remove that photo. Try again.");
+    }
   }
 
   async function handleMove(index: number, dir: -1 | 1) {

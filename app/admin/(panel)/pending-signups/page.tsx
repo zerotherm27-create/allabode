@@ -122,14 +122,16 @@ export default async function PendingSignupsPage() {
     if (ownersResult.error) throw new Error(ownersResult.error.message);
     if (tenantsResult.error) throw new Error(tenantsResult.error.message);
     if (staffResult.error) throw new Error(staffResult.error.message);
-    if (specialistsResult.error) throw new Error(specialistsResult.error.message);
+    // The specialists table only exists after its migration is run; until then
+    // treat an error as "no specialists" so this page keeps working.
+    if (specialistsResult.error) console.warn("specialists lookup failed:", specialistsResult.error.message);
 
     rows = buildPendingSignups({
       authUsers,
       owners: (ownersResult.data ?? []) as LinkedRecord[],
       tenants: (tenantsResult.data ?? []) as LinkedRecord[],
       staff: (staffResult.data ?? []) as LinkedRecord[],
-      specialists: (specialistsResult.data ?? []) as LinkedRecord[],
+      specialists: (specialistsResult.error ? [] : specialistsResult.data ?? []) as LinkedRecord[],
     });
   } catch (error) {
     loadError = error instanceof Error ? error.message : "Unknown Supabase admin error";

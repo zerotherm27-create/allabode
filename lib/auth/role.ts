@@ -20,6 +20,8 @@ function sameEmail(a?: string | null, b?: string | null) {
  * Owner/tenant is checked first, but only when the linked record email matches
  * the auth email. That avoids stale/wrong auth_user_id links stealing an admin
  * session while still allowing true owner/staff dual records into the portal.
+ * Specialist → `specialists` (by auth_user_id), checked after owner/tenant and
+ * before the staff fallback; any specialist status still yields this role.
  * Staff → `users` (via the is_staff() RPC, which is security-definer).
  * Returns role `null` when signed in but not yet linked ("pending").
  */

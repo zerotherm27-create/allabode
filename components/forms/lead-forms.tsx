@@ -23,14 +23,17 @@ function FormShell({
   successBody,
   build,
   children,
+  privacyHref = "/privacy-policy",
 }: {
   type: string;
-  submitLabel: string;
+  submitLabel: ReactNode;
   successTitle: string;
   successBody: string;
   /** Read the form, return payload or a field-errors map. */
   build: (data: FormData) => { payload?: Record<string, unknown>; errors?: Record<string, string> };
   children: (errors: Record<string, string>) => ReactNode;
+  /** Absolute on a specialist microsite (its host redirects every other path). */
+  privacyHref?: string;
 }) {
   const [state, setState] = useState<State>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -130,7 +133,7 @@ function FormShell({
           the purpose of responding to my inquiry, coordinating services, and
           providing property-related assistance. I understand that my
           information will be handled according to the{" "}
-          <a href="/privacy-policy" className="text-navy-700 underline underline-offset-2 hover:text-gold-ink">
+          <a href={privacyHref} className="text-navy-700 underline underline-offset-2 hover:text-gold-ink">
             Privacy Policy
           </a>
           .
@@ -568,6 +571,66 @@ export function ListPropertyForm() {
           </div>
           <Field label="Property description">
             <Textarea name="message" placeholder="Describe the property, amenities, and condition…" />
+          </Field>
+        </>
+      )}
+    </FormShell>
+  );
+}
+
+/* ---------------- Specialist microsite: "Contact me" ---------------- */
+/**
+ * Posts a normal `inquiry` (same-origin, to /api/leads) tagged with the
+ * specialist's slug. The server verifies the slug against the public
+ * specialists view before tagging the row and notifying the specialist.
+ */
+export function SpecialistContactForm({
+  specialistSlug,
+  specialistName,
+  privacyHref,
+}: {
+  specialistSlug: string;
+  specialistName: string;
+  privacyHref?: string;
+}) {
+  const firstName = specialistName.trim().split(/\s+/)[0] || specialistName;
+  return (
+    <FormShell
+      type="inquiry"
+      privacyHref={privacyHref}
+      submitLabel={
+        <>
+          Send message
+          <Icon name="send" size={16} />
+        </>
+      }
+      successTitle="Message sent"
+      successBody={`Thanks — ${firstName} will get back to you soon.`}
+      build={(data) => {
+        const errors: Record<string, string> = {};
+        const name = reqText(data, "name", "Name", errors);
+        const email = reqEmail(data, errors);
+        const phone = reqText(data, "phone", "Contact number", errors);
+        const message = reqText(data, "message", "A message", errors);
+        if (Object.keys(errors).length) return { errors };
+        return { payload: { name, email, phone, message, specialist: specialistSlug } };
+      }}
+    >
+      {(e) => (
+        <>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <Field label="Name" required error={e.name}>
+              <Input name="name" autoComplete="name" />
+            </Field>
+            <Field label="Email" required error={e.email}>
+              <Input name="email" type="email" autoComplete="email" />
+            </Field>
+          </div>
+          <Field label="Contact Number" required error={e.phone}>
+            <Input name="phone" type="tel" autoComplete="tel" inputMode="tel" />
+          </Field>
+          <Field label="How can I help you?" required error={e.message}>
+            <Textarea name="message" rows={4} maxLength={4000} />
           </Field>
         </>
       )}

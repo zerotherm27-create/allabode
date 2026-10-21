@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { getConsent, CONSENT_EVENT } from "@/lib/cookie-consent";
+import { isSecretUrlPath } from "@/lib/analytics/private-paths";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -22,6 +23,8 @@ function PageviewTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Never report a URL that carries a secret (the unsubscribe token).
+    if (isSecretUrlPath(pathname)) return;
     if (GA_ID) window.gtag?.("event", "page_view", { page_path: pathname });
     if (META_PIXEL_ID) window.fbq?.("track", "PageView");
   }, [pathname]);
@@ -34,6 +37,7 @@ function PageviewTracker() {
  *  (NEXT_PUBLIC_GA_MEASUREMENT_ID / NEXT_PUBLIC_META_PIXEL_ID). Reacts live to
  *  the visitor accepting mid-session, no reload needed. */
 export function Analytics() {
+  const pathname = usePathname();
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
@@ -47,7 +51,9 @@ export function Analytics() {
     };
   }, []);
 
-  if (!allowed || (!GA_ID && !META_PIXEL_ID)) return null;
+  // Don't load the scripts on a page whose URL carries a secret (GA / the
+  // pixel would read location.href); PageviewTracker also skips those paths.
+  if (!allowed || (!GA_ID && !META_PIXEL_ID) || isSecretUrlPath(pathname)) return null;
 
   return (
     <>

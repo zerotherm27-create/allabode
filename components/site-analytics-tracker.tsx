@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getConsent, CONSENT_EVENT } from "@/lib/cookie-consent";
+import { isPrivateAnalyticsPath } from "@/lib/analytics/private-paths";
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
 
@@ -47,7 +48,7 @@ export function SiteAnalyticsTracker() {
     };
   }, []);
 
-  const excluded = !allowed || (pathname?.startsWith("/admin") ?? false);
+  const excluded = !allowed || isPrivateAnalyticsPath(pathname);
 
   useEffect(() => {
     if (excluded) return;

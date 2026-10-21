@@ -176,3 +176,27 @@ export function safeStoredContact(row: Partial<Record<keyof PublicContact, strin
     public_email: take(normalizePublicEmail(row.public_email ?? "")),
   };
 }
+
+/** Reads the "Don't show a call link" checkbox value from a form field (checked = "on"). */
+export function parseHideCallLink(raw: unknown): boolean {
+  return raw === "on" || raw === "true" || raw === true;
+}
+
+/** Strict stored-value read: only a real boolean true hides the link (missing column / null = false). */
+export function storedHideCallLink(raw: unknown): boolean {
+  return raw === true;
+}
+
+/**
+ * The tel: href for the "Call me" row, or null for no row. Hiding wins over
+ * both the specialist's own number and the company number.
+ */
+export function resolveCallHref(opts: {
+  hide: boolean;
+  ownPhone: string | null;
+  companyPhone: string;
+}): string | null {
+  if (opts.hide) return null;
+  if (opts.ownPhone) return telHref(opts.ownPhone);
+  return opts.companyPhone ? telHref(opts.companyPhone) : null;
+}

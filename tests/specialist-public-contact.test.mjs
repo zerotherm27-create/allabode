@@ -111,3 +111,21 @@ test("safeStoredContact drops values that no longer validate", () => {
   assert.equal(r.public_email, null);
   assert.equal(r.public_viber, null);
 });
+
+test("hide call link: checkbox and stored-value parsing", () => {
+  assert.equal(m.parseHideCallLink("on"), true);
+  assert.equal(m.parseHideCallLink(null), false);
+  assert.equal(m.parseHideCallLink(undefined), false);
+  assert.equal(m.storedHideCallLink(true), true);
+  assert.equal(m.storedHideCallLink(false), false);
+  assert.equal(m.storedHideCallLink(undefined), false);
+  assert.equal(m.storedHideCallLink("true"), false);
+});
+
+test("hide call link: no phone row at all when hidden, own beats company otherwise", () => {
+  assert.equal(m.resolveCallHref({ hide: true, ownPhone: "+639171234567", companyPhone: "+63 2 1234" }), null);
+  assert.equal(m.resolveCallHref({ hide: true, ownPhone: null, companyPhone: "+6321234567" }), null);
+  assert.equal(m.resolveCallHref({ hide: false, ownPhone: "+639171234567", companyPhone: "+6321234567" }), "tel:+639171234567");
+  assert.equal(m.resolveCallHref({ hide: false, ownPhone: null, companyPhone: "+6321234567" }), "tel:+6321234567");
+  assert.equal(m.resolveCallHref({ hide: false, ownPhone: null, companyPhone: "" }), null);
+});

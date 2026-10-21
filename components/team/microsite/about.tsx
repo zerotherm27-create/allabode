@@ -52,7 +52,7 @@ export function MicrositeAbout({ specialist }: { specialist: PublicSpecialist })
               className="object-cover object-[30%_20%] lg:object-[40%_center]"
             />
           </div>
-          <div className="relative -mt-10 ml-3 bg-navy px-3 py-4 text-white sm:-mt-20 sm:ml-8 sm:px-6 sm:py-8 lg:m-0 lg:px-10 lg:py-14">
+          <div className="relative -mt-10 bg-navy px-3 py-4 text-white sm:-mt-20 sm:px-6 sm:py-8 lg:m-0 lg:px-10 lg:py-14">
             <ul className="flex flex-col">
               {ABOUT_VALUES.map((v) => (
                 <li

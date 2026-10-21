@@ -3,6 +3,7 @@ import { Icon } from "@/components/icon";
 import { Panel, StatCard } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
+import { profileChecklist, type ChecklistItem } from "@/lib/team/profile-suggest";
 
 const STATUSES = [
   { key: "draft", label: "Drafts", icon: "edit" },
@@ -37,12 +38,64 @@ export default async function SpecialistOverviewPage() {
       .eq("lead_stage", "New");
     if (!error) newLeads = count ?? 0;
   }
+  // Profile checklist (fail-soft: hidden when the read fails or the profile is complete).
+  let checklist: { items: ChecklistItem[]; done: number; total: number } | null = null;
+  if (specialistId) {
+    try {
+      const supabase = await createClient();
+      const { data: prof, error } = await supabase
+        .from("specialists")
+        .select("photo_path,tagline,bio,areas,specialties,languages")
+        .eq("id", specialistId)
+        .maybeSingle();
+      if (!error && prof) {
+        const c = profileChecklist({
+          photoPath: prof.photo_path,
+          tagline: prof.tagline,
+          bio: prof.bio,
+          areas: prof.areas,
+          specialties: prof.specialties,
+          languages: prof.languages,
+        });
+        if (!c.complete) checklist = c;
+      }
+    } catch {
+      checklist = null;
+    }
+  }
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
     <div className="mx-auto max-w-5xl">
       <h1 className="font-display text-2xl font-bold text-navy">Overview</h1>
       <p className="mt-1 text-sm text-slate">Your listings and where each one stands.</p>
+
+      {checklist && (
+        <section aria-labelledby="profile-checklist" className="mt-6 rounded-lg border border-line bg-surface p-5">
+          <h2 id="profile-checklist" className="font-display text-base font-semibold text-navy">
+            Complete your profile
+          </h2>
+          <p className="mt-1 text-sm text-slate">
+            {checklist.done} of {checklist.total} done. A full profile helps buyers trust and reach you.
+          </p>
+          <ul className="mt-3 flex flex-col gap-2">
+            {checklist.items.map((i) => (
+              <li key={i.key} className="flex items-center gap-2 text-sm text-ink">
+                <Icon name={i.done ? "check_circle" : "radio_button_unchecked"} size={18} />
+                <span className={i.done ? "text-slate line-through" : ""}>{i.label}</span>
+                {i.done && <span className="sr-only">(done)</span>}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/dashboard/specialist/profile"
+            className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-navy px-5 text-sm font-semibold text-white transition-colors hover:bg-navy-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+          >
+            Finish your profile
+            <Icon name="arrow_forward" size={18} />
+          </Link>
+        </section>
+      )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {STATUSES.map((s) => (

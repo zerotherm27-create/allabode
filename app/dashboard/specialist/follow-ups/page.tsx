@@ -2,11 +2,15 @@ import { Icon } from "@/components/icon";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
 import { site } from "@/lib/site";
+import { getPublicSiteUrl } from "@/lib/url";
 import { formatFromAddress } from "@/lib/email-address";
 import { NURTURE_FROM_ADDRESS } from "@/lib/nurture/message";
 import { renderSample } from "@/lib/nurture/preview";
 import { nurtureMode } from "@/lib/nurture/schedule";
 import { describeDelay, isFollowUpMigrationMissing, isTemplateOn } from "@/lib/leads/follow-ups";
+import { MERGE_FIELDS } from "@/lib/nurture/render";
+import { isOverrideTableMissing, pickTemplateSource } from "@/lib/nurture/override-validate";
+import { EditedBadge, TemplateOverrideEditor } from "@/components/specialist/template-override-editor";
 import {
   MasterSwitch,
   PersonalNoteForm,
@@ -27,10 +31,12 @@ export default async function FollowUpsPage() {
   let enabled = true;
   let note = "";
   let specialist: SpecialistRow | null = null;
+  let overrides = new Map<string, { subject: string; body: string }>();
+  let overridesUnavailable = false;
 
   if (specialistId) {
     const supabase = await createClient();
-    const [tpl, pref, set, sp] = await Promise.all([
+    const [tpl, pref, set, sp, ov] = await Promise.all([
       supabase
         .from("email_templates")
         .select("id,name,subject,body,delay_days,position")
@@ -45,6 +51,7 @@ export default async function FollowUpsPage() {
         .eq("specialist_id", specialistId)
         .maybeSingle(),
       supabase.from("specialists").select("display_name,email,phone,subdomain").eq("id", specialistId).maybeSingle(),
+      supabase.from("specialist_template_overrides").select("template_id,subject,body").eq("specialist_id", specialistId),
     ]);
     const err = [tpl, pref, set, sp].find((r) => r.error)?.error;
     if (err) {
@@ -60,6 +67,18 @@ export default async function FollowUpsPage() {
       enabled = s?.followups_enabled !== false;
       note = s?.personal_note ?? "";
       specialist = sp.data as SpecialistRow | null;
+      // Own versions are optional: if their table isn't there yet, the rest of the page still works.
+      if (ov.error) {
+        if (isOverrideTableMissing(ov.error)) overridesUnavailable = true;
+        else console.error("[specialist/follow-ups] failed to load own versions:", ov.error);
+      } else {
+        overrides = new Map(
+          ((ov.data ?? []) as { template_id: string; subject: string; body: string }[]).map((o) => [
+            o.template_id,
+            { subject: o.subject, body: o.body },
+          ]),
+        );
+      }
     }
   }
 
@@ -123,7 +142,8 @@ export default async function FollowUpsPage() {
               The emails
             </h2>
             <p className="mt-1 text-sm text-slate">
-              Written by All Abode. Switch off any you don&apos;t want sent. Previews use sample customer details.
+              Written by All Abode. Switch off any you don&apos;t want sent, or write your own version for your leads.
+              Previews use sample customer details.
             </p>
 
             {templates.length === 0 ? (
@@ -133,12 +153,19 @@ export default async function FollowUpsPage() {
             ) : (
               <ol className="mt-4 space-y-4">
                 {templates.map((t) => {
-                  const rendered = specialist ? renderSample(t, specialist, note) : null;
+                  const own = overrides.get(t.id) ?? null;
+                  const source = pickTemplateSource({ ...t, audience: "lead" }, own, MERGE_FIELDS);
+                  const rendered = specialist
+                    ? renderSample(source, specialist, note, { specialistVersion: source.fromOverride })
+                    : null;
                   return (
                     <li key={t.id} className="rounded-lg border border-line bg-surface p-4 md:p-6">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <h3 className="font-display text-base font-semibold text-navy">{t.name}</h3>
+                          <h3 className="flex flex-wrap items-center gap-2 font-display text-base font-semibold text-navy">
+                            <span className="break-words">{t.name}</span>
+                            {own && <EditedBadge />}
+                          </h3>
                           <p className="mt-1 flex items-center gap-1.5 text-sm text-slate">
                             <Icon name="schedule" size={16} />
                             {describeDelay(t.delay_days)}
@@ -158,6 +185,26 @@ export default async function FollowUpsPage() {
                             <p className="mt-1 break-words text-sm font-medium text-ink">{rendered.subject}</p>
                             <p className="label-caps mt-4 text-slate">Message</p>
                             <pre className="mt-1 whitespace-pre-wrap break-words font-body text-sm text-ink">{rendered.text}</pre>
+                          </div>
+                        </details>
+                      )}
+
+                      {specialist && (
+                        <details className="group mt-4 rounded-md border border-line">
+                          <summary className="flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm font-semibold text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700">
+                            <Icon name="edit" size={16} />
+                            Edit my version
+                          </summary>
+                          <div className="border-t border-line p-4">
+                            <TemplateOverrideEditor
+                              templateId={t.id}
+                              owner={{ subject: t.subject, body: t.body }}
+                              override={own}
+                              specialist={specialist}
+                              note={note}
+                              siteUrl={getPublicSiteUrl()}
+                              unavailable={overridesUnavailable}
+                            />
                           </div>
                         </details>
                       )}

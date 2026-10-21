@@ -17,8 +17,11 @@ export function renderSample(
   template: { subject: string; body: string },
   specialist: PreviewSpecialist,
   personalNote: string | null,
+  opts: { specialistVersion?: boolean; siteUrl?: string } = {},
 ): RenderedEmail {
-  const siteUrl = getPublicSiteUrl();
+  // Pass siteUrl from the server when rendering in a client component, so the
+  // server and browser renders match.
+  const siteUrl = opts.siteUrl ?? getPublicSiteUrl();
   const name = specialist.display_name?.trim() ?? "";
   return renderTemplate(
     template,
@@ -45,6 +48,7 @@ export function renderSample(
       unsubscribeUrl: `${siteUrl}/unsubscribe/sample`,
       reason: `You are receiving this because you contacted ${name || "your property specialist"} through ${site.name} and agreed to follow-up emails about your inquiry.`,
     },
+    { linkBodyUrls: !opts.specialistVersion },
   );
 }
 

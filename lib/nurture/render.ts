@@ -2,8 +2,9 @@
 //
 // Renders an owner-written follow-up template. Templates are PLAIN TEXT with
 // {{merge_field}} placeholders (no HTML authoring): blank lines separate
-// paragraphs, single newlines become line breaks, and bare http(s) URLs become
-// links. Every literal character AND every merge value is HTML-escaped, so
+// paragraphs, single newlines become line breaks, and bare http(s) URLs typed
+// in the template become links (merge values are never auto-linked; only the
+// server-built URL fields are). Every literal character AND every merge value is HTML-escaped, so
 // neither the template nor a visitor-supplied value (a lead's name) can inject
 // markup. Unknown fields render empty. The result has an HTML body and a
 // plain-text twin, each ending with the same footer.
@@ -95,17 +96,33 @@ function linkify(escaped: string): string {
   });
 }
 
+/**
+ * URL fields the server builds itself (never visitor input). Only these become
+ * links, and only when the whole value is one http(s) URL; every other merge
+ * value (a lead's name, a personal note) is plain escaped text, never linked.
+ */
+const LINK_FIELDS = new Set(["lead_url", "specialist_page_url", "listing_url", "site_url"]);
+const WHOLE_URL = /^https?:\/\/[^\s<>"']+$/;
+
+function valueHtml(key: string, v: string): string {
+  const escaped = escapeHtml(v);
+  if (LINK_FIELDS.has(key) && WHOLE_URL.test(v)) {
+    return `<a href="${escaped}" style="color:#0d518c">${escaped}</a>`;
+  }
+  return escaped;
+}
+
 /** Escapes the template and every value in one pass, so nothing is escaped twice or missed. */
 function fillHtml(template: string, vars: TemplateVars): string {
   const src = String(template ?? "").replace(/\r\n?/g, "\n");
   let out = "";
   let last = 0;
   for (const m of src.matchAll(FIELD)) {
-    out += escapeHtml(src.slice(last, m.index));
-    out += escapeHtml(value(vars, m[1].toLowerCase()));
+    out += linkify(escapeHtml(src.slice(last, m.index)));
+    out += valueHtml(m[1].toLowerCase(), value(vars, m[1].toLowerCase()));
     last = (m.index ?? 0) + m[0].length;
   }
-  out += escapeHtml(src.slice(last));
+  out += linkify(escapeHtml(src.slice(last)));
   return out;
 }
 
@@ -147,7 +164,7 @@ export function renderTemplate(template: TemplateSource, vars: TemplateVars, foo
 
   // ---- html ----
   const htmlParas = paragraphs(fillHtml(template.body, vars))
-    .map((p) => `<p style="margin:0 0 16px">${linkify(p).replace(/\n/g, "<br>")}</p>`)
+    .map((p) => `<p style="margin:0 0 16px">${p.replace(/\n/g, "<br>")}</p>`)
     .join("");
   const unsub = f.unsubscribe
     ? `<p style="margin:0 0 8px"><a href="${escapeHtml(f.unsubscribe)}" style="color:#5b6676">Unsubscribe from these emails</a></p>`

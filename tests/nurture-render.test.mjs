@@ -94,3 +94,21 @@ test("firstName and escapeHtml", () => {
   assert.equal(firstName(null), "");
   assert.equal(escapeHtml(`<a href="x">'&'</a>`), "&lt;a href=&quot;x&quot;&gt;&#39;&amp;&#39;&lt;/a&gt;");
 });
+
+test("merge values are never auto-linked; only server-built URL fields and template text are", () => {
+  const r = renderTemplate(
+    { subject: "S", body: "Hi {{lead_name}}. Note: {{personal_note}}. Page {{specialist_page_url}}. Docs https://allabodeph.com/faq" },
+    { lead_name: "http://evil.example/x", personal_note: "see https://evil.example", specialist_page_url: "https://allabodeph.com/team/jo" },
+    footer,
+  );
+  assert.ok(!r.html.includes('href="http://evil.example'), "visitor value not linked");
+  assert.ok(!r.html.includes('href="https://evil.example'), "personal note not linked");
+  assert.ok(r.html.includes("Hi http://evil.example/x."));
+  assert.ok(r.html.includes('<a href="https://allabodeph.com/team/jo"'));
+  assert.ok(r.html.includes('<a href="https://allabodeph.com/faq"'));
+});
+
+test("a URL field with extra text is not linked", () => {
+  const r = renderTemplate({ subject: "S", body: "{{listing_url}}" }, { listing_url: "https://a.co/x y" }, footer);
+  assert.ok(!r.html.includes("<a href=\"https://a.co"));
+});

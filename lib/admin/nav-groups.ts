@@ -53,6 +53,7 @@ export const navGroups: AdminNavGroup[] = [
       { label: "Viewings",   icon: "event_available", href: "/admin/viewings" },
       { label: "Inquiries",  icon: "forum",         href: "/admin/inquiries"  },
       { label: "Specialists", icon: "groups",        href: "/admin/specialists" },
+      { label: "Follow-up emails", icon: "mark_email_read", href: "/admin/follow-ups" },
       { label: "Appraisals", icon: "analytics",     href: "/admin/appraisals" },
       { label: "PM Leads",   icon: "corporate_fare",href: "/admin/leads"      },
       { label: "Site Analytics", icon: "monitoring", href: "/admin/analytics" },

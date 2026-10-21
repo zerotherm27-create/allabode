@@ -21,6 +21,8 @@ import { firstName, renderTemplate, type TemplateVars } from "@/lib/nurture/rend
 import {
   afterFailure,
   checkEligibility,
+  CLAIM_MARKER,
+  isUncertainDelivery,
   DEFAULT_MAX_ATTEMPTS,
   DEFAULT_RUN_CAP,
   normalizeAudience,
@@ -35,8 +37,10 @@ import {
   unsubscribeUrls,
 } from "@/lib/nurture/message";
 
-/** How long a claimed row is hidden from other runs while it is being sent. */
-const CLAIM_LEASE_MS = 15 * 60_000;
+/** A claimed row touched this recently may still be mid-send in another run: leave it alone. */
+const IN_FLIGHT_MS = 15 * 60_000;
+/** Resend's default limit is 2 requests/second. */
+const SEND_GAP_MS = 600;
 
 type SendRow = {
   id: string;
@@ -44,6 +48,8 @@ type SendRow = {
   template_id: string;
   due_at: string;
   attempts: number;
+  last_error: string | null;
+  updated_at: string | null;
 };
 
 type TemplateRow = {
@@ -60,6 +66,7 @@ type LeadRow = {
   name: string | null;
   email: string | null;
   phone: string | null;
+  status: string | null;
   lead_stage: string | null;
   consent_followup: boolean | null;
   unsubscribed_at: string | null;
@@ -101,6 +108,8 @@ export type SendSummary = {
   /** Dry run: what would go out. */
   plan: PlannedEmail[];
   skips: { sendId: string; reason: string }[];
+  /** True when the time budget ran out before every due row was handled. */
+  stoppedEarly: boolean;
 };
 
 export type SendOptions = {
@@ -108,12 +117,14 @@ export type SendOptions = {
   /** Only these send rows (the day-0 send right after enrolment). */
   ids?: string[];
   maxAttempts?: number;
+  /** Wall-clock budget for the whole run; no new row starts after it. */
+  budgetMs?: number;
   now?: Date;
   env?: { NURTURE_ENABLED?: string; NURTURE_DRY_RUN?: string };
 };
 
 function emptySummary(mode: NurtureMode): SendSummary {
-  return { mode, considered: 0, sent: 0, skipped: 0, failed: 0, retrying: 0, errors: [], plan: [], skips: [] };
+  return { mode, considered: 0, sent: 0, skipped: 0, failed: 0, retrying: 0, errors: [], plan: [], skips: [], stoppedEarly: false };
 }
 
 /** Sends (or, in dry-run, plans) due queued follow-ups. Never throws. */
@@ -126,11 +137,12 @@ export async function sendQueued(service: SupabaseClient, opts: SendOptions = {}
   const now = opts.now ?? new Date();
   const limit = Math.max(1, Math.min(200, opts.limit ?? DEFAULT_RUN_CAP));
   const max = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const deadline = Date.now() + Math.max(1_000, opts.budgetMs ?? 40_000);
 
   try {
     let q = service
       .from("lead_email_sends")
-      .select("id,inquiry_id,template_id,due_at,attempts")
+      .select("id,inquiry_id,template_id,due_at,attempts,last_error,updated_at")
       .eq("status", "queued")
       .lte("due_at", now.toISOString())
       .order("due_at", { ascending: true })
@@ -170,9 +182,16 @@ export async function sendQueued(service: SupabaseClient, opts: SendOptions = {}
     };
 
     for (const row of due) {
+      if (Date.now() > deadline) {
+        summary.stoppedEarly = true; // the rest stay queued for the next run
+        break;
+      }
       summary.considered++;
       try {
-        await processRow(service, row, templates.get(row.template_id) ?? null, { mode, now, max, siteUrl, company }, summary);
+        const calledProvider = await processRow(
+          service, row, templates.get(row.template_id) ?? null, { mode, now, max, siteUrl, company }, summary,
+        );
+        if (calledProvider) await new Promise((r) => setTimeout(r, SEND_GAP_MS));
       } catch (err) {
         summary.errors.push(`${row.id}: ${err instanceof Error ? err.message : "unexpected error"}`);
       }
@@ -197,16 +216,34 @@ async function processRow(
   template: TemplateRow | null,
   ctx: Ctx,
   summary: SendSummary,
-) {
+): Promise<boolean> {
   if (!template) {
     // Templates are never deleted once used (FK restrict), so this is a read problem: leave queued.
     summary.errors.push(`${row.id}: template not found`);
-    return;
+    return false;
+  }
+
+  // Claimed before but never recorded: the provider may already have accepted it. Never resend.
+  if (isUncertainDelivery(row)) {
+    const touched = new Date(row.updated_at ?? 0).getTime();
+    if (Number.isFinite(touched) && Date.now() - touched < IN_FLIGHT_MS) return false; // maybe mid-send elsewhere
+    summary.skips.push({ sendId: row.id, reason: "uncertain_delivery" });
+    if (ctx.mode === "live") {
+      const { error } = await service
+        .from("lead_email_sends")
+        .update({ status: "failed", last_error: "uncertain_delivery" })
+        .eq("id", row.id)
+        .eq("status", "queued")
+        .eq("attempts", row.attempts);
+      if (error) throw new Error(`record uncertain: ${error.message}`);
+    }
+    summary.failed++;
+    return false;
   }
 
   const { data: leadData, error: leadErr } = await service
     .from("inquiries")
-    .select("id,name,email,phone,lead_stage,consent_followup,unsubscribed_at,unsub_token,specialist_id,listing_id")
+    .select("id,name,email,phone,status,lead_stage,consent_followup,unsubscribed_at,unsub_token,specialist_id,listing_id")
     .eq("id", row.inquiry_id)
     .maybeSingle();
   if (leadErr) throw new Error(`load lead: ${leadErr.message}`);
@@ -271,7 +308,7 @@ async function processRow(
       if (error) throw new Error(`record skip: ${error.message}`);
     }
     summary.skipped++;
-    return;
+    return false;
   }
 
   // Eligible: lead and specialist are present (checkEligibility guarantees it).
@@ -281,7 +318,7 @@ async function processRow(
   if (audience === "lead" && !urls) {
     // Never send a lead email without a working unsubscribe link; leave it queued.
     summary.errors.push(`${row.id}: cannot build the unsubscribe link (check NEXT_PUBLIC_SITE_URL)`);
-    return;
+    return false;
   }
 
   const vars: TemplateVars = {
@@ -333,22 +370,24 @@ async function processRow(
     };
     summary.plan.push(planned);
     console.info("[nurture:dry-run] would send", planned);
-    return;
+    return false;
   }
 
-  // Claim: bump attempts and push due_at out so an overlapping run can't pick it up.
+  // Claim: compare-and-set on attempts, and mark the row so that if this run
+  // dies after the provider accepts the message, the next run fails it
+  // (uncertain_delivery) instead of sending it again.
   const attempts = (row.attempts ?? 0) + 1;
   const { data: claimed, error: claimErr } = await service
     .from("lead_email_sends")
-    .update({ attempts, due_at: new Date(ctx.now.getTime() + CLAIM_LEASE_MS).toISOString() })
+    .update({ attempts, last_error: CLAIM_MARKER })
     .eq("id", row.id)
     .eq("status", "queued")
     .eq("attempts", row.attempts ?? 0)
     .select("id");
   if (claimErr) throw new Error(`claim: ${claimErr.message}`);
-  if (!claimed || claimed.length === 0) return; // another run has it, or it was skipped meanwhile
+  if (!claimed || claimed.length === 0) return false; // another run has it, or it was skipped meanwhile
 
-  const result = await sendEmailResult(message);
+  const result = await sendEmailResult(message, { idempotencyKey: `lead-followup/${row.id}` });
   if (result.ok) {
     const { error } = await service
       .from("lead_email_sends")
@@ -362,7 +401,7 @@ async function processRow(
       .eq("id", row.id);
     if (error) summary.errors.push(`${row.id}: sent but not recorded: ${error.message}`);
     summary.sent++;
-    return;
+    return true;
   }
 
   const next = afterFailure(attempts, ctx.max);
@@ -371,12 +410,11 @@ async function processRow(
     .update({
       status: next,
       last_error: clip(result.reason),
-      // Back to its real due time so the next run retries it (and the lateness rule still applies).
-      due_at: row.due_at,
     })
     .eq("id", row.id)
     .eq("status", "queued"); // a stop rule may have skipped it while we were sending
   if (error) summary.errors.push(`${row.id}: failure not recorded: ${error.message}`);
   if (next === "failed") summary.failed++;
   else summary.retrying++;
+  return true;
 }

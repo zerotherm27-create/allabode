@@ -29,6 +29,7 @@ export type SkipReason =
   | "template_off"
   | "invalid_email"
   | "too_late"
+  | "spam"
   | "lead_missing";
 
 export type LeadFacts = {
@@ -37,6 +38,8 @@ export type LeadFacts = {
   consent_followup: boolean | null;
   unsubscribed_at: string | null;
   email: string | null;
+  /** Staff status on the inquiry; "Spam" stops the sequence. */
+  status?: string | null;
 };
 
 export type EligibilityInput = {
@@ -90,6 +93,7 @@ export function canEnrol(lead: LeadFacts | null): Eligibility {
   if (!lead.specialist_id) return { ok: false, reason: "no_specialist" };
   if (lead.consent_followup !== true) return { ok: false, reason: "no_consent" };
   if (lead.unsubscribed_at) return { ok: false, reason: "unsubscribed" };
+  if (lead.status === "Spam") return { ok: false, reason: "spam" };
   return { ok: true };
 }
 
@@ -143,6 +147,47 @@ export function planEnrolment(
       due_at: computeDueAt(base, t.delay_days),
       status: "queued" as const,
     }));
+}
+
+/** One person (same address) is enrolled at most once per this many days. */
+export const ENROL_WINDOW_DAYS = 30;
+
+export type PriorSend = { template_id: string; status: string; created_at: string };
+
+/**
+ * Per-person dedup across inquiries. `prior` = send rows of OTHER inquiries
+ * with the same lower(trim(email)). Nothing is enrolled when that address was
+ * enrolled within the window; otherwise a template already queued or sent to
+ * the address is dropped, so nobody gets the same email twice.
+ */
+export function dedupeEnrolment<T extends { template_id: string }>(
+  rows: T[],
+  prior: PriorSend[],
+  now: Date = new Date(),
+  windowDays = ENROL_WINDOW_DAYS,
+): T[] {
+  const cutoff = now.getTime() - windowDays * DAY_MS;
+  const recent = prior.some((p) => {
+    const t = new Date(p.created_at).getTime();
+    return !Number.isFinite(t) || t >= cutoff;
+  });
+  if (recent) return [];
+  const taken = new Set(prior.filter((p) => p.status === "queued" || p.status === "sent").map((p) => p.template_id));
+  return rows.filter((r) => !taken.has(r.template_id));
+}
+
+/**
+ * A queued row that was already claimed (attempts > 0) and has no recorded
+ * failure may have been accepted by Resend before the run died: never resend it.
+ */
+export const CLAIM_MARKER = "claimed";
+export function isUncertainDelivery(row: { attempts: number | null; last_error: string | null }): boolean {
+  return (row.attempts ?? 0) > 0 && (row.last_error == null || row.last_error === CLAIM_MARKER);
+}
+
+/** Escapes % _ \ for an exact, case-insensitive PostgREST ilike match. */
+export function ilikeExact(s: string): string {
+  return String(s ?? "").replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
 /** After a failed attempt (attempts already counted): retry while under the cap, else give up. */

@@ -5,7 +5,9 @@ import { sendQueued } from "@/lib/nurture/send";
 import { maxAttempts, runCap } from "@/lib/nurture/schedule";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// The send loop stops starting new rows after SEND_BUDGET_MS, well inside this.
+export const maxDuration = 120;
+const SEND_BUDGET_MS = 75_000;
 
 const RULE = "send_lead_followups";
 
@@ -34,6 +36,7 @@ async function handle(req: Request) {
   const summary = await sendQueued(service, {
     limit: runCap(config?.action_config),
     maxAttempts: maxAttempts(config?.action_config),
+    budgetMs: SEND_BUDGET_MS,
   });
 
   const hadErrors = summary.errors.length > 0;
@@ -53,6 +56,7 @@ async function handle(req: Request) {
     failed: summary.failed,
     retrying: summary.retrying,
     errors: summary.errors.length,
+    stoppedEarly: summary.stoppedEarly,
     ...(summary.mode === "dry_run" ? { plan: summary.plan, skips: summary.skips } : {}),
   });
 }

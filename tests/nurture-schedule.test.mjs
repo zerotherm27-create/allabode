@@ -134,3 +134,43 @@ test("runCap / maxAttempts read rule config with clamps", () => {
   assert.equal(maxAttempts({}), 3);
   assert.equal(maxAttempts({ max_attempts: 99 }), 10);
 });
+
+const { dedupeEnrolment, isUncertainDelivery, ilikeExact, CLAIM_MARKER, ENROL_WINDOW_DAYS } =
+  await loadTs("lib/nurture/schedule.ts");
+
+test("spam inquiries are not enrolled or sent", () => {
+  assert.deepEqual(canEnrol(lead({ status: "Spam" })), { ok: false, reason: "spam" });
+  assert.deepEqual(checkEligibility(base({ lead: lead({ status: "Spam" }) })), { ok: false, reason: "spam" });
+  assert.deepEqual(checkEligibility(base({ lead: lead({ status: "Contacted" }) })), { ok: true });
+});
+
+test("dedupeEnrolment: same address enrolled in the last 30 days -> nothing", () => {
+  const now = new Date("2026-10-31T00:00:00Z");
+  const rows = [{ template_id: "t0" }, { template_id: "t3" }];
+  assert.equal(ENROL_WINDOW_DAYS, 30);
+  assert.deepEqual(dedupeEnrolment(rows, [], now), rows);
+  assert.deepEqual(dedupeEnrolment(rows, [{ template_id: "t9", status: "skipped", created_at: "2026-10-20T00:00:00Z" }], now), []);
+  assert.deepEqual(dedupeEnrolment(rows, [{ template_id: "t0", status: "sent", created_at: "garbage" }], now), []);
+});
+
+test("dedupeEnrolment: older enrolment drops templates already queued or sent", () => {
+  const now = new Date("2026-10-31T00:00:00Z");
+  const rows = [{ template_id: "t0" }, { template_id: "t3" }, { template_id: "t7" }];
+  const prior = [
+    { template_id: "t0", status: "sent", created_at: "2026-08-01T00:00:00Z" },
+    { template_id: "t3", status: "queued", created_at: "2026-08-01T00:00:00Z" },
+    { template_id: "t7", status: "skipped", created_at: "2026-08-01T00:00:00Z" },
+  ];
+  assert.deepEqual(dedupeEnrolment(rows, prior, now), [{ template_id: "t7" }]);
+});
+
+test("isUncertainDelivery: claimed or attempted without a recorded failure", () => {
+  assert.equal(isUncertainDelivery({ attempts: 0, last_error: null }), false);
+  assert.equal(isUncertainDelivery({ attempts: 1, last_error: CLAIM_MARKER }), true);
+  assert.equal(isUncertainDelivery({ attempts: 2, last_error: null }), true);
+  assert.equal(isUncertainDelivery({ attempts: 1, last_error: "The email service returned an error (500)." }), false);
+});
+
+test("ilikeExact escapes wildcards", () => {
+  assert.equal(ilikeExact("a_b%c\\d@x.co"), "a\\_b\\%c\\\\d@x.co");
+});

@@ -69,6 +69,7 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
  */
 export async function sendEmailResult(
   message: EmailMessage,
+  options: { idempotencyKey?: string } = {},
 ): Promise<{ ok: true; id?: string } | { ok: false; reason: string }> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { ok: false, reason: "Email is not configured (RESEND_API_KEY is not set)." };
@@ -76,7 +77,12 @@ export async function sendEmailResult(
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        // Resend drops a repeat POST with the same key (kept ~24h).
+        ...(options.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey.slice(0, 256) } : {}),
+      },
       body: JSON.stringify(buildResendPayload(message)),
     });
     const raw = await res.text();

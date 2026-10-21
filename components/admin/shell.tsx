@@ -26,8 +26,14 @@ export function AdminShell({
   const [open, setOpen] = useState(false);
   const reduced = useReducedMotion() ?? false;
 
+  const allHrefs = navGroups.flatMap((g) => g.items.map((i) => i.href));
+  // The longest matching nav href wins, so /admin/specialists/overview does
+  // not also light up its parent /admin/specialists.
   const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    href === "/admin"
+      ? pathname === "/admin"
+      : pathname.startsWith(href) &&
+        !allHrefs.some((h) => h.length > href.length && h !== "/admin" && pathname.startsWith(h));
 
   async function logout() {
     await createClient().auth.signOut();

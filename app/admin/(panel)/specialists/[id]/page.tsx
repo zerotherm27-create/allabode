@@ -15,6 +15,7 @@ import {
 import { getNeverSignedIn } from "@/lib/team/provision";
 import { checkSpecialistDomain } from "@/lib/team/vercel-domains";
 import { subdomainState } from "@/lib/team/domain-status";
+import { loadActivity } from "@/lib/team/activity-data";
 import { InviteControls, StatusControls, SubdomainControls, VisibilityControls } from "./controls";
 
 type Row = {
@@ -68,6 +69,9 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
     ? subdomainState(await checkSpecialistDomain(s.subdomain, 3000))
     : null;
 
+  const activity = s.status === "approved" ? await loadActivity(30, s.id) : null;
+  const a = activity && activity.ok ? activity.overview.bySpecialist[s.id] : null;
+
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
@@ -86,6 +90,31 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
           )}
         </p>
       </div>
+
+      {a && (
+        <section aria-label="Activity, last 30 days" className="rounded-lg border border-line bg-surface p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-sm font-semibold text-navy">Activity, last 30 days</h2>
+            <Link href="/admin/specialists/overview" className="inline-flex min-h-11 items-center text-sm text-navy-700 hover:underline">All specialists</Link>
+          </div>
+          <dl className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {([
+              ["Live listings", a.listings.live],
+              ["Awaiting approval", a.listings.awaiting],
+              ["New leads", a.newLeads],
+              ["Stale leads", a.staleLeads.length],
+              ["Follow-ups sent", a.followUpsSent],
+              ["Follow-ups failed", a.followUpsFailed],
+              ["Unsubscribes", a.unsubscribes],
+            ] as [string, number][]).map(([label, v]) => (
+              <div key={label}>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate">{label}</dt>
+                <dd className={`mt-1 font-display text-lg font-bold ${(label === "Stale leads" || label === "Follow-ups failed") && v > 0 ? "text-error" : "text-navy"}`}>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
 
       <section className="rounded-lg border border-line bg-surface p-6">
         <h2 className="font-display text-sm font-semibold text-navy">Details</h2>

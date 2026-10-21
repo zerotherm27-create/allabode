@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Field, Input, Textarea } from "@/components/forms/fields";
-import { PROFILE_LIMITS } from "@/lib/team/profile";
+import { PROFILE_LIMITS, parseList, parseYears } from "@/lib/team/profile";
+import { suggestBio, suggestTagline } from "@/lib/team/profile-suggest";
 import {
   updateSpecialistProfile,
   type SpecialistProfileState,
@@ -22,6 +23,52 @@ export type ProfileValues = {
 
 const idle: SpecialistProfileState = { ok: false, message: "" };
 
+/** "Use suggested text" with an inline confirm before it overwrites anything. */
+function SuggestButton({
+  hasText,
+  onApply,
+  label,
+}: {
+  hasText: boolean;
+  onApply: () => void;
+  label: string;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const btn =
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line px-4 text-sm font-semibold text-navy transition-colors hover:bg-surface-gray focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700";
+  if (confirming) {
+    return (
+      <div role="group" aria-label={label} className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <p className="text-sm text-ink">Replace what you wrote with suggested text?</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={btn}
+            onClick={() => {
+              onApply();
+              setConfirming(false);
+            }}
+          >
+            Replace
+          </button>
+          <button type="button" className={btn} onClick={() => setConfirming(false)}>
+            Keep mine
+          </button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-2">
+      <button type="button" className={btn} onClick={() => (hasText ? setConfirming(true) : onApply())}>
+        <Icon name="auto_awesome" size={18} />
+        Use suggested text
+      </button>
+      <p className="mt-1 text-xs text-slate">Edit freely; this is just a starting point. Nothing is saved until you press Save.</p>
+    </div>
+  );
+}
+
 export function SpecialistProfileForm({
   values,
   licenceLine,
@@ -32,9 +79,25 @@ export function SpecialistProfileForm({
 }) {
   const [state, action, pending] = useActionState(updateSpecialistProfile, idle);
   const [nameError, setNameError] = useState("");
+  const [tagline, setTagline] = useState(values.tagline);
+  const [bio, setBio] = useState(values.bio);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  function current() {
+    const fd = new FormData(formRef.current ?? undefined);
+    const str = (k: string) => String(fd.get(k) ?? "");
+    const years = parseYears(str("years_experience"));
+    return {
+      name: str("display_name"),
+      areas: parseList(str("areas")),
+      specialties: parseList(str("specialties")),
+      languages: parseList(str("languages")),
+      years: typeof years === "number" ? years : null,
+    };
+  }
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-5">
+    <form ref={formRef} action={action} noValidate className="flex flex-col gap-5">
       <Field label="Display name" required error={nameError}>
         <Input
           name="display_name"
@@ -46,12 +109,33 @@ export function SpecialistProfileForm({
       </Field>
 
       <Field label="Tagline" hint="One line under your name. Up to 140 characters.">
-        <Input name="tagline" defaultValue={values.tagline} maxLength={PROFILE_LIMITS.tagline} />
+        <Input
+          name="tagline"
+          value={tagline}
+          onChange={(e) => setTagline(e.currentTarget.value)}
+          maxLength={PROFILE_LIMITS.tagline}
+        />
       </Field>
+      <SuggestButton
+        label="Suggested tagline"
+        hasText={tagline.trim() !== ""}
+        onApply={() => setTagline(suggestTagline(current()))}
+      />
 
       <Field label="About you" hint="A short bio for your public page.">
-        <Textarea name="bio" defaultValue={values.bio} maxLength={PROFILE_LIMITS.bio} rows={6} />
+        <Textarea
+          name="bio"
+          value={bio}
+          onChange={(e) => setBio(e.currentTarget.value)}
+          maxLength={PROFILE_LIMITS.bio}
+          rows={6}
+        />
       </Field>
+      <SuggestButton
+        label="Suggested About text"
+        hasText={bio.trim() !== ""}
+        onApply={() => setBio(suggestBio(current()))}
+      />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Phone">

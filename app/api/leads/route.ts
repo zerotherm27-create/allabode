@@ -19,6 +19,7 @@ import {
 import { getPublicSpecialist } from "@/lib/team/public-queries";
 import { getSpecialistLeadEmail } from "@/lib/team/lead-recipient";
 import { sendEmail } from "@/lib/email";
+import { enrolLead } from "@/lib/nurture/enrol";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 import { getPublicSiteUrl } from "@/lib/url";
@@ -121,6 +122,10 @@ export async function POST(request: Request) {
         console.error("[lead:rpc-error]", type, rpcError.message);
       } else if (typeof data === "string" && data) {
         stored = true;
+        // Follow-up emails: only leads stored by the intake functions, after the
+        // checks above. enrolLead never throws and checks assignment + consent.
+        const inquiryId = data;
+        after(() => enrolLead(inquiryId));
         specialist =
           plan.kind === "specialist"
             ? await lookupVerified(plan.slug)

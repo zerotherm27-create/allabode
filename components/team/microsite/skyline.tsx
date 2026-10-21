@@ -3,10 +3,11 @@
 const HAIRLINE = "[&_*]:[vector-effect:non-scaling-stroke]";
 
 /**
- * Branded line illustrations used in place of the mockup's interior photos
- * (owner decision: illustrations until real photos exist). Everything is drawn
- * in currentColor, so callers set the tint with a text-* token and opacity.
- * Purely decorative: aria-hidden, no focusable parts.
+ * Branded line illustrations, kept as faint texture (the firm strip, the
+ * no-photo portrait plate, the listings empty state) now that the hero, About
+ * and closing band use the owner's photos. Drawn in currentColor, so callers
+ * set the tint with a text-* token and opacity. Purely decorative:
+ * aria-hidden, no focusable parts.
  */
 
 // Deterministic skyline: [x, width, height] per building on a 1200 x 320 canvas.
@@ -64,7 +65,7 @@ export function Skyline({ className = "" }: { className?: string }) {
 
 /**
  * A tower facade in elevation (curtain-wall grid with a few lit panes), for
- * the About and closing panels. `lit` panes take the accent class given.
+ * the listings empty state. `lit` panes take the accent class given.
  */
 export function FacadeIllustration({
   className = "",

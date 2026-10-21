@@ -1,16 +1,17 @@
+import Image from "next/image";
 import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { Reveal } from "@/components/motion";
-import { FacadeIllustration } from "@/components/team/microsite/skyline";
 import { ABOUT_COPY, ABOUT_VALUES, aboutParagraphs } from "@/lib/team/profile-copy";
 import type { PublicSpecialist } from "@/lib/team/public-queries";
 
 /**
  * "About me": the specialist's bio (or the default intro + goal) with a navy
- * outline "Get to know me" on the left; on the right an illustrated facade
- * panel beside the navy values panel, bleeding to the viewport edge on desktop.
+ * outline "Get to know me" on the left; on the right the owner's interior photo
+ * beside the navy values panel, bleeding to the viewport edge on desktop.
  * Below lg the two columns stay side by side (55/45) and the navy panel sits
- * over the lower part of the illustration instead of beside it.
+ * over the lower part of the photo instead of beside it (so the crop favours
+ * the top: pendant lamp, plant and city view).
  */
 export function MicrositeAbout({ specialist }: { specialist: PublicSpecialist }) {
   const paragraphs = aboutParagraphs(specialist);
@@ -43,7 +44,13 @@ export function MicrositeAbout({ specialist }: { specialist: PublicSpecialist })
 
         <div className="flex flex-col py-10 pr-5 sm:py-14 sm:pr-8 lg:my-6 lg:grid lg:grid-cols-[2fr_3fr] lg:p-0">
           <div aria-hidden="true" className="relative h-36 overflow-hidden bg-surface-gray sm:h-60 lg:h-auto">
-            <FacadeIllustration className="absolute inset-0 h-full w-full text-navy/20" litClassName="text-gold" />
+            <Image
+              src="/microsite/about-interior.jpg"
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 20vw, 40vw"
+              className="object-cover object-[30%_20%] lg:object-[40%_center]"
+            />
           </div>
           <div className="relative -mt-10 ml-3 bg-navy px-3 py-4 text-white sm:-mt-20 sm:ml-8 sm:px-6 sm:py-8 lg:m-0 lg:px-10 lg:py-14">
             <ul className="flex flex-col">

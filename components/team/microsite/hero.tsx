@@ -42,8 +42,10 @@ function Portrait({ name, photoUrl }: { name: string; photoUrl: string | null })
 
 /**
  * Split hero: name, tagline, paragraph and the page's one brass button on the
- * left over a faint skyline; the portrait fills the right ~45% to the edge,
- * its left edge fading into the cream. The split holds at every width (the
+ * left over the owner's interior photo (cream wall behind the text, the window
+ * and skyline towards the portrait), washed with a cream gradient so the text
+ * keeps its contrast; the portrait fills the right ~45% to the edge, its left
+ * edge masked so it fades into the photo rather than into a cream seam. The split holds at every width (the
  * owner asked for the desktop composition scaled down on phones): the text
  * column narrows and the name, copy and button shrink instead of stacking.
  * Phones get "Inquire now" as the brass button; desktop keeps "View listings".
@@ -51,18 +53,33 @@ function Portrait({ name, photoUrl }: { name: string; photoUrl: string | null })
 export function MicrositeHero({ specialist }: { specialist: PublicSpecialist }) {
   return (
     <section aria-labelledby="hero-name" className="relative isolate overflow-hidden bg-cream">
-      <Skyline className="absolute inset-x-0 bottom-0 -z-10 h-[70%] w-[60%] text-navy/[0.06] [mask-image:linear-gradient(to_top,black_30%,transparent)]" />
+      {/* Background photo (decorative). Positioned so the cream wall and
+          curtain sit behind the text and the window/skyline opens up just
+          before the portrait. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10">
+        <Image
+          src="/microsite/hero-bg.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          preload
+          className="object-cover object-[20%_center] lg:object-[80%_center]"
+        />
+        {/* Cream wash: solid behind the text column, clearing towards the window. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-cream from-55% via-cream/90 via-65% to-cream/0 to-90% sm:from-35% sm:via-58% sm:to-85% lg:from-15% lg:via-cream/85 lg:via-38% lg:to-62%" />
+      </div>
 
-      {/* Portrait: right-hand, full-height bleed at every width. */}
-      <div className="absolute inset-y-0 right-0 w-[42%] lg:w-[45%]">
+      {/* Portrait: right-hand, full-height bleed at every width. A photo is
+          masked on its left edge so it melts into the background photo; the
+          initials plate keeps a crisp edge. */}
+      <div
+        className={`absolute inset-y-0 right-0 w-[42%] lg:w-[45%] ${
+          specialist.photoUrl
+            ? "[mask-image:linear-gradient(to_right,transparent,black_4rem)] sm:[mask-image:linear-gradient(to_right,transparent,black_6rem)] lg:[mask-image:linear-gradient(to_right,transparent,black_8rem)]"
+            : ""
+        }`}
+      >
         <Portrait name={specialist.name} photoUrl={specialist.photoUrl} />
-        {/* A photo fades into the cream; the initials plate keeps a crisp edge. */}
-        {specialist.photoUrl && (
-          <div
-            aria-hidden="true"
-            className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-cream to-transparent sm:w-24 lg:w-32"
-          />
-        )}
       </div>
 
       <div className="container-site">

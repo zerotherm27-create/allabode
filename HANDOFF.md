@@ -1,4 +1,103 @@
-# Current Handoff - 2026-08-06
+# Current Handoff - 2026-10-22
+
+Property specialists program (Phases 1-4 + extras) is built, pushed to `main`
+and deployed. Older sections below (2026-08-06) are still accurate for the
+Google Drive picker work. `CODEX_HANDOFF.md` was not updated.
+
+## Repo state
+
+- Workspace `/Users/jojo/allabode`; work happens on branch
+  `feature/property-specialists` and is pushed with
+  `git push origin feature/property-specialists:main` (Vercel does NOT always
+  auto-deploy a push; a production deploy was triggered by hand each time via the
+  Vercel API/MCP `create_deployment` from `main`).
+- Latest pushed commit: `9eec1bf feat(auth): property specialist variant of the
+  portal sign-in`. Working tree clean. Tests: 244 pass; `tsc` needs
+  `NODE_OPTIONS=--max-old-space-size=6144`.
+- Production: https://allabodeph.com ; specialist sites `<name>.allabodeph.com`
+  (wildcard CNAME at GoDaddy, each subdomain attached through the Vercel API).
+
+## What was built (all invite-only, "property specialist" wording, gender-neutral copy)
+
+1. **Specialist accounts + listings (Phase 1/2):** `specialists` table, approval
+   flow, `/team`, microsite at `<name>.allabodeph.com` (proxy.ts rewrites to
+   `/team/<slug>`), hide/show toggle, photos at `public/microsite/*`, "Backed by
+   All Abode PH" section now uses `public/microsite/firm-skyline.png`.
+2. **Leads inbox + stages (Phase 3):** `inquiries.specialist_id/lead_stage/
+   consent_followup/consent_at/unsubscribed_at/unsub_token`. `/api/leads` calls
+   the service-role-only RPCs `create_specialist_inquiry` /
+   `create_listing_inquiry` after its origin/Turnstile checks (falls back to the
+   old anon insert, never loses a lead). Specialist pages:
+   `/dashboard/specialist/leads`. Admin assign/unassign on `/admin/inquiries`.
+   Company inbox is emailed first, specialist is copied.
+3. **Follow-up email automation:** `lib/nurture/*` (render, schedule, enrol,
+   send, override validation), daily cron `/api/cron/send-lead-followups`
+   (GET+POST, `cronAuthorized`), `/unsubscribe/[token]` + one-click POST.
+   Sender: `"<Specialist> via All Abode" <hello@mail.allabodeph.com>`, reply-to
+   the specialist (decided to KEEP this setup). Admin: `/admin/follow-ups`
+   (templates, deactivate not delete) + `/log`. Specialist: `/dashboard/specialist/
+   follow-ups` (master switch, per-email toggles, personal note, own editable
+   version of each customer email, test send). Starter templates incl. a day-30
+   nurture email in `supabase/seeds/phase3-starter-email-templates.sql`.
+   **Sending is OFF unless `NURTURE_ENABLED=true`**; `NURTURE_DRY_RUN=true`
+   rehearses. Emails more than 5 days overdue are skipped (`too_late`).
+4. **Owner overview (Phase 4):** `/admin/specialists/overview` (listings by
+   status, leads by stage, stale New leads, follow-up stats) + strip on each
+   specialist detail page. Code in `lib/team/activity.ts`, `activity-data.ts`.
+5. **Profile polish:** gender-neutral "Use suggested text" for tagline/bio
+   (`lib/team/profile-suggest.ts`), new specialists get a prefilled bio,
+   "Complete your profile" checklist, photo/pose/background guidance + copyable
+   AI image prompt in the portrait uploader, specialists' own public contact
+   (mobile, Viber, Facebook, LinkedIn, public email), phone/Viber shown as
+   "Call me"/"Message me on Viber" links (digits not printed), option "Don't
+   show a call link on my page".
+6. **Other:** listing detail pop-up gallery is larger/sharper with thumbnail
+   strip + swipe (`components/listing-gallery.tsx`, `images.qualities [75,90]`
+   in next.config.ts); About photo/navy panel aligned on phones; follow-up toggle
+   knob fixed; `/portal/login?for=specialist` variant (no owner/tenant wording,
+   no "Create one"); CLAUDE.md has a Phase 3 entry.
+
+## Database migrations (ALL already run by the owner in the SQL editor)
+
+`20261020100000_specialists`, `20261021100000_specialist_visibility`,
+`20261022100000_leads_and_nurture` (+ `.superpowers/sdd/phase3-rls-checks.sql`
+reported 91 PASS), starter-email seed, `20261023100000_specialist_public_contact`,
+`20261023110000_specialist_template_overrides`,
+`20261023120000_specialist_hide_call_link`. `supabase/setup-storage.sql` was
+re-run earlier.
+
+## Still open (owner side)
+
+- Verify `mail.allabodeph.com` in Resend (DNS at GoDaddy); add a `_dmarc` TXT
+  record (`v=DMARC1; p=none; rua=mailto:...`) at the root domain.
+- Broker sign-off on the new privacy-policy section and the extended consent
+  checkbox wording.
+- Dry run then go live: set `NURTURE_DRY_RUN=true` + `NURTURE_ENABLED=true` in
+  Vercel, redeploy, check `/admin/follow-ups/log`, then remove DRY_RUN.
+  Confirm `CRON_SECRET` and `SUPABASE_SERVICE_ROLE_KEY` are set on Vercel.
+- Specialists (jojo is the test one) should set a real photo, bio and contact
+  details; jojo's bio still has test text.
+
+## Known gaps / follow-ups
+
+- The 7 older cron routes still export only POST (they never ran in production);
+  enabling them is a separate owner decision (they generate invoices/emails).
+- Replies to follow-up emails are not tracked: specialists move the lead stage by
+  hand; sequences stop on Viewing/Negotiating/Closed/Lost, Spam, unsubscribe,
+  suspension. Idea if wanted: Resend inbound or a one-click "I've spoken to this lead".
+- Two same-email submissions within milliseconds can both enrol; test-email rate
+  limit is in-memory per instance.
+- Leads migration is 655 lines (over the 500-line guideline).
+- Anon can read all columns of live listings (private owner fields); no
+  `error.tsx`; AI helper actions lack auth; portfolio fields (testimonials,
+  closed deals, social, intro video) are designed in
+  `docs/superpowers/specs/2026-10-21-specialist-portfolio-fields-design.md`, unbuilt.
+- Plain `/portal/login` still shows Owner/Tenant wording for specialists who
+  arrive without `?for=specialist`.
+
+---
+
+# Previous handoff - 2026-08-06
 
 Continuation notes still live in `memory.md` (local, gitignored) — read its
 2026-08-06 section first, it has full detail, this is the summary.

@@ -3,8 +3,9 @@
 // Renders an owner-written follow-up template. Templates are PLAIN TEXT with
 // {{merge_field}} placeholders (no HTML authoring): blank lines separate
 // paragraphs, single newlines become line breaks, and bare http(s) URLs typed
-// in the template become links (merge values are never auto-linked; only the
-// server-built URL fields are). Every literal character AND every merge value is HTML-escaped, so
+// in the template become links unless opts.linkBodyUrls is false, as it is for
+// a property specialist's own version (merge values are never auto-linked;
+// only the server-built URL fields are). Every literal character AND every merge value is HTML-escaped, so
 // neither the template nor a visitor-supplied value (a lead's name) can inject
 // markup. Unknown fields render empty. The result has an HTML body and a
 // plain-text twin, each ending with the same footer.
@@ -113,16 +114,17 @@ function valueHtml(key: string, v: string): string {
 }
 
 /** Escapes the template and every value in one pass, so nothing is escaped twice or missed. */
-function fillHtml(template: string, vars: TemplateVars): string {
+function fillHtml(template: string, vars: TemplateVars, linkBody = true): string {
   const src = String(template ?? "").replace(/\r\n?/g, "\n");
+  const lit = (s: string) => (linkBody ? linkify(escapeHtml(s)) : escapeHtml(s));
   let out = "";
   let last = 0;
   for (const m of src.matchAll(FIELD)) {
-    out += linkify(escapeHtml(src.slice(last, m.index)));
+    out += lit(src.slice(last, m.index));
     out += valueHtml(m[1].toLowerCase(), value(vars, m[1].toLowerCase()));
     last = (m.index ?? 0) + m[0].length;
   }
-  out += linkify(escapeHtml(src.slice(last)));
+  out += lit(src.slice(last));
   return out;
 }
 
@@ -146,7 +148,22 @@ function footerLines(f: FooterInfo): { reason: string; company: string[]; unsubs
   };
 }
 
-export function renderTemplate(template: TemplateSource, vars: TemplateVars, footer: FooterInfo): RenderedEmail {
+export type RenderOptions = {
+  /**
+   * Turn bare http(s) URLs typed in the body into links (default true, for the
+   * owner's templates). A property specialist's own version renders with this
+   * off, so URLs they type stay plain text; the server-built URL merge fields
+   * are still linked.
+   */
+  linkBodyUrls?: boolean;
+};
+
+export function renderTemplate(
+  template: TemplateSource,
+  vars: TemplateVars,
+  footer: FooterInfo,
+  opts: RenderOptions = {},
+): RenderedEmail {
   const subject = renderSubject(template.subject, vars);
   const f = footerLines(footer);
 
@@ -163,7 +180,7 @@ export function renderTemplate(template: TemplateSource, vars: TemplateVars, foo
   const text = `${textBody}\n\n${textFooter}\n`;
 
   // ---- html ----
-  const htmlParas = paragraphs(fillHtml(template.body, vars))
+  const htmlParas = paragraphs(fillHtml(template.body, vars, opts.linkBodyUrls !== false))
     .map((p) => `<p style="margin:0 0 16px">${p.replace(/\n/g, "<br>")}</p>`)
     .join("");
   const unsub = f.unsubscribe

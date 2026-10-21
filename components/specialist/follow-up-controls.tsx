@@ -54,13 +54,13 @@ function Switch({
     >
       <span
         aria-hidden
-        className={`relative block h-6 w-11 rounded-sm border transition-colors ${
+        className={`relative block h-6 w-11 shrink-0 overflow-hidden rounded-sm border transition-colors ${
           checked ? "border-navy bg-navy" : "border-line bg-surface-gray"
         }`}
       >
         <span
-          className={`absolute top-0.5 size-4 rounded-sm bg-white shadow transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0.5"
+          className={`absolute left-0.5 top-0.5 size-4 rounded-sm bg-white shadow transition-transform ${
+            checked ? "translate-x-5" : "translate-x-0"
           } ${checked ? "" : "border border-line"}`}
         />
       </span>

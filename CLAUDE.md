@@ -101,6 +101,31 @@ per-task). Read both before any `/impeccable` design command.
 
 ## Build status (updated — resume here)
 
+**BUILT, NOT YET LIVE — Specialist leads inbox + automatic follow-up emails (Phase 3):**
+Committed on `feature/property-specialists`, not pushed, **never run against a real DB**.
+- Migration `supabase/migrations/20261022100000_leads_and_nurture.sql` (**user must run it
+  in the SQL editor, then paste `.superpowers/sdd/phase3-rls-checks.sql`; run it
+  right before deploying the intake code**, otherwise leads in the gap are untagged
+  house leads). Then paste `supabase/seeds/phase3-starter-email-templates.sql`.
+  Adds `inquiries.specialist_id/lead_stage/consent_followup/consent_at/unsubscribed_at/
+  unsub_token`, tables `email_templates` (audience `lead`|`specialist`, key `template_key`),
+  `specialist_email_settings`, `specialist_template_prefs`, `lead_email_sends`
+  (unique inquiry+template), `email_suppressions`. `create_specialist_inquiry` /
+  `create_listing_inquiry` are **service_role-only** (called from `/api/leads` after its
+  origin/Turnstile/rate-limit checks); anon direct inserts can never set consent.
+  DB triggers skip queued sends on stage change/unsubscribe.
+- Code: `lib/nurture/*` (render, schedule, enrol, send), `lib/leads/*`,
+  `/api/cron/send-lead-followups` (GET+POST, daily, `cronAuthorized`),
+  `/unsubscribe/[token]` + one-click POST, specialist `/dashboard/specialist/{leads,follow-ups}`,
+  admin `/admin/follow-ups` (+ `/log`), assign/unassign on `/admin/inquiries`,
+  privacy policy section + extended consent checkbox (**wording needs broker sign-off**).
+- Sending is off unless `NURTURE_ENABLED=true`; `NURTURE_DRY_RUN=true` rehearses.
+  Sender `"<Specialist> via All Abode" <hello@mail.allabodeph.com>`, reply-to the specialist
+  (owner must add Resend DNS records for `mail.allabodeph.com` at GoDaddy first).
+  Needs `CRON_SECRET` and `SUPABASE_SERVICE_ROLE_KEY` on Vercel.
+- Known: the 7 older cron routes still export only POST (never run); the test-email rate
+  limit is in-memory; two same-email submissions within ms can both enrol.
+
 **DONE — Property specialists (Phase 1 of 4):** property specialists get their own
 accounts, a public profile, and can list properties (owner-approved).
 - Migration `supabase/migrations/20261020100000_specialists.sql` — `specialists`

@@ -11,6 +11,9 @@ import type { PublicSpecialist } from "@/lib/team/public-queries";
  * "Contact me": company contact details from Admin Settings (the public
  * specialist view has no phone or email) beside the message form. Anchor
  * target of every "Contact" / "Inquire now" / "Get in touch" link.
+ * Two columns from 560px up (as the mobile mockup); narrower phones stack
+ * the details above the form so the fields (and the 300px-wide Turnstile
+ * check) stay full width and usable.
  */
 export async function MicrositeContact({ specialist }: { specialist: PublicSpecialist }) {
   const settings = await getSettings();
@@ -26,27 +29,27 @@ export async function MicrositeContact({ specialist }: { specialist: PublicSpeci
   ].filter((d): d is { icon: string; label: string; href: string | null } => d !== null);
 
   return (
-    <section id="contact" aria-labelledby="contact-heading" className="scroll-mt-20 bg-cream py-section">
-      <div className="container-site grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-0">
-        <Reveal className="lg:border-r lg:border-line lg:pr-16">
-          <h2 id="contact-heading" className="font-display text-3xl font-bold text-navy sm:text-4xl">
+    <section id="contact" aria-labelledby="contact-heading" className="scroll-mt-20 bg-cream py-10 sm:py-14 lg:py-section">
+      <div className="container-site grid grid-cols-1 gap-8 min-[560px]:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] min-[560px]:gap-0 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <Reveal className="min-w-0 min-[560px]:border-r min-[560px]:border-line min-[560px]:pr-5 sm:pr-8 lg:pr-16">
+          <h2 id="contact-heading" className="font-display text-2xl font-bold text-navy sm:text-4xl">
             {CONTACT_COPY.heading}
           </h2>
-          <p className="mt-3 leading-relaxed text-slate">{CONTACT_COPY.sub}</p>
-          <ul className="mt-8 flex flex-col gap-1">
+          <p className="mt-2 text-sm leading-relaxed text-slate sm:mt-3 sm:text-base">{CONTACT_COPY.sub}</p>
+          <ul className="mt-5 flex flex-col sm:mt-8 sm:gap-1">
             {details.map((d) => (
               <li key={d.icon}>
                 {d.href ? (
                   <a
                     href={d.href}
-                    className="flex min-h-[44px] items-center gap-4 break-all text-ink transition-colors hover:text-navy-700"
+                    className="flex min-h-[44px] items-center gap-2.5 break-all text-ink transition-colors hover:text-navy-700 max-sm:text-sm sm:gap-4"
                   >
-                    <Icon name={d.icon} size={22} className="shrink-0 text-navy-700" />
+                    <Icon name={d.icon} size={22} className="size-[18px] shrink-0 text-navy-700 sm:size-[22px]" />
                     {d.label}
                   </a>
                 ) : (
-                  <p className="flex min-h-[44px] items-center gap-4 text-ink">
-                    <Icon name={d.icon} size={22} className="shrink-0 text-navy-700" />
+                  <p className="flex min-h-[44px] items-center gap-2.5 text-ink max-sm:text-sm sm:gap-4">
+                    <Icon name={d.icon} size={22} className="size-[18px] shrink-0 text-navy-700 sm:size-[22px]" />
                     {d.label}
                   </p>
                 )}
@@ -54,7 +57,7 @@ export async function MicrositeContact({ specialist }: { specialist: PublicSpeci
             ))}
           </ul>
         </Reveal>
-        <Reveal delay={0.08} className="min-w-0 lg:pl-16">
+        <Reveal delay={0.08} className="min-w-0 min-[560px]:pl-5 sm:pl-8 lg:pl-16">
           <MicrositeContactForm specialistSlug={specialist.slug} specialistName={specialist.name} />
         </Reveal>
       </div>

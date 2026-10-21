@@ -43,7 +43,9 @@ export function MicrositeHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-surface">
       <div className="container-site flex h-[4.5rem] items-center justify-between gap-6">
-        <Logo variant="color" className="h-10 sm:h-11" href={`${APEX_ORIGIN}/`} />
+        <div className="flex [&>a]:min-h-11">
+          <Logo variant="color" className="h-10 sm:h-11" href={`${APEX_ORIGIN}/`} />
+        </div>
 
         <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-1">

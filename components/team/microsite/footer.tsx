@@ -22,7 +22,8 @@ const NETWORKS: { network: SocialNetwork; key: string }[] = [
 /**
  * Navy microsite footer: logo, the same anchor nav as the header, the
  * company's social links from Admin Settings (any without a URL is skipped),
- * then the shared legal row with absolute links to the main site.
+ * then the shared legal row with absolute links to the main site. Phones:
+ * logo and socials share the first row, the nav wraps underneath.
  */
 export async function MicrositeFooter() {
   const settings = await getSettings();
@@ -32,13 +33,13 @@ export async function MicrositeFooter() {
 
   return (
     <footer className="bg-navy text-white">
-      <div className="container-site flex flex-col gap-8 py-10 md:py-12 lg:flex-row lg:items-center lg:justify-between">
-        <div className="shrink-0">
-          <Logo variant="white" className="h-12" href={`${APEX_ORIGIN}/`} />
+      <div className="container-site flex flex-wrap items-center justify-between gap-x-3 gap-y-3 py-6 md:py-12 lg:flex-nowrap lg:gap-8">
+        <div className="flex shrink-0 lg:block [&>a]:min-h-11">
+          <Logo variant="white" className="h-8 sm:h-10 lg:h-12" href={`${APEX_ORIGIN}/`} />
         </div>
 
-        <nav aria-label="Footer">
-          <ul className="flex flex-wrap gap-x-2 gap-y-1 sm:gap-x-4">
+        <nav aria-label="Footer" className="order-last w-full lg:order-none lg:w-auto">
+          <ul className="-ml-1 flex flex-wrap gap-x-2 sm:gap-x-4 lg:ml-0 lg:gap-y-1">
             {MICROSITE_NAV.map((item) => (
               <li key={item.label}>
                 <a
@@ -53,7 +54,7 @@ export async function MicrositeFooter() {
         </nav>
 
         {socials.length > 0 && (
-          <ul aria-label="All Abode on social media" className="flex items-center gap-2">
+          <ul aria-label="All Abode on social media" className="flex items-center gap-1 sm:gap-2">
             {socials.map(({ network, href }) => (
               <li key={network}>
                 <a

@@ -6,8 +6,7 @@ import { Icon } from "@/components/icon";
 /**
  * "View all properties": the remaining cards are server-rendered and simply
  * revealed in place (no navigation, which a specialist subdomain would
- * redirect). The toggle sits in the section header on desktop and under the
- * grid on phones; both control the same region.
+ * redirect). The single toggle sits under the grid.
  */
 export function ListingsExpander({
   first,

@@ -1,4 +1,3 @@
-import { ChatWidget } from "@/components/chat/chat-widget";
 import { JsonLd, organizationSchema } from "@/components/seo/json-ld";
 import { SiteContentProtection } from "@/components/site-content-protection";
 import { MicrositeHeader } from "@/components/team/microsite/header";
@@ -38,7 +37,6 @@ export default async function ProfileLayout({ children }: { children: React.Reac
         {children}
       </main>
       <MicrositeFooter />
-      <ChatWidget />
     </div>
   );
 }

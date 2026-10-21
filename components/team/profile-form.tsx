@@ -1,10 +1,17 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { type FocusEvent, useActionState, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Field, Input, Textarea } from "@/components/forms/fields";
 import { PROFILE_LIMITS, parseList, parseYears } from "@/lib/team/profile";
 import { suggestBio, suggestTagline } from "@/lib/team/profile-suggest";
+import {
+  PUBLIC_CONTACT_LIMITS,
+  normalizeFacebookUrl,
+  normalizeLinkedInUrl,
+  normalizePhone,
+  normalizePublicEmail,
+} from "@/lib/team/public-contact";
 import {
   updateSpecialistProfile,
   type SpecialistProfileState,
@@ -19,6 +26,21 @@ export type ProfileValues = {
   areas: string;
   specialties: string;
   languages: string;
+  publicPhone: string;
+  publicViber: string;
+  publicFacebook: string;
+  publicLinkedIn: string;
+  publicEmail: string;
+};
+
+type ContactKey = "phone" | "viber" | "facebook" | "linkedin" | "email";
+
+const CONTACT_CHECKS: Record<ContactKey, (v: string) => { ok: true } | { ok: false; error: string }> = {
+  phone: (v) => normalizePhone(v, "Mobile number"),
+  viber: (v) => normalizePhone(v, "Viber number"),
+  facebook: normalizeFacebookUrl,
+  linkedin: normalizeLinkedInUrl,
+  email: normalizePublicEmail,
 };
 
 const idle: SpecialistProfileState = { ok: false, message: "" };
@@ -82,6 +104,11 @@ export function SpecialistProfileForm({
   const [tagline, setTagline] = useState(values.tagline);
   const [bio, setBio] = useState(values.bio);
   const formRef = useRef<HTMLFormElement>(null);
+  const [contactErrors, setContactErrors] = useState<Partial<Record<ContactKey, string>>>({});
+  const checkContact = (key: ContactKey) => (e: FocusEvent<HTMLInputElement>) => {
+    const r = CONTACT_CHECKS[key](e.currentTarget.value);
+    setContactErrors((prev) => ({ ...prev, [key]: r.ok ? "" : r.error }));
+  };
 
   function current() {
     const fd = new FormData(formRef.current ?? undefined);
@@ -138,7 +165,7 @@ export function SpecialistProfileForm({
       />
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Phone">
+        <Field label="Phone" hint="Private. Only All Abode sees this.">
           <Input
             name="phone"
             type="tel"
@@ -166,6 +193,75 @@ export function SpecialistProfileForm({
       <Field label="Languages" hint="Separate with commas, for example English, Filipino.">
         <Input name="languages" defaultValue={values.languages} />
       </Field>
+
+      <fieldset className="flex flex-col gap-5 rounded-md border border-line p-4">
+        <legend className="px-1 text-sm font-semibold text-navy">Public contact details</legend>
+        <p className="-mt-2 flex items-start gap-2 text-sm text-ink">
+          <Icon name="info" size={18} className="mt-0.5 shrink-0 text-navy-700" />
+          Anything you add here is shown publicly on your page. Leave blank to use the company details.
+        </p>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Mobile number" hint="For example 0917 123 4567." error={contactErrors.phone}>
+            <Input
+              name="public_phone"
+              type="tel"
+              inputMode="tel"
+              defaultValue={values.publicPhone}
+              maxLength={PUBLIC_CONTACT_LIMITS.phone}
+              autoComplete="off"
+              onBlur={checkContact("phone")}
+            />
+          </Field>
+          <Field label="Viber number" hint="The number your Viber account uses." error={contactErrors.viber}>
+            <Input
+              name="public_viber"
+              type="tel"
+              inputMode="tel"
+              defaultValue={values.publicViber}
+              maxLength={PUBLIC_CONTACT_LIMITS.phone}
+              autoComplete="off"
+              onBlur={checkContact("viber")}
+            />
+          </Field>
+        </div>
+        <Field label="Facebook link" hint="For example facebook.com/yourpage." error={contactErrors.facebook}>
+          <Input
+            name="public_facebook_url"
+            type="url"
+            inputMode="url"
+            defaultValue={values.publicFacebook}
+            maxLength={PUBLIC_CONTACT_LIMITS.url}
+            autoComplete="off"
+            onBlur={checkContact("facebook")}
+          />
+        </Field>
+        <Field label="LinkedIn link" hint="For example linkedin.com/in/yourname." error={contactErrors.linkedin}>
+          <Input
+            name="public_linkedin_url"
+            type="url"
+            inputMode="url"
+            defaultValue={values.publicLinkedIn}
+            maxLength={PUBLIC_CONTACT_LIMITS.url}
+            autoComplete="off"
+            onBlur={checkContact("linkedin")}
+          />
+        </Field>
+        <Field
+          label="Public email"
+          hint="Shown on your page. Your sign-in email stays private."
+          error={contactErrors.email}
+        >
+          <Input
+            name="public_email"
+            type="email"
+            inputMode="email"
+            defaultValue={values.publicEmail}
+            maxLength={PUBLIC_CONTACT_LIMITS.email}
+            autoComplete="off"
+            onBlur={checkContact("email")}
+          />
+        </Field>
+      </fieldset>
 
       <section aria-labelledby="licence-heading" className="rounded-md border border-line p-4">
         <h2 id="licence-heading" className="text-sm font-semibold text-navy">Accreditation</h2>

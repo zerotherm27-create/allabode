@@ -35,6 +35,15 @@ export default async function SpecialistProfilePage() {
   const row = data as Row | null;
   if (!row) redirect(homeForRole(role));
 
+  // Separate, tolerant read: before 20261023100000_specialist_public_contact.sql
+  // is run these columns don't exist, and the page must still load.
+  const { data: pc } = await supabase
+    .from("specialists")
+    .select("public_phone,public_viber,public_facebook_url,public_linkedin_url,public_email")
+    .eq("id", specialistId)
+    .maybeSingle();
+  const contact = (pc ?? {}) as Partial<Record<string, string | null>>;
+
   let photoUrl: string | null = null;
   if (row.photo_path) {
     const { data: pub } = supabase.storage.from("specialist-photos").getPublicUrl(row.photo_path);
@@ -50,6 +59,11 @@ export default async function SpecialistProfilePage() {
     areas: (row.areas ?? []).join(", "),
     specialties: (row.specialties ?? []).join(", "),
     languages: (row.languages ?? []).join(", "),
+    publicPhone: contact.public_phone ?? "",
+    publicViber: contact.public_viber ?? "",
+    publicFacebook: contact.public_facebook_url ?? "",
+    publicLinkedIn: contact.public_linkedin_url ?? "",
+    publicEmail: contact.public_email ?? "",
   };
   // Read-only: the same fixed label every specialist shows publicly.
   const licence = specialistTitleLine();

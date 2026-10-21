@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { isValidSpecialistSlug, specialistPhotoUrl } from "@/lib/team/queries";
+import { safeStoredContact, type PublicContact } from "@/lib/team/public-contact";
 
 /**
  * Public, read-only access to approved property specialists via the
@@ -15,6 +16,17 @@ const db = url && key ? createClient(url, key) : null;
 
 const COLS =
   "id,slug,display_name,tagline,bio,areas,specialties,languages,years_experience,photo_path";
+
+/** Added by 20261023100000_specialist_public_contact.sql; read in a separate, tolerant query. */
+const CONTACT_COLS = "public_phone,public_viber,public_facebook_url,public_linkedin_url,public_email";
+
+const NO_CONTACT: PublicContact = {
+  public_phone: null,
+  public_viber: null,
+  public_facebook_url: null,
+  public_linkedin_url: null,
+  public_email: null,
+};
 
 type Row = {
   id: string;
@@ -40,6 +52,9 @@ export type PublicSpecialist = {
   languages: string[];
   yearsExperience: number | null;
   photoUrl: string | null;
+  /** The specialist's own published contact details (each null = use the company value).
+   *  Only loaded by getPublicSpecialist(); always all-null in the directory list. */
+  contact: PublicContact;
 };
 
 function mapRow(r: Row): PublicSpecialist {
@@ -54,6 +69,7 @@ function mapRow(r: Row): PublicSpecialist {
     languages: r.languages ?? [],
     yearsExperience: r.years_experience,
     photoUrl: specialistPhotoUrl(r.photo_path),
+    contact: NO_CONTACT,
   };
 }
 
@@ -79,8 +95,31 @@ export async function getPublicSpecialist(slug: string): Promise<PublicSpecialis
       .eq("slug", slug)
       .maybeSingle();
     if (error || !data) return null;
-    return mapRow(data as Row);
+    const specialist = mapRow(data as Row);
+    specialist.contact = await getPublicContact(slug);
+    return specialist;
   } catch {
     return null;
+  }
+}
+
+/**
+ * The published contact details for one slug. Separate from the main query so
+ * a missing column (migration not run yet) or any other failure only drops
+ * these details (all null = company details) instead of the whole page.
+ * Stored values are re-validated before they can become links.
+ */
+async function getPublicContact(slug: string): Promise<PublicContact> {
+  if (!db) return NO_CONTACT;
+  try {
+    const { data, error } = await db
+      .from("public_specialists")
+      .select(CONTACT_COLS)
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error || !data) return NO_CONTACT;
+    return safeStoredContact(data as Partial<PublicContact>);
+  } catch {
+    return NO_CONTACT;
   }
 }

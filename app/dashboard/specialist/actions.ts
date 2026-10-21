@@ -23,6 +23,7 @@ import {
   portraitError,
   portraitKey,
 } from "@/lib/team/profile";
+import { PUBLIC_CONTACT_LIMITS, parsePublicContact } from "@/lib/team/public-contact";
 
 export type SpecialistProfileState = { ok: boolean; message: string };
 
@@ -76,6 +77,17 @@ export async function updateSpecialistProfile(
   const years = parseYears(text(fd, "years_experience", 4));
   if (years === undefined) return fail("Years of experience must be a whole number from 0 to 80.");
 
+  // Public contact details (opt-in; blank = use the company details).
+  // Over-long input is refused by the validator rather than silently cut.
+  const contact = parsePublicContact({
+    phone: text(fd, "public_phone", PUBLIC_CONTACT_LIMITS.phone + 1),
+    viber: text(fd, "public_viber", PUBLIC_CONTACT_LIMITS.phone + 1),
+    facebook: text(fd, "public_facebook_url", PUBLIC_CONTACT_LIMITS.url + 1),
+    linkedin: text(fd, "public_linkedin_url", PUBLIC_CONTACT_LIMITS.url + 1),
+    email: text(fd, "public_email", PUBLIC_CONTACT_LIMITS.email + 1),
+  });
+  if (!contact.ok) return fail(contact.error);
+
   const update: Record<string, unknown> = {
     display_name: displayName,
     tagline: text(fd, "tagline", PROFILE_LIMITS.tagline) || null,
@@ -98,9 +110,30 @@ export async function updateSpecialistProfile(
   if (error) return fail(error.message);
   if (!data || data.length === 0) return fail("Your profile wasn't saved. Try again.");
 
+  // Written separately so the rest of the profile still saves before the
+  // public-contact migration has been run (the columns then don't exist).
+  const { data: cData, error: cErr } = await me.supabase
+    .from("specialists")
+    .update(contact.value)
+    .eq("id", me.id)
+    .select("id");
+  const contactMissing = cErr && (cErr.code === "42703" || cErr.code === "PGRST204");
+  const anyContact = Object.values(contact.value).some((v) => v !== null);
+
   revalidatePath("/dashboard/specialist/profile");
   revalidatePath("/dashboard/specialist");
   revalidateProfilePages(me.subdomain);
+
+  if (cErr && !(contactMissing && !anyContact)) {
+    return fail(
+      contactMissing
+        ? "Your profile was saved, but public contact details can't be saved yet. Contact All Abode."
+        : `Your profile was saved, but the public contact details weren't. ${cErr.message}`,
+    );
+  }
+  if (!cErr && (!cData || cData.length === 0)) {
+    return fail("Your profile was saved, but the public contact details weren't. Try again.");
+  }
   return done("Profile saved. Changes are live now.");
 }
 

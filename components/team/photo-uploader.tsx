@@ -10,17 +10,20 @@ import {
 
 const idle: SpecialistProfileState = { ok: false, message: "" };
 
-/** For restyling a specialist's own real photo in an AI image editor; never for inventing a person. */
-const EDIT_PROMPT = `Edit the attached photo of me into a professional real estate portrait. Keep my face, skin tone, hair, expression and body exactly as they are. Do not retouch, slim, age or change my features.
+/** Style prompt for an AI image tool. Specialists attach their own photo where the tool allows it. */
+const EDIT_PROMPT = `Professional corporate headshot portrait of a friendly real estate professional, vertical 4:5 composition.
 
-Change only the following:
-- Vertical portrait, 4:5 ratio (800 x 1000 px).
-- Replace the background with a plain, softly blurred light neutral backdrop in warm off-white or soft grey, or a softly blurred bright modern office or lobby. No navy, black or very dark tones, and no pure white.
-- Soft, even, natural window-style light on my face, with gentle shadows and no harsh glare.
-- Frame me head and shoulders, centred, looking at the camera, with some space above my head. Keep my face in the top two-thirds of the frame.
-- Keep my clothing as it is. If it blends into the background, adjust the background tone rather than my clothing.
-- Do not change my pose. If my hands or arms look awkward, crop them out of the frame instead of redrawing them.
-- Sharp focus on my eyes, natural colours, clean professional look. No filters, text, watermarks, props or extra people.`;
+Pose: seated or standing tall with relaxed shoulders, body angled about 25 degrees away from the camera, head turned back to face the lens, chin slightly forward and down, natural warm smile that reaches the eyes, looking straight into the camera. Hands and arms out of frame.
+
+Framing: head and shoulders with a little chest, subject centred, clear space above the head, eyes about one third down from the top of the frame, face in the upper two-thirds.
+
+Background: plain, softly blurred light neutral backdrop in warm off-white or soft grey, or a softly blurred bright modern office lobby. No dark, navy or black tones, no pure white, no busy details.
+
+Lighting: soft, even, natural window-style light on the face, gentle shadows, no harsh glare, natural skin texture.
+
+Clothing: smart business attire, such as a navy or charcoal blazer over a light shirt, clearly contrasting with the background.
+
+Style: realistic photograph, 85mm portrait lens look, shallow depth of field, sharp focus on the eyes, natural colours, clean and professional. No text, watermark, logo, props, filters or extra people.`;
 
 function EditPromptHelp() {
   const [copied, setCopied] = useState<"yes" | "no" | "failed">("no");
@@ -36,14 +39,14 @@ function EditPromptHelp() {
   return (
     <details className="group mt-4 rounded-md border border-line bg-surface-gray">
       <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-medium text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700">
-        Want help getting the right look? Restyle your own photo with an AI editor
+        Want help getting the right look? Use this AI image prompt
         <Icon name="expand_more" size={18} className="shrink-0 transition-transform group-open:rotate-180" />
       </summary>
       <div className="border-t border-line px-4 pb-4 pt-3 text-sm text-slate">
         <p>
-          Upload your own photo to an image editor that accepts a photo plus an instruction (such as ChatGPT or
-          Gemini) and paste this prompt. Use your real photo, since clients will meet you. Check that your face is
-          unchanged, then crop and save it here.
+          Paste this prompt into an AI image tool (such as ChatGPT or Gemini) to get a photo in our style. Clients
+          will meet you, so attach your own photo if the tool allows it and add: &ldquo;Use the person in the attached
+          photo and keep my face unchanged.&rdquo; Check the result looks like you, then crop and save it here.
         </p>
         <pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap rounded-md border border-line bg-surface p-3 text-xs text-ink">
           {EDIT_PROMPT}

@@ -8,7 +8,7 @@ import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 import { CONTACT_COPY } from "@/lib/team/profile-copy";
 import type { PublicSpecialist } from "@/lib/team/public-queries";
-import { formatPhone, telHref, viberHref } from "@/lib/team/public-contact";
+import { telHref, viberHref } from "@/lib/team/public-contact";
 
 type Detail = {
   key: string;
@@ -31,7 +31,8 @@ const glyph = (network: SocialNetwork) => (
  * "Contact me": the specialist's own published contact details where they
  * have filled them in, otherwise the company contact details from Admin
  * Settings, beside the message form. Mobile and email fall back per row to the
- * company values; Viber, Facebook and LinkedIn rows only appear when the
+ * company values; phone and Viber show as "Call me" / "Message me on Viber"
+ * links, never as printed digits; Viber, Facebook and LinkedIn rows only appear when the
  * specialist has added them (the company's socials stay in the footer).
  * Anchor target of every "Contact" / "Inquire now" / "Get in touch" link.
  * Two columns from 560px up (as the mobile mockup); narrower phones stack
@@ -45,11 +46,12 @@ export async function MicrositeContact({ specialist }: { specialist: PublicSpeci
   const companyEmail = s(settings, "contact_email").trim();
   const location = s(settings, "contact_location").trim();
 
-  const phone = own.public_phone
-    ? { label: formatPhone(own.public_phone), href: telHref(own.public_phone) }
-    : companyPhone
-      ? { label: companyPhone, href: telHref(companyPhone) }
-      : null;
+  // The number itself is not printed on the page: it sits behind a "Call me" link that dials
+  // when tapped (the digits remain in the link target, so this hides, not secures, the number).
+  const phoneHref = own.public_phone ? telHref(own.public_phone) : companyPhone ? telHref(companyPhone) : null;
+  const phone = phoneHref
+    ? { label: "Call me", href: phoneHref, ariaLabel: `Call ${specialist.name}` }
+    : null;
   const email = own.public_email ?? (companyEmail || null);
 
   const rows: (Detail | null)[] = [
@@ -58,7 +60,7 @@ export async function MicrositeContact({ specialist }: { specialist: PublicSpeci
       ? {
           key: "viber",
           icon: glyph("viber"),
-          label: `Viber ${formatPhone(own.public_viber)}`,
+          label: "Message me on Viber",
           href: viberHref(own.public_viber),
           ariaLabel: `Message ${specialist.name} on Viber`,
         }

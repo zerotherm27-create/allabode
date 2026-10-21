@@ -1,9 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { LEAD_TYPES, isTrustedOrigin, validateAndBuildRow, type LeadType } from "@/lib/leads/validate";
 import { checkAndIncrement, rateLimitKeyFromRequest } from "@/lib/leads/rate-limit";
 import { verifyTurnstile } from "@/lib/leads/turnstile";
 import { LEAD_HONEYPOT_FIELD, LEAD_MIN_SUBMIT_MS } from "@/lib/leads/constants";
+import {
+  buildSpecialistLeadEmail,
+  parseSpecialistSlug,
+  tagSpecialistInquiry,
+  type VerifiedSpecialist,
+} from "@/lib/leads/specialist-lead";
+import { getPublicSpecialist } from "@/lib/team/public-queries";
+import { getSpecialistLeadEmail } from "@/lib/team/lead-recipient";
+import { sendEmail } from "@/lib/email";
+import { getSettings, s } from "@/lib/settings";
+import { site } from "@/lib/site";
+import { getPublicSiteUrl } from "@/lib/url";
 
 /**
  * Lead intake endpoint. Accepts inquiry / viewing / appraisal /
@@ -12,6 +24,12 @@ import { LEAD_HONEYPOT_FIELD, LEAD_MIN_SUBMIT_MS } from "@/lib/leads/constants";
  *
  * When Supabase env vars are absent the route validates and logs only, so the
  * UI flow works end-to-end in local/preview without a database.
+ *
+ * An `inquiry` carrying a `specialist` slug (the microsite contact form) is
+ * tagged with that specialist only after the slug is verified against the
+ * public_specialists view; an unknown slug is ignored (plain inquiry). After
+ * the insert, a best-effort notification goes to the specialist and the
+ * company inbox via after(), so email can never delay or fail the response.
  */
 
 const MAX_BODY_BYTES = 15_000;
@@ -73,7 +91,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const { error } = await supabase.from(result.table).insert(result.row);
+  let row = result.row;
+  let specialist: VerifiedSpecialist | null = null;
+  const specialistSlug = type === "inquiry" ? parseSpecialistSlug(body.specialist) : null;
+  if (specialistSlug) {
+    const found = await getPublicSpecialist(specialistSlug);
+    if (found) {
+      specialist = { slug: found.slug, name: found.name };
+      row = tagSpecialistInquiry(row, specialist);
+    }
+  }
+
+  const { error } = await supabase.from(result.table).insert(row);
   if (error) {
     console.error("[lead:error]", type, error.message);
     return NextResponse.json(
@@ -82,5 +111,40 @@ export async function POST(request: Request) {
     );
   }
 
+  if (specialist) {
+    const notified = specialist;
+    const lead = row;
+    after(() => notifySpecialistLead(notified, lead));
+  }
+
   return NextResponse.json({ ok: true, persisted: true });
+}
+
+/** Emails the specialist (looked up server-side) and the company inbox. Never throws. */
+async function notifySpecialistLead(specialist: VerifiedSpecialist, row: Record<string, unknown>) {
+  try {
+    const [specialistEmail, settings] = await Promise.all([
+      getSpecialistLeadEmail(specialist.slug),
+      getSettings(),
+    ]);
+    const companyEmail = s(settings, "contact_email").trim() || site.email;
+    const recipients = [...new Set([specialistEmail, companyEmail].filter((e): e is string => !!e).map((e) => e.toLowerCase()))];
+    let adminUrl: string | null = null;
+    try {
+      adminUrl = new URL("/admin/inquiries", getPublicSiteUrl()).toString();
+    } catch {
+      adminUrl = null;
+    }
+    const { subject, html } = buildSpecialistLeadEmail({
+      specialistName: specialist.name,
+      name: String(row.name ?? ""),
+      email: String(row.email ?? ""),
+      phone: typeof row.phone === "string" ? row.phone : null,
+      message: typeof row.message === "string" ? row.message : null,
+      adminUrl,
+    });
+    await Promise.all(recipients.map((to) => sendEmail({ to, subject, html })));
+  } catch {
+    console.warn("[lead:notify] specialist notification failed");
+  }
 }

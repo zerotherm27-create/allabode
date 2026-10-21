@@ -3,6 +3,7 @@ import { StatusForm } from "@/components/admin/status-form";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { Icon } from "@/components/icon";
 import { updateInquiry, deleteInquiry } from "@/app/admin/actions";
+import { specialistSourceLabel } from "@/lib/leads/specialist-lead";
 
 const STATUSES = ["New", "Contacted", "Scheduled", "In progress", "Closed", "Spam"];
 
@@ -42,7 +43,9 @@ export default async function AdminInquiriesPage() {
             No inquiries yet.
           </p>
         )}
-        {rows.map((r) => (
+        {rows.map((r) => {
+          const source = specialistSourceLabel(r.details);
+          return (
           <article key={r.id} className="rounded-lg border border-line bg-surface p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -73,6 +76,12 @@ export default async function AdminInquiriesPage() {
                 </ConfirmActionForm>
               </div>
             </div>
+            {source && (
+              <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-navy-700">
+                <Icon name="person" size={16} />
+                {source}
+              </p>
+            )}
             {r.message && <p className="mt-3 text-sm text-slate">{r.message}</p>}
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate">
               {r.preferred_viewing_date && <span>Viewing: {r.preferred_viewing_date}</span>}
@@ -86,7 +95,8 @@ export default async function AdminInquiriesPage() {
               notes={r.internal_notes}
             />
           </article>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

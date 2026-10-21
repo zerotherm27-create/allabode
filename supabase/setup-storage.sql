@@ -1,4 +1,4 @@
--- Run this in Supabase → SQL Editor (idempotent — safe to re-run)
+
 -- Creates storage buckets + all RLS policies for receipts, finance-docs,
 -- site-assets, documents, agreements, listing-images and specialist-photos.
 -- Requires migration 20261020100000_specialists.sql (specialists table and

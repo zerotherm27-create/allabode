@@ -17,7 +17,8 @@ import { formatFromAddress } from "@/lib/email-address";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 import { getPublicSiteUrl } from "@/lib/url";
-import { firstName, renderTemplate, type TemplateVars } from "@/lib/nurture/render";
+import { firstName, MERGE_FIELDS, renderTemplate, type TemplateVars } from "@/lib/nurture/render";
+import { isOverrideTableMissing, pickTemplateSource } from "@/lib/nurture/override-validate";
 import {
   afterFailure,
   checkEligibility,
@@ -87,6 +88,7 @@ type SpecialistRow = {
 
 type SettingsRow = { followups_enabled: boolean | null; personal_note: string | null };
 type PrefRow = { enabled: boolean | null };
+type OverrideRow = { subject: string | null; body: string | null };
 
 export type PlannedEmail = {
   sendId: string;
@@ -252,13 +254,14 @@ async function processRow(
   let specialist: SpecialistRow | null = null;
   let settingsRow: SettingsRow | null = null;
   let pref: PrefRow | null = null;
+  let override: OverrideRow | null = null;
   let suppressed = false;
   let listing: { title: string | null; slug: string | null; live: boolean } | null = null;
 
   if (lead?.specialist_id) {
     const sid = lead.specialist_id;
     const emailLower = (lead.email ?? "").trim().toLowerCase();
-    const [sp, st, pr, sup, li] = await Promise.all([
+    const [sp, st, pr, sup, li, ov] = await Promise.all([
       service.from("specialists").select("id,display_name,email,phone,status,subdomain,is_visible").eq("id", sid).maybeSingle(),
       service.from("specialist_email_settings").select("followups_enabled,personal_note").eq("specialist_id", sid).maybeSingle(),
       service.from("specialist_template_prefs").select("enabled").eq("specialist_id", sid).eq("template_id", template.id).maybeSingle(),
@@ -268,9 +271,23 @@ async function processRow(
       lead.listing_id
         ? service.from("listings").select("title,slug,status,approval_status").eq("id", lead.listing_id).maybeSingle()
         : Promise.resolve({ data: null, error: null }),
+      // The specialist's own version, read at SEND time so edits apply to queued emails.
+      normalizeAudience(template.audience) === "lead"
+        ? service
+            .from("specialist_template_overrides")
+            .select("subject,body")
+            .eq("specialist_id", sid)
+            .eq("template_id", template.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
     ]);
     const failed = [sp, st, pr, sup].find((r) => r.error);
     if (failed?.error) throw new Error(`load context: ${failed.error.message}`);
+    // Overrides table not created yet: everyone uses the owner's version. Any
+    // other read error leaves the row queued (thrown) rather than sending the
+    // wrong version.
+    if (ov.error && !isOverrideTableMissing(ov.error)) throw new Error(`load override: ${ov.error.message}`);
+    override = ov.error ? null : (ov.data as OverrideRow | null);
     specialist = sp.data as SpecialistRow | null;
     settingsRow = st.data as SettingsRow | null;
     pref = pr.data as PrefRow | null;
@@ -340,14 +357,17 @@ async function processRow(
   };
 
   const specialistName = sp.display_name?.trim() || "your property specialist";
-  const rendered = renderTemplate(template, vars, {
+  // The specialist's own version (customer emails only, re-validated here),
+  // else the owner's. The footer below is added either way.
+  const source = pickTemplateSource({ ...template, audience }, override, MERGE_FIELDS);
+  const rendered = renderTemplate(source, vars, {
     ...ctx.company,
     unsubscribeUrl: urls?.pageUrl ?? null,
     reason:
       audience === "lead"
         ? `You are receiving this because you contacted ${specialistName} through ${site.name} and agreed to follow-up emails about your inquiry.`
         : `Internal reminder from ${site.name} about a lead assigned to you.`,
-  });
+  }, { linkBodyUrls: !source.fromOverride });
 
   const message = buildFollowupMessage({
     audience,

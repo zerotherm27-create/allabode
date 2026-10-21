@@ -201,22 +201,27 @@ async function notifySpecialistLead(specialist: VerifiedSpecialist, row: Record<
       getSettings(),
     ]);
     const companyEmail = s(settings, "contact_email").trim() || site.email;
-    const recipients = [...new Set([specialistEmail, companyEmail].filter((e): e is string => !!e).map((e) => e.toLowerCase()))];
     let adminUrl: string | null = null;
     try {
       adminUrl = new URL("/admin/inquiries", getPublicSiteUrl()).toString();
     } catch {
       adminUrl = null;
     }
-    const { subject, html } = buildSpecialistLeadEmail({
+    const base = {
       specialistName: specialist.name,
       name: String(row.name ?? ""),
       email: String(row.email ?? ""),
       phone: typeof row.phone === "string" ? row.phone : null,
       message: typeof row.message === "string" ? row.message : null,
       adminUrl,
-    });
-    await Promise.all(recipients.map((to) => sendEmail({ to, subject, html })));
+    };
+    // Company first (main recipient), then a copy to the specialist.
+    const companyMail = buildSpecialistLeadEmail({ ...base, audience: "company" });
+    await sendEmail({ to: companyEmail, subject: companyMail.subject, html: companyMail.html });
+    if (specialistEmail && specialistEmail.toLowerCase() !== companyEmail.toLowerCase()) {
+      const copy = buildSpecialistLeadEmail({ ...base, audience: "specialist" });
+      await sendEmail({ to: specialistEmail, subject: copy.subject, html: copy.html });
+    }
   } catch {
     console.warn("[lead:notify] specialist notification failed");
   }

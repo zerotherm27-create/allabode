@@ -71,12 +71,17 @@ export type SpecialistLeadEmailInput = {
   message: string | null;
   /** Absolute http(s) URL of the admin inquiries page; omitted from the email when absent or malformed. */
   adminUrl?: string | null;
+  /** Who the copy is for: the company inbox is the main recipient, the specialist gets a copy. */
+  audience?: "company" | "specialist";
 };
 
 /** Subject + HTML body of the notification sent to the specialist and the company inbox. */
 export function buildSpecialistLeadEmail(input: SpecialistLeadEmailInput): { subject: string; html: string } {
   const specialist = input.specialistName.replace(/[\r\n]+/g, " ").trim() || "a specialist";
-  const subject = `New message for ${specialist} from the website`;
+  const forCompany = input.audience === "company";
+  const subject = forCompany
+    ? `New inquiry assigned to ${specialist}`
+    : `New message for ${specialist} from the website`;
   const row = (label: string, value: string) =>
     `<tr><td style="padding:6px 16px 6px 0;color:#5b6676;vertical-align:top;white-space:nowrap">${label}</td>` +
     `<td style="padding:6px 0;color:#1a2433">${value}</td></tr>`;
@@ -84,7 +89,9 @@ export function buildSpecialistLeadEmail(input: SpecialistLeadEmailInput): { sub
     typeof input.adminUrl === "string" && /^https?:\/\/[^\s"'<>]+$/i.test(input.adminUrl) ? input.adminUrl : null;
   const html = [
     `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#1a2433">`,
-    `<p>A visitor sent <strong>${escapeHtml(specialist)}</strong> a message from their specialist page.</p>`,
+    forCompany
+      ? `<p>A visitor sent a message that was assigned to <strong>${escapeHtml(specialist)}</strong>. They have been copied.</p>`
+      : `<p>A visitor sent <strong>${escapeHtml(specialist)}</strong> a message from their specialist page.</p>`,
     `<table style="border-collapse:collapse">`,
     row("Name", escapeHtml(input.name)),
     row("Email", escapeHtml(input.email)),

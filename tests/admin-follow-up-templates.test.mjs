@@ -107,7 +107,7 @@ test("starter seed uses only supported merge fields and is idempotent", () => {
   assert.deepEqual(m.unknownFields(sql, render.MERGE_FIELDS), [], `unsupported: ${used}`);
   assert.match(sql, /on conflict \(template_key\) do nothing/i);
   const keys = [...sql.matchAll(/^\s*'(day-[a-z0-9-]+)',$/gm)].map((x) => x[1]);
-  assert.equal(keys.length, 5);
+  assert.equal(keys.length, 6);
   for (const k of keys) assert.match(k, m.KEY_RE);
   assert.doesNotMatch(sql, /\bagent\b/i);
 });

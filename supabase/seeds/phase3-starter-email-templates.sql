@@ -100,5 +100,24 @@ Warm regards,
 Property specialist, {{company_name}}
 {{specialist_phone}}$b$,
   14, 50, 'lead', true
+),
+(
+  'day-30-nurture',
+  'Day 30 - Nurture: staying in touch',
+  $s$Whenever you're ready, {{lead_first_name}}$s$,
+  $b$Hi {{lead_first_name}},
+
+It's {{specialist_name}} from {{company_name}}. A month has passed since you got in touch, so I'm not going to chase you. I just want you to know the door stays open.
+
+Plans change, and the right place often turns up later than people expect. When you're ready to start looking again, to sell, or to ask about renting or managing a property, reply to this email and I'll pick it up from there. In the meantime you can browse what's new here:
+{{site_url}}/listings
+
+{{personal_note}}
+
+Warm regards,
+{{specialist_name}}
+Property specialist, {{company_name}}
+{{specialist_phone}}$b$,
+  30, 60, 'lead', true
 )
 on conflict (template_key) do nothing;

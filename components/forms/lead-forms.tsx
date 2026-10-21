@@ -67,6 +67,9 @@ function FormShell({
         body: JSON.stringify({
           type,
           consent: true,
+          // The one required checkbox covers follow-up emails about this
+          // inquiry too; the server stores it only for assigned inquiry leads.
+          consentFollowup: true,
           [LEAD_HONEYPOT_FIELD]: data.get(LEAD_HONEYPOT_FIELD),
           elapsedMs: mountedAt.current == null ? undefined : Date.now() - mountedAt.current,
           turnstileToken: data.get("cf-turnstile-response") || undefined,
@@ -131,8 +134,10 @@ function FormShell({
         <span>
           I agree to allow All Abode to collect and process my information for
           the purpose of responding to my inquiry, coordinating services, and
-          providing property-related assistance. I understand that my
-          information will be handled according to the{" "}
+          providing property-related assistance. I also agree to receive
+          follow-up emails about my inquiry from All Abode and the property
+          specialist handling it; every email includes an unsubscribe link. I
+          understand that my information will be handled according to the{" "}
           <a href={privacyHref} className="text-navy-700 underline underline-offset-2 hover:text-gold-ink">
             Privacy Policy
           </a>
@@ -165,13 +170,13 @@ function reqEmail(data: FormData, errors: Record<string, string>) {
 }
 
 /* ---------------- Listing inquiry / viewing ---------------- */
-export function InquiryForm({ listingTitle }: { listingTitle?: string }) {
+export function InquiryForm({ listingTitle, listingId }: { listingTitle?: string; listingId?: string }) {
   return (
     <FormShell
       type="inquiry"
       submitLabel="Send Inquiry"
       successTitle="Inquiry received"
-      successBody="Thank you. A licensed agent will reach out within one business day to assist you."
+      successBody="Thank you. A licensed property specialist will reach out within one business day to assist you."
       build={(data) => {
         const errors: Record<string, string> = {};
         const name = reqText(data, "name", "Name", errors);
@@ -187,6 +192,7 @@ export function InquiryForm({ listingTitle }: { listingTitle?: string }) {
             preferredViewingDate: data.get("preferredViewingDate"),
             preferredContactMethod: data.get("preferredContactMethod"),
             listing: listingTitle,
+            listingId,
           },
         };
       }}

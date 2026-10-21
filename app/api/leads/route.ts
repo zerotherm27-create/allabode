@@ -1,15 +1,21 @@
 import { NextResponse, after } from "next/server";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { createClient, createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { LEAD_TYPES, isTrustedOrigin, validateAndBuildRow, type LeadType } from "@/lib/leads/validate";
 import { checkAndIncrement, rateLimitKeyFromRequest } from "@/lib/leads/rate-limit";
 import { verifyTurnstile } from "@/lib/leads/turnstile";
 import { LEAD_HONEYPOT_FIELD, LEAD_MIN_SUBMIT_MS } from "@/lib/leads/constants";
 import {
   buildSpecialistLeadEmail,
-  parseSpecialistSlug,
   tagSpecialistInquiry,
   type VerifiedSpecialist,
 } from "@/lib/leads/specialist-lead";
+import {
+  isInputError,
+  listingRpcArgs,
+  parseFollowupConsent,
+  planIntake,
+  specialistRpcArgs,
+} from "@/lib/leads/intake";
 import { getPublicSpecialist } from "@/lib/team/public-queries";
 import { getSpecialistLeadEmail } from "@/lib/team/lead-recipient";
 import { sendEmail } from "@/lib/email";
@@ -93,22 +99,57 @@ export async function POST(request: Request) {
 
   let row = result.row;
   let specialist: VerifiedSpecialist | null = null;
-  const specialistSlug = type === "inquiry" ? parseSpecialistSlug(body.specialist) : null;
-  if (specialistSlug) {
-    const found = await getPublicSpecialist(specialistSlug);
-    if (found) {
-      specialist = { slug: found.slug, name: found.name };
-      row = tagSpecialistInquiry(row, specialist);
+  const plan = type === "inquiry" || type === "viewing" ? planIntake(type, body) : { kind: "plain" as const };
+  const consent = parseFollowupConsent(body);
+
+  // Preferred path: the service-role-only database functions store consent and
+  // assign the lead. Runs only after the origin / Turnstile / rate-limit /
+  // validation checks above. NULL or any non-input failure falls through to the
+  // plain insert below so a lead is never lost (it just gets no consent or owner).
+  let stored = false;
+  if (plan.kind !== "plain" && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const service = createServiceClient();
+      const { data, error: rpcError } =
+        plan.kind === "specialist"
+          ? await service.rpc("create_specialist_inquiry", specialistRpcArgs(row, plan.slug, plan.listingId, consent))
+          : await service.rpc("create_listing_inquiry", listingRpcArgs(row, plan.listingId, plan.type, consent));
+      if (rpcError) {
+        if (isInputError(rpcError)) {
+          return NextResponse.json({ error: rpcError.message }, { status: 422 });
+        }
+        console.error("[lead:rpc-error]", type, rpcError.message);
+      } else if (typeof data === "string" && data) {
+        stored = true;
+        specialist =
+          plan.kind === "specialist"
+            ? await lookupVerified(plan.slug)
+            : await lookupAssignedSpecialist(service, data);
+        if (specialist) {
+          row = tagSpecialistInquiry(row, specialist);
+        }
+      }
+    } catch {
+      console.error("[lead:rpc-error]", type, "unexpected failure");
     }
   }
 
-  const { error } = await supabase.from(result.table).insert(row);
-  if (error) {
-    console.error("[lead:error]", type, error.message);
-    return NextResponse.json(
-      { error: "We couldn't submit your request. Please try again." },
-      { status: 500 }
-    );
+  if (!stored) {
+    // Fallback: anon insert. No consent flag or assignment (the database forces
+    // consent false for this path); the specialist is still tagged in `details`.
+    const slug = plan.kind === "specialist" ? plan.slug : null;
+    if (slug) {
+      specialist = await lookupVerified(slug);
+      if (specialist) row = tagSpecialistInquiry(row, specialist);
+    }
+    const { error } = await supabase.from(result.table).insert(row);
+    if (error) {
+      console.error("[lead:error]", type, error.message);
+      return NextResponse.json(
+        { error: "We couldn't submit your request. Please try again." },
+        { status: 500 }
+      );
+    }
   }
 
   if (specialist) {
@@ -118,6 +159,33 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true, persisted: true });
+}
+
+async function lookupVerified(slug: string): Promise<VerifiedSpecialist | null> {
+  const found = await getPublicSpecialist(slug);
+  return found ? { slug: found.slug, name: found.name } : null;
+}
+
+/** The specialist a just-stored listing lead was assigned to (by the database), for the notification. */
+async function lookupAssignedSpecialist(
+  service: ReturnType<typeof createServiceClient>,
+  inquiryId: string,
+): Promise<VerifiedSpecialist | null> {
+  try {
+    const { data: lead } = await service.from("inquiries").select("specialist_id").eq("id", inquiryId).maybeSingle();
+    const sid = (lead as { specialist_id: string | null } | null)?.specialist_id;
+    if (!sid) return null;
+    const { data: sp } = await service
+      .from("specialists")
+      .select("subdomain,display_name")
+      .eq("id", sid)
+      .eq("status", "approved")
+      .maybeSingle();
+    const r = sp as { subdomain: string | null; display_name: string | null } | null;
+    return r?.subdomain && r.display_name ? { slug: r.subdomain, name: r.display_name } : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Emails the specialist (looked up server-side) and the company inbox. Never throws. */

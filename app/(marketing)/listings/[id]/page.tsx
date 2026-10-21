@@ -308,13 +308,13 @@ export default async function ListingDetailPage({ params }: Params) {
               Have a question instead?
             </h2>
             <p className="mt-4 text-slate">
-              Send your details and a licensed agent will reach out within one
+              Send your details and a licensed property specialist will reach out within one
               business day to answer questions about{" "}
               <strong className="text-navy">{listing.title}</strong>.
             </p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-6 sm:p-8">
-            <InquiryForm listingTitle={`${listing.title}, ${listing.location}`} />
+            <InquiryForm listingTitle={`${listing.title}, ${listing.location}`} listingId={listing.dbId} />
           </div>
         </Container>
       </section>

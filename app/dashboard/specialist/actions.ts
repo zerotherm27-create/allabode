@@ -23,7 +23,7 @@ import {
   portraitError,
   portraitKey,
 } from "@/lib/team/profile";
-import { PUBLIC_CONTACT_LIMITS, parsePublicContact } from "@/lib/team/public-contact";
+import { PUBLIC_CONTACT_LIMITS, parseHideCallLink, parsePublicContact } from "@/lib/team/public-contact";
 
 export type SpecialistProfileState = { ok: boolean; message: string };
 
@@ -120,9 +120,29 @@ export async function updateSpecialistProfile(
   const contactMissing = cErr && (cErr.code === "42703" || cErr.code === "PGRST204");
   const anyContact = Object.values(contact.value).some((v) => v !== null);
 
+  // Own write so a missing column (migration not run) never blocks the contact details above.
+  const hide = parseHideCallLink(fd.get("hide_call_link"));
+  const { data: hData, error: hErr } = await me.supabase
+    .from("specialists")
+    .update({ hide_call_link: hide })
+    .eq("id", me.id)
+    .select("id");
+  const hideMissing = hErr && (hErr.code === "42703" || hErr.code === "PGRST204");
+
   revalidatePath("/dashboard/specialist/profile");
   revalidatePath("/dashboard/specialist");
   revalidateProfilePages(me.subdomain);
+
+  if (hErr && !(hideMissing && !hide)) {
+    return fail(
+      hideMissing
+        ? "Your profile was saved, but the call-link option can't be saved yet. Contact All Abode."
+        : `Your profile was saved, but the call-link option wasn't. ${hErr.message}`,
+    );
+  }
+  if (!hErr && (!hData || hData.length === 0)) {
+    return fail("Your profile was saved, but the call-link option wasn't. Try again.");
+  }
 
   if (cErr && !(contactMissing && !anyContact)) {
     return fail(

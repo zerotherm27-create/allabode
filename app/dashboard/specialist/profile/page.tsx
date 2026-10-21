@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 import { specialistTitleLine } from "@/lib/team/license";
 import { SpecialistProfileForm, type ProfileValues } from "@/components/team/profile-form";
+import { storedHideCallLink } from "@/lib/team/public-contact";
 import { PhotoUploader } from "@/components/team/photo-uploader";
 
 type Row = {
@@ -44,6 +45,14 @@ export default async function SpecialistProfilePage() {
     .maybeSingle();
   const contact = (pc ?? {}) as Partial<Record<string, string | null>>;
 
+  // Own tolerant read for the same reason (20261023120000_specialist_hide_call_link.sql).
+  const { data: hc } = await supabase
+    .from("specialists")
+    .select("hide_call_link")
+    .eq("id", specialistId)
+    .maybeSingle();
+  const hideCallLink = storedHideCallLink((hc as { hide_call_link?: unknown } | null)?.hide_call_link);
+
   let photoUrl: string | null = null;
   if (row.photo_path) {
     const { data: pub } = supabase.storage.from("specialist-photos").getPublicUrl(row.photo_path);
@@ -64,6 +73,7 @@ export default async function SpecialistProfilePage() {
     publicFacebook: contact.public_facebook_url ?? "",
     publicLinkedIn: contact.public_linkedin_url ?? "",
     publicEmail: contact.public_email ?? "",
+    hideCallLink,
   };
   // Read-only: the same fixed label every specialist shows publicly.
   const licence = specialistTitleLine();

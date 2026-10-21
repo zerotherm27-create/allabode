@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { isValidSpecialistSlug, specialistPhotoUrl } from "@/lib/team/queries";
-import { safeStoredContact, type PublicContact } from "@/lib/team/public-contact";
+import { safeStoredContact, storedHideCallLink, type PublicContact } from "@/lib/team/public-contact";
 
 /**
  * Public, read-only access to approved property specialists via the
@@ -27,6 +27,9 @@ const NO_CONTACT: PublicContact = {
   public_linkedin_url: null,
   public_email: null,
 };
+
+/** Added by 20261023120000_specialist_hide_call_link.sql; its own tolerant query so a missing column never drops the contact details. */
+const HIDE_CALL_COL = "hide_call_link";
 
 type Row = {
   id: string;
@@ -55,6 +58,8 @@ export type PublicSpecialist = {
   /** The specialist's own published contact details (each null = use the company value).
    *  Only loaded by getPublicSpecialist(); always all-null in the directory list. */
   contact: PublicContact;
+  /** True when the specialist opted out of any call link on their page (false before the migration). */
+  hideCallLink: boolean;
 };
 
 function mapRow(r: Row): PublicSpecialist {
@@ -70,6 +75,7 @@ function mapRow(r: Row): PublicSpecialist {
     yearsExperience: r.years_experience,
     photoUrl: specialistPhotoUrl(r.photo_path),
     contact: NO_CONTACT,
+    hideCallLink: false,
   };
 }
 
@@ -97,6 +103,7 @@ export async function getPublicSpecialist(slug: string): Promise<PublicSpecialis
     if (error || !data) return null;
     const specialist = mapRow(data as Row);
     specialist.contact = await getPublicContact(slug);
+    specialist.hideCallLink = await getHideCallLink(slug);
     return specialist;
   } catch {
     return null;
@@ -121,5 +128,21 @@ async function getPublicContact(slug: string): Promise<PublicContact> {
     return safeStoredContact(data as Partial<PublicContact>);
   } catch {
     return NO_CONTACT;
+  }
+}
+
+/** The "no call link" opt-out for one slug. Tolerant: any failure (e.g. column missing) = false. */
+async function getHideCallLink(slug: string): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const { data, error } = await db
+      .from("public_specialists")
+      .select(HIDE_CALL_COL)
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error || !data) return false;
+    return storedHideCallLink((data as { hide_call_link?: unknown }).hide_call_link);
+  } catch {
+    return false;
   }
 }

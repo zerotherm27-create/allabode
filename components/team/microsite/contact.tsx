@@ -8,7 +8,7 @@ import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 import { CONTACT_COPY } from "@/lib/team/profile-copy";
 import type { PublicSpecialist } from "@/lib/team/public-queries";
-import { telHref, viberHref } from "@/lib/team/public-contact";
+import { resolveCallHref, viberHref } from "@/lib/team/public-contact";
 
 type Detail = {
   key: string;
@@ -48,7 +48,12 @@ export async function MicrositeContact({ specialist }: { specialist: PublicSpeci
 
   // The number itself is not printed on the page: it sits behind a "Call me" link that dials
   // when tapped (the digits remain in the link target, so this hides, not secures, the number).
-  const phoneHref = own.public_phone ? telHref(own.public_phone) : companyPhone ? telHref(companyPhone) : null;
+  // "Don't show a call link" removes the row entirely (own and company number alike).
+  const phoneHref = resolveCallHref({
+    hide: specialist.hideCallLink,
+    ownPhone: own.public_phone,
+    companyPhone,
+  });
   const phone = phoneHref
     ? { label: "Call me", href: phoneHref, ariaLabel: `Call ${specialist.name}` }
     : null;

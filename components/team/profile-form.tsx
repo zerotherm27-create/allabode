@@ -31,6 +31,7 @@ export type ProfileValues = {
   publicFacebook: string;
   publicLinkedIn: string;
   publicEmail: string;
+  hideCallLink: boolean;
 };
 
 type ContactKey = "phone" | "viber" | "facebook" | "linkedin" | "email";
@@ -261,6 +262,21 @@ export function SpecialistProfileForm({
             onBlur={checkContact("email")}
           />
         </Field>
+        <div>
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-ink">
+            <input
+              type="checkbox"
+              name="hide_call_link"
+              defaultChecked={values.hideCallLink}
+              aria-describedby="hide-call-link-hint"
+              className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded-sm border-line accent-navy"
+            />
+            <span className="font-semibold text-navy">Don&apos;t show a call link on my page</span>
+          </label>
+          <p id="hide-call-link-hint" className="ml-7 text-sm text-slate">
+            Visitors can still use the contact form, email and your other links.
+          </p>
+        </div>
       </fieldset>
 
       <section aria-labelledby="licence-heading" className="rounded-md border border-line p-4">

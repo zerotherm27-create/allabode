@@ -35,9 +35,15 @@ export function PhotoUploader({ currentUrl }: { currentUrl: string | null }) {
 
       <div className="min-w-0 flex-1">
         <ul className="list-disc pl-5 text-sm text-slate">
-          <li>Use a plain background.</li>
+          <li>Use a tall portrait photo (4:5), JPEG, 1.5 MB or smaller. The cropper below sets the shape.</li>
+          <li>
+            Plain light-to-mid background (soft grey, off-white, cream, or a softly blurred office). Avoid
+            navy, black or very dark backdrops, busy scenes and pure white.
+          </li>
           <li>Face a window or shoot in good light.</li>
-          <li>Frame head and shoulders, looking at the camera.</li>
+          <li>Frame head and shoulders, looking at the camera, with some space above your head.</li>
+          <li>Keep your face in the top two-thirds so the team page crop does not cut it off.</li>
+          <li>Wear something that contrasts with the background. No sunglasses, heavy filters or group shots.</li>
         </ul>
 
         <div className="mt-4">

@@ -13,10 +13,14 @@
 --     visitor's opt-in to follow-up emails), unsubscribed_at and unsub_token
 --     (the secret in the unsubscribe link).
 --   * Public visitors (anon/authenticated, not staff) still insert straight
---     into inquiries, but a trigger forces every privileged column, so a
---     direct insert can NEVER tag a specialist. The only public paths that
---     produce a specialist-owned lead are create_specialist_inquiry() and
---     create_listing_inquiry(), which resolve the specialist server-side.
+--     into inquiries, but a trigger forces every privileged column (incl.
+--     follow-up consent), so a direct insert can NEVER tag a specialist or
+--     opt anyone in to emails. Specialist-owned / consenting leads are only
+--     written by create_specialist_inquiry() and create_listing_inquiry(),
+--     which are service_role-only: /api/leads calls them after its origin,
+--     Turnstile and rate-limit checks.
+--   * Moving a lead to Viewing/Negotiating/Closed/Lost, or unsubscribing it,
+--     skips its queued follow-ups (trigger stop_lead_followups).
 --   * An approved specialist reads only their own leads and may change only
 --     lead_stage and internal_notes (trigger guard_inquiry_update).
 --   * email_templates / specialist_email_settings / specialist_template_prefs
@@ -80,7 +84,15 @@ alter table inquiries add column if not exists consent_followup boolean not null
 alter table inquiries add column if not exists consent_at       timestamptz;
 alter table inquiries add column if not exists unsubscribed_at  timestamptz;
 -- Volatile default: every existing row gets its own token when the column is added.
-alter table inquiries add column if not exists unsub_token      uuid not null default gen_random_uuid() unique;
+alter table inquiries add column if not exists unsub_token      uuid not null default gen_random_uuid();
+do $$
+begin
+  if not exists (select 1 from pg_constraint
+                  where conname = 'inquiries_unsub_token_key'
+                    and conrelid = 'public.inquiries'::regclass) then
+    alter table public.inquiries add constraint inquiries_unsub_token_key unique (unsub_token);
+  end if;
+end $$;
 
 create index if not exists inquiries_specialist_idx  on inquiries (specialist_id);
 create index if not exists inquiries_email_lower_idx on inquiries (lower(email));
@@ -90,11 +102,12 @@ create index if not exists inquiries_email_lower_idx on inquiries (lower(email))
 -- ========================================================================
 -- INSERT by anyone who is not staff (public forms post as anon through
 -- PostgREST under the "anyone submits inquiry" with check (true) policy).
--- Assignment, stage, unsubscribe state, the unsubscribe token and the
--- timestamps are never the caller's to choose. Consent is the visitor's own
--- claim, so it is kept, but its timestamp is always the server's.
--- Staff and server/definer contexts (create_*_inquiry run as the function
--- owner, not anon/authenticated) are exempt, like the other guards.
+-- Assignment, stage, unsubscribe state, the unsubscribe token, follow-up
+-- consent and the timestamps are never the caller's to choose: consent is
+-- only recorded by the service-role intake functions (after the app's bot and
+-- rate-limit checks), staff, or the server. Staff and server/definer contexts
+-- (service_role, and create_*_inquiry running as the function owner) are
+-- exempt, like the other guards.
 create or replace function guard_inquiry_insert()
 returns trigger language plpgsql set search_path = public, pg_temp as $$
 begin
@@ -106,8 +119,8 @@ begin
   new.lead_stage       := 'New';
   new.unsubscribed_at  := null;
   new.unsub_token      := gen_random_uuid();
-  new.consent_followup := coalesce(new.consent_followup, false);
-  new.consent_at       := case when new.consent_followup then now() else null end;
+  new.consent_followup := false;
+  new.consent_at       := null;
   -- Follow-up timing is computed from these; no back- or forward-dating.
   new.created_at       := now();
   new.updated_at       := now();
@@ -203,8 +216,9 @@ create table if not exists specialist_template_prefs (
   primary key (specialist_id, template_id)
 );
 
--- template_id has no ON DELETE action on purpose: a template that has been
--- used keeps its send history, so staff deactivate it (is_active) instead.
+-- template_id has no ON DELETE action on purpose (restrict): a template that
+-- has been used keeps its send history. The admin UI must DEACTIVATE
+-- (is_active = false) a used template, never delete it.
 create table if not exists lead_email_sends (
   id                  uuid primary key default gen_random_uuid(),
   inquiry_id          uuid not null references inquiries (id) on delete cascade,
@@ -312,8 +326,14 @@ drop policy if exists "staff manage lead email sends"   on lead_email_sends;
 drop policy if exists "specialist reads own lead email sends" on lead_email_sends;
 create policy "staff manage lead email sends" on lead_email_sends
   for all using (is_staff()) with check (is_staff());
+-- Keyed on the lead's CURRENT owner (not the specialist recorded on the
+-- send), so a reassigned lead's history moves with it.
 create policy "specialist reads own lead email sends" on lead_email_sends
-  for select to authenticated using (specialist_id = (select current_specialist_id()));
+  for select to authenticated using (
+    exists (select 1 from inquiries i
+             where i.id = lead_email_sends.inquiry_id
+               and i.specialist_id = (select current_specialist_id()))
+  );
 
 drop policy if exists "staff manage email suppressions" on email_suppressions;
 create policy "staff manage email suppressions" on email_suppressions
@@ -350,6 +370,9 @@ end $$;
 revoke execute on function _check_inquiry_input(text, text, text, text, jsonb)
   from public, anon, authenticated;
 
+-- Both intake functions are service_role-only (see grants): /api/leads
+-- calls them with the service-role client after its own checks.
+--
 -- Microsite contact form. The specialist is resolved from the slug through
 -- public_specialists — the exact rule the public directory uses (approved,
 -- has a subdomain, visible). Hidden, suspended, pending and unknown slugs all
@@ -408,14 +431,18 @@ begin
 end $$;
 
 revoke execute on function create_specialist_inquiry(text, text, text, text, text, uuid, boolean, jsonb)
-  from public;
+  from public, anon, authenticated;
 grant  execute on function create_specialist_inquiry(text, text, text, text, text, uuid, boolean, jsonb)
-  to anon, authenticated;
+  to service_role;
 
 -- Listing page inquiry / viewing request. The listing must be publicly live
 -- (same rule as the "public reads live listings" policy); the lead is
 -- assigned to the listing's owner when that owner is an approved specialist,
--- and stays a house lead otherwise. The caller never names a specialist, so
+-- and stays a house lead otherwise. A HIDDEN (is_visible = false) but
+-- approved specialist still gets leads on their own listings (owner ruling),
+-- even though the public page shows the listing as a house listing;
+-- create_specialist_inquiry, by contrast, treats a hidden slug as not found.
+-- The caller never names a specialist, so
 -- no one can attach a lead to a specialist through a listing they don't own.
 -- A listing that is not live returns NULL with nothing inserted (the caller
 -- learns only what the public listings already show); the app then falls back
@@ -461,7 +488,9 @@ begin
   values (p_type::inquiry_type, v_listing.id, btrim(p_name), btrim(p_email), btrim(p_phone),
           nullif(btrim(coalesce(p_message, '')), ''),
           coalesce(p_details, '{}'::jsonb) - 'source' - 'specialistSlug' - 'specialistName',
-          p_preferred_viewing_date, nullif(btrim(coalesce(p_preferred_contact_method, '')), ''),
+          case when p_preferred_viewing_date between current_date - 1 and current_date + 400
+               then p_preferred_viewing_date end,
+          nullif(btrim(coalesce(p_preferred_contact_method, '')), ''),
           v_listing.specialist_id, v_consent, case when v_consent then now() end)
   returning id into v_id;
 
@@ -469,9 +498,9 @@ begin
 end $$;
 
 revoke execute on function create_listing_inquiry(uuid, text, text, text, text, boolean, jsonb, text, date, text)
-  from public;
+  from public, anon, authenticated;
 grant  execute on function create_listing_inquiry(uuid, text, text, text, text, boolean, jsonb, text, date, text)
-  to anon, authenticated;
+  to service_role;
 
 -- ========================================================================
 -- Unsubscribe
@@ -499,14 +528,19 @@ begin
   update inquiries set unsubscribed_at = now()
    where id = v_id and unsubscribed_at is null;
 
-  insert into email_suppressions (email_lower, reason)
-  values (v_email, 'unsubscribed')
-  on conflict (email_lower) do nothing;
+  -- An over-long address (possible via an old direct insert) cannot satisfy
+  -- the suppressions check; the lead itself is still unsubscribed above.
+  if char_length(v_email) <= 254 then
+    insert into email_suppressions (email_lower, reason)
+    values (v_email, 'unsubscribed')
+    on conflict (email_lower) do nothing;
+  end if;
 
   update lead_email_sends
      set status = 'skipped', skip_reason = 'unsubscribed'
    where status = 'queued'
-     and inquiry_id in (select id from inquiries where lower(email) = v_email);
+     and (inquiry_id = v_id
+          or inquiry_id in (select id from inquiries where lower(btrim(email)) = v_email));
 
   return true;
 end $$;
@@ -519,8 +553,9 @@ grant  execute on function unsubscribe_lead(uuid) to anon, authenticated;
 -- ========================================================================
 -- Re-issued in full from 20261020100000_specialists.sql. Unchanged: staff
 -- only, listing handling, subdomain kept, grants. New: queued follow-ups of
--- this specialist (by send or by lead) are skipped, then their leads become
--- house leads (specialist_id null).
+-- the leads this specialist currently owns are skipped, then those leads
+-- become house leads (specialist_id null). Sends are matched through the
+-- lead, so a lead already reassigned to someone else is untouched.
 create or replace function suspend_specialist(p_specialist uuid)
 returns void language plpgsql security definer set search_path = public, pg_temp as $$
 begin
@@ -542,8 +577,7 @@ begin
   update lead_email_sends
      set status = 'skipped', skip_reason = 'specialist_removed'
    where status = 'queued'
-     and (specialist_id = p_specialist
-          or inquiry_id in (select id from inquiries where specialist_id = p_specialist));
+     and inquiry_id in (select id from inquiries where specialist_id = p_specialist);
 
   update inquiries set specialist_id = null where specialist_id = p_specialist;
 end $$;
@@ -552,7 +586,7 @@ revoke execute on function suspend_specialist(uuid) from public, anon;
 grant  execute on function suspend_specialist(uuid) to authenticated;
 
 -- Before-delete trigger (staff delete, or FK cascade from auth.users). Runs
--- before the FKs null specialist_id, so the queued sends can still be found.
+-- before the FK nulls inquiries.specialist_id, so the leads can still be found.
 create or replace function release_specialist_listings()
 returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
 begin
@@ -565,8 +599,7 @@ begin
   update lead_email_sends
      set status = 'skipped', skip_reason = 'specialist_removed'
    where status = 'queued'
-     and (specialist_id = old.id
-          or inquiry_id in (select id from inquiries where specialist_id = old.id));
+     and inquiry_id in (select id from inquiries where specialist_id = old.id);
 
   update inquiries set specialist_id = null where specialist_id = old.id;
   return old;
@@ -577,6 +610,35 @@ revoke execute on function release_specialist_listings() from public, anon, auth
 drop trigger if exists specialists_release_listings on specialists;
 create trigger specialists_release_listings before delete on specialists
   for each row execute function release_specialist_listings();
+
+-- ========================================================================
+-- Stop rule: progressed or unsubscribed leads get no more follow-ups
+-- ========================================================================
+-- AFTER UPDATE so it sees the final row, whoever made the change (staff, a
+-- specialist session, unsubscribe_lead()). SECURITY DEFINER because a
+-- specialist has no write access to lead_email_sends.
+create or replace function stop_lead_followups()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  if new.lead_stage in ('Viewing', 'Negotiating', 'Closed', 'Lost')
+     and new.lead_stage is distinct from old.lead_stage then
+    update lead_email_sends
+       set status = 'skipped', skip_reason = 'stage_changed'
+     where inquiry_id = new.id and status = 'queued';
+  end if;
+  if new.unsubscribed_at is not null and old.unsubscribed_at is null then
+    update lead_email_sends
+       set status = 'skipped', skip_reason = 'unsubscribed'
+     where inquiry_id = new.id and status = 'queued';
+  end if;
+  return null;
+end $$;
+
+revoke execute on function stop_lead_followups() from public, anon, authenticated;
+
+drop trigger if exists inquiries_stop_followups on inquiries;
+create trigger inquiries_stop_followups after update of lead_stage, unsubscribed_at on inquiries
+  for each row execute function stop_lead_followups();
 
 -- ========================================================================
 -- Automation registry row for the sender cron (/api/cron/send-lead-followups)

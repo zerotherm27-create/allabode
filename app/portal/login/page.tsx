@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const isSpecialist = params.get("for") === "specialist";
   const initError =
     params.get("error") === "link_expired"
       ? "That link has expired or was already used. Ask All Abode to send you a new one."
@@ -53,11 +54,13 @@ function LoginForm() {
             height={80}
             className="h-16 w-auto"
           />
-          <p className="label-caps text-gold">Owner / Tenant Portal</p>
+          <p className="label-caps text-gold">{isSpecialist ? "Property Specialist Portal" : "Owner / Tenant Portal"}</p>
         </div>
         <h1 className="mt-6 text-center font-display text-2xl font-bold text-navy">Sign in</h1>
         <p className="mt-2 text-center text-sm text-slate">
-          For property owners and tenants of All Abode.
+          {isSpecialist
+            ? "For All Abode property specialists. Accounts are created by invitation."
+            : "For property owners and tenants of All Abode."}
         </p>
 
         <div className="mt-7">
@@ -100,12 +103,22 @@ function LoginForm() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate">
-          No account yet?{" "}
-          <Link href="/portal/signup" className="font-medium text-navy-700 hover:text-gold">
-            Create one
-          </Link>
-        </p>
+        {isSpecialist ? (
+          <p className="mt-6 text-center text-sm text-slate">
+            Need access? Your invitation email has a link to set your password, or{" "}
+            <Link href="/contact" className="font-medium text-navy-700 hover:text-gold">
+              contact All Abode
+            </Link>
+            .
+          </p>
+        ) : (
+          <p className="mt-6 text-center text-sm text-slate">
+            No account yet?{" "}
+            <Link href="/portal/signup" className="font-medium text-navy-700 hover:text-gold">
+              Create one
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

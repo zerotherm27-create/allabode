@@ -218,7 +218,7 @@ export function SiteHeader() {
                 Owner / Tenant Login
               </Link>
               <Link
-                href="/portal/login"
+                href="/portal/login?for=specialist"
                 role="menuitem"
                 onClick={() => setLoginMenuOpen(false)}
                 className="block rounded-md px-3 py-2.5 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
@@ -354,7 +354,7 @@ export function SiteHeader() {
                       Owner / Tenant Login
                     </Link>
                     <Link
-                      href="/portal/login"
+                      href="/portal/login?for=specialist"
                       onClick={close}
                       className="block rounded-lg px-4 py-3 text-sm font-medium text-slate transition-colors hover:bg-surface-gray hover:text-navy"
                     >

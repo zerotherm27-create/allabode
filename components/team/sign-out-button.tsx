@@ -15,7 +15,7 @@ export function SignOutButton() {
     try {
       const { error: err } = await createClient().auth.signOut();
       if (err) throw err;
-      router.replace("/portal/login");
+      router.replace("/portal/login?for=specialist");
       router.refresh();
     } catch {
       setError("We couldn't sign you out. Try again.");

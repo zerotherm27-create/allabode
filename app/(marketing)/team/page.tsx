@@ -5,9 +5,10 @@ import { SpecialistCard } from "@/components/team/specialist-card";
 import { getPublicSpecialists } from "@/lib/team/public-queries";
 import { shuffled } from "@/lib/team/shuffle";
 
-// The marketing layout sets `revalidate = 300`. The directory is shuffled on
-// every request, so it opts out of static caching entirely.
-export const dynamic = "force-dynamic";
+// Cached by the marketing layout's `revalidate = 300`: the directory order is
+// reshuffled each time the page is regenerated (at most every 5 minutes, and
+// right away when a specialist is added/hidden), which keeps the rotation fair
+// while serving the page from the edge instead of querying the database per visit.
 
 const title = "Our team";
 const description =

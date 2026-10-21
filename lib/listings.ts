@@ -241,6 +241,15 @@ async function attachSpecialists(
   }
 }
 
+/**
+ * List views (cards, category pages, sitemap, related) only ever show the first
+ * photo. Keeping just that one trims the page payload and the number of image
+ * URLs that have to be resolved; the full gallery comes from getListing().
+ */
+function coverOnly(listing: Listing): Listing {
+  return listing.images && listing.images.length > 1 ? { ...listing, images: listing.images.slice(0, 1) } : listing;
+}
+
 export async function getListings(): Promise<Listing[]> {
   if (!db) return mockListings;
   const { data, error } = await db
@@ -250,7 +259,7 @@ export async function getListings(): Promise<Listing[]> {
     .order("created_at", { ascending: false })
     .order("sort_order", { referencedTable: "listing_images", ascending: true });
   if (error || !data || data.length === 0) return mockListings;
-  return attachSpecialists(await resolveImageUrls((data as Row[]).map(mapRow)));
+  return attachSpecialists(await resolveImageUrls((data as Row[]).map(mapRow).map(coverOnly)));
 }
 
 export async function getFeaturedListings(limit = 3): Promise<Listing[]> {
@@ -262,7 +271,7 @@ export async function getFeaturedListings(limit = 3): Promise<Listing[]> {
     .order("sort_order", { referencedTable: "listing_images", ascending: true })
     .limit(limit);
   if (error || !data || data.length === 0) return mockListings.slice(0, limit);
-  return attachSpecialists(await resolveImageUrls((data as Row[]).map(mapRow)));
+  return attachSpecialists(await resolveImageUrls((data as Row[]).map(mapRow).map(coverOnly)));
 }
 
 export async function getListing(slug: string): Promise<Listing | null> {

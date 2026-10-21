@@ -1,4 +1,5 @@
 {
+  "regions": ["syd1"],
   "crons": [
     { "path": "/api/cron/generate-invoices",   "schedule": "0 1 * * *" },
     { "path": "/api/cron/check-lease-expiry",  "schedule": "0 8 * * *" },

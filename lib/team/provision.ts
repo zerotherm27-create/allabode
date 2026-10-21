@@ -9,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { createClient } from "@/lib/supabase/server";
 import { sendEmailResult } from "@/lib/email";
 import { getPublicSiteUrl } from "@/lib/url";
+import { suggestBio } from "@/lib/team/profile-suggest";
 import { canResendSignInLink } from "@/lib/team/admin-status";
 import {
   decideExistingUser,
@@ -188,7 +189,10 @@ export async function provisionSpecialist(supabase: SessionClient, input: Provis
       email: input.email,
       display_name: input.displayName,
       phone: input.phone,
+      // Ready-made, editable starting text. Only for new rows; existing specialists are never touched.
+      // Nothing about areas/specialties is known at add time, so a blank tagline stays blank (the site default shows).
       tagline: input.tagline,
+      bio: suggestBio({ name: input.displayName }),
       subdomain: input.subdomain,
       status: "approved",
       license_mode: "accredited",

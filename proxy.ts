@@ -1,15 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { specialistSlugFromHost } from "@/lib/team/host";
+import { specialistHostAction, specialistSlugFromHost } from "@/lib/team/host";
 
 const MAIN_ORIGIN = "https://allabodeph.com";
 
 // Paths the original matcher covered (everything else only reaches here for specialist hosts).
 const AUTH_PATH = /^\/(admin|dashboard|portal)(\/|$)/;
-
-const PASS_THROUGH =
-  /^\/(_next\/|_vercel\/|favicon\.ico$|robots\.txt$|sitemap\.xml$|manifest\.webmanifest$|logo\/|icon|apple-icon)/;
-const HAS_EXTENSION = /\.[a-z0-9]+$/i;
 
 function mainOrigin(host: string): string {
   // Local testing: <slug>.localhost:3000 -> http://localhost:3000. Otherwise a FIXED origin.
@@ -22,14 +18,13 @@ function mainOrigin(host: string): string {
 
 function handleSpecialistHost(request: NextRequest, slug: string, host: string) {
   const { pathname, search } = request.nextUrl;
-  if (pathname === "/") {
+  const action = specialistHostAction(pathname, slug);
+  if (action === "rewrite") {
     const target = request.nextUrl.clone();
     target.pathname = `/team/${slug}`;
     return NextResponse.rewrite(target);
   }
-  if (pathname === `/team/${slug}` || PASS_THROUGH.test(pathname) || HAS_EXTENSION.test(pathname)) {
-    return NextResponse.next();
-  }
+  if (action === "next") return NextResponse.next();
   return NextResponse.redirect(`${mainOrigin(host)}${pathname}${search}`, 307);
 }
 

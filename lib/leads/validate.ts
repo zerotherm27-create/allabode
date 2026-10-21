@@ -1,4 +1,5 @@
 import { getPublicSiteUrl } from "@/lib/url";
+import { isSpecialistSiteOrigin } from "@/lib/team/host";
 
 export const LEAD_TYPES = [
   "inquiry",
@@ -102,6 +103,11 @@ const PREFERRED_CONTACT_METHODS = ["Email", "Phone call", "Viber", "WhatsApp"] a
  * typically sends neither header, while every real browser submission from
  * the form does — so unlike a generic CSRF check, missing-both is a hard
  * block here rather than a soft-allow.
+ *
+ * Specialist microsites (`https://<slug>.allabodeph.com`, and
+ * `http://<slug>.localhost` outside production) post their contact form
+ * same-origin, so their exact origins are trusted too — decided on the
+ * parsed hostname by isSpecialistSiteOrigin, never a suffix match.
  */
 export function isTrustedOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
@@ -116,6 +122,7 @@ export function isTrustedOrigin(request: Request): boolean {
     }
   }
   if (!candidate) return false;
+  if (isSpecialistSiteOrigin(candidate, process.env.NODE_ENV === "production")) return true;
 
   try {
     return candidate === new URL(getPublicSiteUrl()).origin;

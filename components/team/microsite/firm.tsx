@@ -1,11 +1,11 @@
+import Image from "next/image";
 import { Icon } from "@/components/icon";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion";
-import { Skyline } from "@/components/team/microsite/skyline";
 import { apexUrl } from "@/components/team/microsite/links";
 import { FIRM_COPY } from "@/lib/team/profile-copy";
 
 /**
- * "Part of a trusted firm": centred statement over a faint skyline, then four
+ * "Part of a trusted firm": centred statement over the owner's line-drawn skyline, then four
  * hairline-divided service tiles linking to the main site's service pages.
  * The four tiles stay in one row at every width, with the type scaled down.
  * Anchor target of the header's "Our services".
@@ -17,7 +17,14 @@ export function MicrositeFirm() {
       aria-labelledby="firm-heading"
       className="relative isolate scroll-mt-20 overflow-hidden border-y border-line bg-surface-gray py-10 sm:py-14 lg:py-section"
     >
-      <Skyline className="absolute inset-x-0 bottom-0 -z-10 h-full w-full text-navy/[0.05]" />
+      <Image
+        src="/microsite/firm-skyline.png"
+        alt=""
+        aria-hidden="true"
+        fill
+        sizes="100vw"
+        className="-z-10 object-cover object-bottom mix-blend-multiply"
+      />
       <div className="container-site">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="label-caps text-gold-ink">{FIRM_COPY.eyebrow}</p>

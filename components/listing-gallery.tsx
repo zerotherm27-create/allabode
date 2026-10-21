@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Icon } from "@/components/icon";
@@ -22,6 +22,7 @@ export function ListingGallery({
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+  const swipeStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -179,7 +180,20 @@ export function ListingGallery({
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={`lightbox-${index}`}
-                  className="relative h-full max-h-[calc(100dvh-8.5rem)] w-full"
+                  className="relative h-full max-h-[calc(100dvh-11rem)] w-full touch-pan-y"
+                  onPointerDown={(e) => {
+                    swipeStartX.current = e.clientX;
+                  }}
+                  onPointerUp={(e) => {
+                    const start = swipeStartX.current;
+                    swipeStartX.current = null;
+                    if (start === null || images.length < 2) return;
+                    const dx = e.clientX - start;
+                    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+                  }}
+                  onPointerCancel={() => {
+                    swipeStartX.current = null;
+                  }}
                   initial={{ opacity: shouldReduceMotion ? 1 : 0, scale: shouldReduceMotion ? 1 : 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: shouldReduceMotion ? 1 : 0, scale: shouldReduceMotion ? 1 : 0.98 }}
@@ -189,8 +203,11 @@ export function ListingGallery({
                     src={images[index].url}
                     alt={images[index].alt ?? title}
                     fill
-                    sizes="100vw"
-                    className="object-contain"
+                    sizes="(min-width: 1280px) 1600px, 100vw"
+                    quality={90}
+                    priority
+                    draggable={false}
+                    className="select-none object-contain"
                   />
                 </motion.div>
               </AnimatePresence>
@@ -216,6 +233,28 @@ export function ListingGallery({
                 </>
               )}
             </div>
+
+            {images.length > 1 && (
+              <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pb-4 sm:px-8 [&>:first-child]:ml-auto [&>:last-child]:mr-auto">
+                {images.map((img, i) => (
+                  <button
+                    key={`strip-${img.url}`}
+                    type="button"
+                    aria-label={`Show photo ${i + 1} of ${images.length}`}
+                    aria-current={index === i}
+                    onClick={() => setIndex(i)}
+                    ref={(el) => {
+                      if (el && index === i) el.scrollIntoView({ block: "nearest", inline: "center" });
+                    }}
+                    className={`relative h-12 w-16 shrink-0 overflow-hidden rounded-md border-2 sm:h-14 sm:w-20 ${
+                      index === i ? "border-gold opacity-100" : "border-white/30 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <Image src={img.url} alt="" fill sizes="80px" className="object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

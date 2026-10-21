@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   images: {
+    // 75 is the default; 90 is used by the full-screen listing gallery for sharper photos.
+    qualities: [75, 90],
     // Default is 60s. Listing photos get a brand-new storage path on
     // re-upload rather than overwriting one in place, so a long TTL here
     // can't serve a stale image for an edited listing.

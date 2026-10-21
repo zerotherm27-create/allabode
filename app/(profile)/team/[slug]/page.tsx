@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SpecialistProfile } from "@/components/team/specialist-profile";
+import { SpecialistMicrosite } from "@/components/team/microsite/specialist-microsite";
 import { getPublicSpecialist } from "@/lib/team/public-queries";
 import { isValidSpecialistSlug, metaDescription } from "@/lib/team/queries";
 import { composeIntro } from "@/lib/team/profile-copy";
@@ -55,5 +55,5 @@ export default async function SpecialistProfilePage({ params }: { params: Params
   const listings = allListings.filter(
     (l) => l.specialist?.slug === specialist.slug && l.status !== "Sold",
   );
-  return <SpecialistProfile specialist={specialist} listings={listings} />;
+  return <SpecialistMicrosite specialist={specialist} listings={listings} />;
 }

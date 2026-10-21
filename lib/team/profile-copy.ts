@@ -1,10 +1,12 @@
 // Pure, import-free (unit tested directly via tests/helpers/load-ts.mjs).
 //
-// Copy for the public specialist portfolio. Everything personal is assembled
-// only from fields the specialist filled in; everything else is firm-level
-// (All Abode's standard way of working), worded to match the service pages
-// under app/(marketing)/property-solutions/* so no claim goes further than
-// the site already does.
+// Copy for the public specialist microsite (components/team/microsite/*).
+// Everything personal is assembled only from fields the specialist filled in;
+// everything else is default or firm-level copy, adapted from the owner's
+// mockup and worded to match the service pages under
+// app/(marketing)/property-solutions/* so no claim goes further than the site
+// already does. Specialists are "accredited real estate salespersons": no
+// broker name, licence number, figures, awards or testimonials here.
 
 export const COMPANY_NAME = "All Abode Property Solutions";
 
@@ -58,56 +60,111 @@ export function composeIntro(f: IntroFields): string {
   return second ? `${lead} ${second}` : lead;
 }
 
-/**
- * "How we'll work together": All Abode's standard process, true for every
- * specialist. Paraphrases the brokerage and leasing process steps on the
- * service pages (requirement review, viewings, offers/terms and documents,
- * turnover and post-transaction follow-up, optional property management).
- */
-export const PROCESS_STEPS = [
-  {
-    title: "Consultation",
-    body: "We start with what you need: your budget, preferred location, timeline, and the type of property, or the details of the property you want to rent out or sell.",
-  },
-  {
-    title: "Shortlist and viewings",
-    body: "You get options matched to your brief, and we schedule and coordinate the viewings, so your time goes to properties that fit.",
-  },
-  {
-    title: "Negotiation and documentation",
-    body: "We help coordinate offers, terms, and payment arrangements, then the lease or transaction documents and the requirements that come with them.",
-  },
-  {
-    title: "Turnover and after-care",
-    body: "We coordinate the final steps and turnover. Owners can keep going with All Abode property management after move-in if they prefer.",
-  },
-] as const;
+
+/** I-statement facts for the About section, built only from filled-in fields; "" when there are none. */
+export function aboutFacts(f: Omit<IntroFields, "name">): string {
+  const areas = joinList(f.areas);
+  const specialties = joinList(f.specialties);
+  const languages = joinList(f.languages);
+  const years = f.yearsExperience != null && f.yearsExperience > 0 ? f.yearsExperience : null;
+  const parts: string[] = [];
+  if (areas && specialties) parts.push(`I work across ${areas}, helping clients with ${specialties}.`);
+  else if (areas) parts.push(`I work across ${areas}.`);
+  else if (specialties) parts.push(`I help clients with ${specialties}.`);
+  if (years && languages) {
+    parts.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate and work in ${languages}.`);
+  } else if (years) {
+    parts.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate.`);
+  } else if (languages) {
+    parts.push(`I work in ${languages}.`);
+  }
+  return parts.join(" ");
+}
+
+/* ---- Microsite default copy (adapted from the owner's mockup) ----------- */
+
+export const HERO_COPY = {
+  eyebrow: "Real estate professional",
+  /** Shown under the name when the specialist has not written a tagline. */
+  defaultTagline: "Your partner in finding the right space",
+  paragraph:
+    "Helping individuals, families, and investors make confident real estate decisions through trusted advisory and personalized service.",
+} as const;
+
+export const ABOUT_COPY = {
+  eyebrow: "About me",
+  heading: "Real estate guidance with a personal touch",
+  goal: "My goal is to make real estate simple, transparent, and stress-free, so you can focus on what matters most.",
+  cta: "Get to know me",
+} as const;
+
+/** Default first paragraph of "About me" for a specialist without a bio. */
+export function aboutIntro(name: string): string {
+  return `I'm ${name.trim()}, an accredited real estate salesperson with All Abode PH. I work with clients who value clear information, honest advice, and a smooth, professional experience, whether you're buying, selling, leasing, or investing.`;
+}
 
 /**
- * "Why clients choose All Abode": firm-level facts only, each stated on the
- * site already (home page, brokerage, documentation-assistance, property
- * management and valuation pages). No broker name, licence number, figures,
- * awards or testimonials.
+ * The About section's paragraphs: the specialist's own bio split on blank
+ * lines, or (without one) the default intro, a sentence of their own facts
+ * when they have any, and the goal line.
  */
-export const FIRM_POINTS = [
-  {
-    icon: "verified_user",
-    title: "Licensed practice",
-    body: "Brokerage work is carried out under a licensed real estate practice.",
-  },
-  {
-    icon: "description",
-    title: "Documentation assistance",
-    body: "Help coordinating title transfer, tax payments, notarial requirements, and property paperwork.",
-  },
-  {
-    icon: "home_work",
-    title: "Property management in-house",
-    body: "Rent collection, maintenance, and owner coordination for owners who want ongoing care.",
-  },
-  {
-    icon: "request_quote",
-    title: "Valuation and appraisal",
-    body: "Formal appraisal reports prepared by duly licensed real estate appraisers.",
-  },
+export function aboutParagraphs(f: IntroFields & { bio: string | null }): string[] {
+  const bio = f.bio?.trim();
+  if (bio) return bio.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const facts = aboutFacts(f);
+  return [facts ? `${aboutIntro(f.name)} ${facts}` : aboutIntro(f.name), ABOUT_COPY.goal];
+}
+
+/** The navy values panel beside "About me". Icons are Material Symbols names from components/icon.tsx. */
+export const ABOUT_VALUES = [
+  { icon: "apartment", title: "Client-focused", body: "Personalized support from start to finish" },
+  { icon: "verified_user", title: "Professional", body: "Backed by a licensed brokerage and valuation firm" },
+  { icon: "trending_up", title: "Result-driven", body: "Helping you achieve your real estate goals" },
 ] as const;
+
+/** "Part of a trusted firm" strip. Paths are on the main site (prefixed with the apex origin by the component). */
+export const FIRM_COPY = {
+  eyebrow: "Part of a trusted firm",
+  heading: "Backed by All Abode PH",
+  body: "All transactions and documentation are coursed through All Abode Brokerage and Valuation OPC, a licensed and registered firm.",
+  services: [
+    { icon: "home", title: "Brokerage", body: "Buy and sell with confidence", path: "/property-solutions/brokerage" },
+    {
+      icon: "key",
+      title: "Property management",
+      body: "Professional care for your property",
+      path: "/property-solutions/property-management",
+    },
+    { icon: "real_estate_agent", title: "Leasing", body: "Find the right tenants", path: "/property-solutions/leasing" },
+    {
+      icon: "request_quote",
+      title: "Appraisal and documentation services",
+      body: "Valuations by licensed appraisers and paperwork support",
+      path: "/valuation",
+    },
+  ],
+} as const;
+
+export const LISTINGS_COPY = {
+  eyebrow: "Featured listings",
+  heading: "Selected properties",
+  sub: "A curated selection of properties for living and investment.",
+  emptyHeading: "No active listings right now",
+  emptyBody:
+    "New properties come in all the time. Tell me what you're looking for, whether a place to rent, a home to buy, or a space for your business, and I'll send you matching options.",
+} as const;
+
+/** How many listings show before "View all properties". */
+export const FEATURED_LISTING_COUNT = 3;
+
+export const CTA_COPY = {
+  eyebrow: "Let's find your next move",
+  heading: "Ready to explore your options?",
+  body: "Whether you're looking for a new home, an investment property, or need an appraisal, I'm here to help.",
+  cta: "Get in touch",
+} as const;
+
+export const CONTACT_COPY = {
+  heading: "Contact me",
+  sub: "Let's talk about your real estate goals.",
+} as const;

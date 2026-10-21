@@ -83,5 +83,5 @@ export function checkTestRateLimit(
 export function isFollowUpMigrationMissing(err: { code?: string; message?: string } | null | undefined): boolean {
   if (!err) return false;
   if (err.code === "42P01" || err.code === "PGRST205" || err.code === "42703" || err.code === "PGRST204") return true;
-  return /specialist_email_settings|specialist_template_prefs|email_templates/i.test(err.message ?? "");
+  return /specialist_email_settings|specialist_template_prefs|email_templates|lead_email_sends/i.test(err.message ?? "");
 }

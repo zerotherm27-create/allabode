@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type PortalRole = "staff" | "owner" | "tenant" | "specialist";
@@ -25,7 +26,7 @@ function sameEmail(a?: string | null, b?: string | null) {
  * Staff → `users` (via the is_staff() RPC, which is security-definer).
  * Returns role `null` when signed in but not yet linked ("pending").
  */
-export async function getCurrentRole(): Promise<RoleContext> {
+async function resolveCurrentRole(): Promise<RoleContext> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -36,62 +37,56 @@ export async function getCurrentRole(): Promise<RoleContext> {
   }
   const base = { userId: user.id, email: user.email ?? null };
 
-  const { data: owner } = await supabase
-    .from("owners")
-    .select("id,email")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  if (owner && sameEmail((owner as { email?: string | null }).email, user.email)) {
-    return { role: "owner", ownerId: owner.id as string, tenantId: null, specialistId: null, ...base };
+  // Every lookup is independent, so run them together (one round trip to the
+  // database instead of up to six in a row) and apply the priority order below.
+  const [ownerRes, tenantRes, ownerByEmailRes, tenantByEmailRes, specialistRes, staffRes] = await Promise.all([
+    supabase.from("owners").select("id,email").eq("auth_user_id", user.id).maybeSingle(),
+    supabase.from("tenants").select("id,email").eq("auth_user_id", user.id).maybeSingle(),
+    user.email
+      ? supabase.from("owners").select("id").ilike("email", user.email).maybeSingle()
+      : Promise.resolve({ data: null }),
+    user.email
+      ? supabase.from("tenants").select("id").ilike("email", user.email).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from("specialists").select("id").eq("auth_user_id", user.id).maybeSingle(),
+    supabase.rpc("is_staff"),
+  ]);
+
+  const owner = ownerRes.data as { id: string; email?: string | null } | null;
+  if (owner && sameEmail(owner.email, user.email)) {
+    return { role: "owner", ownerId: owner.id, tenantId: null, specialistId: null, ...base };
   }
 
-  const { data: tenant } = await supabase
-    .from("tenants")
-    .select("id,email")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  if (tenant && sameEmail((tenant as { email?: string | null }).email, user.email)) {
-    return { role: "tenant", ownerId: null, tenantId: tenant.id as string, specialistId: null, ...base };
+  const tenant = tenantRes.data as { id: string; email?: string | null } | null;
+  if (tenant && sameEmail(tenant.email, user.email)) {
+    return { role: "tenant", ownerId: null, tenantId: tenant.id, specialistId: null, ...base };
   }
 
   // Dual-role/staff fallback: if the auth UUID is in public.users, the
   // link_portal_account RPC may intentionally leave auth_user_id unset. Staff
   // RLS can still read these rows, so preserve owner/tenant portal access by
   // matching the verified auth email before falling back to staff.
-  if (user.email) {
-    const { data: ownerByEmail } = await supabase
-      .from("owners")
-      .select("id")
-      .ilike("email", user.email)
-      .maybeSingle();
-    if (ownerByEmail) {
-      return { role: "owner", ownerId: ownerByEmail.id as string, tenantId: null, specialistId: null, ...base };
-    }
-
-    const { data: tenantByEmail } = await supabase
-      .from("tenants")
-      .select("id")
-      .ilike("email", user.email)
-      .maybeSingle();
-    if (tenantByEmail) {
-      return { role: "tenant", ownerId: null, tenantId: tenantByEmail.id as string, specialistId: null, ...base };
-    }
+  const ownerByEmail = ownerByEmailRes.data as { id: string } | null;
+  if (ownerByEmail) {
+    return { role: "owner", ownerId: ownerByEmail.id, tenantId: null, specialistId: null, ...base };
+  }
+  const tenantByEmail = tenantByEmailRes.data as { id: string } | null;
+  if (tenantByEmail) {
+    return { role: "tenant", ownerId: null, tenantId: tenantByEmail.id, specialistId: null, ...base };
   }
 
-  const { data: specialist } = await supabase
-    .from("specialists")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const specialist = specialistRes.data as { id: string } | null;
   if (specialist) {
-    return { role: "specialist", ownerId: null, tenantId: null, specialistId: specialist.id as string, ...base };
+    return { role: "specialist", ownerId: null, tenantId: null, specialistId: specialist.id, ...base };
   }
 
-  const { data: isStaff } = await supabase.rpc("is_staff");
-  if (isStaff) return { role: "staff", ownerId: null, tenantId: null, specialistId: null, ...base };
+  if (staffRes.data) return { role: "staff", ownerId: null, tenantId: null, specialistId: null, ...base };
 
   return { role: null, ownerId: null, tenantId: null, specialistId: null, ...base };
 }
+
+/** Memoised per request, so a layout and its page share one lookup. */
+export const getCurrentRole = cache(resolveCurrentRole);
 
 /**
  * Portal-specific: links the auth account by email (via RPC side-effect), then

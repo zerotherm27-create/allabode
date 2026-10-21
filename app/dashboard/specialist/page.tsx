@@ -15,40 +15,37 @@ const STATUSES = [
 export default async function SpecialistOverviewPage() {
   const { specialistId } = await getCurrentRole();
   const counts: Record<string, number> = {};
+  let newLeads: number | null = null;
+  let checklist: { items: ChecklistItem[]; done: number; total: number } | null = null;
 
   if (specialistId) {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("listings")
-      .select("approval_status")
-      .eq("specialist_id", specialistId);
-    for (const r of (data ?? []) as { approval_status: string | null }[]) {
-      const k = r.approval_status ?? "draft";
-      counts[k] = (counts[k] ?? 0) + 1;
-    }
-  }
-  // New-lead count (fail-soft: null when lead tracking isn't available yet).
-  let newLeads: number | null = null;
-  if (specialistId) {
-    const supabase = await createClient();
-    const { count, error } = await supabase
-      .from("inquiries")
-      .select("id", { count: "exact", head: true })
-      .eq("specialist_id", specialistId)
-      .eq("lead_stage", "New");
-    if (!error) newLeads = count ?? 0;
-  }
-  // Profile checklist (fail-soft: hidden when the read fails or the profile is complete).
-  let checklist: { items: ChecklistItem[]; done: number; total: number } | null = null;
-  if (specialistId) {
-    try {
-      const supabase = await createClient();
-      const { data: prof, error } = await supabase
+    // The three reads are independent, so they run together.
+    const [listingsRes, leadsRes, profRes] = await Promise.all([
+      supabase.from("listings").select("approval_status").eq("specialist_id", specialistId),
+      // New-lead count (fail-soft: null when lead tracking isn't available yet).
+      supabase
+        .from("inquiries")
+        .select("id", { count: "exact", head: true })
+        .eq("specialist_id", specialistId)
+        .eq("lead_stage", "New"),
+      supabase
         .from("specialists")
         .select("photo_path,tagline,bio,areas,specialties,languages")
         .eq("id", specialistId)
-        .maybeSingle();
-      if (!error && prof) {
+        .maybeSingle(),
+    ]);
+
+    for (const r of (listingsRes.data ?? []) as { approval_status: string | null }[]) {
+      const k = r.approval_status ?? "draft";
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    if (!leadsRes.error) newLeads = leadsRes.count ?? 0;
+
+    // Profile checklist (fail-soft: hidden when the read fails or the profile is complete).
+    const prof = profRes.data;
+    if (!profRes.error && prof) {
+      try {
         const c = profileChecklist({
           photoPath: prof.photo_path,
           tagline: prof.tagline,
@@ -58,9 +55,9 @@ export default async function SpecialistOverviewPage() {
           languages: prof.languages,
         });
         if (!c.complete) checklist = c;
+      } catch {
+        checklist = null;
       }
-    } catch {
-      checklist = null;
     }
   }
   const total = Object.values(counts).reduce((a, b) => a + b, 0);

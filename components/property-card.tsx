@@ -8,11 +8,18 @@ import { type Listing, formatBeds, statusStyles } from "@/lib/data";
 export function PropertyCard({
   listing,
   priceContext,
+  showListedBy = true,
+  linkOrigin = "",
 }: {
   listing: Listing;
+  /** Off on a specialist's own page, where "Listed by" would just repeat their name. */
+  showListedBy?: boolean;
   /** Force a single market's price on a category browse page, even for dual-market listings. */
   priceContext?: "sale" | "rent";
+  /** Prefix for the detail link, e.g. the apex origin on a specialist subdomain (which redirects other paths). */
+  linkOrigin?: string;
 }) {
+  const detailHref = `${linkOrigin}/listings/${listing.id}`;
   const showBothPrices = !priceContext && !!listing.salePrice && !!listing.rentPrice;
   const singlePrice =
     priceContext === "sale" ? listing.salePrice ?? listing.price
@@ -74,7 +81,7 @@ export function PropertyCard({
           </p>
         )}
         <h3 className="mt-1 font-display text-lg font-semibold leading-tight text-navy">
-          <Link href={`/listings/${listing.id}`} className="hover:text-navy-700 focus-visible:underline">
+          <Link href={detailHref} className="hover:text-navy-700 focus-visible:underline">
             {listing.title}
           </Link>
         </h3>
@@ -100,7 +107,7 @@ export function PropertyCard({
         </div>
 
         <Link
-          href={`/listings/${listing.id}`}
+          href={detailHref}
           aria-hidden="true"
           tabIndex={-1}
           className="label-caps mt-6 flex min-h-[44px] items-center gap-2 text-navy transition-colors hover:text-gold-ink"
@@ -109,7 +116,7 @@ export function PropertyCard({
           <Icon name="arrow_forward" size={16} />
         </Link>
         {/* Sibling of the links above (never nested); renders nothing for house listings. */}
-        <ListedBy specialist={listing.specialist} size="sm" />
+        {showListedBy && <ListedBy specialist={listing.specialist} size="sm" />}
       </div>
     </article>
   );

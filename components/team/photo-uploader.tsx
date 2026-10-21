@@ -19,6 +19,7 @@ Change only the following:
 - Soft, even, natural window-style light on my face, with gentle shadows and no harsh glare.
 - Frame me head and shoulders, centred, looking at the camera, with some space above my head. Keep my face in the top two-thirds of the frame.
 - Keep my clothing as it is. If it blends into the background, adjust the background tone rather than my clothing.
+- Do not change my pose. If my hands or arms look awkward, crop them out of the frame instead of redrawing them.
 - Sharp focus on my eyes, natural colours, clean professional look. No filters, text, watermarks, props or extra people.`;
 
 function EditPromptHelp() {
@@ -106,6 +107,11 @@ export function PhotoUploader({ currentUrl }: { currentUrl: string | null }) {
           <li>Frame head and shoulders, looking at the camera, with some space above your head.</li>
           <li>Keep your face in the top two-thirds so the team page crop does not cut it off.</li>
           <li>Wear something that contrasts with the background. No sunglasses, heavy filters or group shots.</li>
+          <li>
+            Pose: stand or sit tall with relaxed shoulders, angle your body slightly away and turn your head to the
+            camera, chin slightly forward, with a natural, warm smile. Keep hands and arms relaxed or out of frame.
+          </li>
+          <li>Hold the phone at eye level (on a stand or held by someone else) and take plenty of shots.</li>
         </ul>
 
         <EditPromptHelp />

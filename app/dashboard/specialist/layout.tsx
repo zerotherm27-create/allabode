@@ -12,6 +12,7 @@ export const metadata: Metadata = { title: "Specialist dashboard", robots: { ind
 
 const nav: NavItem[] = [
   { label: "Overview", icon: "dashboard", href: "/dashboard/specialist" },
+  { label: "Leads", icon: "forum", href: "/dashboard/specialist/leads" },
   { label: "My listings", icon: "home_work", href: "/dashboard/specialist/listings" },
   { label: "Profile", icon: "person", href: "/dashboard/specialist/profile" },
 ];

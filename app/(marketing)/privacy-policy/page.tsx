@@ -93,6 +93,37 @@ export default async function PrivacyPolicyPage() {
 
             <div>
               <h2 className="font-display text-xl font-bold text-navy">
+                Follow-up Emails About Your Inquiry
+              </h2>
+              <p className="mt-3">
+                When you submit an inquiry and tick the consent box, you also
+                agree to receive a short series of follow-up emails about that
+                inquiry. They are sent on behalf of the property specialist
+                handling your inquiry, or by All Abode, from our sending
+                address at mail.allabodeph.com, and your replies go to that
+                specialist. We send them only if your inquiry has been assigned
+                to a property specialist, and only about the property or
+                service you asked about.
+              </p>
+              <p className="mt-3">
+                Our legal basis is your consent, which you give by ticking the
+                box on the form. You can withdraw it at any time: every email
+                has an unsubscribe link, and using it stops further follow-up
+                emails to that email address. You can also write to us at the
+                contact details below. Unsubscribing does not affect replies to
+                your inquiry or messages you send us directly.
+              </p>
+              <p className="mt-3">
+                We keep a record of your consent and of the follow-up emails
+                sent to you, together with your inquiry, for as long as needed
+                to handle your inquiry and keep our professional records (see
+                Data Retention). If you unsubscribe, we keep your email address
+                on a do-not-email list so we do not contact you again.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="font-display text-xl font-bold text-navy">
                 Website Analytics
               </h2>
               <p className="mt-3">

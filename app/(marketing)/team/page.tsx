@@ -4,6 +4,7 @@ import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
 import { SpecialistCard } from "@/components/team/specialist-card";
 import { getPublicSpecialists } from "@/lib/team/public-queries";
 import { shuffled } from "@/lib/team/shuffle";
+import { getSettings, s } from "@/lib/settings";
 
 // Cached by the marketing layout's `revalidate = 300`: the directory order is
 // reshuffled each time the page is regenerated (at most every 5 minutes, and
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TeamPage() {
-  const specialists = await getPublicSpecialists();
+  const [specialists, settings] = await Promise.all([getPublicSpecialists(), getSettings()]);
   const ordered = shuffled(specialists);
 
   return (
@@ -32,6 +33,8 @@ export default async function TeamPage() {
         title="Meet the All Abode team"
         lead="A growing group of property specialists helping you rent, buy, sell, and manage property with clarity."
         crumbs={[{ label: "Home", href: "/" }, { label: "Our team" }]}
+        image={s(settings, "page_team_image") || undefined}
+        imagePosition={s(settings, "page_team_image_position")}
       />
 
       {/* Property specialists */}

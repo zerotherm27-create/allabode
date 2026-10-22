@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Container, Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PageHero, SectionHeading, CtaBand } from "@/components/sections";
@@ -72,23 +73,30 @@ export default async function AboutPage() {
 
       {/* Properties by Chel — founder's personal brand */}
       <section className="bg-surface-gray py-section">
-        <Container className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-16">
+        <Container className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:gap-16">
           <Reveal className="shrink-0">
-            <div className="flex w-56 flex-col items-center gap-4 rounded-lg border border-line bg-surface p-6 text-center shadow-sm">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-navy/5 text-navy-700">
-                <Icon name="home_work" size={28} />
-              </span>
-              <div>
-                <p className="font-display text-base font-bold text-navy">
-                  Properties by Chel
-                </p>
-                <p className="mt-1 text-xs text-slate">
-                  Personal real estate advisory &amp; education
-                </p>
-              </div>
+            <a
+              href="https://www.propertiesbychel.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Properties by Chel (opens propertiesbychel.com in a new tab)"
+              className="group flex w-64 flex-col items-center gap-5 rounded-lg border border-line bg-surface p-7 text-center shadow-sm transition-shadow hover:shadow-[var(--shadow-card)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+            >
+              <Image
+                src="/logo/properties-by-chel-navy.png"
+                alt="Properties by Chel"
+                width={759}
+                height={354}
+                sizes="200px"
+                className="h-auto w-44"
+              />
               <div className="h-px w-full bg-line" />
               <p className="label-caps text-gold-ink">Founded by Chel</p>
-            </div>
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-navy-700 group-hover:text-gold-ink">
+                propertiesbychel.com
+                <Icon name="arrow_forward" size={16} />
+              </span>
+            </a>
           </Reveal>
           <Reveal className="max-w-xl">
             <p className="label-caps text-gold-ink">About the Founder</p>
@@ -96,18 +104,31 @@ export default async function AboutPage() {
               Properties by Chel
             </h2>
             <p className="mt-4 leading-relaxed text-slate">
-              Properties by Chel is the personal real estate advisory and
-              educational brand of Chel, founder of All Abode. It shares
-              educational content and professional insights to help clients
-              understand real estate topics, from leasing and buying to
-              property management and valuation.
+              Properties by Chel is the private real estate advisory practice
+              of Chel, founder of All Abode. Based in Makati City, it advises
+              buyers and sellers of prime residential property with discretion
+              and personal attention, by referral and appointment.
             </p>
             <p className="mt-3 leading-relaxed text-slate">
-              All Abode, operated by All Abode Brokerage and Valuation OPC,
-              serves as the main operating company for full-service property
-              support: brokerage, valuation, leasing, property management, and
-              documentation assistance.
+              The two work side by side. Properties by Chel is a quieter,
+              one-to-one conversation about significant residences. All Abode,
+              operated by All Abode Brokerage and Valuation OPC, is the main
+              operating company for full-service property support: brokerage,
+              valuation, leasing, property management, and documentation
+              assistance.
             </p>
+            <Button
+              href="https://www.propertiesbychel.com"
+              variant="secondary"
+              size="lg"
+              className="mt-6"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Visit Properties by Chel
+              <Icon name="arrow_forward" size={16} />
+            </Button>
+            <p className="mt-2 text-xs text-slate">Opens propertiesbychel.com in a new tab.</p>
           </Reveal>
         </Container>
       </section>

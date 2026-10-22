@@ -11,6 +11,7 @@ import { SignOutButton } from "@/components/team/sign-out-button";
 export const metadata: Metadata = { title: "Specialist dashboard", robots: { index: false } };
 
 const nav: NavItem[] = [
+  { label: "Getting started", icon: "rocket_launch", href: "/dashboard/specialist/getting-started" },
   { label: "Overview", icon: "dashboard", href: "/dashboard/specialist" },
   { label: "Leads", icon: "forum", href: "/dashboard/specialist/leads" },
   { label: "Follow-up emails", icon: "mail", href: "/dashboard/specialist/follow-ups" },

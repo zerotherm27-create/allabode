@@ -3,6 +3,8 @@ import { Icon } from "@/components/icon";
 import { Panel, StatCard } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
+import { loadOnboarding } from "@/lib/team/onboarding-data";
+import type { OnboardingGuide } from "@/lib/team/onboarding";
 import { profileChecklist, type ChecklistItem } from "@/lib/team/profile-suggest";
 
 const STATUSES = [
@@ -16,12 +18,13 @@ export default async function SpecialistOverviewPage() {
   const { specialistId } = await getCurrentRole();
   const counts: Record<string, number> = {};
   let newLeads: number | null = null;
+  let guide: OnboardingGuide | null = null;
   let checklist: { items: ChecklistItem[]; done: number; total: number } | null = null;
 
   if (specialistId) {
     const supabase = await createClient();
     // The three reads are independent, so they run together.
-    const [listingsRes, leadsRes, profRes] = await Promise.all([
+    const [listingsRes, leadsRes, profRes, guideRes] = await Promise.all([
       supabase.from("listings").select("approval_status").eq("specialist_id", specialistId),
       // New-lead count (fail-soft: null when lead tracking isn't available yet).
       supabase
@@ -34,7 +37,9 @@ export default async function SpecialistOverviewPage() {
         .select("photo_path,tagline,bio,areas,specialties,languages")
         .eq("id", specialistId)
         .maybeSingle(),
+      loadOnboarding(specialistId),
     ]);
+    guide = guideRes;
 
     for (const r of (listingsRes.data ?? []) as { approval_status: string | null }[]) {
       const k = r.approval_status ?? "draft";
@@ -67,6 +72,48 @@ export default async function SpecialistOverviewPage() {
       <h1 className="font-display text-2xl font-bold text-navy">Overview</h1>
       <p className="mt-1 text-sm text-slate">Your listings and where each one stands.</p>
 
+      {guide && !guide.complete && (() => {
+        const next = guide.steps.find((s) => s.id === guide.nextStepId);
+        return (
+          <section aria-labelledby="getting-started" className="mt-6 rounded-lg border border-gold bg-surface p-5">
+            <h2 id="getting-started" className="font-display text-base font-semibold text-navy">
+              Getting started
+            </h2>
+            <p className="mt-1 text-sm text-slate">
+              {guide.done} of {guide.total} steps done.
+              {next ? ` Next up: ${next.title}.` : ""}
+            </p>
+            <div
+              role="progressbar"
+              aria-label="Getting started progress"
+              aria-valuemin={0}
+              aria-valuemax={guide.total}
+              aria-valuenow={guide.done}
+              className="mt-3 h-2 w-full overflow-hidden rounded-sm bg-surface-gray"
+            >
+              <div className="h-full bg-gold" style={{ width: `${Math.round((guide.done / guide.total) * 100)}%` }} />
+            </div>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              {next && (
+                <Link
+                  href={next.href.startsWith("https://") ? "/dashboard/specialist/getting-started" : next.href}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-navy px-5 text-sm font-semibold text-white transition-colors hover:bg-navy-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+                >
+                  {next.ctaLabel}
+                  <Icon name="arrow_forward" size={18} />
+                </Link>
+              )}
+              <Link
+                href="/dashboard/specialist/getting-started"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-line px-5 text-sm font-semibold text-navy transition-colors hover:bg-surface-gray focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+              >
+                See the full guide
+              </Link>
+            </div>
+          </section>
+        );
+      })()}
+
       {checklist && (
         <section aria-labelledby="profile-checklist" className="mt-6 rounded-lg border border-line bg-surface p-5">
           <h2 id="profile-checklist" className="font-display text-base font-semibold text-navy">
@@ -90,6 +137,12 @@ export default async function SpecialistOverviewPage() {
           >
             Finish your profile
             <Icon name="arrow_forward" size={18} />
+          </Link>
+          <Link
+            href="/dashboard/specialist/getting-started"
+            className="ml-0 mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-navy-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700 sm:ml-4 sm:mt-4"
+          >
+            See the full guide
           </Link>
         </section>
       )}

@@ -82,7 +82,8 @@ export async function createAuthorityToSellIdUploadTicket(
   const record = data as AuthorityToSellRecord;
   if (record.status !== "sent") return { error: "This document can no longer be edited." };
 
-  const ext = (fileName.split(".").pop() || "jpg").toLowerCase();
+  void fileName;
+  const ext = fileType === "image/png" ? "png" : "jpg";
   const path = `authority-to-sell/${record.id}/owner-id-${Date.now()}.${ext}`;
 
   try {

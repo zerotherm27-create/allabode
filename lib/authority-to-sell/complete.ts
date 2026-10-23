@@ -34,7 +34,9 @@ export async function completeAuthorityToSell(id: string, supabase: SupabaseClie
   let ownerIdImageDataUri: string | null = null;
   let ownerIdFileBuffer: Buffer | null = null;
   let ownerIdMime = "image/jpeg";
-  if (a.owner_id_document_path) {
+  // Defence in depth: the RPC already binds the path, but never read a file
+  // outside this record's own folder.
+  if (a.owner_id_document_path?.startsWith(`authority-to-sell/${a.id}/`) && !a.owner_id_document_path.includes("..")) {
     const { data: idFile } = await supabase.storage.from(AGREEMENTS_BUCKET).download(a.owner_id_document_path);
     if (idFile) {
       ownerIdFileBuffer = Buffer.from(await idFile.arrayBuffer());

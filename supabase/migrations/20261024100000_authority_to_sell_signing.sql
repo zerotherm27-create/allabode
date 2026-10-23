@@ -102,12 +102,26 @@ create or replace function save_ats_id_upload(
   p_token uuid,
   p_path text
 ) returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_id uuid;
 begin
-  update authority_to_sell_agreements
-  set owner_id_document_path = p_path
+  select id into v_id from authority_to_sell_agreements
   where access_token = p_token
     and status = 'sent'
     and (token_expires_at is null or token_expires_at > now());
+  -- The path must be one this record's upload ticket could have issued, so a
+  -- token holder can't point the ID at another file in the private bucket.
+  if v_id is null
+     or p_path is null
+     or p_path like '%..%'
+     or p_path !~ ('^authority-to-sell/' || v_id::text || '/owner-id-[0-9]+\.(jpg|png)$') then
+    raise exception 'invalid ID upload path';
+  end if;
+
+  update authority_to_sell_agreements
+  set owner_id_document_path = p_path
+  where id = v_id
+    and status = 'sent';
   if not found then
     raise exception 'authority to sell not found or no longer editable';
   end if;

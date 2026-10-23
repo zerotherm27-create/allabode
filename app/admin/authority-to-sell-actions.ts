@@ -110,7 +110,8 @@ export async function deleteAuthorityToSell(id: string) {
     throw new Error("A fully executed Authority to Sell can't be deleted — void it instead to preserve the signed record.");
   }
 
-  const paths = [ats.pdf_path, ats.owner_id_document_path].filter((p): p is string => !!p);
+  const paths = [ats.pdf_path, ats.owner_id_document_path]
+    .filter((p): p is string => !!p && p.startsWith(`authority-to-sell/${id}/`) && !p.includes(".."));
   if (paths.length) await supabase.storage.from(AGREEMENTS_BUCKET).remove(paths);
 
   const { error } = await supabase.from(TABLE).delete().eq("id", id);

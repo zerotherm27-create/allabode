@@ -5,7 +5,7 @@ import { COMPANY_SIGNATORY } from "@/lib/pm/company-signatory";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
 import {
   ATS_DISCLAIMER, BROKER, atsIntro, buildAtsSections, isSafeSignatureDataUrl,
-  type AtsOwnerDetails, type AtsPropertyDetails, type AtsSaleTerms,
+  type AtsBlock, type AtsOwnerDetails, type AtsPropertyDetails, type AtsSaleTerms,
 } from "@/lib/pm/authority-to-sell-clauses";
 
 let _logoBase64: string | null = null;
@@ -41,7 +41,6 @@ const styles = StyleSheet.create({
   signBoxImg: { width: 52, height: 18, objectFit: "contain" },
   signBoxBlank: { width: 52, height: 18 },
   title: { fontSize: 16, fontFamily: "Helvetica-Bold", color: NAVY, textAlign: "center", marginBottom: 4 },
-  subtitle: { fontSize: 10, color: SLATE, textAlign: "center", marginBottom: 14 },
   h1: { fontFamily: "Helvetica-Bold", marginTop: 9, marginBottom: 5 },
   h2: { fontSize: 10, fontFamily: "Helvetica-Bold", marginTop: 8, marginBottom: 4 },
   p: { marginBottom: 6, textAlign: "justify" },
@@ -98,6 +97,35 @@ function Field({ label, value }: { label: string; value?: string | number | null
 }
 
 function Hr() { return <View style={styles.hr} />; }
+
+function AtsBlockView({ block: b }: { block: AtsBlock }) {
+  if (b.type === "p") return <Text style={styles.p}>{b.text}</Text>;
+  if (b.type === "bullets") {
+    return (
+      <View style={{ marginBottom: 4 }}>
+        {b.items.map((it) => (
+          <View key={it} style={styles.listItem}>
+            <Text style={styles.bullet}>&#x2022;</Text>
+            <Text style={{ flex: 1 }}>{it}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
+  return (
+    <View style={{ marginBottom: 4 }}>
+      {b.items.map((it) => (
+        <View key={it.label} style={{ marginBottom: 4 }} wrap={false}>
+          <View style={styles.listItem}>
+            <Check checked={it.checked} />
+            <Text style={it.body ? styles.bold : undefined}>{it.label}</Text>
+          </View>
+          {it.body ? <Text style={[styles.p, { marginLeft: 14 }]}>{it.body}</Text> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 function PageFooter({ ownerSig, brokerSig }: { ownerSig: string | null; brokerSig: string | null }) {
   return (
@@ -191,39 +219,20 @@ export async function renderAuthorityToSellPdf(raw: AuthorityToSellPdfInput): Pr
         <Field label="Address:" value={BROKER.address} />
         <Field label="Contact No.:" value={BROKER.contactNo} />
 
-        {sections.map((s) => (
-          <View key={s.heading}>
-            <Text style={styles.h1} minPresenceAhead={50}>{s.heading}</Text>
-            {s.blocks.map((b, i) => {
-              if (b.type === "p") return <Text key={i} style={styles.p}>{b.text}</Text>;
-              if (b.type === "bullets") {
-                return (
-                  <View key={i} style={{ marginBottom: 4 }}>
-                    {b.items.map((it) => (
-                      <View key={it} style={styles.listItem}>
-                        <Text style={styles.bullet}>&#x2022;</Text>
-                        <Text style={{ flex: 1 }}>{it}</Text>
-                      </View>
-                    ))}
-                  </View>
-                );
-              }
-              return (
-                <View key={i} style={{ marginBottom: 4 }}>
-                  {b.items.map((it) => (
-                    <View key={it.label} style={{ marginBottom: 4 }}>
-                      <View style={styles.listItem}>
-                        <Check checked={it.checked} />
-                        <Text style={it.body ? styles.bold : undefined}>{it.label}</Text>
-                      </View>
-                      {it.body ? <Text style={[styles.p, { marginLeft: 14 }]}>{it.body}</Text> : null}
-                    </View>
-                  ))}
-                </View>
-              );
-            })}
-          </View>
-        ))}
+        {sections.map((s) => {
+          // Keep the heading with its first block (and a lead-in line with the
+          // list it introduces) so a heading is never stranded at a page bottom.
+          const headCount = s.blocks[0]?.type === "p" && s.blocks[1] && s.blocks[1].type !== "p" ? 2 : 1;
+          return (
+            <View key={s.heading}>
+              <View wrap={false}>
+                <Text style={styles.h1}>{s.heading}</Text>
+                {s.blocks.slice(0, headCount).map((b, i) => <AtsBlockView key={i} block={b} />)}
+              </View>
+              {s.blocks.slice(headCount).map((b, i) => <AtsBlockView key={i} block={b} />)}
+            </View>
+          );
+        })}
 
         <View wrap={false}>
           <View style={styles.sigBlock}>

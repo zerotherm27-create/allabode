@@ -1,5 +1,6 @@
 "use client";
 
+import { RichTextToolbar } from "@/components/admin/rich-text-toolbar";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -311,7 +312,8 @@ export function ListingForm({
           </F>
         )}
         <F label="Description" span>
-          <textarea ref={descriptionRef} name="description" defaultValue={v.description} rows={4} className={`${inputCls} h-auto py-2`} />
+          <RichTextToolbar target={descriptionRef} />
+          <textarea ref={descriptionRef} name="description" defaultValue={v.description} rows={12} className={`${inputCls} h-auto py-2 font-mono text-[13px] leading-relaxed`} />
           {aiEnabled && (
             <div className="mt-1.5 flex items-center gap-3">
               <button

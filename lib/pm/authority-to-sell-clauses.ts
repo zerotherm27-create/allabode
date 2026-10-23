@@ -283,9 +283,16 @@ export function isSafeSignatureDataUrl(v: unknown): v is string {
   return typeof v === "string" && v.length <= 1_500_000 && /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(v);
 }
 
+export function atsPropertyError(property: AtsPropertyDetails): string | null {
+  if (!property.propertyType?.trim() || !property.location?.trim()) return "Please enter the property type and location.";
+  if (!property.titleNo?.trim()) return "Please enter the Title No. or Tax Declaration No.";
+  return null;
+}
+
 /** Why a draft can't proceed to signing yet; null when the sale terms are complete. */
 export function atsTermsError(property: AtsPropertyDetails, terms: AtsSaleTerms, executionDate: string | null | undefined): string | null {
-  if (!property.propertyType?.trim() || !property.location?.trim()) return "Please enter the property type and location.";
+  const propertyErr = atsPropertyError(property);
+  if (propertyErr) return propertyErr;
   if (!terms.authorityType) return "Please choose the type of authority.";
   if (!terms.grossPrice?.trim()) return "Please enter the gross selling price.";
   if (!(terms.paymentTerms ?? []).length) return "Please select at least one payment term.";

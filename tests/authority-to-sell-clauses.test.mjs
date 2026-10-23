@@ -88,6 +88,7 @@ test("atsTermsError flags each missing requirement", async () => {
   const { atsTermsError } = await load();
   assert.equal(atsTermsError(property, terms, "2026-10-24"), null);
   assert.match(atsTermsError({}, terms, "2026-10-24"), /property type/);
+  assert.match(atsTermsError({ ...property, titleNo: " " }, terms, "2026-10-24"), /Title No/);
   assert.match(atsTermsError(property, { ...terms, authorityType: "" }, "2026-10-24"), /type of authority/);
   assert.match(atsTermsError(property, { ...terms, grossPrice: "" }, "2026-10-24"), /gross selling price/);
   assert.match(atsTermsError(property, { ...terms, paymentTerms: [] }, "2026-10-24"), /payment term/);

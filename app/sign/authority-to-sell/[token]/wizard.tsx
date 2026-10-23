@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { SIGNING_ID_TYPES } from "@/lib/signing/form-helpers";
 import {
-  DEFAULT_COMMISSION_PCT, atsTermsError,
+  DEFAULT_COMMISSION_PCT, atsPropertyError, atsTermsError,
   type AtsOwnerDetails, type AtsPaymentTerm, type AtsPropertyDetails, type AtsSaleTerms,
 } from "@/lib/pm/authority-to-sell-clauses";
 import { FullAtsPreview } from "./full-ats-preview";
@@ -127,9 +127,12 @@ export function AuthorityToSellWizard({ token, initial }: { token: string; initi
         return;
       }
     }
-    if (step === 2 && (!property.propertyType.trim() || !property.location.trim())) {
-      setError("Please enter the property type and location.");
-      return;
+    if (step === 2) {
+      const propertyErr = atsPropertyError(property);
+      if (propertyErr) {
+        setError(propertyErr);
+        return;
+      }
     }
     if (step === 3) {
       const termsErr = atsTermsError(property, terms, executionDate);
@@ -290,10 +293,10 @@ export function AuthorityToSellWizard({ token, initial }: { token: string; initi
       {step === 2 && (
         <StepShell title="Property for sale">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Property type" required hint="e.g. Condominium unit, house and lot, lot only">
-              <Input className={inputCls} value={property.propertyType} onChange={(e) => setProperty({ ...property, propertyType: e.target.value })} />
+            <Field label="Property type" required>
+              <Input className={inputCls} placeholder="e.g. Condominium unit, house and lot" value={property.propertyType} onChange={(e) => setProperty({ ...property, propertyType: e.target.value })} />
             </Field>
-            <Field label="Title No. / Tax Declaration No.">
+            <Field label="Title No. / Tax Declaration No." required>
               <Input className={inputCls} value={property.titleNo} onChange={(e) => setProperty({ ...property, titleNo: e.target.value })} />
             </Field>
           </div>
@@ -329,8 +332,8 @@ export function AuthorityToSellWizard({ token, initial }: { token: string; initi
             <Field label="Gross selling price (PHP)" required>
               <Input className={inputCls} inputMode="decimal" value={terms.grossPrice} onChange={(e) => setTerms({ ...terms, grossPrice: e.target.value })} />
             </Field>
-            <Field label="Minimum acceptable price (PHP)" hint="Optional">
-              <Input className={inputCls} inputMode="decimal" value={terms.minPrice} onChange={(e) => setTerms({ ...terms, minPrice: e.target.value })} />
+            <Field label="Minimum acceptable price (PHP)">
+              <Input className={inputCls} inputMode="decimal" placeholder="Optional" value={terms.minPrice} onChange={(e) => setTerms({ ...terms, minPrice: e.target.value })} />
             </Field>
           </div>
 
@@ -384,8 +387,8 @@ export function AuthorityToSellWizard({ token, initial }: { token: string; initi
             <Field label="Date of signing" required>
               <Input className={inputCls} type="date" value={executionDate} onChange={(e) => setExecutionDate(e.target.value)} />
             </Field>
-            <Field label="Place of signing" required hint="City or municipality">
-              <Input className={inputCls} value={terms.executionPlace} onChange={(e) => setTerms({ ...terms, executionPlace: e.target.value })} />
+            <Field label="Place of signing" required>
+              <Input className={inputCls} placeholder="City or municipality" value={terms.executionPlace} onChange={(e) => setTerms({ ...terms, executionPlace: e.target.value })} />
             </Field>
           </div>
         </StepShell>

@@ -9,6 +9,7 @@ import { sendEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit";
 import { signedUrl, AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeAuthorityToSell } from "@/lib/authority-to-sell/complete";
+import { isSafeSignatureDataUrl } from "@/lib/pm/authority-to-sell-clauses";
 
 function s(fd: FormData, k: string): string | null {
   const v = fd.get(k);
@@ -127,6 +128,7 @@ export async function countersignAuthorityToSell(id: string, signatureDataUrl: s
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in.");
+  if (!isSafeSignatureDataUrl(signatureDataUrl)) throw new Error("Invalid signature — please draw or upload it again.");
 
   const { data: staffRow } = await supabase.from("users").select("is_signatory").eq("id", user.id).maybeSingle();
   if (!staffRow?.is_signatory) {

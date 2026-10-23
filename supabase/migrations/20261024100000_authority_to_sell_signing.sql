@@ -145,6 +145,11 @@ begin
   if a.id is null then
     raise exception 'authority to sell not found or not signable';
   end if;
+  if p_signature_data is null
+     or length(p_signature_data) > 1500000
+     or p_signature_data !~ '^data:image/(png|jpeg);base64,[A-Za-z0-9+/=]+$' then
+    raise exception 'invalid signature';
+  end if;
   if a.owner_id_document_path is null or a.owner_id_type is null or a.owner_id_number is null then
     raise exception 'a valid government ID (type, number, and uploaded image) is required before signing';
   end if;

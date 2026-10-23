@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
+import { isSafeSignatureDataUrl } from "@/lib/pm/authority-to-sell-clauses";
 
 export type AuthorityToSellRecord = {
   id: string;
@@ -108,6 +109,7 @@ export async function submitAuthorityToSellOwnerSignature(
   token: string,
   input: { typedName: string; signatureDataUrl: string },
 ): Promise<{ error?: string }> {
+  if (!isSafeSignatureDataUrl(input.signatureDataUrl)) return { error: "Invalid signature — please draw or upload it again." };
   const supabase = await createClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_ats_owner_signature", {

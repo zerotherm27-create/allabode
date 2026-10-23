@@ -275,6 +275,14 @@ export function buildAtsSections(
   ];
 }
 
+/**
+ * Signature images end up in `<Image src>` inside the PDF renderer, which fetches
+ * any URL it is given — so only inline PNG/JPEG data URIs are ever accepted.
+ */
+export function isSafeSignatureDataUrl(v: unknown): v is string {
+  return typeof v === "string" && v.length <= 1_500_000 && /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(v);
+}
+
 /** Why a draft can't proceed to signing yet; null when the sale terms are complete. */
 export function atsTermsError(property: AtsPropertyDetails, terms: AtsSaleTerms, executionDate: string | null | undefined): string | null {
   if (!property.propertyType?.trim() || !property.location?.trim()) return "Please enter the property type and location.";

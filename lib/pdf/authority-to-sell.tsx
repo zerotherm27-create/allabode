@@ -4,7 +4,7 @@ import path from "path";
 import { COMPANY_SIGNATORY } from "@/lib/pm/company-signatory";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
 import {
-  ATS_DISCLAIMER, BROKER, atsIntro, buildAtsSections,
+  ATS_DISCLAIMER, BROKER, atsIntro, buildAtsSections, isSafeSignatureDataUrl,
   type AtsOwnerDetails, type AtsPropertyDetails, type AtsSaleTerms,
 } from "@/lib/pm/authority-to-sell-clauses";
 
@@ -154,7 +154,16 @@ export type AuthorityToSellPdfInput = {
   brokerSignerEmail: string;
 };
 
-export async function renderAuthorityToSellPdf(input: AuthorityToSellPdfInput): Promise<Buffer> {
+export async function renderAuthorityToSellPdf(raw: AuthorityToSellPdfInput): Promise<Buffer> {
+  // Never hand react-pdf anything but an inline image: it fetches arbitrary URLs.
+  const inlineOnly = (v: string | null) => (v && v.startsWith("data:image/") ? v : null);
+  const input: AuthorityToSellPdfInput = {
+    ...raw,
+    ownerSignatureDataUri: isSafeSignatureDataUrl(raw.ownerSignatureDataUri) ? raw.ownerSignatureDataUri : "",
+    brokerSignatureDataUri: isSafeSignatureDataUrl(raw.brokerSignatureDataUri) ? raw.brokerSignatureDataUri : "",
+    ownerIdImageDataUri: inlineOnly(raw.ownerIdImageDataUri),
+    brokerIdImageDataUri: inlineOnly(raw.brokerIdImageDataUri),
+  };
   const od = input.ownerDetails;
   const sections = buildAtsSections(input.propertyDetails, input.saleTerms);
   const Footer = () => (

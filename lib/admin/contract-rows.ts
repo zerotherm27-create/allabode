@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type ContractType = "pm" | "tenancy" | "parking" | "short_term_rental" | "addendum";
+export type ContractType = "pm" | "tenancy" | "parking" | "short_term_rental" | "addendum" | "authority_to_sell";
 
 export type ContractRow = {
   id: string;
@@ -48,6 +48,7 @@ export const CONTRACT_TYPE_LABEL: Record<ContractType, string> = {
   parking: "Parking",
   short_term_rental: "Short Term Rental",
   addendum: "Addendum",
+  authority_to_sell: "Authority to Sell",
 };
 export const CONTRACT_TYPE_COLOR: Record<ContractType, string> = {
   pm: "bg-navy/10 text-navy",
@@ -55,6 +56,7 @@ export const CONTRACT_TYPE_COLOR: Record<ContractType, string> = {
   parking: "bg-navy-700/10 text-navy-700",
   short_term_rental: "bg-available/15 text-available",
   addendum: "bg-reserved/15 text-reserved",
+  authority_to_sell: "bg-gold/15 text-gold-bright",
 };
 
 type Named = { name?: string } | null;
@@ -68,6 +70,18 @@ type PmRaw = {
   status: string;
   created_at: string;
   manager_signed_at: string | null;
+};
+
+type AtsRaw = {
+  id: string;
+  owner_email: string;
+  owner_name_hint: string | null;
+  owner_details: Named;
+  property_details: { propertyType?: string; location?: string } | null;
+  linked_owner_id: string | null;
+  status: string;
+  created_at: string;
+  broker_signed_at: string | null;
 };
 
 type TenantContractRaw = {
@@ -137,7 +151,7 @@ export async function fetchContractRows(
     return (data ?? []) as unknown as T[];
   };
 
-  const [pm, tenancy, parking, str, addendum] = await Promise.all([
+  const [pm, tenancy, parking, str, addendum, ats] = await Promise.all([
     run<PmRaw>(
       "agreements",
       "id,owner_email,owner_name_hint,owner_details,linked_owner_id,status,created_at,manager_signed_at",
@@ -148,6 +162,12 @@ export async function fetchContractRows(
     run<ParkingRaw>("parking_agreements", `${common},parking_details`, clauseFor(landlordClause)),
     run<StrRaw>("short_term_rental_agreements", `${common},property_details`, clauseFor(landlordClause)),
     run<AddendumRaw>("addenda", `${common},parent_snapshot`, clauseFor(landlordClause)),
+    run<AtsRaw>(
+      "authority_to_sell_agreements",
+      "id,owner_email,owner_name_hint,owner_details,property_details,linked_owner_id,status,created_at,broker_signed_at",
+      pmClause,
+      scope?.party === "tenant",
+    ),
   ]);
 
   const matchesTenant = (r: TenantContractRaw) =>
@@ -224,6 +244,20 @@ export async function fetchContractRows(
       created_at: r.created_at,
       signed_at: r.landlord_signed_at,
     })),
+    ...ats
+      .filter((r) => scope?.party !== "owner" || r.linked_owner_id === scope.id || lc(r.owner_email) === lc(scope.email))
+      .map((r): ContractRow => ({
+        id: r.id,
+        type: "authority_to_sell",
+        href: `/admin/contracts/authority-to-sell/${r.id}`,
+        name: r.owner_details?.name || r.owner_name_hint || r.owner_email,
+        email: r.owner_email,
+        detail: [r.property_details?.propertyType, r.property_details?.location].filter(Boolean).join(", ") || "Authority to Sell",
+        status: r.status,
+        statusLabel: PM_STATUS_LABEL[r.status] ?? r.status,
+        created_at: r.created_at,
+        signed_at: r.broker_signed_at,
+      })),
   ];
 
   return rows.sort((x, y) => (x.created_at < y.created_at ? 1 : -1));

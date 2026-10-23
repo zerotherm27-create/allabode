@@ -13,6 +13,7 @@ const DOC_TYPE_LABEL: Record<string, string> = {
   move_in_checklist:  "Move-in Checklist",
   inspection_report:  "Inspection Report",
   parking_contract:   "Parking Contract",
+  authority_to_sell:  "Authority to Sell",
   other:              "Other",
 };
 

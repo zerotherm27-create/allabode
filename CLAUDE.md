@@ -101,6 +101,22 @@ per-task). Read both before any `/impeccable` design command.
 
 ## Build status (updated — resume here)
 
+**BUILT, NOT YET LIVE — Authority to Sell e-signature (6th signing flow, owner-facing):**
+- Migration `supabase/migrations/20261024100000_authority_to_sell_signing.sql` — table
+  `authority_to_sell_agreements` + RPCs `get_ats_by_token` / `save_ats_draft` /
+  `save_ats_id_upload` / `submit_ats_owner_signature`. **User must run it in the SQL editor.**
+  Reuses the `agreements` bucket under `authority-to-sell/{id}/`.
+- Mirrors the PM agreement: admin sends name + email at `/admin/contracts/authority-to-sell/new`;
+  the owner fills property, price, payment terms, commission (default 5%, `DEFAULT_COMMISSION_PCT`),
+  period, authority type, ID at `/sign/authority-to-sell/[token]` (5-step wizard) and signs; a
+  `users.is_signatory` account countersigns as Broker. Broker details are fixed defaults in
+  `BROKER` (`lib/pm/authority-to-sell-clauses.ts`) — never owner-editable.
+- Contract text once in `lib/pm/authority-to-sell-clauses.ts` (tests:
+  `tests/authority-to-sell-clauses.test.mjs`); PDF `lib/pdf/authority-to-sell.tsx` uses the same
+  header/footer/PLEASE SIGN box as the other agreements. Completion in
+  `lib/authority-to-sell/complete.ts` (owner upsert, portal login, `documents` row
+  `document_type:'authority_to_sell'`). Not yet walked live (needs the migration + a signatory).
+
 **BUILT, NOT YET LIVE — Specialist leads inbox + automatic follow-up emails (Phase 3):**
 Committed on `feature/property-specialists`, not pushed, **never run against a real DB**.
 - Migration `supabase/migrations/20261022100000_leads_and_nurture.sql` (**user must run it

@@ -18,6 +18,7 @@ const nav: NavItem[] = [
 
 const DOC_TYPE_LABEL: Record<string, string> = {
   agreement:          "Property Management Agreement",
+  authority_to_sell:  "Authority to Sell",
   lease_contract:     "Lease Contract",
   id:                 "Government ID",
   proof_of_ownership: "Proof of Ownership",

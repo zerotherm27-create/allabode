@@ -61,6 +61,9 @@ export default async function AdminContractsPage() {
           <Link href="/admin/contracts/addendum/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
             <Icon name="add" size={20} /> Addendum
           </Link>
+          <Link href="/admin/contracts/authority-to-sell/new" className="inline-flex items-center gap-2 rounded-md border border-navy px-5 py-3 text-sm font-semibold text-navy hover:bg-surface-gray press">
+            <Icon name="add" size={20} /> Authority to Sell
+          </Link>
         </div>
       </div>
       <div className="mt-6">

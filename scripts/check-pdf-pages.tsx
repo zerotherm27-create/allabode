@@ -209,6 +209,24 @@ async function pm() {
   return renderAgreementPdf(input as unknown as Parameters<typeof renderAgreementPdf>[0]);
 }
 
+async function ats() {
+  const { renderAuthorityToSellPdf } = await import("@/lib/pdf/authority-to-sell");
+  return renderAuthorityToSellPdf({
+    id: "a1", referenceCode: "ATS-0001", executionDate: "2026-10-24",
+    ownerDetails: { name: "Hanzzle Embon", address: landlord.address, email: "o@example.com", contact: "0917 000 0000" },
+    propertyDetails: { propertyType: "Condominium unit", location: "878 G. Tolentino Street, Sampaloc, Manila", titleNo: "CCT-123456", area: "45 sqm", improvements: "Fully furnished" },
+    saleTerms: {
+      authorityType: "exclusive", grossPrice: "5000000", minPrice: "4800000", paymentTerms: ["cash", "bank_financing"],
+      commissionPct: "5", periodLength: "6", periodUnit: "months", periodStart: "2026-11-01", periodEnd: "2027-04-30",
+      protectionDays: "90", terminationNoticeDays: "30", executionPlace: "Makati City",
+    },
+    ownerIdTypeLabel: "Passport", ownerIdNumber: "P1302864B", ownerIdIssuedDate: "2019-04-01", ownerIdImageDataUri: idImg,
+    brokerIdTypeLabel: "PRC", brokerIdNumber: "0035712", brokerIdIssuedDate: "June 30, 2025", brokerIdImageDataUri: idImg,
+    ownerTypedName: "Hanzzle Embon", ownerSignatureDataUri: sig, ownerSignedAtManila: "Oct 25, 2026, 3:03 PM", ownerSignedIp: "5.6.7.8",
+    brokerSignatureDataUri: sig, brokerSignedAtManila: "Oct 26, 2026, 9:00 AM", brokerSignedIp: "9.9.9.9", brokerSignerEmail: "m@example.com",
+  });
+}
+
 async function quotation() {
   const { renderQuotationPdf } = await import("@/lib/pdf/quotation");
   const cats = ["furnishing", "repairs", "others"] as const;
@@ -229,7 +247,7 @@ async function quotation() {
   });
 }
 
-const RENDERERS: Record<string, () => Promise<Buffer>> = { tenancy, "tenancy-2ids": () => tenancyWith(0), "tenancy-4ids": () => tenancyWith(2), "tenancy-6ids": () => tenancyWith(4), "tenancy-8ids": () => tenancyWith(6), parking, str, addendum, pm, quotation };
+const RENDERERS: Record<string, () => Promise<Buffer>> = { tenancy, "tenancy-2ids": () => tenancyWith(0), "tenancy-4ids": () => tenancyWith(2), "tenancy-6ids": () => tenancyWith(4), "tenancy-8ids": () => tenancyWith(6), parking, str, addendum, pm, ats, quotation };
 
 // ── main ─────────────────────────────────────────────────────────────────────
 

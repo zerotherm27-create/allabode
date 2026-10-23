@@ -80,6 +80,7 @@ export const navGroups: AdminNavGroup[] = [
       { label: "New Tenancy Agreement",icon: "history_edu",   href: "/admin/contracts/tenancy/new" },
       { label: "New Short-Term Rental",icon: "flight",        href: "/admin/contracts/short-term-rental/new" },
       { label: "New Addendum",         icon: "note_add",      href: "/admin/contracts/addendum/new" },
+      { label: "New Authority to Sell",icon: "sell",          href: "/admin/contracts/authority-to-sell/new" },
     ],
   },
 ];

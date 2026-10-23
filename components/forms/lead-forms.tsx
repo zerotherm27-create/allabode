@@ -275,12 +275,17 @@ export function AppraisalForm() {
             <Field label="Mobile" required error={e.phone}>
               <Input name="phone" type="tel" autoComplete="tel" placeholder="+63 9XX XXX XXXX" />
             </Field>
-            <Field label="Property location" required error={e.propertyLocation}>
-              <Input name="propertyLocation" placeholder="City / district" />
+            <Field
+              label="Where is the property located?"
+              required
+              error={e.propertyLocation}
+              hint="Enter the city, district, or barangay. For more than one property, separate each location with a comma."
+            >
+              <Input name="propertyLocation" autoComplete="address-level2" placeholder="e.g. Makati City, Taguig City" />
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Property type" required>
+            <Field label="What type of property needs to be appraised?" required hint="Choose “Multiple property types” if you have more than one kind of property.">
               <Select name="propertyType" defaultValue="Condominium">
                 <option>Condominium</option>
                 <option>House and Lot</option>
@@ -288,15 +293,17 @@ export function AppraisalForm() {
                 <option>Commercial</option>
                 <option>Industrial / Warehouse</option>
                 <option>Agricultural</option>
+                <option>Multiple property types</option>
               </Select>
             </Field>
-            <Field label="Purpose of appraisal" required>
+            <Field label="What is the purpose of the appraisal?" required>
               <Select name="appraisalPurpose" defaultValue="Pre-sale valuation">
                 <option>Pre-sale valuation</option>
                 <option>Bank loan / collateral</option>
                 <option>Estate / inheritance</option>
                 <option>Legal / dispute</option>
                 <option>Investment analysis</option>
+                <option>Other</option>
               </Select>
             </Field>
           </div>

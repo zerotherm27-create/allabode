@@ -57,7 +57,7 @@ function enumOrReject(v: unknown, allowed: readonly string[]): EnumResult {
 }
 
 const PROPERTY_TYPES_BY_TYPE: Record<string, readonly string[]> = {
-  appraisal: ["Condominium", "House and Lot", "Vacant Lot", "Commercial", "Industrial / Warehouse", "Agricultural"],
+  appraisal: ["Condominium", "House and Lot", "Vacant Lot", "Commercial", "Industrial / Warehouse", "Agricultural", "Multiple property types"],
   "property-management": ["Condominium", "House and Lot", "Apartment", "Commercial", "Mixed-use"],
   contact: ["Condominium", "House and Lot", "Lot", "Commercial", "Office", "Industrial / Warehouse", "Parking", "Other / Not applicable"],
   "list-property": ["Condominium", "House and Lot", "Apartment", "Townhouse", "Commercial", "Lot"],
@@ -69,6 +69,7 @@ const APPRAISAL_PURPOSES = [
   "Estate / inheritance",
   "Legal / dispute",
   "Investment analysis",
+  "Other",
 ] as const;
 
 const OCCUPANCY_STATUSES = ["Vacant", "Partially occupied", "Fully occupied"] as const;

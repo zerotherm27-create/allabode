@@ -5,6 +5,7 @@ import { Button, Container } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { PropertyCard } from "@/components/property-card";
 import { Reveal } from "@/components/motion";
+import { ListingDescription } from "@/components/listing-description";
 import { ListedBy } from "@/components/team/listed-by";
 import { ListingGallery } from "@/components/listing-gallery";
 import { ListingMap } from "@/components/listing-map";
@@ -157,9 +158,7 @@ export default async function ListingDetailPage({ params }: Params) {
                 About this property
               </h2>
               {listing.description ? (
-                <p className="mt-3 whitespace-pre-wrap leading-relaxed text-slate">
-                  {listing.description}
-                </p>
+                <ListingDescription text={listing.description} />
               ) : (
                 <p className="mt-3 leading-relaxed text-slate">
                   A rare offering in {listing.location.split(",").slice(-1)},

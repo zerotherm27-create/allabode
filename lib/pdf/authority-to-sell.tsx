@@ -174,8 +174,7 @@ export async function renderAuthorityToSellPdf(raw: AuthorityToSellPdfInput): Pr
     <Document>
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
-        <Text style={styles.title}>AUTHORITY TO SELL</Text>
-        <Text style={styles.subtitle}>All Abode Brokerage and Valuation OPC</Text>
+        <Text style={[styles.title, { marginBottom: 14 }]}>AUTHORITY TO SELL</Text>
         <Text style={styles.p}>{atsIntro(input.executionDate, input.saleTerms.executionPlace)}</Text>
 
         <Text style={styles.h2} minPresenceAhead={50}>OWNER / SELLER</Text>

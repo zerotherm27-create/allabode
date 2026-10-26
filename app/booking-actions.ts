@@ -63,10 +63,12 @@ export async function submitViewingBooking(input: {
   elapsedMs?: number;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   // Bot trap: fail silently so an automated client can't tell which check tripped.
-  const tripped =
-    Boolean(input.website) ||
-    (typeof input.elapsedMs === "number" && input.elapsedMs < LEAD_MIN_SUBMIT_MS);
-  if (tripped) return { ok: true };
+  const honeypotTripped = Boolean(input.website);
+  const tooFast = typeof input.elapsedMs === "number" && input.elapsedMs < LEAD_MIN_SUBMIT_MS;
+  if (honeypotTripped || tooFast) {
+    console.info("[booking:blocked]", honeypotTripped ? "honeypot" : `too-fast(${input.elapsedMs}ms)`);
+    return { ok: true };
+  }
 
   const name = input.name.trim().slice(0, NAME_MAX);
   if (name.length < 2) return { ok: false, error: "Please enter your name." };

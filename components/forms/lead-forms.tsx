@@ -108,6 +108,9 @@ function FormShell({
         name={LEAD_HONEYPOT_FIELD}
         tabIndex={-1}
         autoComplete="off"
+        data-lpignore="true"
+        data-1p-ignore
+        data-form-type="other"
         aria-hidden="true"
         className="absolute -left-[9999px] h-0 w-0 opacity-0"
         defaultValue=""

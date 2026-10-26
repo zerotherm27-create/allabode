@@ -64,11 +64,11 @@ export async function POST(request: Request) {
   }
 
   // Bot traps: fail silently so an automated client can't tell which check tripped.
-  const tripped =
-    Boolean(body[LEAD_HONEYPOT_FIELD]) ||
-    (typeof body.elapsedMs === "number" && body.elapsedMs < LEAD_MIN_SUBMIT_MS);
-  if (tripped) {
-    console.info("[lead:blocked]", type);
+  const honeypotTripped = Boolean(body[LEAD_HONEYPOT_FIELD]);
+  const tooFast = typeof body.elapsedMs === "number" && body.elapsedMs < LEAD_MIN_SUBMIT_MS;
+  if (honeypotTripped || tooFast) {
+    // Which trap fired (never the values) so a wrongly blocked visitor can be diagnosed.
+    console.info("[lead:blocked]", type, honeypotTripped ? "honeypot" : `too-fast(${body.elapsedMs}ms)`);
     return NextResponse.json({ ok: true, persisted: false });
   }
 

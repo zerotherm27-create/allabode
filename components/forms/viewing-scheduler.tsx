@@ -189,11 +189,14 @@ export function ViewingScheduler({ listingId }: { listingId: string }) {
               </Field>
               <input
                 type="text"
-                name="website"
+                name="hp_contact_ref"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 tabIndex={-1}
                 autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore
+                data-form-type="other"
                 aria-hidden="true"
                 className="absolute -left-[9999px] h-0 w-0 opacity-0"
               />

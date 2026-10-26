@@ -552,9 +552,12 @@ export async function carryForwardSoa(id: string) {
   if (s.status !== "published") throw new Error("Only published statements can be carried forward.");
   if (Number(s.closing_balance) >= 0) throw new Error("Carry forward only applies to negative payouts.");
 
-  await supabase.from("statements_of_account")
+  const { data: updated, error: updErr } = await supabase.from("statements_of_account")
     .update({ payout_status: "carried_forward" })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
+  if (updErr) throw new Error(`Could not carry forward: ${updErr.message}`);
+  if (!updated || updated.length === 0) throw new Error("Could not carry forward — no matching statement was updated.");
   await logAudit(supabase, { action: "soa.carried_forward", entityType: "statement", entityId: id, actorId: user?.id });
   revalidatePath(`/admin/statements/${id}`);
   if ((s as { statement_type?: string }).statement_type === "owner") revalidateOwnerStatementPaths(id);

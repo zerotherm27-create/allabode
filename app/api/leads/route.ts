@@ -64,11 +64,17 @@ export async function POST(request: Request) {
   }
 
   // Bot traps: fail silently so an automated client can't tell which check tripped.
-  const honeypotTripped = Boolean(body[LEAD_HONEYPOT_FIELD]);
+  // The honeypot is log-only: browser autofill / extensions fill hidden inputs and
+  // were silently discarding real inquiries. Bots are stopped by Turnstile + the
+  // rate limit below; only the (client-reported) too-fast check still drops quietly.
+  const honeypotFilled = Boolean(body[LEAD_HONEYPOT_FIELD]);
   const tooFast = typeof body.elapsedMs === "number" && body.elapsedMs < LEAD_MIN_SUBMIT_MS;
-  if (honeypotTripped || tooFast) {
-    // Which trap fired (never the values) so a wrongly blocked visitor can be diagnosed.
-    console.info("[lead:blocked]", type, honeypotTripped ? "honeypot" : `too-fast(${body.elapsedMs}ms)`);
+  if (honeypotFilled) {
+    // Length only, never the value.
+    console.warn("[lead:honeypot-filled]", type, `len=${String(body[LEAD_HONEYPOT_FIELD]).length}`, "accepted");
+  }
+  if (tooFast) {
+    console.info("[lead:blocked]", type, `too-fast(${body.elapsedMs}ms)`);
     return NextResponse.json({ ok: true, persisted: false });
   }
 

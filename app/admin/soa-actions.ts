@@ -460,6 +460,30 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
     if (!manualRows || manualRows.length === 0) throw new Error("Could not save one of the one-time expenses — no matching line was found.");
   }
 
+  // Additional (one-time) income: staff-authored income lines. Same shape as the
+  // one-time expenses above, but a positive amount on line_type "income_manual",
+  // which every total/view already counts via its "income_" prefix.
+  const incomeIds = (str(formData, "manual_income_ids") ?? "").split(",").filter(Boolean);
+  for (let i = 0; i < incomeIds.length; i++) {
+    const lineId = incomeIds[i];
+    if (formData.get(`income_delete_${i}`)) {
+      const { data: delRows, error: delErr } = await supabase.from("soa_lines")
+        .delete().eq("id", lineId).eq("line_type", "income_manual").select("id");
+      if (delErr) throw new Error(delErr.message);
+      if (!delRows || delRows.length === 0) throw new Error("Could not remove one of the additional income items — no matching line was found.");
+      continue;
+    }
+    const desc = ((formData.get(`income_desc_${i}`) as string | null) ?? "").trim();
+    const amt = parseFloat((formData.get(`income_amount_${i}`) as string | null) ?? "");
+    if (!desc || isNaN(amt)) continue; // a blank row is a no-op, not a wipe
+    const { data: incRows, error: incErr } = await supabase.from("soa_lines").update({
+      description: desc,
+      amount: Math.abs(amt),
+    }).eq("id", lineId).eq("line_type", "income_manual").select("id");
+    if (incErr) throw new Error(incErr.message);
+    if (!incRows || incRows.length === 0) throw new Error("Could not save one of the additional income items — no matching line was found.");
+  }
+
   // Add new one-time expense lines
   const newCount = parseInt((formData.get("new_expense_count") as string | null) ?? "0", 10);
   const newLines: Record<string, unknown>[] = [];
@@ -472,7 +496,18 @@ export async function saveOwnerSoaReview(id: string, formData: FormData) {
       newLines.push({ statement_id: id, line_type: "deduction_expense_manual", description: desc, amount: -Math.abs(amt), sort_order: ++maxSort });
     }
   }
-  if (newLines.length) await supabase.from("soa_lines").insert(newLines);
+  const newIncomeCount = parseInt((formData.get("new_income_count") as string | null) ?? "0", 10);
+  for (let i = 0; i < newIncomeCount; i++) {
+    const desc = ((formData.get(`new_income_desc_${i}`) as string | null) ?? "").trim();
+    const amt  = parseFloat((formData.get(`new_income_amount_${i}`) as string | null) ?? "0");
+    if (desc && !isNaN(amt) && amt !== 0) {
+      newLines.push({ statement_id: id, line_type: "income_manual", description: desc, amount: Math.abs(amt), sort_order: ++maxSort });
+    }
+  }
+  if (newLines.length) {
+    const { error: insErr } = await supabase.from("soa_lines").insert(newLines);
+    if (insErr) throw new Error(`Could not add the new items: ${insErr.message}`);
+  }
 
   // SOA meta fields
   const adjustments  = parseFloat((formData.get("adjustments") as string | null) ?? "0");

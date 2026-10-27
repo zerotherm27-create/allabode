@@ -118,7 +118,10 @@ export async function renderOwnerSoaPdf(input: OwnerSoaPdfInput): Promise<Buffer
   const incLT  = lines.filter((l) => l.line_type === "income_longterm");
   const incST  = lines.filter((l) => l.line_type === "income_shortterm");
   const incBnb = lines.filter((l) => l.line_type === "income_bnb");
-  const incOth = lines.filter((l) => l.line_type === "income_other");
+  const incOth = [
+    ...lines.filter((l) => l.line_type === "income_other"),
+    ...lines.filter((l) => l.line_type === "income_manual"), // staff-added additional income
+  ];
   const totalIncome = [...incLT, ...incST, ...incBnb, ...incOth].reduce((s, l) => s + Number(l.amount), 0);
 
   // Deposit/advance-rent lines (income_other) render under the same lease-type

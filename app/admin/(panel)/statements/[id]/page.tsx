@@ -122,6 +122,8 @@ export default async function StatementDetailPage({ params }: { params: Promise<
   const mgmtFeeLines  = lines.filter((l) => l.line_type === "deduction_mgmt_fee" || l.line_type === "deduction_vat");
   const editableLines = lines.filter((l) => ["deduction_utility", "deduction_expense_recurring"].includes(l.line_type));
   const manualLines   = lines.filter((l) => l.line_type === "deduction_expense_manual");
+  const manualIncome  = lines.filter((l) => l.line_type === "income_manual");
+  const autoIncome    = incomeLines.filter((l) => l.line_type !== "income_manual");
 
   const totalIncome     = incomeLines.reduce((a, l) => a + Number(l.amount), 0);
   const totalDeductions = lines.filter((l) => l.line_type.startsWith("deduction_")).reduce((a, l) => a + Math.abs(Number(l.amount)), 0);
@@ -188,6 +190,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
         <ActionForm actionKey="save-recalc" action={saveOwnerSoaReview.bind(null, id)} className="mt-6 flex flex-col gap-4">
           <input type="hidden" name="editable_line_ids" value={editableLines.map((l) => l.id).join(",")} />
           <input type="hidden" name="manual_line_ids" value={manualLines.map((l) => l.id).join(",")} />
+          <input type="hidden" name="manual_income_ids" value={manualIncome.map((l) => l.id).join(",")} />
 
           {/* Income */}
           <div className="overflow-hidden rounded-lg border border-line bg-surface">
@@ -197,13 +200,35 @@ export default async function StatementDetailPage({ params }: { params: Promise<
                 {incomeLines.length === 0 && (
                   <tr><td colSpan={2} className="px-4 py-4 text-center text-sm text-slate">No payments recorded for this period.</td></tr>
                 )}
-                {incomeLines.map((l) => (
+                {autoIncome.map((l) => (
                   <tr key={l.id}>
                     <td className="px-4 py-2.5 text-ink">
                       {l.description}
                       {l.billing_note && <span className="ml-2 text-xs text-slate">{l.billing_note}</span>}
                     </td>
                     <td className="px-4 py-2.5 text-right font-medium text-navy">{peso(l.amount)}</td>
+                  </tr>
+                ))}
+                {/* Additional income (staff-added, one-time) */}
+                {manualIncome.length > 0 && (
+                  <tr><td colSpan={2} className="bg-surface-gray px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate">Additional income</td></tr>
+                )}
+                {manualIncome.map((l, i) => (
+                  <tr key={l.id}>
+                    <td className="px-2 py-1.5">
+                      <div className="flex items-center gap-3">
+                        <input name={`income_desc_${i}`} defaultValue={l.description ?? ""} aria-label="Income description"
+                          className="h-8 w-full rounded border border-line px-2 text-sm text-ink focus:border-navy-700 focus:outline-none" />
+                        <label className="inline-flex shrink-0 items-center gap-1.5 text-xs text-slate">
+                          <input type="checkbox" name={`income_delete_${i}`} value="1" className="h-4 w-4 accent-navy" />
+                          Remove
+                        </label>
+                      </div>
+                    </td>
+                    <td className="w-36 px-2 py-1.5">
+                      <input name={`income_amount_${i}`} type="number" step="0.01" min="0" defaultValue={Math.abs(l.amount)} aria-label="Income amount"
+                        className="h-8 w-full rounded border border-line px-2 text-right text-sm focus:border-navy-700 focus:outline-none" />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -215,6 +240,27 @@ export default async function StatementDetailPage({ params }: { params: Promise<
               </tfoot>
             </table>
           </div>
+
+          {/* Add additional income */}
+          <details className="rounded-lg border border-dashed border-line bg-surface">
+            <summary className="cursor-pointer px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate select-none">
+              + Add additional income
+            </summary>
+            <div className="border-t border-line p-4">
+              <input type="hidden" name="new_income_count" value="5" />
+              <div className="flex flex-col gap-2">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex gap-2">
+                    <input name={`new_income_desc_${i}`} placeholder="Description (e.g. Parking fee, Late fee)"
+                      className="flex-1 h-9 rounded border border-line px-3 text-sm focus:border-navy-700 focus:outline-none" />
+                    <input name={`new_income_amount_${i}`} type="number" step="0.01" min="0" placeholder="Amount"
+                      className="w-32 h-9 rounded border border-line px-3 text-sm text-right focus:border-navy-700 focus:outline-none" />
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-slate">Saved with the rest of the review. Counts toward Total Income and the payout.</p>
+            </div>
+          </details>
 
           {/* Legacy: computeOwnerSoaByLease no longer produces info_advance_rent lines (advance
               rent is now full income, disclosed instead via billing_note on its income line).

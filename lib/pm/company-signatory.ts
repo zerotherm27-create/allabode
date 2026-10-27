@@ -17,6 +17,15 @@ export type CompanySignatoryIdImage = {
   mime: string;
 };
 
+const ID_FOLDER = COMPANY_SIGNATORY.idStoragePath.split("/")[0];
+
+function mimeFor(name: string, blobType: string | undefined): string {
+  const ext = name.split(".").pop()?.toLowerCase();
+  if (ext === "png") return "image/png";
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  return blobType === "image/png" ? "image/png" : "image/jpeg";
+}
+
 function imageDataUri(buffer: Buffer, mime: string) {
   return `data:${mime};base64,${buffer.toString("base64")}`;
 }
@@ -30,28 +39,49 @@ async function readLocalIdImage(): Promise<Buffer | null> {
   }
 }
 
+async function downloadStored(supabase: SupabaseClient, path: string): Promise<CompanySignatoryIdImage | null> {
+  const { data, error } = await supabase.storage.from(AGREEMENTS_BUCKET).download(path);
+  if (error || !data) {
+    if (error) console.warn(`[company-signatory] could not download ${path}:`, error.message);
+    return null;
+  }
+  const fileBuffer = Buffer.from(await data.arrayBuffer());
+  if (!fileBuffer.length) return null;
+  const mime = mimeFor(path, data.type);
+  return { dataUri: imageDataUri(fileBuffer, mime), fileBuffer, mime };
+}
+
+/**
+ * The broker/signatory ID photo attached to every contract PDF. Looks for the
+ * canonical path first; if the file was uploaded under a different name or
+ * extension (e.g. via the dashboard), falls back to the first image in the
+ * `company-signatory/` folder, preferring one that looks like the PRC card.
+ */
 export async function loadCompanySignatoryIdImage(
   supabase: SupabaseClient,
 ): Promise<CompanySignatoryIdImage> {
-  const mime = "image/jpeg";
-  const { data: storedFile } = await supabase.storage
-    .from(AGREEMENTS_BUCKET)
-    .download(COMPANY_SIGNATORY.idStoragePath);
+  const canonical = await downloadStored(supabase, COMPANY_SIGNATORY.idStoragePath);
+  if (canonical) return canonical;
 
-  if (storedFile) {
-    const fileBuffer = Buffer.from(await storedFile.arrayBuffer());
-    return { dataUri: imageDataUri(fileBuffer, mime), fileBuffer, mime };
+  const { data: files, error: listErr } = await supabase.storage.from(AGREEMENTS_BUCKET).list(ID_FOLDER, { limit: 50 });
+  if (listErr) console.warn(`[company-signatory] could not list ${ID_FOLDER}/:`, listErr.message);
+  const images = (files ?? []).filter((f) => /\.(jpe?g|png)$/i.test(f.name));
+  const preferred = images.find((f) => /prc|cruzado|aremchel/i.test(f.name)) ?? images[0];
+  if (preferred) {
+    const found = await downloadStored(supabase, `${ID_FOLDER}/${preferred.name}`);
+    if (found) return found;
   }
 
-  const fileBuffer = await readLocalIdImage();
-  if (!fileBuffer) {
-    return { dataUri: null, fileBuffer: null, mime };
+  const localBuffer = await readLocalIdImage();
+  if (localBuffer) {
+    const mime = "image/jpeg";
+    await supabase.storage.from(AGREEMENTS_BUCKET).upload(COMPANY_SIGNATORY.idStoragePath, localBuffer, {
+      contentType: mime,
+      upsert: true,
+    });
+    return { dataUri: imageDataUri(localBuffer, mime), fileBuffer: localBuffer, mime };
   }
 
-  await supabase.storage.from(AGREEMENTS_BUCKET).upload(COMPANY_SIGNATORY.idStoragePath, fileBuffer, {
-    contentType: mime,
-    upsert: true,
-  });
-
-  return { dataUri: imageDataUri(fileBuffer, mime), fileBuffer, mime };
+  console.warn(`[company-signatory] no ID image found in ${AGREEMENTS_BUCKET}/${ID_FOLDER}/ — the broker ID page will print "ID image unavailable."`);
+  return { dataUri: null, fileBuffer: null, mime: "image/jpeg" };
 }

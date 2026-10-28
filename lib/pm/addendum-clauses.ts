@@ -78,7 +78,7 @@ export const DEFAULT_ADDENDUM_BANK_DETAILS: AddendumBankDetails = {
   name: "All Abode Brokerage and Valuation OPC",
   bank: "Union Bank of the Philippines",
   branch: "JTKC Building, Pasong Tamo Branch",
-  accountNumber: "0020 2003 7938",
+  accountNumber: "0020 2004 1280",
 };
 
 export const PARENT_TYPE_TITLE: Record<AddendumParentType, string> = {

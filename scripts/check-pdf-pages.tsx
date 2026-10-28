@@ -110,7 +110,7 @@ async function tenancyWith(extraIds: number) {
       { dueDate: "Nov 7, 2026", amount: "52,000.00", particulars: "2 months security deposit" },
       ...["Dec 2, 2026", "Jan 2, 2027", "Feb 2, 2027", "Mar 2, 2027", "Apr 2, 2027", "May 2, 2027"].map((d) => ({ dueDate: d, amount: "26,000.00", particulars: "1 month rent" })),
     ],
-    bankDetails: { name: "All Abode Property Management Corp.", bank: "Union Bank of the Philippines", branch: "JTKC Building, Pasong Tamo Branch", accountNumber: "0020 2003 7938" },
+    bankDetails: { name: "All Abode Property Management Corp.", bank: "Union Bank of the Philippines", branch: "JTKC Building, Pasong Tamo Branch", accountNumber: "0020 2004 1280" },
     inventory,
     tenantIdTypeLabel: "Government ID", tenantIdNumber: "808942901", tenantIdIssuedDate: "2026-07-13", tenantIdImageDataUri: idImg,
     additionalOccupantIds: Array.from({ length: extraIds }, (_, i) => ({ name: `Occupant ${i + 1}`, idImageDataUri: idImg })),
@@ -122,7 +122,7 @@ async function tenancyWith(extraIds: number) {
 }
 
 
-const bank = { name: "All Abode Brokerage and Valuation OPC", bank: "Union Bank of the Philippines", branch: "JTKC Building, Pasong Tamo Branch", accountNumber: "0020 2003 7938" };
+const bank = { name: "All Abode Brokerage and Valuation OPC", bank: "Union Bank of the Philippines", branch: "JTKC Building, Pasong Tamo Branch", accountNumber: "0020 2004 1280" };
 const common = {
   tenantIdTypeLabel: "Government ID", tenantIdNumber: "808942901", tenantIdIssuedDate: "2026-07-13", tenantIdImageDataUri: idImg,
   landlordIdTypeLabel: "Passport", landlordIdNumber: "P1302864B", landlordIdIssuedDate: "2019-04-01", landlordIdImageDataUri: idImg,

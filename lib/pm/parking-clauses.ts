@@ -23,9 +23,9 @@ export type ParkingScheduleRow = { dueDate: string; amount: string; bankBranch: 
 
 export const DEFAULT_PARKING_BANK_DETAILS: ParkingBankDetails = {
   name: "All Abode Brokerage and Valuation OPC",
-  bank: "Banco de Oro (BDO)",
-  branch: "Makati Cinema Square",
-  accountNumber: "004290181697",
+  bank: "Union Bank of the Philippines",
+  branch: "JTKC Building, Pasong Tamo Branch",
+  accountNumber: "0020 2004 1280",
 };
 
 export const PARKING_DISCLAIMER =

@@ -28,7 +28,7 @@ export const DEFAULT_STR_BANK_DETAILS: StrBankDetails = {
   name: "All Abode Brokerage and Valuation OPC",
   bank: "Union Bank of the Philippines",
   branch: "JTKC Building, Pasong Tamo Branch",
-  accountNumber: "0020 2003 7938",
+  accountNumber: "0020 2004 1280",
 };
 
 /** The opening recital paragraph — a modern plain-language intro (not the

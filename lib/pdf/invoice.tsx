@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import fs from "fs";
 import path from "path";
+import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
 
 const peso = (n: number | string) =>
   `PHP ${Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -199,6 +200,16 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Buffer> 
             </>
           )}
         </View>
+
+        {/* Payment details */}
+        {!isPaid && input.status !== "voided" && (
+          <View style={s.notes} wrap={false}>
+            <Text style={{ fontFamily: "Helvetica-Bold", marginBottom: 3 }}>Payment Details</Text>
+            <Text>Account Name: {DEFAULT_BANK_DETAILS.name}</Text>
+            <Text>Bank: {DEFAULT_BANK_DETAILS.bank}, {DEFAULT_BANK_DETAILS.branch}</Text>
+            <Text>Account Number: {DEFAULT_BANK_DETAILS.accountNumber}</Text>
+          </View>
+        )}
 
         {/* Notes */}
         {input.notes && (

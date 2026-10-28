@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
 import { renderPaymentReceiptPdf, METHOD_LABEL } from "@/lib/pdf/payment-receipt";
 import { sendEmail } from "@/lib/email";
+import { DEFAULT_BANK_DETAILS } from "@/lib/pm/tenancy-clauses";
 import { createNotification } from "@/lib/notify";
 
 function siteUrl() {
@@ -341,9 +342,14 @@ async function notifyOwnerInvoiceIssued(
     await sendEmail({
       to: row.email,
       subject: title,
-      html: `<p>Hi ${row.name ?? "Owner"},</p><p>${body}</p><p><a href="${siteUrl()}${link}">View in dashboard</a></p>`,
+      html: `<p>Hi ${row.name ?? "Owner"},</p><p>${body}</p><p><a href="${siteUrl()}${link}">View in dashboard</a></p>${paymentDetailsHtml()}`,
     });
   }
+}
+
+function paymentDetailsHtml() {
+  const b = DEFAULT_BANK_DETAILS;
+  return `<p><strong>Payment details</strong><br>Account Name: ${b.name}<br>Bank: ${b.bank}, ${b.branch}<br>Account Number: ${b.accountNumber}</p>`;
 }
 
 // ============================================================

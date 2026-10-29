@@ -6,6 +6,7 @@ import { Icon } from "@/components/icon";
 import { updateInquiry, deleteInquiry } from "@/app/admin/actions";
 import { specialistSourceLabel } from "@/lib/leads/specialist-lead";
 import { isUnassignedSpecialistLead } from "@/lib/leads/intake";
+import { PropertySubmission } from "@/components/admin/property-submission";
 import { InquiryAssignForm } from "@/components/admin/inquiry-assign-form";
 
 const STATUSES = ["New", "Contacted", "Scheduled", "In progress", "Closed", "Spam"];
@@ -123,7 +124,11 @@ export default async function AdminInquiriesPage({
                 {source}
               </p>
             )}
-            {r.message && <p className="mt-3 text-sm text-slate">{r.message}</p>}
+            {r.type === "list-property" ? (
+              <PropertySubmission message={r.message} details={r.details} />
+            ) : (
+              r.message && <p className="mt-3 text-sm text-slate">{r.message}</p>
+            )}
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate">
               {r.preferred_viewing_date && <span>Viewing: {r.preferred_viewing_date}</span>}
               {r.preferred_contact_method && <span>Contact via: {r.preferred_contact_method}</span>}

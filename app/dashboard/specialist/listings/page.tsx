@@ -3,6 +3,7 @@ import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { ListingThumb, firstImageUrl, type ListingImageRef } from "@/components/admin/listing-thumb";
+import { ListingSearch, matchesSearch } from "@/components/admin/listing-search";
 import { ApprovalBadge } from "@/components/specialist/approval-badge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
@@ -118,9 +119,10 @@ const columns: Column<Row>[] = [
 export default async function SpecialistListingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; q?: string | string[] }>;
 }) {
-  const { notice } = await searchParams;
+  const { notice, q: rawQ } = await searchParams;
+  const q = (Array.isArray(rawQ) ? rawQ[0] : rawQ)?.trim().slice(0, 100) ?? "";
   const { specialistId } = await getCurrentRole();
   const supabase = await createClient();
 
@@ -132,7 +134,10 @@ export default async function SpecialistListingsPage({
         .order("updated_at", { ascending: false })
     : { data: [], error: null };
   if (error) console.error("[specialist/listings] failed to load listings:", error);
-  const rows = (data ?? []) as Row[];
+  const allRows = (data ?? []) as Row[];
+  const rows = allRows.filter((r) =>
+    matchesSearch(q, [r.title, r.city, r.property_type, r.listing_category, r.status]),
+  );
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -140,7 +145,7 @@ export default async function SpecialistListingsPage({
         <div>
           <h1 className="font-display text-2xl font-bold text-navy">My listings</h1>
           <p className="mt-1 text-sm text-slate">
-            {rows.length} {rows.length === 1 ? "listing" : "listings"}. New listings are reviewed by All Abode before they go live.
+            {q ? `${rows.length} of ${allRows.length}` : rows.length} {allRows.length === 1 ? "listing" : "listings"}. New listings are reviewed by All Abode before they go live.
           </p>
         </div>
         <Link
@@ -160,13 +165,14 @@ export default async function SpecialistListingsPage({
           Couldn&apos;t load your listings. Refresh the page to try again.
         </p>
       )}
+      <ListingSearch q={q} action="/dashboard/specialist/listings" />
       <div className="mt-6">
         <DataTable
           rows={rows}
           columns={columns}
           getKey={(r) => r.id}
           empty={
-            <>
+            q ? <>No listings match your search.</> : <>
               You haven&apos;t added a listing yet.{" "}
               <Link href="/dashboard/specialist/listings/new" className="text-navy-700 underline">
                 Create your first one

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { ListingThumb, firstImageUrl, type ListingImageRef } from "@/components/admin/listing-thumb";
+import { ListingSearch, matchesSearch } from "@/components/admin/listing-search";
 import { ApprovalBadge } from "@/components/specialist/approval-badge";
 import {
   approvalCounts,
@@ -21,6 +22,7 @@ type Row = {
   id: string;
   title: string;
   slug: string;
+  location: string | null;
   property_type: string;
   listing_category: string;
   status: string;
@@ -33,7 +35,7 @@ type Row = {
   specialists?: { display_name: string } | null;
 };
 
-const BASE_SELECT = "id,title,slug,property_type,listing_category,status,is_featured,price,listing_images(url,sort_order)";
+const BASE_SELECT = "id,title,slug,location,property_type,listing_category,status,is_featured,price,listing_images(url,sort_order)";
 const EXTENDED_SELECT = `${BASE_SELECT},approval_status,specialist_id,specialists(display_name)`;
 
 const FILTERS: { key: ApprovalFilter; label: string }[] = [
@@ -95,9 +97,11 @@ const specialistColumns: Column<Row>[] = [
 export default async function AdminListingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ approval?: string | string[] }>;
+  searchParams: Promise<{ approval?: string | string[]; q?: string | string[] }>;
 }) {
-  const filter = parseApprovalFilter((await searchParams).approval);
+  const sp = await searchParams;
+  const filter = parseApprovalFilter(sp.approval);
+  const q = (Array.isArray(sp.q) ? sp.q[0] : sp.q)?.trim().slice(0, 100) ?? "";
   const supabase = await createClient();
   const first = await supabase
     .from("listings")
@@ -111,7 +115,10 @@ export default async function AdminListingsPage({
   if (error) console.error("[admin/listings] failed to load listings:", error);
   const allRows = (data ?? []) as unknown as Row[];
   const counts = approvalCounts(allRows);
-  const rows = extended ? filterByApproval(allRows, filter) : allRows;
+  const approvalRows = extended ? filterByApproval(allRows, filter) : allRows;
+  const rows = approvalRows.filter((r) =>
+    matchesSearch(q, [r.title, r.location, r.slug, r.property_type, r.listing_category, r.status, r.specialists?.display_name]),
+  );
   const columns = extended
     ? [...baseColumns.slice(0, 3), ...specialistColumns, ...baseColumns.slice(3)]
     : baseColumns;
@@ -140,6 +147,7 @@ export default async function AdminListingsPage({
           Specialist columns and the approval filter appear once the specialists migration is run in the Supabase SQL editor.
         </p>
       )}
+      <ListingSearch q={q} action="/admin/listings" hidden={filter !== "all" ? { approval: filter } : undefined} />
       {extended && (
         <nav aria-label="Filter by approval status" className="mt-5 flex flex-wrap gap-2">
           {FILTERS.map((f) => {
@@ -147,7 +155,7 @@ export default async function AdminListingsPage({
             return (
               <Link
                 key={f.key}
-                href={f.key === "all" ? "/admin/listings" : `/admin/listings?approval=${f.key}`}
+                href={{ pathname: "/admin/listings", query: { ...(f.key !== "all" && { approval: f.key }), ...(q && { q }) } }}
                 aria-current={active ? "page" : undefined}
                 className={`press inline-flex min-h-11 items-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors ${
                   active
@@ -165,7 +173,7 @@ export default async function AdminListingsPage({
         </nav>
       )}
       <div className="mt-6">
-        <DataTable rows={rows} columns={columns} getKey={(r) => r.id} empty={filter !== "all" && extended ? <>No listings match this filter.</> : <>No listings yet. <Link href="/admin/listings/new" className="text-navy-700 underline">Add the first one</Link>.</>} />
+        <DataTable rows={rows} columns={columns} getKey={(r) => r.id} empty={(filter !== "all" && extended) || q ? <>No listings match your search or filter.</> : <>No listings yet. <Link href="/admin/listings/new" className="text-navy-700 underline">Add the first one</Link>.</>} />
       </div>
     </div>
   );

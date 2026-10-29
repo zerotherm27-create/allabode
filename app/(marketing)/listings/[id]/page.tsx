@@ -58,6 +58,7 @@ export default async function ListingDetailPage({ params }: Params) {
   const { id } = await params;
   const [listing, settings] = await Promise.all([getListing(id), getSettings()]);
   if (!listing) notFound();
+  const closed = listing.status === "Sold" || listing.status === "Leased";
   const phone = s(settings, "contact_phone");
   const phoneHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
 
@@ -262,7 +263,17 @@ export default async function ListingDetailPage({ params }: Params) {
                   : "Speak with our team about this property."}
               </p>
               <div className="mt-5 flex flex-col gap-3">
-                <Button href={listing.dbId ? "#schedule" : "#inquire"}>Schedule a Viewing</Button>
+                {closed ? (
+                  <>
+                    <Button disabled>Schedule a Viewing</Button>
+                    <p role="status" className="text-sm text-slate">
+                      This property is already {listing.status.toLowerCase()}, so viewings are closed.
+                      Questions? Use the inquiry form below.
+                    </p>
+                  </>
+                ) : (
+                  <Button href={listing.dbId ? "#schedule" : "#inquire"}>Schedule a Viewing</Button>
+                )}
                 <Button href="/valuation" variant="ghost">
                   Request Appraisal
                 </Button>
@@ -280,7 +291,7 @@ export default async function ListingDetailPage({ params }: Params) {
       </Reveal>
 
       {/* Schedule a viewing */}
-      {listing.dbId && (
+      {listing.dbId && !closed && (
         <section id="schedule" className="scroll-mt-24 bg-surface-gray py-section">
           <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr]">
             <div>

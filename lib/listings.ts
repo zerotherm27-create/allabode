@@ -74,7 +74,8 @@ const COMMERCIAL = new Set(["Commercial", "Office", "Warehouse", "Lot", "Parking
 
 function uiStatus(row: Row): ListingStatus {
   if (row.status === "Reserved") return "Reserved";
-  if (row.status === "Sold" || row.status === "Leased") return "Sold";
+  if (row.status === "Sold") return "Sold";
+  if (row.status === "Leased") return "Leased";
   return listingStatusLabel(row.listing_category);
 }
 

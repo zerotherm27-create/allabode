@@ -54,7 +54,7 @@ export default async function SpecialistProfilePage({ params }: { params: Params
 
   const allListings = await getListings();
   const listings = allListings.filter(
-    (l) => l.specialist?.slug === specialist.slug && l.status !== "Sold",
+    (l) => l.specialist?.slug === specialist.slug && l.status !== "Sold" && l.status !== "Leased",
   );
   const base = `https://${site.domain}`;
   return (

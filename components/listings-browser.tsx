@@ -13,9 +13,10 @@ function priceValue(p: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
-function availabilityOf(l: Listing): "Available" | "Reserved" | "Sold" {
+function availabilityOf(l: Listing): "Available" | "Reserved" | "Sold" | "Leased" {
   if (l.status === "Reserved") return "Reserved";
   if (l.status === "Sold") return "Sold";
+  if (l.status === "Leased") return "Leased";
   return "Available";
 }
 
@@ -146,7 +147,7 @@ export function ListingsBrowser({
 
           <Filter label="Availability" htmlFor="filter-availability">
             <select id="filter-availability" value={availability} onChange={(e) => setAvailability(e.target.value)} className={selectCls}>
-              {["All", "Available", "Reserved", "Sold"].map((o) => (
+              {["All", "Available", "Reserved", "Sold", "Leased"].map((o) => (
                 <option key={o}>{o}</option>
               ))}
             </select>

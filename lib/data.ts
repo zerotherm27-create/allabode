@@ -59,7 +59,7 @@ export const services: Service[] = [
   },
 ];
 
-export type ListingStatus = "For Sale" | "For Rent" | "For Sale & For Rent" | "Reserved" | "Sold";
+export type ListingStatus = "For Sale" | "For Rent" | "For Sale & For Rent" | "Reserved" | "Sold" | "Leased";
 
 export type Listing = {
   id: string;
@@ -244,6 +244,7 @@ export const statusStyles: Record<ListingStatus, string> = {
   "For Sale & For Rent": "bg-gold text-navy",
   Reserved: "bg-reserved text-white",
   Sold: "bg-sold text-white",
+  Leased: "bg-sold text-white",
 };
 
 export const trustPoints = [

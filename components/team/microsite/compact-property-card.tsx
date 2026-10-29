@@ -14,6 +14,7 @@ const TAG: Record<ListingStatus, string> = {
   "For Sale & For Rent": "bg-gold text-navy",
   Reserved: "bg-surface text-navy",
   Sold: "bg-ink text-white",
+  Leased: "bg-ink text-white",
 };
 
 /**

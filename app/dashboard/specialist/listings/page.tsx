@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
+import { ListingThumb, firstImageUrl, type ListingImageRef } from "@/components/admin/listing-thumb";
 import { ApprovalBadge } from "@/components/specialist/approval-badge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
@@ -19,6 +20,7 @@ type Row = {
   property_type: string | null;
   city: string | null;
   updated_at: string;
+  listing_images: ListingImageRef[] | null;
 };
 
 const NOTICES: Record<string, string> = {
@@ -35,7 +37,9 @@ const columns: Column<Row>[] = [
     header: "Listing",
     primary: true,
     cell: (l) => (
-      <div>
+      <div className="flex items-center gap-3">
+        <ListingThumb url={firstImageUrl(l.listing_images)} title={l.title} />
+        <div>
         <Link
           href={`/dashboard/specialist/listings/${l.id}/edit`}
           className="font-medium text-navy hover:text-navy-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
@@ -45,6 +49,7 @@ const columns: Column<Row>[] = [
         <p className="text-xs text-slate">
           {[l.listing_category, l.property_type, l.city].filter(Boolean).join(" · ")}
         </p>
+        </div>
       </div>
     ),
   },
@@ -122,7 +127,7 @@ export default async function SpecialistListingsPage({
   const { data, error } = specialistId
     ? await supabase
         .from("listings")
-        .select("id,title,status,approval_status,ever_approved,rejection_note,listing_category,property_type,city,updated_at")
+        .select("id,title,status,approval_status,ever_approved,rejection_note,listing_category,property_type,city,updated_at,listing_images(url,sort_order)")
         .eq("specialist_id", specialistId)
         .order("updated_at", { ascending: false })
     : { data: [], error: null };

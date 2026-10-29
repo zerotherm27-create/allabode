@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { DataTable, type Column } from "@/components/admin/data-table";
+import { ListingThumb, firstImageUrl, type ListingImageRef } from "@/components/admin/listing-thumb";
 import { ApprovalBadge } from "@/components/specialist/approval-badge";
 import {
   approvalCounts,
@@ -25,13 +26,14 @@ type Row = {
   status: string;
   is_featured: boolean;
   price: number | null;
+  listing_images?: ListingImageRef[] | null;
   /** Present only once the specialists migration has run. */
   approval_status?: string;
   specialist_id?: string | null;
   specialists?: { display_name: string } | null;
 };
 
-const BASE_SELECT = "id,title,slug,property_type,listing_category,status,is_featured,price";
+const BASE_SELECT = "id,title,slug,property_type,listing_category,status,is_featured,price,listing_images(url,sort_order)";
 const EXTENDED_SELECT = `${BASE_SELECT},approval_status,specialist_id,specialists(display_name)`;
 
 const FILTERS: { key: ApprovalFilter; label: string }[] = [
@@ -44,9 +46,12 @@ const FILTERS: { key: ApprovalFilter; label: string }[] = [
 
 const baseColumns: Column<Row>[] = [
   { header: "Title", primary: true, cell: (l) => (
-    <div>
-      <Link href={`/admin/listings/${l.id}/edit`} className="font-medium text-navy hover:text-navy-700">{l.title}</Link>
-      <p className="text-xs text-slate">{l.listing_category} · {l.property_type}</p>
+    <div className="flex items-center gap-3">
+      <ListingThumb url={firstImageUrl(l.listing_images)} title={l.title} />
+      <div>
+        <Link href={`/admin/listings/${l.id}/edit`} className="font-medium text-navy hover:text-navy-700">{l.title}</Link>
+        <p className="text-xs text-slate">{l.listing_category} · {l.property_type}</p>
+      </div>
     </div>
   ) },
   { header: "Price", cell: (l) => <span className="text-slate">{l.price != null ? `₱${Number(l.price).toLocaleString("en-PH")}` : "—"}</span> },

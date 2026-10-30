@@ -45,7 +45,7 @@ export function AdminShell({
     <div className="flex min-h-dvh bg-surface-gray">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-navy text-white transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-navy text-white transition-transform lg:sticky lg:top-0 lg:h-dvh lg:shrink-0 lg:self-start lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >

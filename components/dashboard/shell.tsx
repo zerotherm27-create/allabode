@@ -47,7 +47,7 @@ export function DashboardShell({
     <div className="min-h-screen bg-surface-gray lg:grid lg:grid-cols-[260px_1fr]">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-navy text-white transition-transform duration-[var(--dur-mid)] ease-[var(--ease-out)] lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-navy text-white transition-transform duration-[var(--dur-mid)] ease-[var(--ease-out)] lg:sticky lg:top-0 lg:h-dvh lg:shrink-0 lg:self-start lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >

@@ -188,12 +188,12 @@ export async function computeOwnerSoaByLease(
   // 1. Fetch lease
   const { data: leaseRow } = await supabase
     .from("leases")
-    .select("id,rent_amount,lease_type,mgmt_fee_pct,vat_pct,unit_id,tenant_id,advance,deposit")
+    .select("id,rent_amount,lease_type,mgmt_fee_pct,charge_mgmt_fee,vat_pct,unit_id,tenant_id,advance,deposit")
     .eq("id", leaseId)
     .maybeSingle();
   if (!leaseRow) throw new Error("Lease not found");
 
-  type LeaseRow = { rent_amount: number; lease_type: string; mgmt_fee_pct: number; vat_pct: number; unit_id: string; tenant_id: string | null; advance: number | null; deposit: number | null };
+  type LeaseRow = { rent_amount: number; lease_type: string; mgmt_fee_pct: number; charge_mgmt_fee?: boolean | null; vat_pct: number; unit_id: string; tenant_id: string | null; advance: number | null; deposit: number | null };
   const lease = leaseRow as LeaseRow;
 
   // 2. Unit → property → owner
@@ -376,7 +376,10 @@ export async function computeOwnerSoaByLease(
   // one-time deposit/advance amounts that aren't recurring management
   // revenue and shouldn't inflate the fee.
   const monthlyRent = Number(lease.rent_amount ?? 0);
-  const mgmtFeePct = Number(lease.mgmt_fee_pct ?? 5);
+  // Leases flagged charge_mgmt_fee = false (e.g. tenant-hunting only) skip the
+  // fee and the VAT on it. A pct of 0 keeps soa-validate's expected math at 0.
+  const chargeMgmtFee = lease.charge_mgmt_fee !== false;
+  const mgmtFeePct = chargeMgmtFee ? Number(lease.mgmt_fee_pct ?? 5) : 0;
   const vatPct = Number(lease.vat_pct ?? 12);
   const mgmtFeeAmt = Math.round(monthlyRent * mgmtFeePct) / 100;
   const vatAmt = Math.round(mgmtFeeAmt * vatPct) / 100;
@@ -409,8 +412,10 @@ export async function computeOwnerSoaByLease(
       sort_order:   50 + i,
       commission_id: c.id,
     })),
-    { line_type: "deduction_mgmt_fee", description: `Management Fee (${mgmtFeePct}%)`, amount: -mgmtFeeAmt, sort_order: 100 },
-    { line_type: "deduction_vat",      description: `VAT (${vatPct}%)`,                amount: -vatAmt,    sort_order: 101 },
+    ...(chargeMgmtFee ? [
+      { line_type: "deduction_mgmt_fee", description: `Management Fee (${mgmtFeePct}%)`, amount: -mgmtFeeAmt, sort_order: 100 },
+      { line_type: "deduction_vat",      description: `VAT (${vatPct}%)`,                amount: -vatAmt,    sort_order: 101 },
+    ] : []),
     ...expenses.map((e, i) => ({
       line_type:    "deduction_expense",
       description:  e.description ?? "Expense",

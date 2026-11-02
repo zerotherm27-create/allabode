@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
 import { issueInvoice, voidInvoice, recordPaymentOnInvoice, addInvoiceLine, deleteInvoiceLine } from "@/app/admin/invoice-actions";
 import { inputCls } from "@/components/admin/form-kit";
+import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 
 const peso = (n: number | string) => `₱${Math.round(Number(n)).toLocaleString("en-PH")}`;
 
@@ -105,11 +106,14 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
             <Icon name="download" size={16} /> PDF
           </a>
           {canVoid && !canIssue && (
-            <form action={voidInvoice.bind(null, id)}>
+            <ConfirmActionForm
+              action={voidInvoice.bind(null, id)}
+              message={`Void invoice ${inv.invoice_number}? Tenants can no longer pay it and it drops out of balances. Payments already recorded stay on file.`}
+            >
               <button type="submit" className="inline-flex items-center gap-1.5 rounded-md border border-error px-4 py-2 text-sm font-medium text-error hover:bg-error-bg">
                 <Icon name="block" size={16} /> Void
               </button>
-            </form>
+            </ConfirmActionForm>
           )}
         </div>
       </div>

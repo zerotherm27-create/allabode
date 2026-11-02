@@ -147,11 +147,14 @@ export default async function EditLeasePage({
                         <Icon name="open_in_new" size={16} />
                       </Link>
                       {inv.status !== "voided" && (
-                        <form action={voidInvoice.bind(null, inv.id)}>
+                        <ConfirmActionForm
+                          action={voidInvoice.bind(null, inv.id)}
+                          message={`Void invoice ${inv.invoice_number}? Tenants can no longer pay it and it drops out of balances. Payments already recorded stay on file.`}
+                        >
                           <button type="submit" aria-label="Void" title="Void invoice" className="flex h-8 w-8 items-center justify-center rounded-md text-error hover:bg-error-bg">
                             <Icon name="block" size={16} />
                           </button>
-                        </form>
+                        </ConfirmActionForm>
                       )}
                     </div>
                   </td>

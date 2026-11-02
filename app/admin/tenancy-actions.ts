@@ -373,6 +373,36 @@ export async function finalizeTenancyAgreement(id: string) {
   revalidatePath(`/admin/contracts/tenancy/${id}`);
 }
 
+/**
+ * Re-render the PDF of a completed agreement (e.g. after adding a missing ID).
+ * Only the PDF is rebuilt: no tenant/lease/portal side effects, and the
+ * previous PDF file is kept in storage.
+ */
+export async function regenerateTenancyPdf(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+
+  await completeTenancyAgreement(id, supabase, { regenerate: true });
+  await logAudit(supabase, { action: "tenancy_agreement.pdf_regenerated", entityType: "tenancy_agreement", entityId: id, actorId: user.id });
+  revalidatePath(`/admin/contracts/tenancy/${id}`);
+}
+
+/** Short-lived signed URLs for the parties' uploaded ID images (staff view). */
+export async function getTenancyIdUrls(id: string): Promise<{ tenant: string | null; landlord: string | null }> {
+  const supabase = await createClient();
+  const { data: a } = await supabase
+    .from("tenancy_agreements")
+    .select("tenant_id_document_path,landlord_id_document_path")
+    .eq("id", id)
+    .maybeSingle();
+  const [tenant, landlord] = await Promise.all([
+    a?.tenant_id_document_path ? signedUrl(supabase, AGREEMENTS_BUCKET, a.tenant_id_document_path, 300) : null,
+    a?.landlord_id_document_path ? signedUrl(supabase, AGREEMENTS_BUCKET, a.landlord_id_document_path, 300) : null,
+  ]);
+  return { tenant, landlord };
+}
+
 // ============================================================
 // Void / delete (same semantics as the PM agreement)
 // ============================================================

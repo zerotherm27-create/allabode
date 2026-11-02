@@ -10,6 +10,7 @@ import { TenancyTermsForm, type TenancyTermsInitial, type UnitOption } from "@/c
 import {
   sendTenancyTenantLink, sendTenancyLandlordLink, updateTenancyTerms, updateTenancyInventory,
   finalizeTenancyAgreement, voidTenancyAgreement, deleteTenancyAgreement, getTenancyPdfSignedUrl,
+  regenerateTenancyPdf, getTenancyIdUrls,
 } from "@/app/admin/tenancy-actions";
 import { getPublicSiteUrl } from "@/lib/url";
 import { DEFAULT_BANK_DETAILS, DEFAULT_INVENTORY, type InventoryRow, type PaymentScheduleRow, type TenancyBankDetails } from "@/lib/pm/tenancy-clauses";
@@ -53,6 +54,7 @@ type TenancyAgreement = {
   tenant_id_type: string | null;
   tenant_id_number: string | null;
   tenant_id_issued_date: string | null;
+  tenant_id_document_path: string | null;
   landlord_id_document_path: string | null;
   tenant_typed_name: string | null;
   tenant_signed_at: string | null;
@@ -128,9 +130,10 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
   const a = data as TenancyAgreement;
 
   const termsEditable = a.status === "draft" || a.status === "sent";
-  const [{ data: staffRow }, pdfUrl, unitsResult, brandOptions] = await Promise.all([
+  const [{ data: staffRow }, pdfUrl, idUrls, unitsResult, brandOptions] = await Promise.all([
     user ? supabase.from("users").select("is_signatory").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     a.status === "completed" ? getTenancyPdfSignedUrl(id) : Promise.resolve(null),
+    a.tenant_id_document_path || a.landlord_id_document_path ? getTenancyIdUrls(id) : Promise.resolve({ tenant: null, landlord: null }),
     termsEditable
       ? supabase.from("units").select("id,unit_label,base_rent,properties(name,address)").order("unit_label")
       : Promise.resolve({ data: null }),
@@ -155,6 +158,7 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
   const doUpdateTerms = updateTenancyTerms.bind(null, id);
   const doUpdateInventory = updateTenancyInventory.bind(null, id);
   const doFinalize = finalizeTenancyAgreement.bind(null, id);
+  const doRegenerate = regenerateTenancyPdf.bind(null, id);
   const doVoid = voidTenancyAgreement.bind(null, id);
   const doDelete = deleteTenancyAgreement.bind(null, id);
   const tenantLink = `${getPublicSiteUrl()}/sign/tenancy/${a.access_token}`;
@@ -264,6 +268,22 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
               </div>
             ))}
           </dl>
+          <div className="mt-3 flex flex-wrap gap-4 text-sm">
+            {idUrls.tenant ? (
+              <a href={idUrls.tenant} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-navy-700 underline">
+                <Icon name="verified_user" size={16} /> Open tenant ID
+              </a>
+            ) : (
+              <span className="text-slate">No tenant ID file</span>
+            )}
+            {idUrls.landlord ? (
+              <a href={idUrls.landlord} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-navy-700 underline">
+                <Icon name="verified_user" size={16} /> Open landlord ID
+              </a>
+            ) : (
+              <span className="text-slate">No landlord ID file</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -338,6 +358,13 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
               <Icon name="picture_as_pdf" size={18} /> View signed PDF
             </a>
           )}
+          <ActionRow>
+            <div className="mt-3">
+              <ActionButton actionKey="regenerate-pdf" action={doRegenerate} label="Regenerate PDF" pendingLabel="Rebuilding…"
+                className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray"
+                confirmMessage="Rebuild the signed PDF from the saved data? The previous PDF file is kept, and the tenant portal copy is replaced with the new one." />
+            </div>
+          </ActionRow>
           <div className="mt-3 flex flex-wrap gap-4 text-sm">
             {a.linked_tenant_id && (
               <Link href={`/admin/tenants/${a.linked_tenant_id}/edit`} className="text-navy-700 underline">Tenant record</Link>

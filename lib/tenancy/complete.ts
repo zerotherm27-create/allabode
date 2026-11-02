@@ -70,11 +70,18 @@ async function downloadAsDataUri(
  * (token-authenticated by the RPC) and passes the service-role admin client —
  * the same narrow admin-client exception the token PDF route already uses.
  */
-export async function completeTenancyAgreement(id: string, supabase: SupabaseClient): Promise<void> {
+export async function completeTenancyAgreement(
+  id: string,
+  supabase: SupabaseClient,
+  opts?: { regenerate?: boolean }
+): Promise<void> {
   const { data: a, error } = await supabase.from("tenancy_agreements").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
   if (!a) throw new Error("Agreement not found.");
-  if (a.status === "completed") return; // idempotent — retry-safe
+  // Idempotent — retry-safe. `regenerate` re-renders the PDF of an already
+  // completed agreement and nothing else (no tenant/lease/portal side effects).
+  if (a.status === "completed" && !opts?.regenerate) return;
+  if (opts?.regenerate && a.status !== "completed") throw new Error("Only a completed agreement can be regenerated.");
   if (!a.landlord_signature_data || !a.tenant_signature_data) {
     throw new Error("Both signatures are required before the agreement can be finalized.");
   }
@@ -174,6 +181,11 @@ export async function completeTenancyAgreement(id: string, supabase: SupabaseCli
       contentType: "application/pdf",
       upsert: true,
     });
+    if (opts?.regenerate) {
+      const { error: pathErr } = await supabase.from("tenancy_agreements").update({ pdf_path: pdfPath }).eq("id", a.id);
+      if (pathErr) throw new Error(pathErr.message);
+      return "";
+    }
     let documentsIdPath: string | null = null;
     if (tenantIdFile.buffer) {
       const ext = tenantIdFile.mime === "image/png" ? "png" : tenantIdFile.mime === "application/pdf" ? "pdf" : "jpg";

@@ -33,7 +33,9 @@ async function downloadAsDataUri(
   if (!file) {
     ({ data: file } = await createAdminClient().storage.from(AGREEMENTS_BUCKET).download(storagePath));
   }
-  if (!file) return { dataUri: null, buffer: null, mime: "image/jpeg" };
+  // A path is recorded, so the ID was uploaded: fail the completion (it stays
+  // retryable via "Finalize agreement") rather than render a blank ID page.
+  if (!file) throw new Error(`Could not read the uploaded ID file (${storagePath}). Re-upload it and finalize again.`);
   const buffer = Buffer.from(await file.arrayBuffer());
   // Prefer the content-type Supabase Storage actually stored (set from the
   // browser's validated File.type at upload — see uploadToSignedUrl callers)
@@ -44,8 +46,16 @@ async function downloadAsDataUri(
   const mime = file.type || extGuess;
   // @react-pdf can only embed raster images inline; a PDF-format ID is
   // attached as a document row but not rendered into the IDs page.
-  const dataUri = mime === "application/pdf" ? null : `data:${mime};base64,${buffer.toString("base64")}`;
-  return { dataUri, buffer, mime };
+  if (mime === "application/pdf") return { dataUri: null, buffer, mime };
+  // Check the real bytes: a HEIC/WebP photo renamed .jpeg can't be embedded and
+  // would otherwise leave the "Copy of Valid IDs" page blank.
+  const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+  if (!isJpeg && !isPng) {
+    throw new Error(`The uploaded ID file (${storagePath}) isn't a JPG or PNG image and can't be placed in the PDF. Ask for a new upload.`);
+  }
+  const embedMime = isPng ? "image/png" : "image/jpeg";
+  return { dataUri: `data:${embedMime};base64,${buffer.toString("base64")}`, buffer, mime: embedMime };
 }
 
 /**

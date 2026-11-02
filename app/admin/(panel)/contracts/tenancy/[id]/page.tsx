@@ -53,6 +53,7 @@ type TenancyAgreement = {
   tenant_id_type: string | null;
   tenant_id_number: string | null;
   tenant_id_issued_date: string | null;
+  landlord_id_document_path: string | null;
   tenant_typed_name: string | null;
   tenant_signed_at: string | null;
   landlord_typed_name: string | null;
@@ -310,7 +311,7 @@ export default async function AdminTenancyContractDetailPage({ params }: { param
             )}
           </div>
           {isSignatory ? (
-            <TenancyCountersignForm agreementId={id} />
+            <TenancyCountersignForm agreementId={id} hasLandlordId={!!(a.landlord_id_document_path && a.landlord_id_type && a.landlord_id_number)} />
           ) : (
             <div className="rounded-lg border border-line bg-surface-gray p-5 text-sm text-slate">
               Only a designated signatory account can countersign for the landlord. Send the landlord their signing

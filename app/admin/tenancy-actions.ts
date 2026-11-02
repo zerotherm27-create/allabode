@@ -276,7 +276,18 @@ export async function updateTenancyInventory(id: string, fd: FormData) {
 // Landlord countersign fallback (designated signatory) -> completion
 // ============================================================
 
-export async function countersignTenancyAgreement(id: string, signatureDataUrl: string) {
+export type CountersignLandlordId = {
+  idType: string;
+  idNumber: string;
+  idIssuedDate: string;
+  path: string;
+};
+
+export async function countersignTenancyAgreement(
+  id: string,
+  signatureDataUrl: string,
+  landlordId?: CountersignLandlordId | null
+) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in.");
@@ -288,7 +299,7 @@ export async function countersignTenancyAgreement(id: string, signatureDataUrl: 
 
   const { data: agreement } = await supabase
     .from("tenancy_agreements")
-    .select("status,landlord_signed_via,landlord_signature_data,landlord_details")
+    .select("status,landlord_signed_via,landlord_signature_data,landlord_details,landlord_id_type,landlord_id_number,landlord_id_document_path")
     .eq("id", id)
     .maybeSingle();
   if (!agreement) throw new Error("Agreement not found.");
@@ -299,6 +310,27 @@ export async function countersignTenancyAgreement(id: string, signatureDataUrl: 
     throw new Error("The landlord has already signed via their signing link.");
   }
 
+  // The landlord's ID is mandatory on the remote path (RPC-enforced) and appears on
+  // the "Copy of Valid IDs" page, so a countersign needs one too: either already on
+  // file (the landlord uploaded it before the fallback) or supplied here.
+  const idOnFile = !!(agreement.landlord_id_document_path && agreement.landlord_id_type && agreement.landlord_id_number);
+  if (!idOnFile) {
+    if (!landlordId?.idType || !landlordId.idNumber.trim() || !landlordId.idIssuedDate || !landlordId.path) {
+      throw new Error("The landlord's ID type, number, issue date and image are required to countersign.");
+    }
+    if (!landlordId.path.startsWith(`tenancy/${id}/`)) {
+      throw new Error("Invalid ID file.");
+    }
+  }
+  const idUpdate = !idOnFile && landlordId
+    ? {
+        landlord_id_type: landlordId.idType,
+        landlord_id_number: landlordId.idNumber.trim(),
+        landlord_id_issued_date: landlordId.idIssuedDate,
+        landlord_id_document_path: landlordId.path,
+      }
+    : {};
+
   const ip = await clientIp();
   const landlordName = (agreement.landlord_details as { name?: string } | null)?.name ?? "";
   const { error } = await supabase.from("tenancy_agreements").update({
@@ -308,6 +340,7 @@ export async function countersignTenancyAgreement(id: string, signatureDataUrl: 
     landlord_signed_ip: ip,
     landlord_signed_via: "countersign",
     signatory_user_id: user.id,
+    ...idUpdate,
   }).eq("id", id).is("landlord_signature_data", null);
   if (error) throw new Error(error.message);
 

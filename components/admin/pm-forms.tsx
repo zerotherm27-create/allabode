@@ -195,7 +195,7 @@ export type LeaseValues = {
   unit_id?: string; tenant_id?: string; start_date?: string; end_date?: string;
   rent_amount?: number | null; billing_cycle?: string; deposit?: number | null;
   advance?: number | null; remittance_due_date?: string; notice_period_days?: number | null; status?: string; terms?: string;
-  lease_type?: string; mgmt_fee_pct?: number | null; vat_pct?: number | null;
+  lease_type?: string; mgmt_fee_pct?: number | null; charge_mgmt_fee?: boolean | null; vat_pct?: number | null;
 };
 export function LeaseForm({
   action, initial = {}, units, tenants,
@@ -264,6 +264,17 @@ export function LeaseForm({
         <F label="Terms" span><textarea name="terms" defaultValue={v.terms} rows={3} className={`${inputCls} h-auto py-2`} /></F>
       </Group>
       <Group title="Management Fees">
+        <F label="Charge management fee" hint="Turn off for tenant-hunting-only leases. The fee and its VAT are left off the owner statement." span>
+          <label className="inline-flex min-h-11 items-center gap-2 text-sm text-navy">
+            <input
+              name="charge_mgmt_fee"
+              type="checkbox"
+              defaultChecked={v.charge_mgmt_fee !== false}
+              className="h-4 w-4"
+            />
+            Include management fee on owner statements
+          </label>
+        </F>
         <F label="Management fee %" hint={`${leaseTypeLabel(leaseType)} default: ${defaultMgmtFeeForLeaseType(leaseType)}%. You can override per lease.`}>
           <input
             name="mgmt_fee_pct"

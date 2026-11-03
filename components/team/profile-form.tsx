@@ -191,7 +191,7 @@ export function SpecialistProfileForm({
       <Field label="Specialties" hint="Separate with commas, for example Pre-selling condos, Leasing.">
         <Input name="specialties" defaultValue={values.specialties} />
       </Field>
-      <Field label="Languages" hint="Separate with commas, for example English, Filipino.">
+      <Field label="Other languages you speak" hint="Separate with commas, for example Mandarin, Cebuano.">
         <Input name="languages" defaultValue={values.languages} />
       </Field>
 

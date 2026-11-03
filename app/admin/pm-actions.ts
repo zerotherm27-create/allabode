@@ -154,6 +154,7 @@ function leaseRow(fd: FormData) {
     terms: s(fd, "terms"),
     lease_type:   s(fd, "lease_type")   ?? "long_term",
     mgmt_fee_pct: n(fd, "mgmt_fee_pct") ?? 5,
+    charge_mgmt_fee: fd.get("charge_mgmt_fee") === "on",
     vat_pct:      n(fd, "vat_pct")      ?? 12,
   };
 }

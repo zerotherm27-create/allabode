@@ -30,6 +30,15 @@ export function joinList(items: string[]): string {
   return `${xs.slice(0, -1).join(", ")}, and ${xs[xs.length - 1]}`;
 }
 
+// English and Filipino are assumed for every specialist, so write-ups never
+// state them. Mirrors IMPLIED_LANGUAGES in profile-suggest.ts.
+const IMPLIED_LANGUAGES = new Set(["english", "filipino", "tagalog", "pilipino"]);
+
+/** Languages worth stating: everything except the ones every specialist is assumed to speak. */
+export function otherLanguages(items: string[]): string[] {
+  return items.map((s) => s.trim()).filter((s) => s && !IMPLIED_LANGUAGES.has(s.toLowerCase()));
+}
+
 /**
  * Fallback bio for a specialist who has not written one: one or two plain
  * sentences built only from their own fields, skipping whatever is missing.
@@ -42,22 +51,17 @@ export function composeIntro(f: IntroFields): string {
   const specialties = joinList(f.specialties);
 
   let lead = `${name} is a property specialist with ${COMPANY_NAME}`;
-  if (areas && specialties) lead += `, working across ${areas} and helping clients with ${specialties}`;
-  else if (areas) lead += `, working across ${areas}`;
+  if (areas && specialties) lead += `, helping clients with ${specialties} across ${areas}`;
+  else if (areas) lead += `, working with clients across ${areas}`;
   else if (specialties) lead += `, helping clients with ${specialties}`;
   lead += ".";
 
   const years = f.yearsExperience != null && f.yearsExperience > 0 ? f.yearsExperience : null;
-  const languages = joinList(f.languages);
-  let second = "";
-  if (years && languages) {
-    second = `${first} has ${years} ${years === 1 ? "year" : "years"} of experience in real estate and works in ${languages}.`;
-  } else if (years) {
-    second = `${first} has ${years} ${years === 1 ? "year" : "years"} of experience in real estate.`;
-  } else if (languages) {
-    second = `${first} works in ${languages}.`;
-  }
-  return second ? `${lead} ${second}` : lead;
+  const languages = joinList(otherLanguages(f.languages));
+  const rest: string[] = [];
+  if (years) rest.push(`${first} has ${years} ${years === 1 ? "year" : "years"} of experience in real estate.`);
+  if (languages) rest.push(`${first} also speaks ${languages}.`);
+  return [lead, ...rest].join(" ");
 }
 
 
@@ -65,19 +69,14 @@ export function composeIntro(f: IntroFields): string {
 export function aboutFacts(f: Omit<IntroFields, "name">): string {
   const areas = joinList(f.areas);
   const specialties = joinList(f.specialties);
-  const languages = joinList(f.languages);
+  const languages = joinList(otherLanguages(f.languages));
   const years = f.yearsExperience != null && f.yearsExperience > 0 ? f.yearsExperience : null;
   const parts: string[] = [];
-  if (areas && specialties) parts.push(`I work across ${areas}, helping clients with ${specialties}.`);
-  else if (areas) parts.push(`I work across ${areas}.`);
+  if (areas && specialties) parts.push(`I help clients with ${specialties} across ${areas}.`);
+  else if (areas) parts.push(`I work with clients across ${areas}.`);
   else if (specialties) parts.push(`I help clients with ${specialties}.`);
-  if (years && languages) {
-    parts.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate and work in ${languages}.`);
-  } else if (years) {
-    parts.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate.`);
-  } else if (languages) {
-    parts.push(`I work in ${languages}.`);
-  }
+  if (years) parts.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate.`);
+  if (languages) parts.push(`I also speak ${languages}.`);
   return parts.join(" ");
 }
 

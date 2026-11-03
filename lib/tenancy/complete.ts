@@ -33,7 +33,9 @@ async function downloadAsDataUri(
   if (!file) {
     ({ data: file } = await createAdminClient().storage.from(AGREEMENTS_BUCKET).download(storagePath));
   }
-  if (!file) return { dataUri: null, buffer: null, mime: "image/jpeg" };
+  // A path is recorded, so the ID was uploaded: fail the completion (it stays
+  // retryable via "Finalize agreement") rather than render a blank ID page.
+  if (!file) throw new Error(`Could not read the uploaded ID file (${storagePath}). Re-upload it and finalize again.`);
   const buffer = Buffer.from(await file.arrayBuffer());
   // Prefer the content-type Supabase Storage actually stored (set from the
   // browser's validated File.type at upload — see uploadToSignedUrl callers)
@@ -44,8 +46,16 @@ async function downloadAsDataUri(
   const mime = file.type || extGuess;
   // @react-pdf can only embed raster images inline; a PDF-format ID is
   // attached as a document row but not rendered into the IDs page.
-  const dataUri = mime === "application/pdf" ? null : `data:${mime};base64,${buffer.toString("base64")}`;
-  return { dataUri, buffer, mime };
+  if (mime === "application/pdf") return { dataUri: null, buffer, mime };
+  // Check the real bytes: a HEIC/WebP photo renamed .jpeg can't be embedded and
+  // would otherwise leave the "Copy of Valid IDs" page blank.
+  const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+  if (!isJpeg && !isPng) {
+    throw new Error(`The uploaded ID file (${storagePath}) isn't a JPG or PNG image and can't be placed in the PDF. Ask for a new upload.`);
+  }
+  const embedMime = isPng ? "image/png" : "image/jpeg";
+  return { dataUri: `data:${embedMime};base64,${buffer.toString("base64")}`, buffer, mime: embedMime };
 }
 
 /**
@@ -60,11 +70,18 @@ async function downloadAsDataUri(
  * (token-authenticated by the RPC) and passes the service-role admin client —
  * the same narrow admin-client exception the token PDF route already uses.
  */
-export async function completeTenancyAgreement(id: string, supabase: SupabaseClient): Promise<void> {
+export async function completeTenancyAgreement(
+  id: string,
+  supabase: SupabaseClient,
+  opts?: { regenerate?: boolean }
+): Promise<void> {
   const { data: a, error } = await supabase.from("tenancy_agreements").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
   if (!a) throw new Error("Agreement not found.");
-  if (a.status === "completed") return; // idempotent — retry-safe
+  // Idempotent — retry-safe. `regenerate` re-renders the PDF of an already
+  // completed agreement and nothing else (no tenant/lease/portal side effects).
+  if (a.status === "completed" && !opts?.regenerate) return;
+  if (opts?.regenerate && a.status !== "completed") throw new Error("Only a completed agreement can be regenerated.");
   if (!a.landlord_signature_data || !a.tenant_signature_data) {
     throw new Error("Both signatures are required before the agreement can be finalized.");
   }
@@ -164,6 +181,11 @@ export async function completeTenancyAgreement(id: string, supabase: SupabaseCli
       contentType: "application/pdf",
       upsert: true,
     });
+    if (opts?.regenerate) {
+      const { error: pathErr } = await supabase.from("tenancy_agreements").update({ pdf_path: pdfPath }).eq("id", a.id);
+      if (pathErr) throw new Error(pathErr.message);
+      return "";
+    }
     let documentsIdPath: string | null = null;
     if (tenantIdFile.buffer) {
       const ext = tenantIdFile.mime === "image/png" ? "png" : tenantIdFile.mime === "application/pdf" ? "pdf" : "jpg";

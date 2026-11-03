@@ -34,6 +34,16 @@ test("no gendered words and caps across many inputs", () => {
   assert.ok(n > 1000);
 });
 
+test("bio never states English or Filipino, but still names other languages", () => {
+  for (const languages of [["English"], ["Filipino"], ["English", "Filipino"], ["Tagalog", " english "]]) {
+    const b = suggestBio({ name: "A", years: 5, languages });
+    assert.doesNotMatch(b, /English|Filipino|Tagalog|speak/i);
+  }
+  const mixed = suggestBio({ name: "A", languages: ["English", "Mandarin", "Filipino"] });
+  assert.match(mixed, /I also speak Mandarin\./);
+  assert.doesNotMatch(mixed, /English|Filipino/);
+});
+
 test("tagline", () => {
   assert.equal(suggestTagline({ areas: [], specialties: [] }), "Your partner in finding the right space");
   assert.equal(suggestTagline({ areas: ["Makati", "BGC"] }), "Property guidance across Makati and BGC");
@@ -43,12 +53,12 @@ test("tagline", () => {
 test("bio includes sentences only when data exists, and never invents years", () => {
   const empty = suggestBio({ name: "Maria Santos" });
   assert.match(empty, /I'm Maria,/);
-  assert.doesNotMatch(empty, /year|work across|work in|help clients/);
+  assert.doesNotMatch(empty, /year|work with clients|speak|help clients/);
   assert.doesNotMatch(suggestBio({ name: "A", years: 0 }), /year/);
   assert.match(suggestBio({ name: "A", years: 1 }), /1 year of experience/);
-  assert.match(suggestBio({ name: "A", years: 5, languages: ["English", "Filipino"] }), /5 years .* work in English and Filipino/);
+  assert.match(suggestBio({ name: "A", years: 5, languages: ["Mandarin", "Cebuano"] }), /5 years of experience in real estate\. I also speak Mandarin and Cebuano\./);
   const full = suggestBio({ name: "A", areas: ["Makati"], specialties: ["Leasing"] });
-  assert.match(full, /I work across Makati, helping clients with Leasing\./);
+  assert.match(full, /I help clients with Leasing across Makati\./);
   assert.equal(full.split("\n\n").length, 2);
   assert.doesNotMatch(suggestBio({}), /undefined|null/);
 });

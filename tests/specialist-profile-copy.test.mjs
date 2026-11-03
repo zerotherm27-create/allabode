@@ -33,33 +33,42 @@ test("composeIntro with only a name is still a full sentence", () => {
 test("composeIntro includes areas and specialties when present", () => {
   assert.equal(
     composeIntro({ ...base, areas: ["Makati", "BGC"], specialties: ["leasing"] }),
-    "Maria Santos is a property specialist with All Abode Property Solutions, working across Makati and BGC and helping clients with leasing.",
+    "Maria Santos is a property specialist with All Abode Property Solutions, helping clients with leasing across Makati and BGC.",
   );
+  assert.match(composeIntro({ ...base, areas: ["Makati"] }), /Solutions, working with clients across Makati\.$/);
   assert.match(composeIntro({ ...base, specialties: ["selling"] }), /Solutions, helping clients with selling\.$/);
 });
 
-test("composeIntro adds years and languages as a second sentence, omitting what is missing", () => {
+test("composeIntro adds years and other languages as extra sentences, omitting what is missing", () => {
   assert.match(
-    composeIntro({ ...base, yearsExperience: 7, languages: ["English", "Filipino"] }),
-    /\. Maria has 7 years of experience in real estate and works in English and Filipino\.$/,
+    composeIntro({ ...base, yearsExperience: 7, languages: ["Mandarin", "Cebuano"] }),
+    /\. Maria has 7 years of experience in real estate\. Maria also speaks Mandarin and Cebuano\.$/,
   );
   assert.match(composeIntro({ ...base, yearsExperience: 1 }), /Maria has 1 year of experience in real estate\.$/);
-  assert.match(composeIntro({ ...base, languages: ["English"] }), /Maria works in English\.$/);
+  assert.match(composeIntro({ ...base, languages: ["Mandarin"] }), /Maria also speaks Mandarin\.$/);
   assert.doesNotMatch(composeIntro({ ...base, yearsExperience: 0 }), /experience/);
+});
+
+test("English and Filipino are never written out, other languages still are", () => {
+  const implied = ["English", "Filipino", "Tagalog", "  english ", "FILIPINO"];
+  assert.equal(composeIntro({ ...base, languages: implied }), composeIntro(base));
+  assert.equal(aboutFacts({ ...base, languages: implied }), "");
+  assert.doesNotMatch(composeIntro({ ...base, languages: ["English", "Mandarin", "Filipino"] }), /English|Filipino/);
+  assert.equal(aboutFacts({ ...base, languages: ["English", "Mandarin", "Filipino"] }), "I also speak Mandarin.");
 });
 
 test("aboutFacts is empty without facts and first-person with them", () => {
   assert.equal(aboutFacts(base), "");
   assert.equal(
     aboutFacts({ ...base, areas: ["Makati", "BGC"], specialties: ["leasing"] }),
-    "I work across Makati and BGC, helping clients with leasing.",
+    "I help clients with leasing across Makati and BGC.",
   );
+  assert.equal(aboutFacts({ ...base, areas: ["Makati"] }), "I work with clients across Makati.");
   assert.equal(aboutFacts({ ...base, specialties: ["selling"] }), "I help clients with selling.");
   assert.equal(
-    aboutFacts({ ...base, yearsExperience: 1, languages: ["English"] }),
-    "I have 1 year of experience in real estate and work in English.",
+    aboutFacts({ ...base, yearsExperience: 1, languages: ["Mandarin"] }),
+    "I have 1 year of experience in real estate. I also speak Mandarin.",
   );
-  assert.equal(aboutFacts({ ...base, languages: ["English", "Filipino"] }), "I work in English and Filipino.");
   assert.equal(aboutFacts({ ...base, yearsExperience: 0 }), "");
 });
 
@@ -77,7 +86,7 @@ test("aboutParagraphs falls back to the default intro and goal, adding facts whe
   assert.match(sparse[0], /^I'm Maria Santos, an accredited real estate salesperson with All Abode PH\./);
   assert.equal(sparse[1], ABOUT_COPY.goal);
   const rich = aboutParagraphs({ ...base, bio: "   ", areas: ["Makati"] });
-  assert.match(rich[0], /investing\. I work across Makati\.$/);
+  assert.match(rich[0], /investing\. I work with clients across Makati\.$/);
 });
 
 test("microsite copy has no figures, broker names, licence numbers or 'agent' wording", () => {

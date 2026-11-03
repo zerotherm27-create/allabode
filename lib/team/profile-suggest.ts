@@ -19,8 +19,19 @@ export type SuggestInput = {
   years?: number | null;
 };
 
+// English and Filipino are assumed for every specialist, so write-ups never
+// state them. Mirrors IMPLIED_LANGUAGES in profile-copy.ts.
+const IMPLIED_LANGUAGES = new Set(["english", "filipino", "tagalog", "pilipino"]);
+
 function clean(items: string[] | undefined, max = MAX_LIST_ITEMS): string[] {
   return (items ?? []).map((s) => s.trim()).filter(Boolean).slice(0, max);
+}
+
+function otherLanguages(items: string[] | undefined): string[] {
+  return (items ?? [])
+    .map((s) => s.trim())
+    .filter((s) => s && !IMPLIED_LANGUAGES.has(s.toLowerCase()))
+    .slice(0, MAX_LIST_ITEMS);
 }
 
 function joinList(items: string[]): string {
@@ -55,26 +66,21 @@ export function suggestBio(f: SuggestInput): string {
   const name = (f.name ?? "").trim();
   const areas = joinList(clean(f.areas));
   const specialties = joinList(clean(f.specialties));
-  const languages = joinList(clean(f.languages));
+  const languages = joinList(otherLanguages(f.languages));
   const years = f.years != null && Number.isInteger(f.years) && f.years > 0 ? f.years : null;
 
   const intro = name
     ? `Hi, I'm ${firstNameOf(name)}, a property specialist with All Abode Property Solutions.`
     : "I'm a property specialist with All Abode Property Solutions.";
   const first: string[] = [intro];
-  if (areas && specialties) first.push(`I work across ${areas}, helping clients with ${specialties}.`);
-  else if (areas) first.push(`I work across ${areas}.`);
+  if (areas && specialties) first.push(`I help clients with ${specialties} across ${areas}.`);
+  else if (areas) first.push(`I work with clients across ${areas}.`);
   else if (specialties) first.push(`I help clients with ${specialties}.`);
-  if (years && languages) {
-    first.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate and work in ${languages}.`);
-  } else if (years) {
-    first.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate.`);
-  } else if (languages) {
-    first.push(`I work in ${languages}.`);
-  }
+  if (years) first.push(`I have ${years} ${years === 1 ? "year" : "years"} of experience in real estate.`);
+  if (languages) first.push(`I also speak ${languages}.`);
 
   const second =
-    "I focus on clear information, honest advice, and a smooth experience from the first viewing to the final paperwork. Get in touch and tell me what you're looking for.";
+    "I keep things simple: clear information, honest advice, and a smooth process from the first viewing to the final paperwork. Tell me what you're looking for and I'll help you take the next step.";
 
   return cap(`${first.join(" ")}\n\n${second}`, BIO_MAX);
 }

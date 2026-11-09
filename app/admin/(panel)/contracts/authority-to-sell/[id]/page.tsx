@@ -6,7 +6,7 @@ import { AtsCountersignForm } from "@/components/admin/ats-countersign-form";
 import { CopyLink } from "@/components/admin/copy-link";
 import { ActionRow, ActionButton } from "@/components/admin/action-row";
 import {
-  sendAuthorityToSellLink, finalizeAuthorityToSell, getAuthorityToSellPdfSignedUrl,
+  sendAuthorityToSellLink, finalizeAuthorityToSell, getAuthorityToSellPdfSignedUrl, regenerateAuthorityToSellPdf,
   voidAuthorityToSell, deleteAuthorityToSell,
 } from "@/app/admin/authority-to-sell-actions";
 import { getPublicSiteUrl } from "@/lib/url";
@@ -57,6 +57,7 @@ export default async function AdminAuthorityToSellDetailPage({ params }: { param
   const displayName = od.name || a.owner_name_hint || a.owner_email;
   const doSendLink = sendAuthorityToSellLink.bind(null, id);
   const doFinalize = finalizeAuthorityToSell.bind(null, id);
+  const doRegenerate = regenerateAuthorityToSellPdf.bind(null, id);
   const doVoid = voidAuthorityToSell.bind(null, id);
   const doDelete = deleteAuthorityToSell.bind(null, id);
   const signingLink = `${getPublicSiteUrl()}/sign/authority-to-sell/${a.access_token}`;
@@ -182,6 +183,13 @@ export default async function AdminAuthorityToSellDetailPage({ params }: { param
             <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-navy-700 underline">
               <Icon name="picture_as_pdf" size={18} /> View signed PDF
             </a>
+            <ActionRow>
+              <div className="mt-3">
+                <ActionButton actionKey="regenerate-pdf" action={doRegenerate} label="Regenerate PDF" pendingLabel="Rebuilding…"
+                  className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:bg-surface-gray"
+                  confirmMessage="Rebuild the signed PDF from the saved data? The previous PDF file is kept." />
+              </div>
+            </ActionRow>
           </div>
         )}
 

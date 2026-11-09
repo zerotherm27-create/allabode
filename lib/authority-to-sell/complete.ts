@@ -25,11 +25,18 @@ export function manilaTime(iso: string | null) {
  * client as a parameter so the staff session (countersign) and finalize retry
  * can both call it.
  */
-export async function completeAuthorityToSell(id: string, supabase: SupabaseClient): Promise<void> {
+export async function completeAuthorityToSell(
+  id: string,
+  supabase: SupabaseClient,
+  opts?: { regenerate?: boolean },
+): Promise<void> {
   const { data: a, error } = await supabase.from("authority_to_sell_agreements").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
   if (!a) throw new Error("Authority to Sell not found.");
-  if (a.status === "completed") return;
+  // `regenerate` re-renders the PDF of a completed record and nothing else
+  // (no owner/portal/document-row side effects); the old file is kept.
+  if (a.status === "completed" && !opts?.regenerate) return;
+  if (opts?.regenerate && a.status !== "completed") throw new Error("Only a completed Authority to Sell can be regenerated.");
 
   let ownerIdImageDataUri: string | null = null;
   let ownerIdFileBuffer: Buffer | null = null;
@@ -88,6 +95,11 @@ export async function completeAuthorityToSell(id: string, supabase: SupabaseClie
     contentType: "application/pdf",
     upsert: true,
   });
+  if (opts?.regenerate) {
+    await supabase.from("authority_to_sell_agreements").update({ pdf_path: pdfPath }).eq("id", id);
+    revalidatePath(`/admin/contracts/authority-to-sell/${id}`);
+    return;
+  }
   let documentsIdPath: string | null = null;
   if (ownerIdFileBuffer) {
     const ext = ownerIdMime === "image/png" ? "png" : "jpg";

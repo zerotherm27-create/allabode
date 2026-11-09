@@ -168,6 +168,16 @@ export async function finalizeAuthorityToSell(id: string) {
   revalidatePath(`/admin/contracts/authority-to-sell/${id}`);
 }
 
+// Re-render the PDF of a completed record (e.g. to pick up the broker ID page).
+export async function regenerateAuthorityToSellPdf(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+  await completeAuthorityToSell(id, supabase, { regenerate: true });
+  await logAudit(supabase, { action: "authority_to_sell.pdf_regenerated", entityType: "authority_to_sell", entityId: id, actorId: user.id });
+  revalidatePath(`/admin/contracts/authority-to-sell/${id}`);
+}
+
 export async function getAuthorityToSellPdfSignedUrl(id: string) {
   const supabase = await createClient();
   const { data: ats } = await supabase.from(TABLE).select("pdf_path,status").eq("id", id).maybeSingle();

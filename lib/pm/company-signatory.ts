@@ -18,6 +18,8 @@ export type CompanySignatoryIdImage = {
 };
 
 const ID_FOLDER = COMPANY_SIGNATORY.idStoragePath.split("/")[0];
+// The photo was uploaded through the dashboard into a folder with a space.
+const ID_FOLDERS = [ID_FOLDER, "company signatory"];
 
 function mimeFor(name: string, blobType: string | undefined): string {
   const ext = name.split(".").pop()?.toLowerCase();
@@ -63,13 +65,15 @@ export async function loadCompanySignatoryIdImage(
   const canonical = await downloadStored(supabase, COMPANY_SIGNATORY.idStoragePath);
   if (canonical) return canonical;
 
-  const { data: files, error: listErr } = await supabase.storage.from(AGREEMENTS_BUCKET).list(ID_FOLDER, { limit: 50 });
-  if (listErr) console.warn(`[company-signatory] could not list ${ID_FOLDER}/:`, listErr.message);
-  const images = (files ?? []).filter((f) => /\.(jpe?g|png)$/i.test(f.name));
-  const preferred = images.find((f) => /prc|cruzado|aremchel/i.test(f.name)) ?? images[0];
-  if (preferred) {
-    const found = await downloadStored(supabase, `${ID_FOLDER}/${preferred.name}`);
-    if (found) return found;
+  for (const folder of ID_FOLDERS) {
+    const { data: files, error: listErr } = await supabase.storage.from(AGREEMENTS_BUCKET).list(folder, { limit: 50 });
+    if (listErr) console.warn(`[company-signatory] could not list ${folder}/:`, listErr.message);
+    const images = (files ?? []).filter((f) => /\.(jpe?g|png)$/i.test(f.name));
+    const preferred = images.find((f) => /prc|cruzado|aremchel/i.test(f.name)) ?? images[0];
+    if (preferred) {
+      const found = await downloadStored(supabase, `${folder}/${preferred.name}`);
+      if (found) return found;
+    }
   }
 
   const localBuffer = await readLocalIdImage();

@@ -4,8 +4,8 @@ import { MicrositeHeader } from "@/components/team/microsite/header";
 import { MicrositeFooter } from "@/components/team/microsite/footer";
 import { getSettings, s } from "@/lib/settings";
 
-// Same ISR ceiling as the marketing layout; admin mutations revalidate on demand.
-export const revalidate = 300;
+// Same ISR ceiling as the marketing layout (1h); admin mutations revalidate on demand.
+export const revalidate = 3600;
 
 /**
  * Chrome for the specialist microsite (/team/<slug>, and <slug>.allabodeph.com

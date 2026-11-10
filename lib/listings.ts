@@ -5,7 +5,7 @@ import {
   type ListingStatus,
 } from "@/lib/data";
 import type { NearbyPlace } from "@/lib/nearby-places";
-import { LISTING_IMAGES_BUCKET, storagePathFromUrl, signedUrlsForPaths } from "@/lib/storage";
+import { LISTING_IMAGES_BUCKET, storagePathFromUrl } from "@/lib/storage";
 import { specialistTitleLine } from "@/lib/team/license";
 import { specialistPhotoUrl } from "@/lib/team/queries";
 import { listingMarkets, listingStatusLabel, listingTypeLabels, type ListingCategory } from "@/lib/listing-category";
@@ -148,32 +148,22 @@ function mapRow(row: Row): Listing {
   };
 }
 
-/** Listing photos live in a private bucket now — the stored `url` is really
- *  just a path carrier. Batch-resolve every image across all given listings
- *  to a short-lived signed URL in one request, instead of leaving the raw
- *  (non-fetchable, private-bucket) URL in place. Falls back to the original
- *  value per-image if signing fails, so a partial failure never blanks a
- *  whole photo grid. */
+/** The listing-images bucket is public, so photos are served at stable URLs
+ *  that next/image and the CDN can cache. (They used to be re-signed on every
+ *  page regeneration, which changed the URL each time and re-downloaded every
+ *  photo from Supabase — billed egress.) This normalises any stored URL —
+ *  including legacy signed ones — to the canonical public URL for its path.
+ *  No network call: getPublicUrl just builds the string. Images whose path
+ *  can't be recovered are left as they are. */
 async function resolveImageUrls(listings: Listing[]): Promise<Listing[]> {
   if (!db) return listings;
-  const allPaths = listings.flatMap((l) =>
-    (l.images ?? [])
-      .map((img) => storagePathFromUrl(LISTING_IMAGES_BUCKET, img.url))
-      .filter((p): p is string => p != null)
-  );
-  if (allPaths.length === 0) return listings;
-  // These pages are cached (marketing layout `revalidate = 300`), so the signed
-  // URL baked into the HTML must outlive the cache by a wide margin — the
-  // previous 900s default expired well before ISR got around to regenerating
-  // the page, leaving every listing image broken until the next hit.
-  const signed = await signedUrlsForPaths(db, LISTING_IMAGES_BUCKET, allPaths, 60 * 60 * 24);
-  if (signed.size === 0) return listings;
+  const bucket = db.storage.from(LISTING_IMAGES_BUCKET);
   for (const listing of listings) {
     if (!listing.images) continue;
     listing.images = listing.images.map((img) => {
       const path = storagePathFromUrl(LISTING_IMAGES_BUCKET, img.url);
-      const url = path ? signed.get(path) : undefined;
-      return url ? { ...img, url } : img;
+      if (!path) return img;
+      return { ...img, url: bucket.getPublicUrl(path).data.publicUrl };
     });
   }
   return listings;

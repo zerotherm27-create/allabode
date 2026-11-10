@@ -12,8 +12,17 @@ values
   ('site-assets',    'site-assets',    true ),
   ('documents',       'documents',      false),
   ('agreements',     'agreements',     false),
-  ('listing-images', 'listing-images', false)
+  ('listing-images', 'listing-images', true )
 on conflict (id) do nothing;
+
+-- listing-images is PUBLIC: photos are served at stable, cacheable URLs so
+-- next/image and the CDN can cache them (private signed URLs changed on every
+-- page regeneration and caused repeated Supabase egress). Paths are
+-- `{listing_id}/{uuid}.jpg` and the listing_images rows are only readable by
+-- anon for live listings, so draft photo URLs are not discoverable. There is
+-- deliberately NO anon policy on storage.objects for this bucket: public
+-- reads don't need one, and without one anon cannot list/enumerate files.
+update storage.buckets set public = true where id = 'listing-images';
 
 -- listing-images: approved specialists can write here too, so cap the size and
 -- accept images only. Staff uploads are re-encoded to JPEG in the browser
@@ -155,19 +164,12 @@ create policy "staff delete agreements"
   on storage.objects for delete to authenticated
   using (bucket_id = 'agreements' and public.is_staff());
 
--- ── 8. listing-images (private — staff full access; anon gets SELECT only,
--- which is required for the Storage API to mint signed URLs, but does NOT
--- allow constructing a working direct/public URL to the object, since the
--- bucket's public flag is now false. Listing photos are served to visitors
--- exclusively as short-lived signed URLs, resolved server-side.) ─────────────
+-- ── 8. listing-images (public bucket — visitors fetch photos by public URL;
+-- no anon policy, so anon cannot list the bucket. Staff full access.) ───────
 create policy "staff manage listing-images"
   on storage.objects for all to authenticated
   using     (bucket_id = 'listing-images' and public.is_staff())
   with check (bucket_id = 'listing-images' and public.is_staff());
-
-create policy "anon read listing-images"
-  on storage.objects for select to anon
-  using (bucket_id = 'listing-images');
 
 -- Approved specialists may manage photos of listings they own. Paths are
 -- `{listing_id}/{uuid}.jpg` (app/admin/actions.ts uploadListingImages), so the

@@ -11,7 +11,7 @@
 
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 export const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
@@ -176,8 +176,35 @@ type VideoHeroProps = {
  */
 export function VideoHero({ video, poster, posterPosition = "center", className, onError }: VideoHeroProps) {
   const reduced = useReducedMotion() ?? false;
+  // The video file is served straight from Supabase Storage, so every play is
+  // billed as egress. Only fetch it where it's worth it: after the page has
+  // settled, on a wide screen, and not on Data Saver / 2G-3G connections.
+  // Everyone else keeps the poster image.
+  const [allowVideo, setAllowVideo] = useState(false);
 
-  if (reduced) {
+  useEffect(() => {
+    if (reduced) return;
+    const conn = (navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    }).connection;
+    const constrained =
+      conn?.saveData === true || (conn?.effectiveType ? /^(slow-2g|2g|3g)$/.test(conn.effectiveType) : false);
+    const narrow = window.matchMedia("(max-width: 767px)").matches;
+    if (constrained || narrow) return;
+
+    let cancelled = false;
+    const start = () => {
+      if (!cancelled) setAllowVideo(true);
+    };
+    // Wait for load + a short grace so bounces and most bots never fetch it.
+    const timer = window.setTimeout(start, 1500);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [reduced]);
+
+  if (reduced || !allowVideo) {
     return poster ? <AmbientHero image={poster} position={posterPosition} className={className} /> : null;
   }
 
@@ -190,7 +217,7 @@ export function VideoHero({ video, poster, posterPosition = "center", className,
       muted
       loop
       playsInline
-      preload="auto"
+      preload="metadata"
       onError={onError}
     />
   );

@@ -262,7 +262,9 @@ function ImageField({ name, defaultValue }: { name: string; defaultValue: string
   );
 }
 
-const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
+// Every homepage visit streams this file from Supabase Storage (billed egress),
+// so keep it small. Compress first: ffmpeg -i in.mp4 -an -vf scale=-2:720 -c:v libx264 -crf 28 -preset slow -movflags +faststart out.mp4
+const MAX_VIDEO_BYTES = 5 * 1024 * 1024;
 
 function VideoField({ name, defaultValue }: { name: string; defaultValue: string }) {
   const [url, setUrl] = useState(defaultValue);
@@ -279,7 +281,7 @@ function VideoField({ name, defaultValue }: { name: string; defaultValue: string
       return;
     }
     if (file.size > MAX_VIDEO_BYTES) {
-      setUploadError("Video must be 20MB or smaller.");
+      setUploadError("Video must be 5MB or smaller. Compress it to 720p with no audio first.");
       return;
     }
     setUploading(true);
@@ -345,7 +347,7 @@ function VideoField({ name, defaultValue }: { name: string; defaultValue: string
         {uploadError && <p className="text-xs text-error">{uploadError}</p>}
         {!uploadError && !url && (
           <p className="text-xs text-slate">
-            MP4, up to 20MB. Requires a public <strong>site-assets</strong> bucket in Supabase Storage.
+            MP4, up to 5MB (720p, no audio, ~10s loop). Requires a public <strong>site-assets</strong> bucket in Supabase Storage.
           </p>
         )}
       </div>

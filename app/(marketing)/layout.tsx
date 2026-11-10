@@ -10,7 +10,9 @@ import { SiteContentProtection } from "@/components/site-content-protection";
 // dynamic rendering. Listing/settings admin mutations call revalidatePath
 // for immediate on-demand invalidation — this is just the time-based
 // safety-net ceiling for pages nothing explicitly revalidated.
-export const revalidate = 300;
+// 1h: edits revalidate on demand, so this only needs to be a loose ceiling, and
+// a longer one means fewer Supabase reads (egress) per regeneration.
+export const revalidate = 3600;
 
 export default async function MarketingLayout({
   children,

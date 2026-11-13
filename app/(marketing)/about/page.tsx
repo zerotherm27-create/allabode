@@ -91,7 +91,7 @@ export default async function AboutPage() {
                 className="h-auto w-44"
               />
               <div className="h-px w-full bg-line" />
-              <p className="label-caps text-gold-ink">Founded by Chel</p>
+              <p className="label-caps text-gold-ink">Founded by Chel Cruzado</p>
               <span className="inline-flex items-center gap-1.5 text-sm font-medium text-navy-700 group-hover:text-gold-ink">
                 propertiesbychel.com
                 <Icon name="arrow_forward" size={16} />

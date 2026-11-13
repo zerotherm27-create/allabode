@@ -4,7 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { Field, Input } from "@/components/forms/fields";
+import { Field, Input, Select } from "@/components/forms/fields";
 import {
   addSpecialist,
   resendSpecialistInviteAction,
@@ -13,8 +13,16 @@ import {
 } from "@/app/admin/specialist-actions";
 import { validateSubdomain } from "@/lib/team/subdomain";
 import { NEW_SPECIALIST_LIMITS, validateNewSpecialist } from "@/lib/team/admin-status";
+import {
+  ACCREDITATION_LABELS,
+  ACCREDITATION_OPTION_NAMES,
+  ACCREDITATION_TYPES,
+  DESIGNATION_MAX,
+  DESIGNATION_SUGGESTIONS,
+  validateTitle,
+} from "@/lib/team/license";
 
-type FieldName = "full_name" | "email" | "phone" | "subdomain" | "tagline";
+type FieldName = "full_name" | "email" | "phone" | "subdomain" | "tagline" | "designation" | "accreditation";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -44,6 +52,13 @@ function checkField(name: FieldName, value: string): string {
   if (name === "subdomain") {
     const r = validateSubdomain(value);
     return r.ok ? "" : r.error;
+  }
+  if (name === "designation" || name === "accreditation") {
+    const t = validateTitle({
+      designation: name === "designation" ? value : "",
+      accreditation: name === "accreditation" ? value : "salesperson",
+    });
+    return t.ok ? "" : (t.errors[name] ?? "");
   }
   const r = validateNewSpecialist({
     full_name: name === "full_name" ? value : "Valid Name",
@@ -91,7 +106,7 @@ export function AddSpecialistForm() {
   const kept = state && !state.ok && state !== dismissed ? state.values ?? {} : {};
   // Read the value before queueing the update: React nulls `currentTarget` once the
   // handler returns, and a functional updater can run later, during render.
-  const onBlur = (n: FieldName) => (e: React.FocusEvent<HTMLInputElement>) => {
+  const onBlur = (n: FieldName) => (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = e.currentTarget.value;
     setBlurErrors((prev) => ({ ...prev, [n]: checkField(n, value) }));
   };
@@ -176,6 +191,23 @@ export function AddSpecialistForm() {
           onChange={(e) => setSubdomain(e.currentTarget.value)}
           onBlur={onBlur("subdomain")}
         />
+      </Field>
+      <Field
+        label="Designation"
+        hint="Optional. Their job title on the page, e.g. Property Specialist, Senior Property Consultant or Marketing Partner. Type your own."
+        error={err("designation")}
+      >
+        <Input name="designation" list="designation-suggestions" defaultValue={kept.designation} autoComplete="off" maxLength={DESIGNATION_MAX} onBlur={onBlur("designation")} />
+      </Field>
+      <datalist id="designation-suggestions">
+        {DESIGNATION_SUGGESTIONS.map((d) => <option key={d} value={d} />)}
+      </datalist>
+      <Field label="Accreditation" required hint="The line shown under their name." error={err("accreditation")}>
+        <Select name="accreditation" defaultValue={kept.accreditation ?? "salesperson"} onBlur={onBlur("accreditation")}>
+          {ACCREDITATION_TYPES.map((t) => (
+            <option key={t} value={t}>{ACCREDITATION_OPTION_NAMES[t]} ({ACCREDITATION_LABELS[t]})</option>
+          ))}
+        </Select>
       </Field>
       <Field label="Tagline" hint="Optional. One line under their name; they can change it later." error={err("tagline")}>
         <Input name="tagline" defaultValue={kept.tagline} maxLength={NEW_SPECIALIST_LIMITS.tagline} onBlur={onBlur("tagline")} />

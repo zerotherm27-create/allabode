@@ -53,6 +53,14 @@ export default async function SpecialistProfilePage() {
     .maybeSingle();
   const hideCallLink = storedHideCallLink((hc as { hide_call_link?: unknown } | null)?.hide_call_link);
 
+  // Own tolerant read (20261113100000_specialist_designation_accreditation.sql).
+  const { data: tc } = await supabase
+    .from("specialists")
+    .select("accreditation")
+    .eq("id", specialistId)
+    .maybeSingle();
+  const accreditation = (tc as { accreditation?: unknown } | null)?.accreditation;
+
   let photoUrl: string | null = null;
   if (row.photo_path) {
     const { data: pub } = supabase.storage.from("specialist-photos").getPublicUrl(row.photo_path);
@@ -75,8 +83,8 @@ export default async function SpecialistProfilePage() {
     publicEmail: contact.public_email ?? "",
     hideCallLink,
   };
-  // Read-only: the same fixed label every specialist shows publicly.
-  const licence = specialistTitleLine();
+  // Read-only: the accreditation line All Abode set for you, as shown publicly.
+  const licence = specialistTitleLine(accreditation);
 
   return (
     <div className="mx-auto max-w-3xl">

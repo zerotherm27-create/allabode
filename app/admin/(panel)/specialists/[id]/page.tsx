@@ -16,7 +16,8 @@ import { getNeverSignedIn } from "@/lib/team/provision";
 import { checkSpecialistDomain } from "@/lib/team/vercel-domains";
 import { subdomainState } from "@/lib/team/domain-status";
 import { loadActivity } from "@/lib/team/activity-data";
-import { InviteControls, StatusControls, SubdomainControls, VisibilityControls } from "./controls";
+import { accreditationLabel, parseAccreditation, storedDesignation } from "@/lib/team/license";
+import { InviteControls, StatusControls, SubdomainControls, TitleControls, VisibilityControls } from "./controls";
 
 type Row = {
   id: string; display_name: string; email: string; phone: string | null; status: string;
@@ -27,6 +28,9 @@ type Row = {
   created_at: string;
   /** Absent until the visibility migration is run. */
   is_visible?: boolean | null;
+  /** Absent until the designation migration is run. */
+  designation?: string | null;
+  accreditation?: string | null;
 };
 
 function Item({ label, value }: { label: string; value: string | null | undefined }) {
@@ -124,6 +128,8 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
           <Item label="Web address" value={s.subdomain} />
           <Item label="Years of experience" value={s.years_experience?.toString()} />
           <Item label="Added" value={new Date(s.created_at).toLocaleDateString("en-PH")} />
+          <Item label="Designation" value={storedDesignation(s.designation)} />
+          <Item label="Accreditation" value={accreditationLabel(s.accreditation)} />
           <Item label="Tagline" value={s.tagline} />
           <Item label="Areas" value={s.areas?.join(", ")} />
           <Item label="Specialties" value={s.specialties?.join(", ")} />
@@ -146,6 +152,12 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
         </p>
       )}
       {s.subdomain && domainState && <SubdomainControls id={s.id} slug={s.subdomain} state={domainState} />}
+      <TitleControls
+        id={s.id}
+        designation={storedDesignation(s.designation) ?? ""}
+        accreditation={parseAccreditation(s.accreditation)}
+        available={"accreditation" in s}
+      />
       <VisibilityControls id={s.id} visible={isSpecialistVisible(s)} available={visibilityAvailable(s)} />
       <StatusControls id={s.id} canSuspend={act.suspend} canReinstate={act.reinstate} />
     </div>

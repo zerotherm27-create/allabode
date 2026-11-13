@@ -28,6 +28,7 @@ import {
   detachSpecialistDomain,
 } from "@/lib/team/vercel-domains";
 import { subdomainState } from "@/lib/team/domain-status";
+import { validateTitle } from "@/lib/team/license";
 
 export type SpecialistActionState = { ok: boolean; message: string };
 
@@ -63,9 +64,9 @@ export type AddSpecialistState = {
   ok: boolean;
   message: string;
   /** Per-field errors, keyed by form field name. */
-  errors?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline", string>>;
+  errors?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline" | "designation" | "accreditation", string>>;
   /** On failure: what was submitted, so the form can keep it (React resets the form after an action). */
-  values?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline", string>>;
+  values?: Partial<Record<"full_name" | "email" | "phone" | "subdomain" | "tagline" | "designation" | "accreditation", string>>;
   /** On success: false when the account was created but the invitation email failed. */
   emailSent?: boolean;
   specialistId?: string;
@@ -93,6 +94,8 @@ export async function addSpecialist(
     phone: field(fd, "phone"),
     subdomain: field(fd, "subdomain"),
     tagline: field(fd, "tagline"),
+    designation: field(fd, "designation"),
+    accreditation: field(fd, "accreditation"),
   };
   const invalid = (
     errors: AddSpecialistState["errors"],
@@ -106,8 +109,13 @@ export async function addSpecialist(
     tagline: fd.get("tagline"),
   });
   const sub = validateSubdomain(field(fd, "subdomain"));
-  const errors = { ...(checked.ok ? {} : checked.errors), ...(sub.ok ? {} : { subdomain: sub.error }) };
-  if (!checked.ok || !sub.ok) return invalid(errors);
+  const title = validateTitle({ designation: fd.get("designation"), accreditation: fd.get("accreditation") ?? "salesperson" });
+  const errors = {
+    ...(checked.ok ? {} : checked.errors),
+    ...(sub.ok ? {} : { subdomain: sub.error }),
+    ...(title.ok ? {} : title.errors),
+  };
+  if (!checked.ok || !sub.ok || !title.ok) return invalid(errors);
   const v = checked.value;
 
   const [emailTaken, subTaken] = await Promise.all([
@@ -131,6 +139,8 @@ export async function addSpecialist(
     phone: v.phone,
     tagline: v.tagline,
     subdomain: sub.value,
+    designation: title.value.designation,
+    accreditation: title.value.accreditation,
   });
   if (!result.ok) {
     const conflict = specialistConflictMessage(result.dbError, { email: v.email, subdomain: sub.value });
@@ -280,6 +290,40 @@ export async function setSpecialistVisibility(specialistId: string, visible: boo
   return done(visible
     ? "Now visible on the website."
     : "Hidden from the website. Their listings show as house listings.");
+}
+
+/**
+ * Staff-only: set a specialist's custom designation (free text, blank = the
+ * site's default wording) and accreditation type (salesperson / sales partner /
+ * marketing partner). The DB guard trigger also keeps specialists from changing
+ * either themselves. `.select('id')` detects a zero-row update.
+ */
+export async function updateSpecialistTitle(
+  specialistId: string,
+  designation: string,
+  accreditation: string,
+): Promise<SpecialistActionState> {
+  const guard = await staffClient();
+  if (guard.error) return guard.error;
+  if (!specialistId) return fail("Missing specialist.");
+
+  const checked = validateTitle({ designation, accreditation });
+  if (!checked.ok) return fail(checked.errors.designation ?? checked.errors.accreditation ?? "Check the fields.");
+
+  const { data, error } = await guard.supabase
+    .from("specialists")
+    .update({ designation: checked.value.designation, accreditation: checked.value.accreditation })
+    .eq("id", specialistId)
+    .select("id,subdomain");
+  if (error) {
+    return fail(isMissingColumn(error) ? "Run the designation migration (20261113100000_specialist_designation_accreditation.sql) to use this option." : error.message);
+  }
+  if (!data || data.length === 0) return fail("Specialist not found.");
+
+  refresh((data[0] as { subdomain: string | null }).subdomain ?? undefined);
+  revalidatePublicListingPaths();
+  revalidatePath(`/admin/specialists/${specialistId}`);
+  return done("Designation and accreditation saved.");
 }
 
 function refreshListing(id: string, slug?: string | null) {

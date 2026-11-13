@@ -92,6 +92,9 @@ export function SpecialistCard({ specialist }: { specialist: PublicSpecialist })
         <h3 className="font-display text-lg font-semibold leading-tight text-navy">
           {specialist.name}
         </h3>
+        {specialist.designation && (
+          <p className="label-caps mt-1.5 text-gold-ink">{specialist.designation}</p>
+        )}
         {specialist.tagline && (
           <p className="mt-2 line-clamp-2 text-sm text-slate">{specialist.tagline}</p>
         )}

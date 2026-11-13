@@ -10,6 +10,7 @@ import type { createClient } from "@/lib/supabase/server";
 import { sendEmailResult } from "@/lib/email";
 import { getPublicSiteUrl } from "@/lib/url";
 import { suggestBio } from "@/lib/team/profile-suggest";
+import type { AccreditationType } from "@/lib/team/license";
 import { canResendSignInLink } from "@/lib/team/admin-status";
 import {
   decideExistingUser,
@@ -119,6 +120,9 @@ export type ProvisionInput = {
   phone: string | null;
   tagline: string | null;
   subdomain: string;
+  /** Custom job title (null = site default) and accreditation type. Both optional for older callers. */
+  designation?: string | null;
+  accreditation?: AccreditationType;
 };
 
 export type ProvisionResult =
@@ -196,6 +200,9 @@ export async function provisionSpecialist(supabase: SessionClient, input: Provis
       subdomain: input.subdomain,
       status: "approved",
       license_mode: "accredited",
+      // Only sent when set, so adding a specialist still works before the designation migration is run.
+      ...(input.designation ? { designation: input.designation } : {}),
+      ...(input.accreditation && input.accreditation !== "salesperson" ? { accreditation: input.accreditation } : {}),
       auth_user_id: userId,
     })
     .select("id")

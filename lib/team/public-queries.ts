@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { isValidSpecialistSlug, specialistPhotoUrl } from "@/lib/team/queries";
 import { safeStoredContact, storedHideCallLink, type PublicContact } from "@/lib/team/public-contact";
+import { parseAccreditation, storedDesignation, type AccreditationType } from "@/lib/team/license";
 
 /**
  * Public, read-only access to approved property specialists via the
@@ -31,6 +32,9 @@ const NO_CONTACT: PublicContact = {
 /** Added by 20261023120000_specialist_hide_call_link.sql; its own tolerant query so a missing column never drops the contact details. */
 const HIDE_CALL_COL = "hide_call_link";
 
+/** Added by 20261113100000_specialist_designation_accreditation.sql; its own tolerant query so a missing column never drops the profile. */
+const TITLE_COLS = "slug,designation,accreditation";
+
 type Row = {
   id: string;
   slug: string;
@@ -60,6 +64,10 @@ export type PublicSpecialist = {
   contact: PublicContact;
   /** True when the specialist opted out of any call link on their page (false before the migration). */
   hideCallLink: boolean;
+  /** Custom job title ("Senior Property Consultant"); null = the site's default wording. */
+  designation: string | null;
+  /** Which accreditation line they show (salesperson before the migration). */
+  accreditation: AccreditationType;
 };
 
 function mapRow(r: Row): PublicSpecialist {
@@ -76,6 +84,8 @@ function mapRow(r: Row): PublicSpecialist {
     photoUrl: specialistPhotoUrl(r.photo_path),
     contact: NO_CONTACT,
     hideCallLink: false,
+    designation: null,
+    accreditation: "salesperson",
   };
 }
 
@@ -85,7 +95,13 @@ export async function getPublicSpecialists(): Promise<PublicSpecialist[]> {
   try {
     const { data, error } = await db.from("public_specialists").select(COLS);
     if (error || !Array.isArray(data)) return [];
-    return (data as Row[]).filter((r) => isValidSpecialistSlug(r.slug)).map(mapRow);
+    const list = (data as Row[]).filter((r) => isValidSpecialistSlug(r.slug)).map(mapRow);
+    const titles = await getTitles();
+    for (const sp of list) {
+      const t = titles.get(sp.slug);
+      if (t) Object.assign(sp, t);
+    }
+    return list;
   } catch {
     return [];
   }
@@ -104,6 +120,7 @@ export async function getPublicSpecialist(slug: string): Promise<PublicSpecialis
     const specialist = mapRow(data as Row);
     specialist.contact = await getPublicContact(slug);
     specialist.hideCallLink = await getHideCallLink(slug);
+    Object.assign(specialist, (await getTitles(slug)).get(slug) ?? {});
     return specialist;
   } catch {
     return null;
@@ -145,4 +162,26 @@ async function getHideCallLink(slug: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+type Title = { designation: string | null; accreditation: AccreditationType };
+
+/**
+ * Designation + accreditation for every live specialist (or one slug), keyed by slug.
+ * Tolerant: any failure (e.g. the columns don't exist yet) = empty map, so callers keep the defaults.
+ */
+async function getTitles(slug?: string): Promise<Map<string, Title>> {
+  const out = new Map<string, Title>();
+  if (!db) return out;
+  try {
+    const q = db.from("public_specialists").select(TITLE_COLS);
+    const { data, error } = await (slug ? q.eq("slug", slug) : q);
+    if (error || !Array.isArray(data)) return out;
+    for (const r of data as { slug: string; designation?: unknown; accreditation?: unknown }[]) {
+      out.set(r.slug, { designation: storedDesignation(r.designation), accreditation: parseAccreditation(r.accreditation) });
+    }
+  } catch {
+    // keep defaults
+  }
+  return out;
 }

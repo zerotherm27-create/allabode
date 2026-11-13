@@ -4,12 +4,21 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { visibilityCopy } from "@/lib/team/admin-status";
 import {
+  ACCREDITATION_LABELS,
+  ACCREDITATION_OPTION_NAMES,
+  ACCREDITATION_TYPES,
+  DESIGNATION_MAX,
+  DESIGNATION_SUGGESTIONS,
+  type AccreditationType,
+} from "@/lib/team/license";
+import {
   attachSpecialistDomainAction,
   reinstateSpecialist,
   removeSpecialistAction,
   resendSpecialistInviteAction,
   setSpecialistVisibility,
   suspendSpecialistAction,
+  updateSpecialistTitle,
   type SpecialistActionState,
 } from "@/app/admin/specialist-actions";
 
@@ -178,6 +187,65 @@ export function VisibilityControls({ id, visible, available }: { id: string; vis
             <Notice state={state} />
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+/** Staff edit: custom designation (free text) and accreditation type. `available` is false until the migration has been run. */
+export function TitleControls({
+  id, designation, accreditation, available,
+}: { id: string; designation: string; accreditation: AccreditationType; available: boolean }) {
+  const [pending, start] = useTransition();
+  const [state, setState] = useState<SpecialistActionState | null>(null);
+  const [des, setDes] = useState(designation);
+  const [acc, setAcc] = useState<AccreditationType>(accreditation);
+  return (
+    <div className="rounded-lg border border-line bg-surface p-6">
+      <h2 className="font-display text-sm font-semibold text-navy">Designation and accreditation</h2>
+      {!available ? (
+        <p className="mt-1 text-sm text-slate">Run the designation migration (20261113100000_specialist_designation_accreditation.sql) to use this option.</p>
+      ) : (
+        <form
+          className="mt-3 flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            start(async () => setState(await updateSpecialistTitle(id, des, acc)));
+          }}
+        >
+          <div>
+            <label htmlFor="designation" className="block text-sm font-medium text-ink">Designation</label>
+            <input
+              id="designation" list="designation-suggestions" value={des} maxLength={DESIGNATION_MAX} autoComplete="off"
+              onChange={(e) => setDes(e.currentTarget.value)}
+              className="mt-1 min-h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
+              aria-describedby="designation-hint"
+            />
+            <datalist id="designation-suggestions">
+              {DESIGNATION_SUGGESTIONS.map((d) => <option key={d} value={d} />)}
+            </datalist>
+            <p id="designation-hint" className="mt-1 text-xs text-slate">Their job title on the page. Leave blank for the default wording.</p>
+          </div>
+          <div>
+            <label htmlFor="accreditation" className="block text-sm font-medium text-ink">Accreditation</label>
+            <select
+              id="accreditation" value={acc}
+              onChange={(e) => setAcc(e.currentTarget.value as AccreditationType)}
+              className="mt-1 min-h-11 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
+            >
+              {ACCREDITATION_TYPES.map((t) => (
+                <option key={t} value={t}>{ACCREDITATION_OPTION_NAMES[t]} ({ACCREDITATION_LABELS[t]})</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="submit" disabled={pending}
+              className="min-h-11 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-50">
+              {pending ? "Saving…" : "Save"}
+            </button>
+            <Notice state={state} />
+          </div>
+        </form>
       )}
     </div>
   );

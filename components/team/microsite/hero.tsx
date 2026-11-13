@@ -3,7 +3,7 @@ import { Button } from "@/components/ui";
 import { Icon } from "@/components/icon";
 import { StaggerGroup, StaggerItem } from "@/components/motion";
 import { Skyline } from "@/components/team/microsite/skyline";
-import { ACCREDITATION_LABEL } from "@/lib/team/license";
+import { accreditationLabel } from "@/lib/team/license";
 import { HERO_COPY } from "@/lib/team/profile-copy";
 import { initialsOf } from "@/lib/team/queries";
 import type { PublicSpecialist } from "@/lib/team/public-queries";
@@ -85,7 +85,7 @@ export function MicrositeHero({ specialist }: { specialist: PublicSpecialist }) 
       <div className="container-site">
         <StaggerGroup className="relative flex min-h-[18.75rem] w-[60%] min-w-0 flex-col justify-center py-6 pr-2 sm:min-h-[28rem] sm:py-14 lg:min-h-[min(40rem,85dvh)] lg:w-[52%] lg:py-24 lg:pr-0">
           <StaggerItem>
-            <p className="label-caps text-gold-ink max-sm:text-[0.6875rem]! max-sm:tracking-[0.1em]!">{HERO_COPY.eyebrow}</p>
+            <p className="label-caps text-gold-ink max-sm:text-[0.6875rem]! max-sm:tracking-[0.1em]!">{specialist.designation ?? HERO_COPY.eyebrow}</p>
           </StaggerItem>
           <StaggerItem>
             <h1
@@ -116,7 +116,7 @@ export function MicrositeHero({ specialist }: { specialist: PublicSpecialist }) 
               </Button>
               <p className="inline-flex items-center gap-1.5 text-xs text-slate max-sm:leading-snug sm:gap-2 sm:text-sm">
                 <Icon name="verified" size={18} className="size-4 shrink-0 text-gold-ink sm:size-[18px]" />
-                {ACCREDITATION_LABEL}
+                {accreditationLabel(specialist.accreditation)}
               </p>
             </div>
           </StaggerItem>

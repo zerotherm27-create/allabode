@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!specialist) return { title: "Property specialist", robots: { index: false } };
 
   // The root layout's title template appends " | All Abode Property Solutions".
-  const title = `${specialist.name} | Property specialist`;
+  const title = `${specialist.name} | ${specialist.designation ?? "Property specialist"}`;
   const fullTitle = `${title} | ${site.name}`;
   // No bio yet: describe them with the same composed intro the About section shows.
   const description = metaDescription(

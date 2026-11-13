@@ -6,7 +6,7 @@ import {
 } from "@/lib/data";
 import type { NearbyPlace } from "@/lib/nearby-places";
 import { LISTING_IMAGES_BUCKET, storagePathFromUrl } from "@/lib/storage";
-import { specialistTitleLine } from "@/lib/team/license";
+import { specialistTitleLine, storedDesignation } from "@/lib/team/license";
 import { specialistPhotoUrl } from "@/lib/team/queries";
 import { listingMarkets, listingStatusLabel, listingTypeLabels, type ListingCategory } from "@/lib/listing-category";
 
@@ -174,6 +174,9 @@ type SpecialistRow = {
   slug: string;
   display_name: string;
   photo_path: string | null;
+  /** Present only once 20261113100000_specialist_designation_accreditation.sql has run. */
+  designation?: string | null;
+  accreditation?: string | null;
 };
 
 /** Attach the listing specialist, fail-soft. Deliberately a separate step from
@@ -206,10 +209,26 @@ async function attachSpecialists(
     if (wanted.length === 0) return listings;
 
     const specialistIds = [...new Set(wanted.map((id) => bySpecialist.get(id)!))];
-    const { data: people, error: peopleErr } = await db
-      .from("public_specialists")
-      .select("id,slug,display_name,photo_path")
-      .in("id", specialistIds);
+    // Try with the designation/accreditation columns; if they don't exist yet
+    // (migration not run), fall back to the original columns.
+    let people: SpecialistRow[] | null = null;
+    let peopleErr: unknown = null;
+    {
+      const r = await db
+        .from("public_specialists")
+        .select("id,slug,display_name,photo_path,designation,accreditation")
+        .in("id", specialistIds);
+      people = r.data as SpecialistRow[] | null;
+      peopleErr = r.error;
+    }
+    if (peopleErr) {
+      const r = await db
+        .from("public_specialists")
+        .select("id,slug,display_name,photo_path")
+        .in("id", specialistIds);
+      people = r.data as SpecialistRow[] | null;
+      peopleErr = r.error;
+    }
     if (peopleErr || !Array.isArray(people) || people.length === 0) return listings;
     const byId = new Map((people as SpecialistRow[]).map((p) => [p.id, p]));
 
@@ -223,7 +242,8 @@ async function attachSpecialists(
           slug: p.slug,
           name: p.display_name,
           photoUrl: specialistPhotoUrl(p.photo_path),
-          licenseLine: opts.withLicense ? specialistTitleLine() : null,
+          licenseLine: opts.withLicense ? specialistTitleLine(p.accreditation) : null,
+          designation: storedDesignation(p.designation),
         },
       };
     });

@@ -81,6 +81,9 @@ export function ListedBy({
           Listed by{" "}
           <span className="font-medium text-navy">{specialist.name}</span>
         </Link>
+        {specialist.designation && (
+          <p className="text-xs font-medium text-ink">{specialist.designation}</p>
+        )}
         {specialist.licenseLine && (
           <p className="text-xs text-slate">{specialist.licenseLine}</p>
         )}

@@ -110,6 +110,8 @@ export type Listing = {
     photoUrl: string | null;
     /** Licence line for the detail page; null on cards and when licence data is missing. */
     licenseLine: string | null;
+    /** Custom job title; null/absent = none shown. */
+    designation?: string | null;
   };
 };
 

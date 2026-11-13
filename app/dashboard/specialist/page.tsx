@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth/role";
 import { loadOnboarding } from "@/lib/team/onboarding-data";
 import type { OnboardingGuide } from "@/lib/team/onboarding";
+import { PublishPanel } from "@/components/specialist/publish-panel";
 import { profileChecklist, type ChecklistItem } from "@/lib/team/profile-suggest";
 
 const STATUSES = [
@@ -19,6 +20,7 @@ export default async function SpecialistOverviewPage() {
   const counts: Record<string, number> = {};
   let newLeads: number | null = null;
   let guide: OnboardingGuide | null = null;
+  let publish: { published: boolean; slug: string | null } | null = null;
   let checklist: { items: ChecklistItem[]; done: number; total: number } | null = null;
 
   if (specialistId) {
@@ -40,6 +42,16 @@ export default async function SpecialistOverviewPage() {
       loadOnboarding(specialistId),
     ]);
     guide = guideRes;
+
+    // Own tolerant read: until the visibility migration is run, is_visible is missing and no panel is shown.
+    const { data: vis } = await supabase
+      .from("specialists")
+      .select("is_visible,subdomain")
+      .eq("id", specialistId)
+      .maybeSingle();
+    if (vis && typeof vis.is_visible === "boolean") {
+      publish = { published: vis.is_visible, slug: (vis.subdomain as string | null) ?? null };
+    }
 
     for (const r of (listingsRes.data ?? []) as { approval_status: string | null }[]) {
       const k = r.approval_status ?? "draft";
@@ -71,6 +83,8 @@ export default async function SpecialistOverviewPage() {
     <div className="mx-auto max-w-5xl">
       <h1 className="font-display text-2xl font-bold text-navy">Overview</h1>
       <p className="mt-1 text-sm text-slate">Your listings and where each one stands.</p>
+
+      {publish && <PublishPanel published={publish.published} slug={publish.slug} />}
 
       {guide && !guide.complete && (() => {
         const next = guide.steps.find((s) => s.id === guide.nextStepId);

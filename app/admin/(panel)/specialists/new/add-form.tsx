@@ -130,7 +130,7 @@ export function AddSpecialistForm() {
             </p>
             <p className="mt-3 text-sm text-slate">
               They&rsquo;ll get an email with a link to set their password, then sign in at /portal/login.
-              Their profile is already listed on the Team page.
+              They&rsquo;re hidden from the Team page until you press &ldquo;Show on website&rdquo; or they publish their own page.
             </p>
           </>
         )}

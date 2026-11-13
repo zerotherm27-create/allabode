@@ -425,3 +425,26 @@ export async function specialistReorderImages(listingId: string, orderedIds: str
   await reorderListingImages(listingId, orderedIds);
   revalidatePath(`${LISTINGS_PATH}/${listingId}/edit`);
 }
+
+/**
+ * Publish the caller's own public page (Team page, profile, web address,
+ * "Listed by"), or take it back down. New specialists start hidden. The RPC
+ * only ever touches the caller's own approved row.
+ */
+export async function setMyPagePublished(published: boolean): Promise<SpecialistProfileState> {
+  const me = await ownSpecialist();
+  if (!me) return fail("You need to be signed in as a property specialist.");
+  if (me.status !== "approved") return fail("Your account can't be published right now. Contact All Abode.");
+  if (typeof published !== "boolean") return fail("Something went wrong. Try again.");
+
+  const { error } = await me.supabase.rpc("set_my_specialist_visibility", { p_visible: published });
+  if (error) {
+    const missing = error.code === "PGRST202" || error.code === "42883";
+    return fail(missing ? "Publishing isn't available yet. Contact All Abode." : error.message);
+  }
+
+  revalidatePath("/dashboard/specialist");
+  revalidateProfilePages(me.subdomain);
+  revalidatePublicListingPaths();
+  return done(published ? "Your page is now live on the Team page." : "Your page is now unpublished.");
+}

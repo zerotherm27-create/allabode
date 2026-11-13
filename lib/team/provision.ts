@@ -11,7 +11,7 @@ import { sendEmailResult } from "@/lib/email";
 import { getPublicSiteUrl } from "@/lib/url";
 import { suggestBio } from "@/lib/team/profile-suggest";
 import type { AccreditationType } from "@/lib/team/license";
-import { canResendSignInLink } from "@/lib/team/admin-status";
+import { canResendSignInLink, isMissingColumn } from "@/lib/team/admin-status";
 import {
   decideExistingUser,
   hasNeverSignedIn,
@@ -187,9 +187,7 @@ export async function provisionSpecialist(supabase: SessionClient, input: Provis
     createdUserId = created.user.id;
   }
 
-  const { data: row, error: insertErr } = await supabase
-    .from("specialists")
-    .insert({
+  const newRow = {
       email: input.email,
       display_name: input.displayName,
       phone: input.phone,
@@ -204,9 +202,18 @@ export async function provisionSpecialist(supabase: SessionClient, input: Provis
       ...(input.designation ? { designation: input.designation } : {}),
       ...(input.accreditation && input.accreditation !== "salesperson" ? { accreditation: input.accreditation } : {}),
       auth_user_id: userId,
-    })
+    };
+  // New specialists start hidden (not on /team) until the owner presses "Show on website"
+  // or the specialist publishes their own page. If is_visible doesn't exist yet
+  // (visibility migration not run), insert without it.
+  let { data: row, error: insertErr } = await supabase
+    .from("specialists")
+    .insert({ ...newRow, is_visible: false })
     .select("id")
     .single();
+  if (insertErr && isMissingColumn(insertErr)) {
+    ({ data: row, error: insertErr } = await supabase.from("specialists").insert(newRow).select("id").single());
+  }
 
   if (insertErr || !row) {
     if (createdUserId) {

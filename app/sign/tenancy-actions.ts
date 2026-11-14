@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { logIdUploadFailure } from "@/lib/signing/upload-log";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
@@ -198,7 +199,7 @@ export async function loadTenancyAgreementForLandlord(token: string): Promise<Te
   return data as TenancyAgreementRecord;
 }
 
-export async function createLandlordIdUploadTicket(
+async function createLandlordIdUploadTicketImpl(
   token: string,
   fileName: string,
   fileSize: number,
@@ -236,7 +237,7 @@ export type ConfirmLandlordIdInput = {
   path: string;
 };
 
-export async function confirmLandlordIdUpload(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
+async function confirmLandlordIdUploadImpl(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("save_tenancy_landlord_id_upload", {
     p_token: token,
@@ -279,4 +280,21 @@ export async function submitLandlordSignature(token: string, input: SubmitSignat
     }
   }
   return { completed: false };
+}
+
+export async function createLandlordIdUploadTicket(
+  token: string,
+  fileName: string,
+  fileSize: number,
+  fileType: string
+): Promise<{ signedUrl?: string; uploadToken?: string; path?: string; error?: string }> {
+  const result = await createLandlordIdUploadTicketImpl(token, fileName, fileSize, fileType);
+  if (result.error) logIdUploadFailure("tenancy", "ticket", result.error, { fileType, fileSize });
+  return result;
+}
+
+export async function confirmLandlordIdUpload(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
+  const result = await confirmLandlordIdUploadImpl(token, input);
+  if (result.error) logIdUploadFailure("tenancy", "confirm", result.error);
+  return result;
 }

@@ -24,6 +24,7 @@ export function LandlordSign({ token, initial }: { token: string; initial: Tenan
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [idError, setIdError] = useState("");
 
   const [idType, setIdType] = useState(initial.landlord_id_type ?? "passport");
   const [idNumber, setIdNumber] = useState(initial.landlord_id_number ?? "");
@@ -36,35 +37,35 @@ export function LandlordSign({ token, initial }: { token: string; initial: Tenan
   const padRef = useRef<SignatureInputHandle>(null);
 
   async function onIdFileChange(file: File) {
-    setError("");
+    setIdError("");
     if (!idNumber.trim() || !idIssuedDate) {
-      setError("Please enter your ID number and issue date before uploading the image.");
+      setIdError("Please enter your ID number and issue date before uploading the image.");
       return;
     }
     setIdUploading(true);
     try {
       const ticket = await createLandlordIdUploadTicket(token, file.name, file.size, file.type);
       if (ticket.error || !ticket.signedUrl || !ticket.uploadToken || !ticket.path) {
-        setError(ticket.error || "Could not prepare upload.");
+        setIdError(ticket.error || "Could not prepare upload.");
         return;
       }
       const { error: upErr } = await createClient()
         .storage.from(AGREEMENTS_BUCKET)
         .uploadToSignedUrl(ticket.path, ticket.uploadToken, file, { contentType: file.type });
       if (upErr) {
-        setError(`Upload failed: ${upErr.message}`);
+        setIdError(`Upload failed: ${upErr.message}`);
         return;
       }
       const { error: confirmErr } = await confirmLandlordIdUpload(token, {
         idType, idNumber, idIssuedDate, path: ticket.path,
       });
       if (confirmErr) {
-        setError(confirmErr);
+        setIdError(confirmErr);
         return;
       }
       setIdUploaded(true);
     } catch {
-      setError("Upload failed — please check your connection and try again.");
+      setIdError("Upload failed — please check your connection and try again.");
     } finally {
       setIdUploading(false);
     }
@@ -76,8 +77,12 @@ export function LandlordSign({ token, initial }: { token: string; initial: Tenan
       setError("Please type your full legal name.");
       return;
     }
-    if (!idNumber || !idIssuedDate || !idUploaded) {
-      setError("Please complete the ID verification (number, issue date, and image) before signing.");
+    if (!idNumber.trim() || !idIssuedDate) {
+      setError("Please enter your ID number and date issued.");
+      return;
+    }
+    if (!idUploaded) {
+      setError(idError || "Please tap \"Upload ID file\" and upload a photo of your ID (JPG or PNG) before signing.");
       return;
     }
     if (!padRef.current || padRef.current.isEmpty()) {
@@ -180,6 +185,7 @@ export function LandlordSign({ token, initial }: { token: string; initial: Tenan
               />
             </Field>
             {idUploading && <p className="text-xs text-slate">Uploading…</p>}
+            {idError && <p role="alert" className="text-sm text-error">{idError}</p>}
             {idUploaded && !idUploading && (
               <p className="flex items-center gap-1.5 text-xs text-available"><Icon name="check_circle" size={16} fill={1} /> ID uploaded</p>
             )}

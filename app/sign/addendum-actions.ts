@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { logIdUploadFailure } from "@/lib/signing/upload-log";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
@@ -189,7 +190,7 @@ export async function loadAddendumForLandlord(token: string): Promise<AddendumRe
   return data as AddendumRecord;
 }
 
-export async function createAddendumLandlordIdUploadTicket(
+async function createAddendumLandlordIdUploadTicketImpl(
   token: string,
   fileName: string,
   fileSize: number,
@@ -227,7 +228,7 @@ export type ConfirmLandlordIdInput = {
   path: string;
 };
 
-export async function confirmAddendumLandlordIdUpload(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
+async function confirmAddendumLandlordIdUploadImpl(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("save_addendum_landlord_id_upload", {
     p_token: token,
@@ -270,4 +271,21 @@ export async function submitAddendumLandlordSignature(token: string, input: Subm
     }
   }
   return { completed: false };
+}
+
+export async function createAddendumLandlordIdUploadTicket(
+  token: string,
+  fileName: string,
+  fileSize: number,
+  fileType: string
+): Promise<{ signedUrl?: string; uploadToken?: string; path?: string; error?: string }> {
+  const result = await createAddendumLandlordIdUploadTicketImpl(token, fileName, fileSize, fileType);
+  if (result.error) logIdUploadFailure("addendum", "ticket", result.error, { fileType, fileSize });
+  return result;
+}
+
+export async function confirmAddendumLandlordIdUpload(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
+  const result = await confirmAddendumLandlordIdUploadImpl(token, input);
+  if (result.error) logIdUploadFailure("addendum", "confirm", result.error);
+  return result;
 }

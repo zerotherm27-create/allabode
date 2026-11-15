@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-export async function POST(req: NextRequest) {
+async function handle(req: NextRequest) {
   const deny = verifyCronSecret(req);
   if (deny) return deny;
 
@@ -67,3 +67,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ published, total: soaIds.length, errors });
 }
+
+// Vercel Cron calls with GET; POST stays for manual triggers.
+export const GET = handle;
+export const POST = handle;

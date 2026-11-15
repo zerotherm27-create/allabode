@@ -8,7 +8,7 @@ import { createNotification } from "@/lib/notify";
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-export async function POST(req: NextRequest) {
+async function handle(req: NextRequest) {
   const deny = verifyCronSecret(req);
   if (deny) return deny;
 
@@ -176,3 +176,7 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json({ created: taken, autoApproved, flagged, total: leases?.length ?? 0, errors });
 }
+
+// Vercel Cron calls with GET; POST stays for manual triggers.
+export const GET = handle;
+export const POST = handle;

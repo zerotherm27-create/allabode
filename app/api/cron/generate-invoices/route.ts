@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { verifyCronSecret, logCronRun } from "@/lib/cron";
 
 export const runtime = "nodejs";
@@ -10,11 +10,11 @@ type Lease = {
   tenant_id: string; unit_id: string; property_id: string; owner_id: string | null;
 };
 
-export async function POST(req: NextRequest) {
+async function handle(req: NextRequest) {
   const deny = verifyCronSecret(req);
   if (deny) return deny;
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const today = new Date();
   const billingStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
   const billingEnd   = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);
@@ -62,3 +62,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ created, skipped, errors });
 }
+
+// Vercel Cron calls with GET; POST stays for manual triggers.
+export const GET = handle;
+export const POST = handle;

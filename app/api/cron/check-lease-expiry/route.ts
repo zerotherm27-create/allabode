@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { verifyCronSecret, logCronRun } from "@/lib/cron";
 import { createNotification } from "@/lib/notify";
 
@@ -10,11 +10,11 @@ const REMINDER_DAYS = [90, 60, 30];
 
 type Lease = { id: string; end_date: string; tenant_id: string };
 
-export async function POST(req: NextRequest) {
+async function handle(req: NextRequest) {
   const deny = verifyCronSecret(req);
   if (deny) return deny;
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const today = new Date();
   let taken = 0; const errors: string[] = [];
 
@@ -53,3 +53,7 @@ export async function POST(req: NextRequest) {
   await logCronRun(supabase, "check_lease_expiry", { processed: leases?.length ?? 0, taken, errors, status });
   return NextResponse.json({ taken, errors });
 }
+
+// Vercel Cron calls with GET; POST stays for manual triggers.
+export const GET = handle;
+export const POST = handle;

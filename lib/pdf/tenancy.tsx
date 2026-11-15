@@ -13,6 +13,7 @@ import {
 } from "@/lib/pm/tenancy-clauses";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
 import { IdGrid } from "@/lib/pdf/id-grid";
+import { KeepTable } from "@/lib/pdf/keep-table";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -133,14 +134,14 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
   return (
     <>
       {para.fields && para.fields.map(([label, value]) => (
-        <View key={label} style={styles.partyRow}>
+        <View key={label} style={styles.partyRow} wrap={false}>
           <Text style={styles.partyLabel}>{label}</Text>
           <Text style={styles.partyValue}>: {value}</Text>
         </View>
       ))}
       {para.text && (
         para.sub ? (
-          <View style={styles.subClause}>
+          <View style={styles.subClause} wrap={false}>
             <Text style={styles.subNo}>{para.sub}</Text>
             <Text style={styles.subBody}>
               {para.subTitle ? <Text style={styles.bold}>{para.subTitle}{"\n"}</Text> : null}
@@ -152,7 +153,7 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
         )
       )}
       {para.numbered && para.numbered.map((n) => (
-        <View key={n.marker} style={styles.numbered}>
+        <View key={n.marker} style={styles.numbered} wrap={false}>
           <Text style={styles.numMarker}>{n.marker}</Text>
           <Text style={styles.numText}>{n.text}</Text>
         </View>
@@ -179,15 +180,15 @@ function Clauses({ clauses }: { clauses: TenancyClause[] }) {
 function PartyBlock({ name, idNumber, address }: { name?: string; idNumber?: string; address?: string }) {
   return (
     <>
-      <View style={styles.partyRow}>
+      <View style={styles.partyRow} wrap={false}>
         <Text style={styles.partyLabel}>NAME</Text>
         <Text style={styles.partyValue}>: {name || BLANK}</Text>
       </View>
-      <View style={styles.partyRow}>
+      <View style={styles.partyRow} wrap={false}>
         <Text style={styles.partyLabel}>ID NUMBER</Text>
         <Text style={styles.partyValue}>: {idNumber || BLANK}</Text>
       </View>
-      <View style={styles.partyRow}>
+      <View style={styles.partyRow} wrap={false}>
         <Text style={styles.partyLabel}>ADDRESS</Text>
         <Text style={styles.partyValue}>: {address || BLANK}</Text>
       </View>
@@ -288,14 +289,14 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
 
         {/* Bank details table (clause 3.3 refers to it) */}
         <Gap h={6} />
-        <View style={styles.table}>
+        <View style={styles.table} wrap={false}>
           {([
             ["Name", input.bankDetails.name],
             ["Bank", input.bankDetails.bank],
             ["Branch", input.bankDetails.branch],
             ["Account number", input.bankDetails.accountNumber],
           ] as const).map(([label, value], i, arr) => (
-            <View key={label} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
+            <View key={label} style={i === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
               <Text style={[styles.tdCell, { width: 120 }]}>{label}</Text>
               <Text style={[styles.tdCellLast, { flex: 1 }]}>{value}</Text>
             </View>
@@ -305,20 +306,23 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
 
         {/* Payment schedule table */}
         <Gap h={6} />
-        <View style={styles.table}>
-          <View style={styles.trow}>
-            <Text style={[styles.thCell, { width: 110 }]}>Due Date</Text>
-            <Text style={[styles.thCell, { width: 90 }]}>Amount</Text>
-            <Text style={[styles.tdCellLast, styles.bold, { flex: 1 }]}>Particulars</Text>
-          </View>
-          {schedule.map((r, i) => (
+        <KeepTable
+          style={styles.table}
+          header={(
+            <View style={styles.trow}>
+              <Text style={[styles.thCell, { width: 110 }]}>Due Date</Text>
+              <Text style={[styles.thCell, { width: 90 }]}>Amount</Text>
+              <Text style={[styles.tdCellLast, styles.bold, { flex: 1 }]}>Particulars</Text>
+            </View>
+          )}
+          rows={schedule.map((r, i) => (
             <View key={i} style={i === schedule.length - 1 ? styles.trowLast : styles.trow}>
               <Text style={[styles.tdCell, { width: 110 }]}>{r.dueDate || " "}</Text>
               <Text style={[styles.tdCell, { width: 90 }]}>{r.amount || " "}</Text>
               <Text style={[styles.tdCellLast, { flex: 1 }]}>{r.particulars || " "}</Text>
             </View>
           ))}
-        </View>
+        />
         <Gap h={10} />
 
         <Clauses clauses={buildTenancyClausesAfterTables(terms)} />
@@ -410,8 +414,8 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         <Text style={[styles.p, { marginTop: 10 }]}>BEFORE ME, personally appeared:</Text>
 
         <Gap h={6} />
-        <View style={styles.table}>
-          <View style={styles.trow}>
+        <View style={styles.table} wrap={false}>
+          <View style={styles.trow} wrap={false}>
             <Text style={[styles.thCell, { flex: 1.4, textAlign: "center" }]}>Name</Text>
             <Text style={[styles.thCell, { flex: 1, textAlign: "center" }]}>Type of ID</Text>
             <Text style={[styles.tdCellLast, styles.bold, { flex: 1, textAlign: "center" }]}>ID Number</Text>
@@ -424,7 +428,7 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
             ...(input.terms.occupants ?? []).slice(1).map((o) => o.trim()).filter(Boolean).map((o) => [o, "", ""]),
             ...Array.from({ length: Math.max(0, 3 - Math.max(0, (input.terms.occupants ?? []).slice(1).filter((o) => o.trim()).length)) }, () => ["", "", ""]),
           ].map(([name, type, num], i, arr) => (
-            <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
+            <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
               <Text style={[styles.tdCell, { flex: 1.4 }]}>{name || " "}</Text>
               <Text style={[styles.tdCell, { flex: 1, textAlign: "center" }]}>{type || " "}</Text>
               <Text style={[styles.tdCellLast, { flex: 1, textAlign: "center" }]}>{num || " "}</Text>
@@ -483,27 +487,30 @@ export async function renderTenancyPdf(input: TenancyPdfInput): Promise<Buffer> 
         </Text>
 
         <Gap h={6} />
-        <View style={styles.table}>
+        <KeepTable
+          style={styles.table}
+          header={(
           <View style={styles.trow}>
             <Text style={[styles.thCell, { width: 58, textAlign: "center" }]}>Quantity</Text>
             <Text style={[styles.thCell, { flex: 1.2, textAlign: "center" }]}>Particulars</Text>
             <Text style={[styles.thCell, { flex: 0.9, textAlign: "center" }]}>Brand</Text>
             <Text style={[styles.tdCellLast, styles.bold, { flex: 1.5, textAlign: "center" }]}>Remarks</Text>
           </View>
-          {inventoryRows.map((r, i) => (
-            <View key={i} style={i === inventoryRows.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
+          )}
+          rows={inventoryRows.map((r, i) => (
+            <View key={i} style={i === inventoryRows.length - 1 ? styles.trowLast : styles.trow}>
               <Text style={[styles.tdCell, { width: 58, textAlign: "center" }]}>{r.quantity || " "}</Text>
               <Text style={[styles.tdCell, { flex: 1.2 }]}>{r.particulars || " "}</Text>
               <Text style={[styles.tdCell, { flex: 0.9 }]}>{r.brand || " "}</Text>
               <Text style={[styles.tdCellLast, { flex: 1.5, fontFamily: "Helvetica-Oblique" }]}>{r.remarks || " "}</Text>
             </View>
           ))}
-        </View>
+        />
         <Gap h={10} />
 
         <Text style={[styles.bold, { marginBottom: 4 }]} minPresenceAhead={60}>Reminders:</Text>
         {TENANCY_REMINDERS.map((t, i) => (
-          <View key={i} style={[styles.numbered, { paddingLeft: 6 }]}>
+          <View key={i} style={[styles.numbered, { paddingLeft: 6 }]} wrap={false}>
             <Text style={styles.numMarker}>{i + 1})</Text>
             <Text style={styles.numText}>{t}</Text>
           </View>

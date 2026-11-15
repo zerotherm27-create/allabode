@@ -100,7 +100,7 @@ function Check({ checked }: { checked?: boolean }) {
 
 function CheckItem({ checked, label }: { checked?: boolean; label: string }) {
   return (
-    <View style={styles.listItem}>
+    <View style={styles.listItem} wrap={false}>
       <Check checked={checked} />
       <Text>{label}</Text>
     </View>
@@ -109,7 +109,7 @@ function CheckItem({ checked, label }: { checked?: boolean; label: string }) {
 
 function Field({ label, value }: { label: string; value?: string | number | null }) {
   return (
-    <View style={styles.fieldRow}>
+    <View style={styles.fieldRow} wrap={false}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <Text style={styles.fieldValue}>{value || "—"}</Text>
     </View>
@@ -418,18 +418,18 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         <Text style={styles.bold}>REPUBLIC OF THE PHILIPPINES )</Text>
         <Text>______________________________ ) S.S.</Text>
         <Text style={[styles.p, { marginTop: 8 }]}>BEFORE ME, a Notary Public for and in the above jurisdiction, personally appeared:</Text>
-        <View style={styles.table}>
-          <View style={styles.trow}>
+        <View style={styles.table} wrap={false}>
+          <View style={styles.trow} wrap={false}>
             <Text style={styles.thCell}>Name</Text>
             <Text style={styles.thCell}>Government ID</Text>
             <Text style={styles.tdCellLast}>Date/Place Issued</Text>
           </View>
-          <View style={styles.trow}>
+          <View style={styles.trow} wrap={false}>
             <Text style={styles.tdCell}>{od.name}</Text>
             <Text style={styles.tdCell}>{input.ownerIdTypeLabel} No. {input.ownerIdNumber}</Text>
             <Text style={styles.tdCellLast}>{input.ownerIdIssuedDate || "____________________"}</Text>
           </View>
-          <View style={styles.trowLast}>
+          <View style={styles.trowLast} wrap={false}>
             <Text style={styles.tdCell}>{COMPANY_SIGNATORY.name}</Text>
             <Text style={styles.tdCell}>{input.managerIdTypeLabel} No. {input.managerIdNumber}</Text>
             <Text style={styles.tdCellLast}>{input.managerIdIssuedDate}</Text>
@@ -451,8 +451,8 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
       <Page size="LETTER" style={styles.page}>
         <PageHeader />
         <Text style={styles.annexTitle}>ANNEX &#x201C;A&#x201D; &#x2014; SERVICE FEES</Text>
-        <View style={styles.table}>
-          <View style={styles.trow}>
+        <View style={styles.table} wrap={false}>
+          <View style={styles.trow} wrap={false}>
             <Text style={styles.thCell}>Service</Text>
             <Text style={styles.tdCellLast}>Fee</Text>
           </View>
@@ -465,7 +465,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
             ["Lease Extension", "Twenty Percent (20%) of the extension rental amount or as agreed"],
             ["Other Services", "Based on separate written quotation and approval"],
           ].map(([s, f], i, arr) => (
-            <View key={s} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
+            <View key={s} style={i === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
               <Text style={styles.tdCell}>{s}</Text>
               <Text style={styles.tdCellLast}>{f}</Text>
             </View>
@@ -494,8 +494,8 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
         ) : (
           <>
             <Text style={styles.h2} minPresenceAhead={50}>Keys and Access</Text>
-            <View style={styles.table}>
-              <View style={styles.trow}>
+            <View style={styles.table} wrap={false}>
+              <View style={styles.trow} wrap={false}>
                 <Text style={styles.thCell}>Item</Text>
                 <Text style={styles.thCell}>Quantity</Text>
                 <Text style={styles.tdCellLast}>Remarks</Text>
@@ -503,7 +503,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
               {KEY_ITEMS.map(([key, label], i) => {
                 const v = ab?.keys?.[key];
                 return (
-                  <View key={key} style={i === KEY_ITEMS.length - 1 ? styles.trowLast : styles.trow}>
+                  <View key={key} style={i === KEY_ITEMS.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
                     <Text style={styles.tdCell}>{label}</Text>
                     <Text style={styles.tdCell}>{v?.qty || "—"}</Text>
                     <Text style={styles.tdCellLast}>{v?.remarks || "—"}</Text>
@@ -513,8 +513,8 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
             </View>
 
             <Text style={styles.h2} minPresenceAhead={50}>Furniture</Text>
-            <View style={styles.table}>
-              <View style={styles.trow}>
+            <View style={styles.table} wrap={false}>
+              <View style={styles.trow} wrap={false}>
                 <Text style={styles.thCell}>Item</Text>
                 <Text style={styles.thCell}>Quantity</Text>
                 <Text style={styles.tdCellLast}>Condition</Text>
@@ -522,7 +522,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
               {FURNITURE_ITEMS.map(([key, label], i) => {
                 const v = ab?.furniture?.[key];
                 return (
-                  <View key={key} style={i === FURNITURE_ITEMS.length - 1 ? styles.trowLast : styles.trow}>
+                  <View key={key} style={i === FURNITURE_ITEMS.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
                     <Text style={styles.tdCell}>{label}</Text>
                     <Text style={styles.tdCell}>{v?.qty || "—"}</Text>
                     <Text style={styles.tdCellLast}>{v?.condition || "—"}</Text>
@@ -532,8 +532,8 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
             </View>
 
             <Text style={styles.h2} minPresenceAhead={50}>Appliances</Text>
-            <View style={styles.table}>
-              <View style={styles.trow}>
+            <View style={styles.table} wrap={false}>
+              <View style={styles.trow} wrap={false}>
                 <Text style={styles.thCell}>Item</Text>
                 <Text style={styles.thCell}>Brand</Text>
                 <Text style={styles.tdCellLast}>Condition</Text>
@@ -541,7 +541,7 @@ export async function renderAgreementPdf(input: AgreementPdfInput): Promise<Buff
               {APPLIANCE_ITEMS.map(([key, label], i) => {
                 const v = ab?.appliances?.[key];
                 return (
-                  <View key={key} style={i === APPLIANCE_ITEMS.length - 1 ? styles.trowLast : styles.trow}>
+                  <View key={key} style={i === APPLIANCE_ITEMS.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
                     <Text style={styles.tdCell}>{label}</Text>
                     <Text style={styles.tdCell}>{v?.brand || "—"}</Text>
                     <Text style={styles.tdCellLast}>{v?.condition || "—"}</Text>

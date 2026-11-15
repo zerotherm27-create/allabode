@@ -89,7 +89,7 @@ function Check({ checked }: { checked?: boolean }) {
 
 function Field({ label, value }: { label: string; value?: string | number | null }) {
   return (
-    <View style={styles.fieldRow}>
+    <View style={styles.fieldRow} wrap={false}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <Text style={styles.fieldValue}>{value || "—"}</Text>
     </View>
@@ -104,7 +104,7 @@ function AtsBlockView({ block: b }: { block: AtsBlock }) {
     return (
       <View style={{ marginBottom: 4 }}>
         {b.items.map((it) => (
-          <View key={it} style={styles.listItem}>
+          <View key={it} style={styles.listItem} wrap={false}>
             <Text style={styles.bullet}>&#x2022;</Text>
             <Text style={{ flex: 1 }}>{it}</Text>
           </View>
@@ -116,7 +116,7 @@ function AtsBlockView({ block: b }: { block: AtsBlock }) {
     <View style={{ marginBottom: 4 }}>
       {b.items.map((it) => (
         <View key={it.label} style={{ marginBottom: 4 }} wrap={false}>
-          <View style={styles.listItem}>
+          <View style={styles.listItem} wrap={false}>
             <Check checked={it.checked} />
             <Text style={it.body ? styles.bold : undefined}>{it.label}</Text>
           </View>
@@ -269,18 +269,18 @@ export async function renderAuthorityToSellPdf(raw: AuthorityToSellPdfInput): Pr
         <Text style={[styles.p, { marginTop: 8 }]}>
           BEFORE ME, a Notary Public, this _____ day of ______________, personally appeared:
         </Text>
-        <View style={styles.table}>
-          <View style={styles.trow}>
+        <View style={styles.table} wrap={false}>
+          <View style={styles.trow} wrap={false}>
             <Text style={styles.thCell}>Name</Text>
             <Text style={styles.thCell}>ID No.</Text>
             <Text style={styles.tdCellLast}>Date/Place Issued</Text>
           </View>
-          <View style={styles.trow}>
+          <View style={styles.trow} wrap={false}>
             <Text style={styles.tdCell}>{od.name}</Text>
             <Text style={styles.tdCell}>{input.ownerIdTypeLabel} No. {input.ownerIdNumber}</Text>
             <Text style={styles.tdCellLast}>{input.ownerIdIssuedDate || "____________________"}</Text>
           </View>
-          <View style={styles.trowLast}>
+          <View style={styles.trowLast} wrap={false}>
             <Text style={styles.tdCell}>{COMPANY_SIGNATORY.name}</Text>
             <Text style={styles.tdCell}>{input.brokerIdTypeLabel} No. {input.brokerIdNumber}</Text>
             <Text style={styles.tdCellLast}>{input.brokerIdIssuedDate}</Text>

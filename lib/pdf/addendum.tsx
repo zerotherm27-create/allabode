@@ -12,6 +12,7 @@ import {
 import { BLANK, type ClauseParagraph } from "@/lib/pm/tenancy-clauses";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
 import { IdGrid } from "@/lib/pdf/id-grid";
+import { KeepTable } from "@/lib/pdf/keep-table";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -126,14 +127,14 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
   return (
     <>
       {para.fields && para.fields.map(([label, value]) => (
-        <View key={label} style={styles.partyRow}>
+        <View key={label} style={styles.partyRow} wrap={false}>
           <Text style={styles.partyLabel}>{label}</Text>
           <Text style={styles.partyValue}>: {value}</Text>
         </View>
       ))}
       {para.text && (
         para.sub ? (
-          <View style={styles.subClause}>
+          <View style={styles.subClause} wrap={false}>
             <Text style={styles.subNo}>{para.sub}</Text>
             <Text style={styles.subBody}>
               {para.subTitle ? <Text style={styles.bold}>{para.subTitle}{"\n"}</Text> : null}
@@ -145,7 +146,7 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
         )
       )}
       {para.numbered && para.numbered.map((n) => (
-        <View key={n.marker + n.text} style={styles.numbered}>
+        <View key={n.marker + n.text} style={styles.numbered} wrap={false}>
           <Text style={styles.numMarker}>{n.marker}</Text>
           <Text style={styles.numText}>{n.text}</Text>
         </View>
@@ -263,18 +264,18 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
                 {c.paras[0] ? <Paragraph para={c.paras[0]} /> : null}
 
                 <Gap h={6} />
-                <View style={styles.table}>
-                  <View style={styles.trow}>
+                <View style={styles.table} wrap={false}>
+                  <View style={styles.trow} wrap={false}>
                     <Text style={[styles.thCell, { flex: 1 }]}>Item</Text>
                     <Text style={[styles.tdCellLast, styles.bold, { width: 110, textAlign: "right" }]}>Amount (PHP)</Text>
                   </View>
                   {feeItems.map((r, j) => (
-                    <View key={j} style={styles.trow}>
+                    <View key={j} style={styles.trow} wrap={false}>
                       <Text style={[styles.tdCell, { flex: 1 }]}>{r.label || " "}</Text>
                       <Text style={[styles.tdCellLast, { width: 110, textAlign: "right" }]}>{peso(Number(r.amount) || 0)}</Text>
                     </View>
                   ))}
-                  <View style={styles.trowLast}>
+                  <View style={styles.trowLast} wrap={false}>
                     <Text style={[styles.tdCell, styles.bold, { flex: 1 }]}>TOTAL</Text>
                     <Text style={[styles.tdCellLast, styles.bold, { width: 110, textAlign: "right" }]}>{peso(feeTotal)}</Text>
                   </View>
@@ -284,14 +285,14 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
                 <Text style={styles.p}>{addendumBankIntro(input.bankDetails)}</Text>
 
                 <Gap h={6} />
-                <View style={styles.table}>
+                <View style={styles.table} wrap={false}>
                   {([
                     ["Name", input.bankDetails.name],
                     ["Bank", input.bankDetails.bank],
                     ["Branch", input.bankDetails.branch],
                     ["Account No.", input.bankDetails.accountNumber],
                   ] as const).map(([label, value], j, arr) => (
-                    <View key={label} style={j === arr.length - 1 ? styles.trowLast : styles.trow}>
+                    <View key={label} style={j === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
                       <Text style={[styles.tdCell, styles.bold, { width: 110 }]}>{label}</Text>
                       <Text style={[styles.tdCellLast, { flex: 1 }]}>{value}</Text>
                     </View>
@@ -302,14 +303,17 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
                 {schedule.length > 0 && (
                   <>
                   <Gap h={6} />
-                  <View style={styles.table}>
+                  <KeepTable
+                    style={styles.table}
+                    header={(
                     <View style={styles.trow}>
                       <Text style={[styles.thCell, { flex: 1 }]}>DATE DUE</Text>
                       <Text style={[styles.thCell, { width: 90, textAlign: "right" }]}>AMOUNT</Text>
                       <Text style={[styles.thCell, { flex: 1.1 }]}>BANK/BRANCH</Text>
                       <Text style={[styles.tdCellLast, styles.bold, { flex: 1.2 }]}>COVERAGE</Text>
                     </View>
-                    {schedule.map((r, j) => (
+                    )}
+                    rows={schedule.map((r, j) => (
                       <View key={j} style={j === schedule.length - 1 ? styles.trowLast : styles.trow}>
                         <Text style={[styles.tdCell, { flex: 1 }]}>{r.dueDate || " "}</Text>
                         <Text style={[styles.tdCell, { width: 90, textAlign: "right" }]}>{r.amount || " "}</Text>
@@ -317,7 +321,7 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
                         <Text style={[styles.tdCellLast, { flex: 1.2 }]}>{r.coverage || " "}</Text>
                       </View>
                     ))}
-                  </View>
+                  />
                   <Gap h={10} />
                   </>
                 )}
@@ -395,8 +399,8 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
         <Text style={[styles.p, { marginTop: 10 }]}>BEFORE ME, personally appeared:</Text>
 
         <Gap h={6} />
-        <View style={styles.table}>
-          <View style={styles.trow}>
+        <View style={styles.table} wrap={false}>
+          <View style={styles.trow} wrap={false}>
             <Text style={[styles.thCell, { flex: 1.3 }]}>Name</Text>
             <Text style={[styles.thCell, { flex: 1 }]}>Type of ID</Text>
             <Text style={[styles.tdCellLast, styles.bold, { flex: 1 }]}>ID Number</Text>
@@ -408,7 +412,7 @@ export async function renderAddendumPdf(input: AddendumPdfInput): Promise<Buffer
             ["", "", ""],
             ["", "", ""],
           ].map(([name, type, num], i, arr) => (
-            <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
+            <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
               <Text style={[styles.tdCell, { flex: 1.3 }]}>{name || " "}</Text>
               <Text style={[styles.tdCell, { flex: 1 }]}>{type || " "}</Text>
               <Text style={[styles.tdCellLast, { flex: 1 }]}>{num || " "}</Text>

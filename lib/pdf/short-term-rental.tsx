@@ -12,6 +12,7 @@ import {
 import { BLANK, type ClauseParagraph } from "@/lib/pm/tenancy-clauses";
 import { PageContactRow } from "@/lib/pdf/contact-icons";
 import { IdGrid } from "@/lib/pdf/id-grid";
+import { KeepTable } from "@/lib/pdf/keep-table";
 
 let _logoBase64: string | null = null;
 function getLogo(): string | null {
@@ -125,14 +126,14 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
   return (
     <>
       {para.fields && para.fields.map(([label, value]) => (
-        <View key={label} style={styles.partyRow}>
+        <View key={label} style={styles.partyRow} wrap={false}>
           <Text style={styles.partyLabel}>{label}</Text>
           <Text style={styles.partyValue}>: {value}</Text>
         </View>
       ))}
       {para.text && (
         para.sub ? (
-          <View style={styles.subClause}>
+          <View style={styles.subClause} wrap={false}>
             <Text style={styles.subNo}>{para.sub}</Text>
             <Text style={styles.subBody}>
               {para.subTitle ? <Text style={styles.bold}>{para.subTitle}{"\n"}</Text> : null}
@@ -144,7 +145,7 @@ function Paragraph({ para }: { para: ClauseParagraph }) {
         )
       )}
       {para.numbered && para.numbered.map((n) => (
-        <View key={n.marker + n.text} style={styles.numbered}>
+        <View key={n.marker + n.text} style={styles.numbered} wrap={false}>
           <Text style={styles.numMarker}>{n.marker}</Text>
           <Text style={styles.numText}>{n.text}</Text>
         </View>
@@ -231,22 +232,22 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
 
         {/* Fee table (clause 6) */}
         <Gap h={6} />
-        <View style={styles.table}>
-          <View style={styles.trow}>
+        <View style={styles.table} wrap={false}>
+          <View style={styles.trow} wrap={false}>
             <Text style={[styles.thCell, { flex: 1 }]}>Item</Text>
             <Text style={[styles.tdCellLast, styles.bold, { width: 110, textAlign: "right" }]}>Amount (PHP)</Text>
           </View>
           {feeItems.map((r, i) => (
-            <View key={i} style={styles.trow}>
+            <View key={i} style={styles.trow} wrap={false}>
               <Text style={[styles.tdCell, { flex: 1 }]}>{r.label || " "}</Text>
               <Text style={[styles.tdCellLast, { width: 110, textAlign: "right" }]}>{peso(Number(r.amount) || 0)}</Text>
             </View>
           ))}
-          <View style={styles.trow}>
+          <View style={styles.trow} wrap={false}>
             <Text style={[styles.tdCell, { flex: 1 }]}>Security Deposit</Text>
             <Text style={[styles.tdCellLast, { width: 110, textAlign: "right" }]}>{peso(Number(input.securityDepositAmount) || 0)}</Text>
           </View>
-          <View style={styles.trowLast}>
+          <View style={styles.trowLast} wrap={false}>
             <Text style={[styles.tdCell, styles.bold, { flex: 1 }]}>TOTAL DUE (upon signing)</Text>
             <Text style={[styles.tdCellLast, styles.bold, { width: 110, textAlign: "right" }]}>{peso(feeTotal)}</Text>
           </View>
@@ -257,14 +258,14 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
 
         {/* Bank details table (clause 6.1) */}
         <Gap h={6} />
-        <View style={styles.table}>
+        <View style={styles.table} wrap={false}>
           {([
             ["Name", input.bankDetails.name],
             ["Bank", input.bankDetails.bank],
             ["Branch", input.bankDetails.branch],
             ["Account No.", input.bankDetails.accountNumber],
           ] as const).map(([label, value], i, arr) => (
-            <View key={label} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
+            <View key={label} style={i === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
               <Text style={[styles.tdCell, styles.bold, { width: 110 }]}>{label}</Text>
               <Text style={[styles.tdCellLast, { flex: 1 }]}>{value}</Text>
             </View>
@@ -340,8 +341,8 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         <Text style={[styles.p, { marginTop: 10 }]}>BEFORE ME, personally appeared:</Text>
 
         <Gap h={6} />
-        <View style={styles.table}>
-          <View style={styles.trow}>
+        <View style={styles.table} wrap={false}>
+          <View style={styles.trow} wrap={false}>
             <Text style={[styles.thCell, { flex: 1.3 }]}>Name</Text>
             <Text style={[styles.thCell, { flex: 1 }]}>Type of ID</Text>
             <Text style={[styles.tdCellLast, styles.bold, { flex: 1 }]}>ID Number</Text>
@@ -353,7 +354,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
             ["", "", ""],
             ["", "", ""],
           ].map(([name, type, num], i, arr) => (
-            <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow}>
+            <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
               <Text style={[styles.tdCell, { flex: 1.3 }]}>{name || " "}</Text>
               <Text style={[styles.tdCell, { flex: 1 }]}>{type || " "}</Text>
               <Text style={[styles.tdCellLast, { flex: 1 }]}>{num || " "}</Text>
@@ -412,14 +413,17 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         </Text>
 
         <Gap h={6} />
-        <View style={styles.table}>
+        <KeepTable
+          style={styles.table}
+          header={(
           <View style={styles.trow}>
             <Text style={[styles.thCell, { width: 58, textAlign: "center" }]}>Quantity</Text>
             <Text style={[styles.thCell, { flex: 1.2, textAlign: "center" }]}>Particulars</Text>
             <Text style={[styles.thCell, { flex: 0.9, textAlign: "center" }]}>Brand</Text>
             <Text style={[styles.tdCellLast, styles.bold, { flex: 1.5, textAlign: "center" }]}>Remarks</Text>
           </View>
-          {input.inventory.map((r, i) => (
+          )}
+          rows={input.inventory.map((r, i) => (
             <View key={i} style={i === input.inventory.length - 1 ? styles.trowLast : styles.trow}>
               <Text style={[styles.tdCell, { width: 58, textAlign: "center" }]}>{r.quantity || " "}</Text>
               <Text style={[styles.tdCell, { flex: 1.2 }]}>{r.particulars || " "}</Text>
@@ -427,7 +431,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
               <Text style={[styles.tdCellLast, { flex: 1.5, fontFamily: "Helvetica-Oblique" }]}>{r.remarks || " "}</Text>
             </View>
           ))}
-        </View>
+        />
         <Gap h={10} />
       </Page>
 
@@ -437,7 +441,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         <Footer />
         <Text style={styles.annexTitle}>ANNEX B — RENTAL RULES</Text>
         {strRentalRules(terms.garbageDisposalLocation).map((rule, i) => (
-          <View key={i} style={[styles.numbered, { paddingLeft: 6 }]}>
+          <View key={i} style={[styles.numbered, { paddingLeft: 6 }]} wrap={false}>
             <Text style={styles.numMarker}>•</Text>
             <Text style={styles.numText}>{rule}</Text>
           </View>
@@ -446,7 +450,7 @@ export async function renderShortTermRentalPdf(input: StrPdfInput): Promise<Buff
         {/* Annex C continues straight after Annex B (no forced page) so a short checklist doesn't get a near-empty page. */}
         <Text style={[styles.annexTitle, { marginTop: 18 }]} minPresenceAhead={60}>ANNEX C — MOVE-OUT CHECKLIST</Text>
         {STR_MOVE_OUT_CHECKLIST.map((item, i) => (
-          <View key={i} style={[styles.numbered, { paddingLeft: 6 }]}>
+          <View key={i} style={[styles.numbered, { paddingLeft: 6 }]} wrap={false}>
             <Text style={styles.numMarker}>•</Text>
             <Text style={styles.numText}>{item}</Text>
           </View>

@@ -165,6 +165,20 @@ button:not(:disabled):active {
   transform: scale(0.98);
 }
 
+/* Dropdown arrow — every native <select> swaps the browser's arrow (which
+   hugs the right edge) for our own chevron, inset 0.875rem with room around it.
+   Left unlayered on purpose so the right padding wins over `px-*` utilities.
+   Selects that draw their own icon opt out via `appearance-none`.
+   The stroke is --color-slate; a data URI cannot read CSS variables. */
+select:not([multiple]):not([size]):not(.appearance-none) {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b6573' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.5rem;
+}
+
 /* Reusable utility primitives */
 @utility container-site {
   width: 100%;

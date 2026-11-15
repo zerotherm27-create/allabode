@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/client";
 import { navGroups } from "@/lib/admin/nav-groups";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { HelpPopover } from "@/components/admin/help-popover";
+import { NotificationBell } from "@/components/dashboard/notification-bell";
+import { EnableAlertsButton } from "@/components/push/enable-alerts-button";
 
 const MotionLink = motion.create(Link);
 
@@ -127,6 +129,8 @@ export function AdminShell({
           <div className="ml-auto flex items-center gap-3 text-sm text-slate">
             <CommandPalette />
             <HelpPopover />
+            <NotificationBell role="admin" />
+            <EnableAlertsButton />
             <span className="hidden h-6 w-px bg-line sm:inline-block" />
             <Icon name="account_circle" size={22} className="text-navy-700" />
             <span className="hidden sm:inline">{email}</span>

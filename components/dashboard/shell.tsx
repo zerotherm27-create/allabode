@@ -7,6 +7,7 @@ import { Icon } from "@/components/icon";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
+import { EnableAlertsButton } from "@/components/push/enable-alerts-button";
 import { Reveal } from "@/components/motion";
 
 export type NavItem = { label: string; icon: string; href: string };
@@ -142,9 +143,8 @@ export function DashboardShell({
           </label>
 
           <div className="ml-auto flex items-center gap-2">
-            {role !== "Specialist" && (
-              <NotificationBell role={role.toLowerCase() as "owner" | "tenant"} />
-            )}
+            {role === "Specialist" && <EnableAlertsButton />}
+            <NotificationBell role={role.toLowerCase() as "owner" | "tenant" | "specialist"} />
             <div className="flex items-center gap-2 rounded-md px-2 py-1">
               <span className="flex size-9 items-center justify-center rounded-full bg-navy text-sm font-semibold text-white">
                 {userName.charAt(0)}

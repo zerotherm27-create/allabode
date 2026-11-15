@@ -20,6 +20,7 @@ import { getPublicSpecialist } from "@/lib/team/public-queries";
 import { getSpecialistLeadEmail } from "@/lib/team/lead-recipient";
 import { sendEmail } from "@/lib/email";
 import { enrolLead } from "@/lib/nurture/enrol";
+import { notifyNewLead } from "@/lib/leads/notify-lead";
 import { getSettings, s } from "@/lib/settings";
 import { site } from "@/lib/site";
 import { getPublicSiteUrl } from "@/lib/url";
@@ -168,6 +169,10 @@ export async function POST(request: Request) {
     const lead = row;
     after(() => notifySpecialistLead(notified, lead));
   }
+  // Every lead alerts All Abode (in-house ones included); assigned ones also alert their specialist.
+  const alerted = specialist;
+  const alertedRow = row;
+  after(() => notifyNewLead({ type, row: alertedRow, specialist: alerted, companyEmailed: Boolean(alerted) }));
 
   return NextResponse.json({ ok: true, persisted: true });
 }

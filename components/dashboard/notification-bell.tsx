@@ -12,7 +12,16 @@ type Notif = {
   is_read: boolean; created_at: string;
 };
 
-export function NotificationBell({ role }: { role: "tenant" | "owner" }) {
+export type BellRole = "tenant" | "owner" | "admin" | "specialist";
+
+const ALL_LINK: Record<BellRole, { href: string; label: string }> = {
+  tenant: { href: "/dashboard/tenant/notices", label: "View all notices →" },
+  owner: { href: "/dashboard/owner/notices", label: "View all notices →" },
+  admin: { href: "/admin/inquiries", label: "Open inquiries →" },
+  specialist: { href: "/dashboard/specialist/leads", label: "Open my leads →" },
+};
+
+export function NotificationBell({ role }: { role: BellRole }) {
   const [notifs, setNotifs]   = useState<Notif[]>([]);
   const [open, setOpen]       = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,6 +38,32 @@ export function NotificationBell({ role }: { role: "tenant" | "owner" }) {
         setNotifs((data ?? []) as Notif[]);
         setLoading(false);
       });
+  }, []);
+
+  // Live updates: a new row for this user appears without a refresh.
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid || cancelled) return;
+      channel = supabase
+        .channel(`notifications:${uid}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "notifications", filter: `recipient_user_id=eq.${uid}` },
+          (payload) => {
+            const n = payload.new as Notif;
+            setNotifs((prev) => (prev.some((p) => p.id === n.id) ? prev : [n, ...prev].slice(0, 15)));
+          },
+        )
+        .subscribe();
+    });
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -54,7 +89,7 @@ export function NotificationBell({ role }: { role: "tenant" | "owner" }) {
   }
 
   const unreadCount = notifs.filter((n) => !n.is_read).length;
-  const noticesHref = `/dashboard/${role}/notices`;
+  const allLink = ALL_LINK[role];
 
   return (
     <div className="relative" ref={panelRef}>
@@ -129,8 +164,8 @@ export function NotificationBell({ role }: { role: "tenant" | "owner" }) {
             )}
           </div>
           <div className="border-t border-line px-4 py-2.5">
-            <Link href={noticesHref} onClick={() => setOpen(false)} className="text-xs font-medium text-navy-700 hover:text-gold">
-              View all notices →
+            <Link href={allLink.href} onClick={() => setOpen(false)} className="text-xs font-medium text-navy-700 hover:text-gold">
+              {allLink.label}
             </Link>
           </div>
           </motion.div>

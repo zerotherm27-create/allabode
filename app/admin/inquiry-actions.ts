@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
 import { assignmentProblem } from "@/lib/leads/intake";
+import { notifyReassignment } from "@/lib/leads/notify-reassign";
 
 export type AssignInquiryState = { ok: boolean; message: string };
 
@@ -68,6 +69,9 @@ export async function assignInquiry(
       to: specialistId || null,
     },
   });
+
+  // Best-effort alerts for the specialists involved; never blocks the assignment.
+  await notifyReassignment(inquiryId, (before as { specialist_id: string | null }).specialist_id ?? null, specialistId || null);
 
   revalidatePath("/admin/inquiries");
   return { ok: true, message: specialistId ? "Assigned." : "Unassigned." };

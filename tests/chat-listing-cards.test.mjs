@@ -81,3 +81,19 @@ test("slug and tool-arg guards reject unsafe values", async () => {
   assert.equal(g.cleanBedrooms("2"), undefined);
   assert.equal(g.cleanBedrooms(99), undefined);
 });
+
+test("contact marker round-trips alongside cards and validates the listing id", async () => {
+  const { encodeCards, encodeContact, parseCards, toCard } = await loadTs("lib/chat/listing-cards.ts");
+  const id = "123e4567-e89b-12d3-a456-426614174000";
+  const raw =
+    "Sure!" + encodeCards([toCard(mk({ id: "a", dbId: id }))]) + encodeContact({ listing: "Nice >> place", listingId: id });
+  const out = parseCards(raw);
+  assert.equal(out.text, "Sure!");
+  assert.equal(out.cards[0].dbId, id);
+  assert.deepEqual(out.contact, { listing: "Nice >> place", listingId: id });
+
+  const bad = parseCards("Hi" + encodeContact({ listingId: "not-a-uuid" }));
+  assert.equal(bad.contact.listingId, undefined);
+  // a contact marker alone, still streaming, never leaks
+  assert.deepEqual(parseCards('Hi\n<<CONTACT:{"lis'), { text: "Hi", cards: [] });
+});

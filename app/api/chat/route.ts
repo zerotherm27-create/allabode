@@ -13,7 +13,7 @@ import {
   safeListingSlug,
   sanitizeMessages,
 } from "@/lib/chat/guardrails";
-import { encodeCards, searchListings, toCard, type ListingCard } from "@/lib/chat/listing-cards";
+import { encodeCards, encodeContact, searchListings, toCard, type ContactRequest, type ListingCard } from "@/lib/chat/listing-cards";
 import { getSettings } from "@/lib/settings";
 
 export const runtime = "nodejs";
@@ -22,6 +22,21 @@ export const maxDuration = 30;
 const MAX_TOKENS = 350;
 
 const TOOLS: ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "request_contact_form",
+      description:
+        "Show the visitor a secure contact form inside the chat so an All Abode property specialist can follow up. Use when they want a viewing, a callback, pricing/availability confirmation, or to talk to someone. The form collects their details; you must never ask for them in chat.",
+      parameters: {
+        type: "object",
+        properties: {
+          slug: { type: "string", description: "Slug of the listing they are interested in, if any" },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
   {
     type: "function",
     function: {
@@ -73,9 +88,25 @@ const TOOLS: ChatCompletionTool[] = [
  * Tool handlers always re-fetch from the DB server-side — the model never
  * gets to assert listing facts itself, only request them by slug.
  */
-type ToolResult = { content: string; cards?: ListingCard[] };
+type ToolResult = { content: string; cards?: ListingCard[]; contact?: ContactRequest };
 
-async function runTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
+async function runTool(
+  name: string,
+  args: Record<string, unknown>,
+  pageSlug?: string
+): Promise<ToolResult> {
+  if (name === "request_contact_form") {
+    const slug = safeListingSlug(args.slug) ?? pageSlug;
+    const listing = slug ? await getListing(slug) : null;
+    return {
+      contact: listing ? { listing: listing.title, listingId: listing.dbId } : {},
+      content: JSON.stringify({
+        shown: true,
+        note: "The contact form is now displayed to the visitor. Invite them to fill it in. Do not ask for their details in chat.",
+      }),
+    };
+  }
+
   if (name === "search_listings") {
     const market = args.market === "sale" || args.market === "rent" ? args.market : undefined;
     const found = searchListings(await getListings(), {
@@ -165,6 +196,7 @@ export async function POST(req: NextRequest) {
   }
   const listingSlug = safeListingSlug(body.listingSlug);
   const collectedCards: ListingCard[] = [];
+  let contactRequest: ContactRequest | null = null;
   const client = getOpenAI();
 
   let stream: Awaited<ReturnType<typeof client.chat.completions.create>>;
@@ -197,7 +229,8 @@ export async function POST(req: NextRequest) {
         } catch {
           // malformed args — runTool below returns a "not found" style error
         }
-        const result = await runTool(call.function.name, args);
+        const result = await runTool(call.function.name, args, listingSlug);
+        if (result.contact) contactRequest = result.contact;
         if (result.cards) collectedCards.push(...result.cards);
         messages.push({ role: "tool", tool_call_id: call.id, content: result.content });
       }
@@ -230,6 +263,7 @@ export async function POST(req: NextRequest) {
         const unique = collectedCards.filter((c) => !seen.has(c.slug) && seen.add(c.slug));
         const marker = encodeCards(unique.slice(0, 4));
         if (marker) controller.enqueue(encoder.encode(marker));
+        if (contactRequest) controller.enqueue(encoder.encode(encodeContact(contactRequest)));
       } catch (err) {
         console.error("chat stream error:", err);
       } finally {

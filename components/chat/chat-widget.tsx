@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { isSafeSlug, parseCards, type ListingCard } from "@/lib/chat/listing-cards";
 import { MAX_MESSAGE_CHARS } from "@/lib/chat/guardrails";
+import { ChatLeadForm } from "@/components/chat/chat-lead-form";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -52,6 +53,7 @@ export function ChatWidget() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [sentForms, setSentForms] = useState<Set<number>>(() => new Set());
   const [hintDismissed, setHintDismissed] = useState(false);
   const [hintShown, setHintShown] = useState(false);
 
@@ -134,9 +136,10 @@ export function ChatWidget() {
                 </div>
               )}
               {messages.map((m, i) => {
-                const { text, cards } = m.role === "assistant" ? parseCards(m.content) : { text: m.content, cards: [] };
+                const { text, cards, contact } =
+                  m.role === "assistant" ? parseCards(m.content) : { text: m.content, cards: [], contact: undefined };
                 return (
-                  <div key={i} className={`flex max-w-[92%] flex-col gap-2 ${m.role === "user" ? "self-end" : "self-start"}`}>
+                  <div key={i} className={`flex flex-col gap-2 ${contact ? "w-full" : "max-w-[92%]"} ${m.role === "user" ? "self-end" : "self-start"}`}>
                     {(text || (pending && i === messages.length - 1 && cards.length === 0)) && (
                       <div
                         className={`whitespace-pre-wrap rounded-md px-3 py-2 text-sm ${
@@ -149,6 +152,13 @@ export function ChatWidget() {
                     {cards.map((c) => (
                       <ChatListingCard key={c.slug} card={c} onNavigate={() => setOpen(false)} />
                     ))}
+                    {contact && (
+                      <ChatLeadForm
+                        ctx={contact}
+                        sent={sentForms.has(i)}
+                        onDone={() => setSentForms((prev) => new Set(prev).add(i))}
+                      />
+                    )}
                   </div>
                 );
               })}

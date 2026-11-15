@@ -17,3 +17,12 @@ test("secret set: only the exact Bearer value passes", () => {
   assert.equal(isCronAuthorized("s3cret", "s3cret", true), false);
   assert.equal(isCronAuthorized(null, "s3cret", false), false);
 });
+
+test("ruleEnabled: only an explicitly active rule runs (fail-safe off)", async () => {
+  const { ruleEnabled } = await loadTs("lib/cron.ts");
+  const client = (result) => ({ from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => result }) }) }) });
+  assert.equal(await ruleEnabled(client({ data: { is_active: true }, error: null }), "x"), true);
+  assert.equal(await ruleEnabled(client({ data: { is_active: false }, error: null }), "x"), false);
+  assert.equal(await ruleEnabled(client({ data: null, error: null }), "x"), false);
+  assert.equal(await ruleEnabled(client({ data: null, error: { message: "boom" } }), "x"), false);
+});

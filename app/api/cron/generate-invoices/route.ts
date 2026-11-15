@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { verifyCronSecret, logCronRun } from "@/lib/cron";
+import { verifyCronSecret, logCronRun, ruleEnabled } from "@/lib/cron";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,6 +15,9 @@ async function handle(req: NextRequest) {
   if (deny) return deny;
 
   const supabase = createServiceClient();
+  if (!(await ruleEnabled(supabase, "generate_invoices"))) {
+    return NextResponse.json({ skipped: "Automation is off. Activate it in Admin → Automation." });
+  }
   const today = new Date();
   const billingStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
   const billingEnd   = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);

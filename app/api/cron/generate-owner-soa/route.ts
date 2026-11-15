@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { verifyCronSecret, logCronRun } from "@/lib/cron";
+import { verifyCronSecret, logCronRun, ruleEnabled } from "@/lib/cron";
 import { computeOwnerSoaByLease } from "@/lib/finance/soa";
 import { validateSoaForAutoApproval } from "@/lib/ai/soa-validate";
 import { createNotification } from "@/lib/notify";
@@ -14,6 +14,9 @@ async function handle(req: NextRequest) {
 
   // Service-role client: no auth cookies in cron context, needs to bypass RLS
   const supabase = createServiceClient();
+  if (!(await ruleEnabled(supabase, "generate_owner_soa"))) {
+    return NextResponse.json({ skipped: "Automation is off. Activate it in Admin → Automation." });
+  }
   const now  = new Date();
   const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const start = prev.toISOString().slice(0, 10);

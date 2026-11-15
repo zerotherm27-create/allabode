@@ -1,5 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+/**
+ * Is this automation switched on in Admin → Automation? Fail-safe: a missing rule row or a
+ * read error counts as OFF, so a scheduled job never runs unless an admin activated it.
+ */
+export async function ruleEnabled(supabase: SupabaseClient, code: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("automation_rules").select("is_active").eq("code", code).maybeSingle();
+  if (error || !data) return false;
+  return (data as { is_active?: boolean }).is_active === true;
+}
+
 /** Verify CRON_SECRET and return a 401 NextResponse if it fails. */
 export function verifyCronSecret(req: Request): Response | null {
   const secret = process.env.CRON_SECRET;

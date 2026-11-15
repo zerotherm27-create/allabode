@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icon";
+import { AutomationToggle } from "@/components/admin/automation-toggle";
+
+// What each automation does to real people, shown in the activation confirmation.
+const WARN: Record<string, string> = {
+  generate_invoices: "It will create rent invoices for every active lease.",
+  check_lease_expiry: "It will send lease-expiry reminders to tenants.",
+  generate_owner_soa: "It will generate owner statements each month.",
+  check_viewing_reminders: "It will email visitors reminders for booked viewings.",
+  auto_publish_owner_soa: "It will publish approved statements to owners automatically.",
+  send_lead_followups: "It will send follow-up emails to leads.",
+};
 
 type Rule = {
   id: string; code: string; name: string; description: string | null;
@@ -23,6 +34,9 @@ export default async function AutomationPage() {
           <h1 className="font-display text-2xl font-bold text-navy">Automation</h1>
           <p className="mt-1 text-sm text-slate">
             {rules.filter((r) => r.is_active).length} active rules · Powered by Vercel Cron
+          </p>
+          <p className="mt-1 text-sm text-slate">
+            Nothing runs automatically until you switch it on. Use the toggle on each rule to activate or pause it.
           </p>
         </div>
       </div>
@@ -54,7 +68,8 @@ export default async function AutomationPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
+                  <AutomationToggle code={rule.code} name={rule.name} active={rule.is_active} warn={WARN[rule.code]} />
                   <div className="text-right">
                     <p className="text-xs text-slate">Last run</p>
                     <p className="text-sm font-medium text-navy">

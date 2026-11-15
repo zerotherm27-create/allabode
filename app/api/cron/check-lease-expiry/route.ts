@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { verifyCronSecret, logCronRun } from "@/lib/cron";
+import { verifyCronSecret, logCronRun, ruleEnabled } from "@/lib/cron";
 import { createNotification } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -15,6 +15,9 @@ async function handle(req: NextRequest) {
   if (deny) return deny;
 
   const supabase = createServiceClient();
+  if (!(await ruleEnabled(supabase, "check_lease_expiry"))) {
+    return NextResponse.json({ skipped: "Automation is off. Activate it in Admin → Automation." });
+  }
   const today = new Date();
   let taken = 0; const errors: string[] = [];
 

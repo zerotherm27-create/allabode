@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { verifyCronSecret, logCronRun } from "@/lib/cron";
+import { verifyCronSecret, logCronRun, ruleEnabled } from "@/lib/cron";
 import { OPEN_STATUSES } from "@/lib/tickets";
 
 export const runtime = "nodejs";
@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
   if (deny) return deny;
 
   const supabase = await createClient();
+  if (!(await ruleEnabled(supabase, "check_ticket_slas"))) {
+    return NextResponse.json({ skipped: "Automation is off. Activate it in Admin → Automation." });
+  }
   const now = new Date().toISOString();
 
   const { data: breached } = await supabase.from("tickets")

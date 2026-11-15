@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { verifyCronSecret, logCronRun } from "@/lib/cron";
+import { verifyCronSecret, logCronRun, ruleEnabled } from "@/lib/cron";
 import { sendEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
@@ -19,6 +19,9 @@ async function handle(req: NextRequest) {
   if (deny) return deny;
 
   const supabase = createServiceClient();
+  if (!(await ruleEnabled(supabase, "check_viewing_reminders"))) {
+    return NextResponse.json({ skipped: "Automation is off. Activate it in Admin → Automation." });
+  }
   const now = new Date();
   const windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000).toISOString();
   const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000).toISOString();

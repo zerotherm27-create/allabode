@@ -89,12 +89,13 @@ test("bio headline suggestions: capped, unique, gender-neutral, always four", ()
 
 test("bio headline suggestions use only the specialist's own data", () => {
   const bare = suggestBioHeadlines({});
-  assert.equal(bare[0], "Real estate guidance with a personal touch");
+  assert.equal(bare[0], "Find the right property with a specialist you trust");
   assert.ok(bare.every((h) => !/\d/.test(h)));
   const rich = suggestBioHeadlines({ name: "Maria Santos", areas: ["Makati", "BGC"], specialties: ["leasing"], years: 7 });
-  assert.equal(rich[0], "Your guide to property in Makati and BGC");
-  assert.ok(rich.includes("Straight answers on leasing"));
-  assert.ok(rich.includes("7 years of helping clients find the right place"));
+  assert.equal(rich[0], "Looking for property in Makati and BGC? Start here");
+  assert.ok(rich.includes("Makati and BGC leasing: expert guidance, zero guesswork"));
+  assert.ok(rich.every((h) => /property|real estate|leasing|Makati|BGC/i.test(h)), "every headline carries a search keyword");
+  assert.ok(rich.includes("7 years helping clients find the right property"));
   assert.ok(!suggestBioHeadlines({ years: 0 }).some((h) => /\d/.test(h)));
-  assert.ok(suggestBioHeadlines({ years: 1 }).some((h) => h.startsWith("1 year of")));
+  assert.ok(suggestBioHeadlines({ years: 1 }).some((h) => h.startsWith("1 year helping")));
 });

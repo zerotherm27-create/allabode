@@ -9,7 +9,6 @@
 const TAGLINE_MAX = 140; // PROFILE_LIMITS.tagline
 const BIO_MAX = 2000; // PROFILE_LIMITS.bio
 const HEADLINE_MAX = 80; // PROFILE_LIMITS.bioHeadline
-const DEFAULT_HEADLINE = "Real estate guidance with a personal touch"; // ABOUT_COPY.heading
 const MAX_LIST_ITEMS = 4; // keep sentences readable
 const DEFAULT_TAGLINE = "Your partner in finding the right space"; // HERO_COPY.defaultTagline
 
@@ -64,7 +63,8 @@ export function suggestTagline(f: Pick<SuggestInput, "areas" | "specialties">): 
 }
 
 /**
- * Up to four ready-made headlines for the About section. The ones built from
+ * Up to four ready-made, search-friendly headlines (place and "property" / "property specialist"
+ * keywords, hook-first wording) for the About section. The ones built from
  * the specialist's own areas, specialties and years come first (each only when
  * that field has data, never a number they did not give); plain ones fill the
  * rest, so there are always options. Gender-neutral, no dashes, each within
@@ -76,17 +76,20 @@ export function suggestBioHeadlines(f: SuggestInput): string[] {
   const years = f.years != null && Number.isInteger(f.years) && f.years > 0 ? f.years : null;
   const first = firstNameOf(f.name ?? "");
 
+  // SEO + hook: each line carries a search phrase people actually type (place + "property" /
+  // "real estate", or "property specialist") and opens with a question, promise or invitation.
   const fromData: string[] = [];
-  if (areas) fromData.push(`Your guide to property in ${areas}`);
-  if (specialties) fromData.push(`Straight answers on ${specialties}`);
-  if (years) fromData.push(`${years} ${years === 1 ? "year" : "years"} of helping clients find the right place`);
-  if (first && first.length <= 20) fromData.push(`Real estate with ${first}: clear, honest, simple`);
+  if (areas) fromData.push(`Looking for property in ${areas}? Start here`);
+  if (areas && specialties) fromData.push(`${areas} ${specialties}: expert guidance, zero guesswork`);
+  else if (specialties) fromData.push(`Need help with ${specialties}? Get straight answers`);
+  if (years) fromData.push(`${years} ${years === 1 ? "year" : "years"} helping clients find the right property`);
+  if (first && first.length <= 20) fromData.push(`Meet ${first}, your property specialist`);
 
   const plain = [
-    DEFAULT_HEADLINE,
-    "Real estate made simple and stress-free",
-    "Clear advice for every move you make",
-    "Honest guidance from first viewing to final paperwork",
+    "Find the right property with a specialist you trust",
+    "Buy, sell or lease with a property specialist who listens",
+    "Real estate made simple, from first viewing to keys",
+    "Property advice that makes your next move clear",
   ];
 
   const out: string[] = [];

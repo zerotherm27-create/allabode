@@ -1,6 +1,5 @@
 import { Icon } from "@/components/icon";
-import { HeroEditorial } from "@/components/team/microsite/hero-editorial";
-import { HeroSignature } from "@/components/team/microsite/hero-signature";
+import { HeroFullBleed } from "@/components/team/microsite/hero-full-bleed";
 import { HeroListings } from "@/components/team/microsite/hero-listings";
 import { MicrositeAbout } from "@/components/team/microsite/about";
 import { MicrositeFirm } from "@/components/team/microsite/firm";
@@ -72,7 +71,7 @@ export async function SpecialistMicrosite({
   if (layout === "signature") {
     return (
       <>
-        <HeroSignature specialist={specialist} quick={quick} />
+        <HeroFullBleed specialist={specialist} tone="dark" quick={quick} />
         <MicrositeListings listings={listings} />
         {about}
         {firm}
@@ -98,7 +97,7 @@ export async function SpecialistMicrosite({
   }
   return (
     <>
-      <HeroEditorial specialist={specialist} />
+      <HeroFullBleed specialist={specialist} tone="light" />
       {about}
       <MicrositeListings listings={listings} />
       {firm}

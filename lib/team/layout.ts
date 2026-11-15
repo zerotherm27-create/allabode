@@ -4,19 +4,19 @@
 // the order of the sections under it; every section is the same component in
 // all three, so they stay one design on the same tokens.
 
-export const MICROSITE_LAYOUT_KEYS = ["editorial", "signature", "listings"] as const;
+export const MICROSITE_LAYOUT_KEYS = ["signature", "editorial", "listings"] as const;
 export type MicrositeLayout = (typeof MICROSITE_LAYOUT_KEYS)[number];
 
-export const DEFAULT_LAYOUT: MicrositeLayout = "editorial";
+export const DEFAULT_LAYOUT: MicrositeLayout = "signature";
 
 export const MICROSITE_LAYOUTS: Record<MicrositeLayout, { name: string; description: string }> = {
-  editorial: {
-    name: "Editorial",
-    description: "Your name large beside a framed portrait. Calm and personal.",
-  },
   signature: {
     name: "Signature",
-    description: "A dark navy opening with your portrait and one-tap contact links.",
+    description: "Your portrait across the full page with your name over it, and one-tap contact links.",
+  },
+  editorial: {
+    name: "Editorial",
+    description: "The same full-width portrait on a light page. Calm and personal.",
   },
   listings: {
     name: "Listings first",

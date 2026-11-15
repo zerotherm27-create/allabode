@@ -99,29 +99,25 @@ function SuggestButton({
  * portrait or a navy area, brass = the main button, grey bars = text and cards.
  */
 function LayoutThumb({ layout }: { layout: MicrositeLayout }) {
-  const frame = "flex h-24 w-full flex-col gap-1.5 border border-line bg-cream p-2";
+  const frame = "relative flex h-24 w-full flex-col gap-1.5 overflow-hidden border border-line bg-cream";
   if (layout === "signature") {
     return (
       <div aria-hidden="true" className={frame}>
-        <div className="flex h-14 bg-navy">
-          <div className="flex flex-1 flex-col justify-center gap-1 px-2">
-            <span className="h-1.5 w-3/4 bg-white" />
-            <span className="h-1.5 w-1/3 bg-gold" />
+        <div className="relative flex-1 bg-navy">
+          <div className="absolute inset-y-0 right-0 w-3/5 bg-navy-600" />
+          <div className="absolute inset-y-0 right-[24%] w-[36%] bg-gradient-to-r from-navy to-navy/0" />
+          <div className="absolute inset-y-0 left-2 flex w-1/3 flex-col justify-center gap-1">
+            <span className="h-1.5 w-full bg-white" />
+            <span className="h-1.5 w-2/3 bg-gold" />
           </div>
-          <div className="w-2/5 bg-navy-600" />
         </div>
-        <div className="-mt-3 mx-2 h-3 border border-line bg-surface" />
-        <div className="grid flex-1 grid-cols-3 gap-1.5">
-          <span className="bg-line-strong" />
-          <span className="bg-line-strong" />
-          <span className="bg-line-strong" />
-        </div>
+        <div className="mx-2 -mt-3 mb-1 h-3 border border-line bg-surface" />
       </div>
     );
   }
   if (layout === "listings") {
     return (
-      <div aria-hidden="true" className={frame}>
+      <div aria-hidden="true" className={`${frame} p-2`}>
         <div className="flex h-6 items-center gap-1.5 border-b border-line">
           <span className="h-5 w-4 bg-navy" />
           <span className="h-1.5 w-1/3 bg-navy" />
@@ -137,15 +133,12 @@ function LayoutThumb({ layout }: { layout: MicrositeLayout }) {
   }
   return (
     <div aria-hidden="true" className={frame}>
-      <div className="flex flex-1 items-end gap-2">
-        <div className="flex flex-1 flex-col gap-1 pb-1">
-          <span className="h-2.5 w-4/5 bg-navy" />
-          <span className="h-1.5 w-3/5 bg-line-strong" />
-          <span className="h-2.5 w-2/5 bg-gold" />
-        </div>
-        <div className="h-full w-1/3 border border-gold bg-navy" />
+      <div className="absolute inset-y-0 right-0 w-3/5 bg-navy-600" />
+      <div className="absolute inset-y-0 right-[24%] w-[36%] bg-gradient-to-r from-cream to-cream/0" />
+      <div className="absolute inset-y-0 left-2 flex w-1/3 flex-col justify-center gap-1">
+        <span className="h-1.5 w-full bg-navy" />
+        <span className="h-1.5 w-2/3 bg-gold" />
       </div>
-      <div className="h-2 border-y border-line" />
     </div>
   );
 }

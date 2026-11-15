@@ -4,8 +4,8 @@
 -- (it re-issues the public_specialists view that migration last defined).
 -- Idempotent: safe to run more than once.
 --
---   layout  'editorial' (the default, so every existing specialist gets the
---           new default page), 'signature' or 'listings'. Chosen by the
+--   layout  'signature' (the default, so every existing specialist gets the
+--           new default page), 'editorial' or 'listings'. Chosen by the
 --           specialist on their Profile page; it only changes the hero and the
 --           order of the sections on their public page.
 --
@@ -13,7 +13,7 @@
 -- set this column themselves (it rides the same own-row UPDATE policy as
 -- tagline and bio).
 
-alter table specialists add column if not exists layout text not null default 'editorial';
+alter table specialists add column if not exists layout text not null default 'signature';
 
 alter table specialists drop constraint if exists specialists_layout_check;
 alter table specialists add constraint specialists_layout_check
@@ -53,8 +53,13 @@ grant select on public_specialists to anon, authenticated;
 
 grant select (layout) on specialists to anon;
 
+-- Already ran the earlier version of this file (default 'editorial')? Run this
+-- once as well (nobody can have picked a layout yet):
+--   alter table specialists alter column layout set default 'signature';
+--   update specialists set layout = 'signature' where layout = 'editorial';
+
 -- Checks afterwards (SQL editor, each as its own query):
---   select layout from specialists limit 5;                 -- 'editorial' for everyone
+--   select layout from specialists limit 5;                 -- 'signature' for everyone
 --   begin; set local role anon;
 --     select slug, layout from public_specialists;
 --   rollback;

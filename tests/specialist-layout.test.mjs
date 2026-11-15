@@ -6,7 +6,7 @@ const { MICROSITE_LAYOUT_KEYS, MICROSITE_LAYOUTS, DEFAULT_LAYOUT, parseLayout, i
   await loadTs("lib/team/layout.ts");
 
 test("parseLayout keeps a known key and falls back to the default otherwise", () => {
-  assert.equal(DEFAULT_LAYOUT, "editorial");
+  assert.equal(DEFAULT_LAYOUT, "signature");
   for (const key of MICROSITE_LAYOUT_KEYS) assert.equal(parseLayout(key), key);
   for (const bad of [null, undefined, "", "Editorial", "signature ", "grid", 3, {}]) {
     assert.equal(parseLayout(bad), DEFAULT_LAYOUT);

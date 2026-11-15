@@ -39,7 +39,13 @@ export function MicrositePortrait({
   return (
     <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-navy-800 via-navy-700 to-navy-600">
       {!compact && <Skyline className="absolute inset-x-0 bottom-0 h-1/2 w-full text-white/10" />}
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* Full-bleed heroes put the name over the lower half of a phone, so the
+          initials ride in the upper part there and centre from md. */}
+      <div
+        className={`absolute inset-0 flex justify-center ${
+          compact ? "items-center" : "items-start pt-[22%] md:items-center md:pt-0"
+        }`}
+      >
         <span
           className={`font-display font-bold tracking-tight text-gold-soft ${
             compact ? "text-2xl" : "text-7xl lg:text-8xl"

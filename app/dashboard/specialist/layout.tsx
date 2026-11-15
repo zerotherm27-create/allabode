@@ -17,6 +17,7 @@ const nav: NavItem[] = [
   { label: "Follow-up emails", icon: "mail", href: "/dashboard/specialist/follow-ups" },
   { label: "My listings", icon: "home_work", href: "/dashboard/specialist/listings" },
   { label: "Profile", icon: "person", href: "/dashboard/specialist/profile" },
+  { label: "Help guide", icon: "menu_book", href: "/dashboard/specialist/guide" },
 ];
 
 const STATE_COPY: Record<string, { icon: string; title: string; body: string }> = {

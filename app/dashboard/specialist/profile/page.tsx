@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Icon } from "@/components/icon";
 import { Panel } from "@/components/dashboard/shell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
@@ -115,6 +117,13 @@ export default async function SpecialistProfilePage() {
       <p className="mt-1 text-sm text-slate">
         This is what buyers see on your public page. Changes go live as soon as you save.
       </p>
+      <Link
+        href="/dashboard/specialist/guide"
+        className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-navy-700 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+      >
+        <Icon name="menu_book" size={18} />
+        How to use your profile, listings, leads and follow-up emails
+      </Link>
 
       <div className="mt-6 flex flex-col gap-6">
         <Panel title="Portrait photo">

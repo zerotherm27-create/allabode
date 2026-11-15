@@ -6,6 +6,7 @@ import { specialistTitleLine } from "@/lib/team/license";
 import { SpecialistProfileForm, type ProfileValues } from "@/components/team/profile-form";
 import { storedHideCallLink } from "@/lib/team/public-contact";
 import { PhotoUploader } from "@/components/team/photo-uploader";
+import { parseLayout } from "@/lib/team/layout";
 
 type Row = {
   display_name: string;
@@ -17,6 +18,7 @@ type Row = {
   specialties: string[] | null;
   languages: string[] | null;
   photo_path: string | null;
+  subdomain: string | null;
   status: string;
   updated_at: string;
 };
@@ -29,7 +31,7 @@ export default async function SpecialistProfilePage() {
   const { data } = await supabase
     .from("specialists")
     .select(
-      "display_name,tagline,bio,phone,years_experience,areas,specialties,languages,photo_path,status,updated_at",
+      "display_name,tagline,bio,phone,years_experience,areas,specialties,languages,photo_path,subdomain,status,updated_at",
     )
     .eq("id", specialistId)
     .maybeSingle();
@@ -61,6 +63,14 @@ export default async function SpecialistProfilePage() {
     .maybeSingle();
   const accreditation = (tc as { accreditation?: unknown } | null)?.accreditation;
 
+  // Own tolerant read (20261115100000_specialist_layout.sql).
+  const { data: lc } = await supabase
+    .from("specialists")
+    .select("layout")
+    .eq("id", specialistId)
+    .maybeSingle();
+  const layout = parseLayout((lc as { layout?: unknown } | null)?.layout);
+
   let photoUrl: string | null = null;
   if (row.photo_path) {
     const { data: pub } = supabase.storage.from("specialist-photos").getPublicUrl(row.photo_path);
@@ -82,7 +92,10 @@ export default async function SpecialistProfilePage() {
     publicLinkedIn: contact.public_linkedin_url ?? "",
     publicEmail: contact.public_email ?? "",
     hideCallLink,
+    layout,
   };
+  // Layout previews need the live public page, which only exists once approved with a web address.
+  const previewBase = row.status === "approved" && row.subdomain ? `/team/${row.subdomain}/preview` : null;
   // Read-only: the accreditation line All Abode set for you, as shown publicly.
   const licence = specialistTitleLine(accreditation);
 
@@ -98,7 +111,7 @@ export default async function SpecialistProfilePage() {
           <PhotoUploader currentUrl={photoUrl} />
         </Panel>
         <Panel title="Your details">
-          <SpecialistProfileForm values={values} licenceLine={licence} />
+          <SpecialistProfileForm values={values} licenceLine={licence} previewBase={previewBase} />
         </Panel>
       </div>
     </div>

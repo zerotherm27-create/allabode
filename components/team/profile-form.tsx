@@ -3,6 +3,7 @@
 import { type FocusEvent, useActionState, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Field, Input, Textarea } from "@/components/forms/fields";
+import { MICROSITE_LAYOUT_KEYS, MICROSITE_LAYOUTS, type MicrositeLayout } from "@/lib/team/layout";
 import { PROFILE_LIMITS, parseList, parseYears } from "@/lib/team/profile";
 import { suggestBio, suggestTagline } from "@/lib/team/profile-suggest";
 import {
@@ -32,6 +33,7 @@ export type ProfileValues = {
   publicLinkedIn: string;
   publicEmail: string;
   hideCallLink: boolean;
+  layout: MicrositeLayout;
 };
 
 type ContactKey = "phone" | "viber" | "facebook" | "linkedin" | "email";
@@ -92,13 +94,72 @@ function SuggestButton({
   );
 }
 
+/**
+ * A small schematic of each layout for the picker (decorative): navy = the
+ * portrait or a navy area, brass = the main button, grey bars = text and cards.
+ */
+function LayoutThumb({ layout }: { layout: MicrositeLayout }) {
+  const frame = "flex h-24 w-full flex-col gap-1.5 border border-line bg-cream p-2";
+  if (layout === "signature") {
+    return (
+      <div aria-hidden="true" className={frame}>
+        <div className="flex h-14 bg-navy">
+          <div className="flex flex-1 flex-col justify-center gap-1 px-2">
+            <span className="h-1.5 w-3/4 bg-white" />
+            <span className="h-1.5 w-1/3 bg-gold" />
+          </div>
+          <div className="w-2/5 bg-navy-600" />
+        </div>
+        <div className="-mt-3 mx-2 h-3 border border-line bg-surface" />
+        <div className="grid flex-1 grid-cols-3 gap-1.5">
+          <span className="bg-line-strong" />
+          <span className="bg-line-strong" />
+          <span className="bg-line-strong" />
+        </div>
+      </div>
+    );
+  }
+  if (layout === "listings") {
+    return (
+      <div aria-hidden="true" className={frame}>
+        <div className="flex h-6 items-center gap-1.5 border-b border-line">
+          <span className="h-5 w-4 bg-navy" />
+          <span className="h-1.5 w-1/3 bg-navy" />
+          <span className="ml-auto h-3 w-1/5 bg-gold" />
+        </div>
+        <div className="grid flex-1 grid-cols-3 gap-1.5">
+          <span className="bg-line-strong" />
+          <span className="bg-line-strong" />
+          <span className="border border-line bg-surface" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div aria-hidden="true" className={frame}>
+      <div className="flex flex-1 items-end gap-2">
+        <div className="flex flex-1 flex-col gap-1 pb-1">
+          <span className="h-2.5 w-4/5 bg-navy" />
+          <span className="h-1.5 w-3/5 bg-line-strong" />
+          <span className="h-2.5 w-2/5 bg-gold" />
+        </div>
+        <div className="h-full w-1/3 border border-gold bg-navy" />
+      </div>
+      <div className="h-2 border-y border-line" />
+    </div>
+  );
+}
+
 export function SpecialistProfileForm({
   values,
   licenceLine,
+  previewBase,
 }: {
   values: ProfileValues;
   /** The read-only accreditation label shown on the public page. */
   licenceLine: string;
+  /** "/team/<slug>/preview" once the public page exists, else null (no preview links). */
+  previewBase: string | null;
 }) {
   const [state, action, pending] = useActionState(updateSpecialistProfile, idle);
   const [nameError, setNameError] = useState("");
@@ -277,6 +338,48 @@ export function SpecialistProfileForm({
             Visitors can still use the contact form, email and your other links.
           </p>
         </div>
+      </fieldset>
+
+      <fieldset className="rounded-md border border-line p-4">
+        <legend className="px-1 text-sm font-semibold text-navy">Page layout</legend>
+        <p className="text-sm text-ink">
+          Choose how your public page opens. Your details, listings and contact form are the same in all three.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {MICROSITE_LAYOUT_KEYS.map((key) => (
+            <div key={key} className="flex flex-col">
+              <label className="flex flex-1 cursor-pointer flex-col gap-3 rounded-md border border-line p-3 transition-colors hover:bg-surface-gray has-[:checked]:border-navy has-[:checked]:bg-surface-gray has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-navy-700">
+                <LayoutThumb layout={key} />
+                <span className="flex items-start gap-2.5">
+                  <input
+                    type="radio"
+                    name="layout"
+                    value={key}
+                    defaultChecked={values.layout === key}
+                    className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-navy"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-navy">{MICROSITE_LAYOUTS[key].name}</span>
+                    <span className="mt-0.5 block text-sm text-slate">{MICROSITE_LAYOUTS[key].description}</span>
+                  </span>
+                </span>
+              </label>
+              {previewBase && (
+                <a
+                  href={`${previewBase}/${key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Preview the ${MICROSITE_LAYOUTS[key].name} layout (opens in a new tab)`}
+                  className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold text-navy-700 hover:underline"
+                >
+                  Preview
+                  <Icon name="open_in_new" size={16} />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-slate">A preview shows your saved details. The layout changes for visitors when you press Save.</p>
       </fieldset>
 
       <section aria-labelledby="licence-heading" className="rounded-md border border-line p-4">

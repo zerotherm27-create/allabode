@@ -51,7 +51,7 @@ export function CompactPropertyCard({
           <div aria-hidden="true" className={`h-full w-full bg-gradient-to-br ${listing.gradient}`} />
         )}
         <span
-          className={`absolute bottom-0 left-0 max-w-full px-2 py-1 text-[0.6875rem] font-bold uppercase leading-tight tracking-[0.08em] ${TAG[listing.status]}`}
+          className={`absolute bottom-0 left-0 max-w-full px-2 py-1 text-xs font-bold uppercase leading-tight tracking-[0.08em] ${TAG[listing.status]}`}
         >
           {listing.status}
         </span>
@@ -67,7 +67,7 @@ export function CompactPropertyCard({
           </Link>
         </h3>
         {specs.length > 0 && (
-          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.6875rem] text-slate">
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate">
             {specs.map((s) => (
               <span key={s.icon} className="inline-flex items-center gap-1">
                 <Icon name={s.icon} size={13} className="shrink-0 text-navy-700" />

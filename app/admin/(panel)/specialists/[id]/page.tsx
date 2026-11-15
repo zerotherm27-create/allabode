@@ -17,6 +17,7 @@ import { checkSpecialistDomain } from "@/lib/team/vercel-domains";
 import { subdomainState } from "@/lib/team/domain-status";
 import { loadActivity } from "@/lib/team/activity-data";
 import { accreditationLabel, parseAccreditation, storedDesignation } from "@/lib/team/license";
+import { MICROSITE_LAYOUTS, parseLayout } from "@/lib/team/layout";
 import { InviteControls, StatusControls, SubdomainControls, TitleControls, VisibilityControls } from "./controls";
 
 type Row = {
@@ -31,6 +32,8 @@ type Row = {
   /** Absent until the designation migration is run. */
   designation?: string | null;
   accreditation?: string | null;
+  /** Absent until the layout migration is run. */
+  layout?: string | null;
 };
 
 function Item({ label, value }: { label: string; value: string | null | undefined }) {
@@ -130,6 +133,7 @@ export default async function AdminSpecialistDetailPage({ params }: { params: Pr
           <Item label="Added" value={new Date(s.created_at).toLocaleDateString("en-PH")} />
           <Item label="Designation" value={storedDesignation(s.designation)} />
           <Item label="Accreditation" value={accreditationLabel(s.accreditation)} />
+          <Item label="Page layout" value={MICROSITE_LAYOUTS[parseLayout(s.layout)].name} />
           <Item label="Tagline" value={s.tagline} />
           <Item label="Areas" value={s.areas?.join(", ")} />
           <Item label="Specialties" value={s.specialties?.join(", ")} />

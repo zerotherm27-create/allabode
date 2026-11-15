@@ -94,7 +94,6 @@ test("microsite copy has no figures, broker names, licence numbers or 'agent' wo
     ...Object.values(HERO_COPY),
     ...Object.values(ABOUT_COPY),
     ...ABOUT_VALUES.flatMap((v) => [v.title, v.body]),
-    FIRM_COPY.eyebrow,
     FIRM_COPY.heading,
     FIRM_COPY.body,
     ...FIRM_COPY.services.flatMap((v) => [v.title, v.body]),

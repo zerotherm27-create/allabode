@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { isValidSpecialistSlug, specialistPhotoUrl } from "@/lib/team/queries";
 import { safeStoredContact, storedHideCallLink, type PublicContact } from "@/lib/team/public-contact";
 import { parseAccreditation, storedDesignation, type AccreditationType } from "@/lib/team/license";
+import { DEFAULT_LAYOUT, parseLayout, type MicrositeLayout } from "@/lib/team/layout";
 
 /**
  * Public, read-only access to approved property specialists via the
@@ -68,6 +69,8 @@ export type PublicSpecialist = {
   designation: string | null;
   /** Which accreditation line they show (salesperson before the migration). */
   accreditation: AccreditationType;
+  /** Which microsite layout they picked (the default before the migration). Only loaded by getPublicSpecialist(). */
+  layout: MicrositeLayout;
 };
 
 function mapRow(r: Row): PublicSpecialist {
@@ -86,6 +89,7 @@ function mapRow(r: Row): PublicSpecialist {
     hideCallLink: false,
     designation: null,
     accreditation: "salesperson",
+    layout: DEFAULT_LAYOUT,
   };
 }
 
@@ -121,6 +125,7 @@ export async function getPublicSpecialist(slug: string): Promise<PublicSpecialis
     specialist.contact = await getPublicContact(slug);
     specialist.hideCallLink = await getHideCallLink(slug);
     Object.assign(specialist, (await getTitles(slug)).get(slug) ?? {});
+    specialist.layout = await getLayout(slug);
     return specialist;
   } catch {
     return null;
@@ -161,6 +166,22 @@ async function getHideCallLink(slug: string): Promise<boolean> {
     return storedHideCallLink((data as { hide_call_link?: unknown }).hide_call_link);
   } catch {
     return false;
+  }
+}
+
+/** The chosen microsite layout for one slug. Tolerant: any failure (e.g. column missing) = the default. */
+async function getLayout(slug: string): Promise<MicrositeLayout> {
+  if (!db) return DEFAULT_LAYOUT;
+  try {
+    const { data, error } = await db
+      .from("public_specialists")
+      .select("layout")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error || !data) return DEFAULT_LAYOUT;
+    return parseLayout((data as { layout?: unknown }).layout);
+  } catch {
+    return DEFAULT_LAYOUT;
   }
 }
 

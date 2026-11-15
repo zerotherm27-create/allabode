@@ -1,5 +1,6 @@
 "use server";
 
+import { DEFAULT_LAYOUT, parseLayout } from "@/lib/team/layout";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -129,9 +130,30 @@ export async function updateSpecialistProfile(
     .select("id");
   const hideMissing = hErr && (hErr.code === "42703" || hErr.code === "PGRST204");
 
+  // Own write again: before 20261115100000_specialist_layout.sql the column
+  // doesn't exist, and that must only matter if they picked a non-default layout.
+  const layout = parseLayout(fd.get("layout"));
+  const { data: lData, error: lErr } = await me.supabase
+    .from("specialists")
+    .update({ layout })
+    .eq("id", me.id)
+    .select("id");
+  const layoutMissing = lErr && (lErr.code === "42703" || lErr.code === "PGRST204");
+
   revalidatePath("/dashboard/specialist/profile");
   revalidatePath("/dashboard/specialist");
   revalidateProfilePages(me.subdomain);
+
+  if (lErr && !(layoutMissing && layout === DEFAULT_LAYOUT)) {
+    return fail(
+      layoutMissing
+        ? "Your profile was saved, but the page layout can't be changed yet. Contact All Abode."
+        : `Your profile was saved, but the page layout wasn't. ${lErr.message}`,
+    );
+  }
+  if (!lErr && (!lData || lData.length === 0)) {
+    return fail("Your profile was saved, but the page layout wasn't. Try again.");
+  }
 
   if (hErr && !(hideMissing && !hide)) {
     return fail(

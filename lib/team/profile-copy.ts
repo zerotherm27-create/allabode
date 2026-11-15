@@ -91,10 +91,8 @@ export const HERO_COPY = {
 } as const;
 
 export const ABOUT_COPY = {
-  eyebrow: "About me",
   heading: "Real estate guidance with a personal touch",
   goal: "My goal is to make real estate simple, transparent, and stress-free, so you can focus on what matters most.",
-  cta: "Get to know me",
 } as const;
 
 /** Default first paragraph of "About me" for a specialist without a bio. */
@@ -123,7 +121,6 @@ export const ABOUT_VALUES = [
 
 /** "Part of a trusted firm" strip. Paths are on the main site (prefixed with the apex origin by the component). */
 export const FIRM_COPY = {
-  eyebrow: "Part of a trusted firm",
   heading: "Backed by All Abode PH",
   body: "All transactions and documentation are coursed through All Abode Brokerage and Valuation OPC, a licensed and registered firm.",
   services: [
@@ -153,17 +150,17 @@ export const LISTINGS_COPY = {
     "New properties come in all the time. Tell me what you're looking for, whether a place to rent, a home to buy, or a space for your business, and I'll send you matching options.",
 } as const;
 
-/** How many listings show before "View all properties". */
-export const FEATURED_LISTING_COUNT = 3;
+/** How many listings show before "View all properties": one large feature card plus a row of three. */
+export const FEATURED_LISTING_COUNT = 4;
 
+/** The navy panel of the closing contact section. */
 export const CTA_COPY = {
-  eyebrow: "Let's find your next move",
   heading: "Ready to explore your options?",
   body: "Whether you're looking for a new home, an investment property, or need an appraisal, I'm here to help.",
-  cta: "Get in touch",
 } as const;
 
+/** The form side of the closing contact section. */
 export const CONTACT_COPY = {
-  heading: "Contact me",
+  heading: "Send me a message",
   sub: "Let's talk about your real estate goals.",
 } as const;

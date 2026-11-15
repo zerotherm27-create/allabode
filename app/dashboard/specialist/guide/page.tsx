@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { site } from "@/lib/site";
+import { StartTourButton } from "@/components/specialist/dashboard-tour";
 
 export const metadata: Metadata = { title: "Help guide", robots: { index: false } };
 
@@ -148,6 +149,9 @@ export default function SpecialistGuidePage() {
         </Link>{" "}
         first, then come back here whenever you need a reminder.
       </p>
+      <div className="mt-4">
+        <StartTourButton />
+      </div>
 
       <nav aria-label="Guide topics" className="mt-6 rounded-lg border border-line bg-surface p-3">
         <ul className="grid gap-1 sm:grid-cols-2">

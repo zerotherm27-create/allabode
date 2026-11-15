@@ -2,20 +2,44 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
 import { getOpenAI, isAiConfigured, RECEIPT_MODEL } from "@/lib/ai/client";
 import { createClient } from "@/lib/supabase/server";
-import { checkAndIncrement, rateLimitKeyFromRequest } from "@/lib/chat/rate-limit";
+import { checkChatLimits, rateLimitKeyFromRequest } from "@/lib/chat/rate-limit";
 import { buildSystemPrompt } from "@/lib/chat/system-prompt";
-import { getListing } from "@/lib/listings";
+import { getListing, getListings } from "@/lib/listings";
+import {
+  MAX_BODY_BYTES,
+  MAX_TOOL_CALLS,
+  cleanArg,
+  cleanBedrooms,
+  safeListingSlug,
+  sanitizeMessages,
+} from "@/lib/chat/guardrails";
+import { encodeCards, searchListings, toCard, type ListingCard } from "@/lib/chat/listing-cards";
 import { getSettings } from "@/lib/settings";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
-
-const MAX_HISTORY_TURNS = 8;
-const MAX_TOKENS = 500;
+const MAX_TOKENS = 350;
 
 const TOOLS: ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "search_listings",
+      description:
+        "Search current available property listings. Use when the visitor wants to find or browse properties. All fields optional. Returns up to 4 matches; preview cards are shown to the visitor automatically.",
+      parameters: {
+        type: "object",
+        properties: {
+          location: { type: "string", description: "City, area or building, e.g. Makati" },
+          market: { type: "string", enum: ["sale", "rent"] },
+          propertyType: { type: "string", description: "e.g. condo, house, office, commercial" },
+          bedrooms: { type: "integer", description: "Exact number of bedrooms" },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
   {
     type: "function",
     function: {
@@ -49,34 +73,65 @@ const TOOLS: ChatCompletionTool[] = [
  * Tool handlers always re-fetch from the DB server-side — the model never
  * gets to assert listing facts itself, only request them by slug.
  */
-async function runTool(name: string, args: Record<string, unknown>): Promise<string> {
-  const slug = typeof args.slug === "string" ? args.slug : "";
-  if (!slug) return JSON.stringify({ error: "No slug provided." });
+type ToolResult = { content: string; cards?: ListingCard[] };
+
+async function runTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
+  if (name === "search_listings") {
+    const market = args.market === "sale" || args.market === "rent" ? args.market : undefined;
+    const found = searchListings(await getListings(), {
+      location: cleanArg(args.location),
+      propertyType: cleanArg(args.propertyType),
+      bedrooms: cleanBedrooms(args.bedrooms),
+      market,
+    });
+    const cards = found.map(toCard);
+    return {
+      cards,
+      content: JSON.stringify({
+        count: cards.length,
+        results: cards.map((c) => ({
+          slug: c.slug,
+          title: c.title,
+          location: c.location,
+          price: c.price,
+          beds: c.beds,
+          baths: c.baths,
+        })),
+      }),
+    };
+  }
+
+  const slug = safeListingSlug(args.slug) ?? "";
+  if (!slug) return { content: JSON.stringify({ error: "No slug provided." }) };
 
   const listing = await getListing(slug);
-  if (!listing) return JSON.stringify({ error: "Listing not found." });
+  if (!listing) return { content: JSON.stringify({ error: "Listing not found." }) };
 
   if (name === "get_listing_details") {
-    return JSON.stringify({
-      title: listing.title,
-      location: listing.location,
-      price: listing.price,
-      status: listing.status,
-      propertyType: listing.propertyType,
-      listingType: listing.listingType,
-      bedrooms: listing.beds,
-      bathrooms: listing.baths,
-      floorArea: listing.area,
-      lotArea: listing.lotArea,
-      furnishing: listing.furnishing,
-      parking: listing.parking,
-      availability: listing.availabilityDate,
-    });
+    return {
+      cards: [toCard(listing)],
+      content: JSON.stringify({
+        slug: listing.id,
+        title: listing.title,
+        location: listing.location,
+        price: listing.price,
+        status: listing.status,
+        propertyType: listing.propertyType,
+        listingType: listing.listingType,
+        bedrooms: listing.beds,
+        bathrooms: listing.baths,
+        floorArea: listing.area,
+        lotArea: listing.lotArea,
+        furnishing: listing.furnishing,
+        parking: listing.parking,
+        availability: listing.availabilityDate,
+      }),
+    };
   }
   if (name === "get_nearby_places") {
-    return JSON.stringify({ places: listing.nearbyPlaces ?? [] });
+    return { content: JSON.stringify({ places: listing.nearbyPlaces ?? [] }) };
   }
-  return JSON.stringify({ error: "Unknown tool." });
+  return { content: JSON.stringify({ error: "Unknown tool." }) };
 }
 
 export async function POST(req: NextRequest) {
@@ -85,22 +140,31 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createClient();
-  const allowed = await checkAndIncrement(supabase, rateLimitKeyFromRequest(req));
-  if (!allowed) {
-    return NextResponse.json(
-      { error: "You're sending messages too quickly — please wait a bit and try again." },
-      { status: 429 }
-    );
+  const limit = await checkChatLimits(supabase, rateLimitKeyFromRequest(req));
+  if (!limit.allowed) {
+    return NextResponse.json({ error: limit.message }, { status: 429 });
   }
 
-  const body = (await req.json().catch(() => null)) as
-    | { messages?: ChatMessage[]; listingSlug?: string }
-    | null;
-  if (!body || !Array.isArray(body.messages)) {
+  const declared = Number(req.headers.get("content-length") ?? 0);
+  if (declared > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Message too long." }, { status: 413 });
+  }
+  const raw = await req.text().catch(() => "");
+  if (raw.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Message too long." }, { status: 413 });
+  }
+  let body: { messages?: unknown; listingSlug?: unknown } | null = null;
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    body = null;
+  }
+  const history = sanitizeMessages(body?.messages);
+  if (!body || history.length === 0) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-
-  const history = body.messages.slice(-MAX_HISTORY_TURNS);
+  const listingSlug = safeListingSlug(body.listingSlug);
+  const collectedCards: ListingCard[] = [];
   const client = getOpenAI();
 
   let stream: Awaited<ReturnType<typeof client.chat.completions.create>>;
@@ -108,7 +172,7 @@ export async function POST(req: NextRequest) {
     const settings = await getSettings();
 
     const messages: ChatCompletionMessageParam[] = [
-      { role: "system", content: buildSystemPrompt(body.listingSlug, settings) },
+      { role: "system", content: buildSystemPrompt(listingSlug, settings) },
       ...history.map((m): ChatCompletionMessageParam => ({ role: m.role, content: m.content })),
     ];
 
@@ -123,8 +187,9 @@ export async function POST(req: NextRequest) {
 
     const toolCalls = first.choices[0]?.message?.tool_calls;
     if (toolCalls && toolCalls.length > 0) {
-      messages.push({ role: "assistant", content: first.choices[0].message.content, tool_calls: toolCalls });
-      for (const call of toolCalls) {
+      const capped = toolCalls.slice(0, MAX_TOOL_CALLS);
+      messages.push({ role: "assistant", content: first.choices[0].message.content, tool_calls: capped });
+      for (const call of toolCalls.slice(0, MAX_TOOL_CALLS)) {
         if (call.type !== "function") continue;
         let args: Record<string, unknown> = {};
         try {
@@ -133,7 +198,8 @@ export async function POST(req: NextRequest) {
           // malformed args — runTool below returns a "not found" style error
         }
         const result = await runTool(call.function.name, args);
-        messages.push({ role: "tool", tool_call_id: call.id, content: result });
+        if (result.cards) collectedCards.push(...result.cards);
+        messages.push({ role: "tool", tool_call_id: call.id, content: result.content });
       }
     }
 
@@ -159,6 +225,11 @@ export async function POST(req: NextRequest) {
           const text = chunk.choices[0]?.delta?.content;
           if (text) controller.enqueue(encoder.encode(text));
         }
+        // Cards are appended after the text so the widget can render previews.
+        const seen = new Set<string>();
+        const unique = collectedCards.filter((c) => !seen.has(c.slug) && seen.add(c.slug));
+        const marker = encodeCards(unique.slice(0, 4));
+        if (marker) controller.enqueue(encoder.encode(marker));
       } catch (err) {
         console.error("chat stream error:", err);
       } finally {

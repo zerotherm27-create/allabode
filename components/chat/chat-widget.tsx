@@ -1,13 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/icon";
+import { isSafeSlug, parseCards, type ListingCard } from "@/lib/chat/listing-cards";
+import { MAX_MESSAGE_CHARS } from "@/lib/chat/guardrails";
 
 type Message = { role: "user" | "assistant"; content: string };
 
 const HINT_SHOW_DELAY_MS = 2500;
 const HINT_AUTO_HIDE_MS = 7000;
+const MAX_USER_MESSAGES_PER_SESSION = 30;
+
+function ChatListingCard({ card, onNavigate }: { card: ListingCard; onNavigate: () => void }) {
+  if (!isSafeSlug(card.slug)) return null;
+  const specs = [
+    card.beds != null ? `${card.beds} bed` : "",
+    card.baths != null ? `${card.baths} bath` : "",
+  ].filter(Boolean);
+  return (
+    <Link
+      href={`/listings/${card.slug}`}
+      onClick={onNavigate}
+      className="flex w-full gap-3 overflow-hidden rounded-md border border-line bg-surface p-2 transition-shadow duration-[var(--dur-fast)] hover:shadow-[var(--shadow-card)] focus-visible:outline-2 focus-visible:outline-navy-700"
+    >
+      <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-sm bg-surface-gray">
+        {card.image && (
+          <Image src={card.image} alt="" fill sizes="80px" className="object-cover" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-ink">{card.title}</p>
+        <p className="truncate text-xs text-slate">{card.location}</p>
+        <p className="text-xs font-bold text-navy-700">
+          {card.price}
+          {specs.length > 0 && <span className="ml-2 font-normal text-slate">{specs.join(" · ")}</span>}
+        </p>
+      </div>
+    </Link>
+  );
+}
 
 export function ChatWidget() {
   const pathname = usePathname();
@@ -37,6 +71,10 @@ export function ChatWidget() {
   async function send() {
     const text = input.trim();
     if (!text || pending) return;
+    if (messages.filter((m) => m.role === "user").length >= MAX_USER_MESSAGES_PER_SESSION) {
+      setError("Chat limit reached for this session. Please use the inquiry form or contact us directly.");
+      return;
+    }
     setError("");
     setInput("");
     const nextMessages: Message[] = [...messages, { role: "user", content: text }];
@@ -47,7 +85,10 @@ export function ChatWidget() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages, listingSlug }),
+        body: JSON.stringify({
+          messages: nextMessages.map((m) => ({ role: m.role, content: parseCards(m.content).text })),
+          listingSlug,
+        }),
       });
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => null);
@@ -92,16 +133,25 @@ export function ChatWidget() {
                     : "Hi, I'm Abbie, the All Abode assistant. Ask me about our services, or open a listing and ask about that property specifically."}
                 </div>
               )}
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`max-w-[85%] rounded-md px-3 py-2 text-sm ${
-                    m.role === "user" ? "self-end bg-navy text-white" : "self-start bg-surface-gray text-ink"
-                  }`}
-                >
-                  {m.content || (pending && i === messages.length - 1 ? "…" : "")}
-                </div>
-              ))}
+              {messages.map((m, i) => {
+                const { text, cards } = m.role === "assistant" ? parseCards(m.content) : { text: m.content, cards: [] };
+                return (
+                  <div key={i} className={`flex max-w-[92%] flex-col gap-2 ${m.role === "user" ? "self-end" : "self-start"}`}>
+                    {(text || (pending && i === messages.length - 1 && cards.length === 0)) && (
+                      <div
+                        className={`whitespace-pre-wrap rounded-md px-3 py-2 text-sm ${
+                          m.role === "user" ? "bg-navy text-white" : "bg-surface-gray text-ink"
+                        }`}
+                      >
+                        {text || "…"}
+                      </div>
+                    )}
+                    {cards.map((c) => (
+                      <ChatListingCard key={c.slug} card={c} onNavigate={() => setOpen(false)} />
+                    ))}
+                  </div>
+                );
+              })}
             </div>
             {error && (
               <p role="alert" className="mt-2 text-xs text-error">
@@ -117,6 +167,7 @@ export function ChatWidget() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") send();
               }}
+              maxLength={MAX_MESSAGE_CHARS}
               placeholder="Type a message…"
               disabled={pending}
               className="h-10 flex-1 rounded-md border border-line bg-surface px-3 text-sm focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/15"

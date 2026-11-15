@@ -2,20 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
-import { DashboardShell, Panel, type NavItem } from "@/components/dashboard/shell";
+import { DashboardShell, Panel } from "@/components/dashboard/shell";
+import { tenantNav as nav } from "@/lib/dashboard/nav";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 import { MONTH_OPTIONS, archiveByYear, availableYears, filterByMonthYear } from "@/lib/portal/document-filters";
 
 export const metadata: Metadata = { title: "My Invoices", robots: { index: false } };
-
-const nav: NavItem[] = [
-  { label: "Dashboard",  icon: "dashboard",    href: "/dashboard/tenant" },
-  { label: "My Lease",   icon: "description",  href: "/dashboard/tenant#lease" },
-  { label: "Invoices",   icon: "request_quote",href: "/dashboard/tenant/invoices" },
-  { label: "Payments",   icon: "payments",     href: "/dashboard/tenant#payments" },
-  { label: "Statements", icon: "receipt_long", href: "/dashboard/tenant#statements" },
-];
 
 const peso = (n: number) => `₱${Math.round(Number(n)).toLocaleString("en-PH")}`;
 

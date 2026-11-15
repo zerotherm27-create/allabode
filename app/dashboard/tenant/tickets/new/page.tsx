@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
-import { DashboardShell, type NavItem } from "@/components/dashboard/shell";
+import { DashboardShell } from "@/components/dashboard/shell";
+import { tenantNav as nav } from "@/lib/dashboard/nav";
 import { Reveal } from "@/components/motion";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
@@ -10,15 +11,6 @@ import { createTicketFromPortal } from "@/app/admin/ticket-actions";
 import { TICKET_CATEGORIES } from "@/lib/tickets";
 
 export const metadata: Metadata = { title: "Submit Request", robots: { index: false } };
-
-const nav: NavItem[] = [
-  { label: "Dashboard",  icon: "dashboard",           href: "/dashboard/tenant" },
-  { label: "My Lease",   icon: "description",         href: "/dashboard/tenant#lease" },
-  { label: "Invoices",   icon: "request_quote",       href: "/dashboard/tenant/invoices" },
-  { label: "Tickets",    icon: "confirmation_number", href: "/dashboard/tenant/tickets" },
-  { label: "Payments",   icon: "payments",            href: "/dashboard/tenant#payments" },
-  { label: "Statements", icon: "receipt_long",        href: "/dashboard/tenant#statements" },
-];
 
 const inputCls = "w-full rounded-md border border-line bg-surface-gray px-3 py-2.5 text-sm text-ink placeholder:text-slate focus:border-navy-700 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-navy-700/15";
 

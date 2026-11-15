@@ -7,7 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 import { site } from "@/lib/site";
 import { SignOutButton } from "@/components/team/sign-out-button";
-import { DashboardTour } from "@/components/specialist/dashboard-tour";
+import { DashboardTour } from "@/components/dashboard/tour";
+import { specialistTour } from "@/lib/dashboard/tours";
 
 export const metadata: Metadata = { title: "Specialist dashboard", robots: { index: false } };
 
@@ -91,7 +92,7 @@ export default async function SpecialistLayout({ children }: { children: React.R
   return (
     <DashboardShell role="Specialist" nav={nav} userName={name}>
       {children}
-      <DashboardTour />
+      <DashboardTour {...specialistTour} />
     </DashboardShell>
   );
 }

@@ -1,23 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
-import { DashboardShell, Panel, type NavItem } from "@/components/dashboard/shell";
+import { DashboardShell, Panel } from "@/components/dashboard/shell";
+import { tenantNav as nav } from "@/lib/dashboard/nav";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 
 export const metadata: Metadata = { title: "Tenant Account", robots: { index: false } };
-
-const nav: NavItem[] = [
-  { label: "Dashboard",  icon: "dashboard",           href: "/dashboard/tenant" },
-  { label: "My Lease",   icon: "description",         href: "/dashboard/tenant#lease" },
-  { label: "Invoices",   icon: "request_quote",       href: "/dashboard/tenant/invoices" },
-  { label: "Tickets",    icon: "confirmation_number", href: "/dashboard/tenant/tickets" },
-  { label: "Documents",  icon: "folder",              href: "/dashboard/tenant/documents" },
-  { label: "Notices",    icon: "campaign",            href: "/dashboard/tenant/notices" },
-  { label: "Payments",   icon: "payments",            href: "/dashboard/tenant#payments" },
-  { label: "Statements", icon: "receipt_long",        href: "/dashboard/tenant#statements" },
-  { label: "Account",    icon: "manage_accounts",     href: "/dashboard/tenant/account" },
-];
 
 export default async function TenantAccountPage() {
   const { role, tenantId } = await getCurrentRole();

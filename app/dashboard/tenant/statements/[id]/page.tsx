@@ -2,23 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
-import { DashboardShell, type NavItem } from "@/components/dashboard/shell";
+import { DashboardShell } from "@/components/dashboard/shell";
+import { tenantNav as nav } from "@/lib/dashboard/nav";
 import { Reveal } from "@/components/motion";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 
 export const metadata: Metadata = { title: "Tenant SOA", robots: { index: false } };
-
-const nav: NavItem[] = [
-  { label: "Dashboard",  icon: "dashboard",           href: "/dashboard/tenant" },
-  { label: "My Lease",   icon: "description",         href: "/dashboard/tenant#lease" },
-  { label: "Invoices",   icon: "request_quote",       href: "/dashboard/tenant/invoices" },
-  { label: "Tickets",    icon: "confirmation_number", href: "/dashboard/tenant/tickets" },
-  { label: "Documents",  icon: "folder",              href: "/dashboard/tenant/documents" },
-  { label: "Notices",    icon: "campaign",            href: "/dashboard/tenant/notices" },
-  { label: "Payments",   icon: "payments",            href: "/dashboard/tenant#payments" },
-  { label: "Statements", icon: "receipt_long",        href: "/dashboard/tenant#statements" },
-];
 
 export default async function TenantStatementViewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

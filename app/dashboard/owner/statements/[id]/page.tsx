@@ -2,22 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
-import { DashboardShell, type NavItem } from "@/components/dashboard/shell";
+import { DashboardShell } from "@/components/dashboard/shell";
+import { ownerNav as nav } from "@/lib/dashboard/nav";
 import { Reveal } from "@/components/motion";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole, homeForRole } from "@/lib/auth/role";
 
 export const metadata: Metadata = { title: "Owner SOA", robots: { index: false } };
-
-const nav: NavItem[] = [
-  { label: "Dashboard",  icon: "dashboard",           href: "/dashboard/owner" },
-  { label: "Properties", icon: "apartment",           href: "/dashboard/owner#properties" },
-  { label: "Tickets",    icon: "confirmation_number", href: "/dashboard/owner/tickets" },
-  { label: "Documents",  icon: "folder",              href: "/dashboard/owner/documents" },
-  { label: "Notices",    icon: "campaign",            href: "/dashboard/owner/notices" },
-  { label: "Statements", icon: "receipt_long",        href: "/dashboard/owner#statements" },
-  { label: "Expenses",   icon: "payments",            href: "/dashboard/owner#expenses" },
-];
 
 const peso = (n: number) =>
   `₱${Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

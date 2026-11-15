@@ -1,7 +1,7 @@
 // Server-only: Web Push delivery to a user's subscribed devices.
 // Silently does nothing until the VAPID keys are set, so the rest of the lead
 // flow works before push is configured. Never throws.
-import webpush from "web-push";
+import * as webpush from "web-push";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export type PushPayload = { title: string; body: string; url: string };

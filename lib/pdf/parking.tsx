@@ -69,6 +69,9 @@ const styles = StyleSheet.create({
   meta: { fontSize: 8, color: SLATE },
 });
 
+/** Schedules up to this many rows are kept on one page; longer ones break between rows only. */
+const MAX_UNBROKEN_SCHEDULE_ROWS = 12;
+
 /** Fixed-height spacer — used instead of margins around tables (see styles.table). */
 function Gap({ h }: { h: number }) {
   return <View style={{ height: h }} />;
@@ -141,8 +144,10 @@ function Clauses({ clauses }: { clauses: ParkingClause[] }) {
     <>
       {clauses.map((c) => (
         <View key={c.no}>
+          {/* wrap={false}: a paragraph (number + text + its bullet list) is never split, so the
+              clause number can't be left alone at the foot of a page. */}
           {c.paras.map((p, j) => (
-            <View key={j}>
+            <View key={j} wrap={false}>
               {p.text && (
                 <View style={styles.clause}>
                   <Text style={styles.clauseNo}>{j === 0 ? `${c.no}.` : " "}</Text>
@@ -232,9 +237,9 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
         <Text style={styles.p}>{parkingWhereas(terms.parkingDetails)}</Text>
 
         <Clauses clauses={buildParkingClausesBeforeTables(terms)} />
+        {/* Clause 5 intro + bank details table (clause 5) stay together on one page. */}
+        <View wrap={false}>
         <Clauses clauses={[parkingClause5Intro(terms, input.bankDetails)]} />
-
-        {/* Bank details table (clause 5) */}
         <Gap h={6} />
         <View style={styles.table}>
           {([
@@ -249,25 +254,44 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
             </View>
           ))}
         </View>
+        </View>
         <Gap h={10} />
 
-        {/* Payment schedule table (4 columns per the reference) */}
+        {/* Payment schedule table (4 columns per the reference). Short schedules move to the next
+            page as a whole; long ones may break between rows but never strand the header. */}
         <Gap h={6} />
-        <View style={styles.table}>
-          <View style={styles.trow}>
-            <Text style={[styles.thCell, { width: 88 }]}>DATE DUE</Text>
-            <Text style={[styles.thCell, { width: 78 }]}>AMOUNT</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>BANK/BRANCH</Text>
-            <Text style={[styles.tdCellLast, styles.bold, { flex: 1.2 }]}>COVERAGE</Text>
-          </View>
-          {input.paymentSchedule.map((r, i) => (
-            <View key={i} style={i === input.paymentSchedule.length - 1 ? styles.trowLast : styles.trow}>
-              <Text style={[styles.tdCell, { width: 88 }]}>{r.dueDate || " "}</Text>
-              <Text style={[styles.tdCell, { width: 78 }]}>{r.amount || " "}</Text>
-              <Text style={[styles.tdCell, { flex: 1 }]}>{r.bankBranch || " "}</Text>
-              <Text style={[styles.tdCellLast, { flex: 1.2 }]}>{r.coverage || " "}</Text>
+        <View style={styles.table} wrap={input.paymentSchedule.length > MAX_UNBROKEN_SCHEDULE_ROWS}>
+          {input.paymentSchedule.length === 0 && (
+            <View style={styles.trowLast}>
+              <Text style={[styles.thCell, { width: 88 }]}>DATE DUE</Text>
+              <Text style={[styles.thCell, { width: 78 }]}>AMOUNT</Text>
+              <Text style={[styles.thCell, { flex: 1 }]}>BANK/BRANCH</Text>
+              <Text style={[styles.tdCellLast, styles.bold, { flex: 1.2 }]}>COVERAGE</Text>
             </View>
-          ))}
+          )}
+          {input.paymentSchedule.map((r, i, arr) => {
+            const row = (
+              <View key={i} style={i === arr.length - 1 ? styles.trowLast : styles.trow} wrap={false}>
+                <Text style={[styles.tdCell, { width: 88 }]}>{r.dueDate || " "}</Text>
+                <Text style={[styles.tdCell, { width: 78 }]}>{r.amount || " "}</Text>
+                <Text style={[styles.tdCell, { flex: 1 }]}>{r.bankBranch || " "}</Text>
+                <Text style={[styles.tdCellLast, { flex: 1.2 }]}>{r.coverage || " "}</Text>
+              </View>
+            );
+            if (i !== 0) return row;
+            // Header row travels with the first data row.
+            return (
+              <View key={i} wrap={false}>
+                <View style={styles.trow}>
+                  <Text style={[styles.thCell, { width: 88 }]}>DATE DUE</Text>
+                  <Text style={[styles.thCell, { width: 78 }]}>AMOUNT</Text>
+                  <Text style={[styles.thCell, { flex: 1 }]}>BANK/BRANCH</Text>
+                  <Text style={[styles.tdCellLast, styles.bold, { flex: 1.2 }]}>COVERAGE</Text>
+                </View>
+                {row}
+              </View>
+            );
+          })}
         </View>
         <Gap h={10} />
 
@@ -353,7 +377,7 @@ export async function renderParkingPdf(input: ParkingPdfInput): Promise<Buffer> 
         </Text>
 
         <Gap h={6} />
-        <View style={styles.table}>
+        <View style={styles.table} wrap={false}>
           <View style={styles.trow}>
             <Text style={[styles.thCell, { flex: 1.3 }]}>NAME</Text>
             <Text style={[styles.thCell, { flex: 1 }]}>ID NUMBER</Text>

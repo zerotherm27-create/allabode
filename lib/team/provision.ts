@@ -264,6 +264,7 @@ export async function getNeverSignedIn(authUserIds: string[]): Promise<Set<strin
     for (const [id, r] of results) {
       if (!r.ok) {
         if (r.missing) continue;
+        console.warn("[specialists] sign-in status lookup rejected:", r.message);
         return null;
       }
       if (hasNeverSignedIn(r.lastSignInAt)) out.add(id);

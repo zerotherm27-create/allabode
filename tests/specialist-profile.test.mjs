@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadTs } from "./helpers/load-ts.mjs";
 
-const { parseList, parseYears, parseDateOnly, portraitError, portraitKey } =
+const { parseList, parseYears, parseDateOnly, portraitError, portraitKey, storedBioHeadline, parseBioHeadline } =
   await loadTs("lib/team/profile.ts");
 const want = { width: 800, height: 1000 };
 
@@ -41,4 +41,21 @@ test("portraitError", () => {
 
 test("portraitKey is inside the caller's folder", () => {
   assert.equal(portraitKey("abc"), "abc/portrait.jpg");
+});
+
+test("storedBioHeadline", () => {
+  assert.equal(storedBioHeadline("  Your   guide to Makati "), "Your guide to Makati");
+  assert.equal(storedBioHeadline("   "), null);
+  assert.equal(storedBioHeadline(null), null);
+  assert.equal(storedBioHeadline(42), null);
+  assert.equal(storedBioHeadline("x".repeat(200)).length, 80);
+});
+
+test("parseBioHeadline: blank is the default, over-long is an error", () => {
+  assert.deepEqual(parseBioHeadline(""), { ok: true, value: null });
+  assert.deepEqual(parseBioHeadline(" Hello  there "), { ok: true, value: "Hello there" });
+  assert.deepEqual(parseBioHeadline("x".repeat(80)), { ok: true, value: "x".repeat(80) });
+  const bad = parseBioHeadline("x".repeat(81));
+  assert.equal(bad.ok, false);
+  assert.match(bad.error, /80 characters/);
 });

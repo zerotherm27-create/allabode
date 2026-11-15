@@ -19,6 +19,7 @@ import { deleteListingImage, reorderListingImages, uploadListingImages } from "@
 import { PHOTO_W, PHOTO_H, jpegDimensions } from "@/lib/team/photo";
 import {
   PROFILE_LIMITS,
+  parseBioHeadline,
   parseList,
   parseYears,
   portraitError,
@@ -89,6 +90,10 @@ export async function updateSpecialistProfile(
   });
   if (!contact.ok) return fail(contact.error);
 
+  // The About headline: blank = the site's default heading; over-long is refused, not cut.
+  const headline = parseBioHeadline(text(fd, "bio_headline", PROFILE_LIMITS.bioHeadline + 20));
+  if (!headline.ok) return fail(headline.error);
+
   const update: Record<string, unknown> = {
     display_name: displayName,
     tagline: text(fd, "tagline", PROFILE_LIMITS.tagline) || null,
@@ -140,9 +145,29 @@ export async function updateSpecialistProfile(
     .select("id");
   const layoutMissing = lErr && (lErr.code === "42703" || lErr.code === "PGRST204");
 
+  // Own write too: before 20261115120000_specialist_bio_headline.sql the column
+  // doesn't exist, and that must only matter if they typed a headline.
+  const { data: bData, error: bErr } = await me.supabase
+    .from("specialists")
+    .update({ bio_headline: headline.value })
+    .eq("id", me.id)
+    .select("id");
+  const headlineMissing = bErr && (bErr.code === "42703" || bErr.code === "PGRST204");
+
   revalidatePath("/dashboard/specialist/profile");
   revalidatePath("/dashboard/specialist");
   revalidateProfilePages(me.subdomain);
+
+  if (bErr && !(headlineMissing && headline.value === null)) {
+    return fail(
+      headlineMissing
+        ? "Your profile was saved, but the About headline can't be saved yet. Contact All Abode."
+        : `Your profile was saved, but the About headline wasn't. ${bErr.message}`,
+    );
+  }
+  if (!bErr && (!bData || bData.length === 0)) {
+    return fail("Your profile was saved, but the About headline wasn't. Try again.");
+  }
 
   if (lErr && !(layoutMissing && layout === DEFAULT_LAYOUT)) {
     return fail(

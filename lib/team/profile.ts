@@ -5,11 +5,28 @@ export const PROFILE_LIMITS = {
   displayName: 120,
   tagline: 140,
   bio: 2000,
+  bioHeadline: 80,
   phone: 40,
   licenseNo: 40,
   listItems: 20,
   listItemLength: 60,
 } as const;
+
+/** A stored About headline, trimmed with spaces collapsed; null when blank or not text (the site then uses its default heading). */
+export function storedBioHeadline(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const t = value.replace(/\s+/g, " ").trim();
+  return t === "" ? null : t.slice(0, PROFILE_LIMITS.bioHeadline);
+}
+
+/** Form input for the About headline: blank is fine (default heading), over-long is an error rather than silently cut. */
+export function parseBioHeadline(raw: string): { ok: true; value: string | null } | { ok: false; error: string } {
+  const t = raw.replace(/\s+/g, " ").trim();
+  if (t.length > PROFILE_LIMITS.bioHeadline) {
+    return { ok: false, error: `Keep the About headline to ${PROFILE_LIMITS.bioHeadline} characters or fewer.` };
+  }
+  return { ok: true, value: t === "" ? null : t };
+}
 
 export const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024;
 

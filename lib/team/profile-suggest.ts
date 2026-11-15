@@ -8,6 +8,8 @@
 
 const TAGLINE_MAX = 140; // PROFILE_LIMITS.tagline
 const BIO_MAX = 2000; // PROFILE_LIMITS.bio
+const HEADLINE_MAX = 80; // PROFILE_LIMITS.bioHeadline
+const DEFAULT_HEADLINE = "Real estate guidance with a personal touch"; // ABOUT_COPY.heading
 const MAX_LIST_ITEMS = 4; // keep sentences readable
 const DEFAULT_TAGLINE = "Your partner in finding the right space"; // HERO_COPY.defaultTagline
 
@@ -59,6 +61,41 @@ export function suggestTagline(f: Pick<SuggestInput, "areas" | "specialties">): 
   if (areas.length) line = `Property guidance across ${joinList(areas)}`;
   else if (specialties.length) line = `Helping clients with ${joinList(specialties)}`;
   return cap(line, TAGLINE_MAX);
+}
+
+/**
+ * Up to four ready-made headlines for the About section. The ones built from
+ * the specialist's own areas, specialties and years come first (each only when
+ * that field has data, never a number they did not give); plain ones fill the
+ * rest, so there are always options. Gender-neutral, no dashes, each within
+ * the headline limit.
+ */
+export function suggestBioHeadlines(f: SuggestInput): string[] {
+  const areas = joinList(clean(f.areas, 2));
+  const specialties = joinList(clean(f.specialties, 2));
+  const years = f.years != null && Number.isInteger(f.years) && f.years > 0 ? f.years : null;
+  const first = firstNameOf(f.name ?? "");
+
+  const fromData: string[] = [];
+  if (areas) fromData.push(`Your guide to property in ${areas}`);
+  if (specialties) fromData.push(`Straight answers on ${specialties}`);
+  if (years) fromData.push(`${years} ${years === 1 ? "year" : "years"} of helping clients find the right place`);
+  if (first && first.length <= 20) fromData.push(`Real estate with ${first}: clear, honest, simple`);
+
+  const plain = [
+    DEFAULT_HEADLINE,
+    "Real estate made simple and stress-free",
+    "Clear advice for every move you make",
+    "Honest guidance from first viewing to final paperwork",
+  ];
+
+  const out: string[] = [];
+  for (const line of [...fromData, ...plain]) {
+    const t = cap(line, HEADLINE_MAX);
+    if (!out.some((o) => o.toLowerCase() === t.toLowerCase())) out.push(t);
+    if (out.length === 4) break;
+  }
+  return out;
 }
 
 /** Two short first-person paragraphs; every sentence needs its own data. */

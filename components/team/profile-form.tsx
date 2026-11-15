@@ -3,9 +3,10 @@
 import { type FocusEvent, useActionState, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Field, Input, Textarea } from "@/components/forms/fields";
+import { ABOUT_COPY } from "@/lib/team/profile-copy";
 import { MICROSITE_LAYOUT_KEYS, MICROSITE_LAYOUTS, type MicrositeLayout } from "@/lib/team/layout";
 import { PROFILE_LIMITS, parseList, parseYears } from "@/lib/team/profile";
-import { suggestBio, suggestTagline } from "@/lib/team/profile-suggest";
+import { suggestBio, suggestBioHeadlines, suggestTagline } from "@/lib/team/profile-suggest";
 import {
   PUBLIC_CONTACT_LIMITS,
   normalizeFacebookUrl,
@@ -34,6 +35,7 @@ export type ProfileValues = {
   publicEmail: string;
   hideCallLink: boolean;
   layout: MicrositeLayout;
+  bioHeadline: string;
 };
 
 type ContactKey = "phone" | "viber" | "facebook" | "linkedin" | "email";
@@ -45,6 +47,8 @@ const CONTACT_CHECKS: Record<ContactKey, (v: string) => { ok: true } | { ok: fal
   linkedin: normalizeLinkedInUrl,
   email: normalizePublicEmail,
 };
+
+const DEFAULT_ABOUT_HEADING = ABOUT_COPY.heading;
 
 const idle: SpecialistProfileState = { ok: false, message: "" };
 
@@ -158,6 +162,8 @@ export function SpecialistProfileForm({
   const [nameError, setNameError] = useState("");
   const [tagline, setTagline] = useState(values.tagline);
   const [bio, setBio] = useState(values.bio);
+  const [bioHeadline, setBioHeadline] = useState(values.bioHeadline);
+  const [headlineIdeas, setHeadlineIdeas] = useState<string[] | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [contactErrors, setContactErrors] = useState<Partial<Record<ContactKey, string>>>({});
   const checkContact = (key: ContactKey) => (e: FocusEvent<HTMLInputElement>) => {
@@ -204,6 +210,49 @@ export function SpecialistProfileForm({
         onApply={() => setTagline(suggestTagline(current()))}
       />
 
+      <Field
+        label="About headline"
+        hint={`The heading above your About text. Up to ${PROFILE_LIMITS.bioHeadline} characters. Leave blank to use "${DEFAULT_ABOUT_HEADING}".`}
+      >
+        <Input
+          name="bio_headline"
+          value={bioHeadline}
+          onChange={(e) => setBioHeadline(e.currentTarget.value)}
+          maxLength={PROFILE_LIMITS.bioHeadline}
+        />
+      </Field>
+      <div className="-mt-2">
+        <button
+          type="button"
+          aria-expanded={headlineIdeas !== null}
+          onClick={() => setHeadlineIdeas(headlineIdeas ? null : suggestBioHeadlines(current()))}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line px-4 text-sm font-semibold text-navy transition-colors hover:bg-surface-gray focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+        >
+          <Icon name="auto_awesome" size={18} />
+          {headlineIdeas ? "Hide suggestions" : "Suggest headlines"}
+        </button>
+        {headlineIdeas && (
+          <ul aria-label="Suggested headlines" className="mt-3 flex flex-col gap-2">
+            {headlineIdeas.map((idea) => (
+              <li key={idea}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBioHeadline(idea);
+                    setHeadlineIdeas(null);
+                  }}
+                  className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md border border-line px-4 py-2 text-left text-sm text-ink transition-colors hover:border-navy hover:bg-surface-gray focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-700"
+                >
+                  <span>{idea}</span>
+                  <span className="shrink-0 text-xs font-semibold text-navy-700">Use this</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-xs text-slate">Built from the areas, specialties and years you have filled in. Edit freely; nothing is saved until you press Save.</p>
+      </div>
+
       <Field label="About you" hint="A short bio for your public page.">
         <Textarea
           name="bio"
@@ -229,7 +278,7 @@ export function SpecialistProfileForm({
             autoComplete="tel"
           />
         </Field>
-        <Field label="Years of experience">
+        <Field label="Years of experience" hint="Whole years, for example 5.">
           <Input
             name="years_experience"
             inputMode="numeric"

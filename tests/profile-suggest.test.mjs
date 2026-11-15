@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadTs } from "./helpers/load-ts.mjs";
 
-const { suggestTagline, suggestBio, profileChecklist } = await loadTs("lib/team/profile-suggest.ts");
+const { suggestTagline, suggestBio, suggestBioHeadlines, profileChecklist } = await loadTs("lib/team/profile-suggest.ts");
 
 const GENDERED =
   /\b(he|she|his|hers?|him|himself|herself|mr|mrs|ms|miss|sir|madam|ma'am|salesman|saleswoman|spokesman|spokesperson|chairman|businessman|gentleman|lady|guys?|man|woman|men|women)\b/i;
@@ -72,4 +72,29 @@ test("profileChecklist", () => {
   assert.deepEqual(some.items.filter((i) => i.done).map((i) => i.key), ["photo", "bio", "specialties"]);
   const all = profileChecklist({ photoPath: "p", tagline: "t", bio: "b", areas: ["a"], specialties: ["s"], languages: ["l"] });
   assert.equal(all.complete, true);
+});
+
+test("bio headline suggestions: capped, unique, gender-neutral, always four", () => {
+  for (const c of combos()) {
+    const hs = suggestBioHeadlines(c);
+    assert.equal(hs.length, 4);
+    assert.equal(new Set(hs.map((h) => h.toLowerCase())).size, 4);
+    for (const h of hs) {
+      assert.ok(h.length > 0 && h.length <= 80, `headline length ${h.length}`);
+      assert.doesNotMatch(h, GENDERED);
+      assert.doesNotMatch(h, /[\u2013\u2014]/);
+    }
+  }
+});
+
+test("bio headline suggestions use only the specialist's own data", () => {
+  const bare = suggestBioHeadlines({});
+  assert.equal(bare[0], "Real estate guidance with a personal touch");
+  assert.ok(bare.every((h) => !/\d/.test(h)));
+  const rich = suggestBioHeadlines({ name: "Maria Santos", areas: ["Makati", "BGC"], specialties: ["leasing"], years: 7 });
+  assert.equal(rich[0], "Your guide to property in Makati and BGC");
+  assert.ok(rich.includes("Straight answers on leasing"));
+  assert.ok(rich.includes("7 years of helping clients find the right place"));
+  assert.ok(!suggestBioHeadlines({ years: 0 }).some((h) => /\d/.test(h)));
+  assert.ok(suggestBioHeadlines({ years: 1 }).some((h) => h.startsWith("1 year of")));
 });

@@ -7,6 +7,7 @@ import { SpecialistProfileForm, type ProfileValues } from "@/components/team/pro
 import { storedHideCallLink } from "@/lib/team/public-contact";
 import { PhotoUploader } from "@/components/team/photo-uploader";
 import { parseLayout } from "@/lib/team/layout";
+import { storedBioHeadline } from "@/lib/team/profile";
 
 type Row = {
   display_name: string;
@@ -71,6 +72,14 @@ export default async function SpecialistProfilePage() {
     .maybeSingle();
   const layout = parseLayout((lc as { layout?: unknown } | null)?.layout);
 
+  // Own tolerant read (20261115120000_specialist_bio_headline.sql).
+  const { data: bh } = await supabase
+    .from("specialists")
+    .select("bio_headline")
+    .eq("id", specialistId)
+    .maybeSingle();
+  const bioHeadline = storedBioHeadline((bh as { bio_headline?: unknown } | null)?.bio_headline) ?? "";
+
   let photoUrl: string | null = null;
   if (row.photo_path) {
     const { data: pub } = supabase.storage.from("specialist-photos").getPublicUrl(row.photo_path);
@@ -93,6 +102,7 @@ export default async function SpecialistProfilePage() {
     publicEmail: contact.public_email ?? "",
     hideCallLink,
     layout,
+    bioHeadline,
   };
   // Layout previews need the live public page, which only exists once approved with a web address.
   const previewBase = row.status === "approved" && row.subdomain ? `/team/${row.subdomain}/preview` : null;

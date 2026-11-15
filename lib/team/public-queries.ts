@@ -3,6 +3,7 @@ import { isValidSpecialistSlug, specialistPhotoUrl } from "@/lib/team/queries";
 import { safeStoredContact, storedHideCallLink, type PublicContact } from "@/lib/team/public-contact";
 import { parseAccreditation, storedDesignation, type AccreditationType } from "@/lib/team/license";
 import { DEFAULT_LAYOUT, parseLayout, type MicrositeLayout } from "@/lib/team/layout";
+import { storedBioHeadline } from "@/lib/team/profile";
 
 /**
  * Public, read-only access to approved property specialists via the
@@ -71,6 +72,8 @@ export type PublicSpecialist = {
   accreditation: AccreditationType;
   /** Which microsite layout they picked (the default before the migration). Only loaded by getPublicSpecialist(). */
   layout: MicrositeLayout;
+  /** The specialist's own heading above their About text; null = the site's default heading. Only loaded by getPublicSpecialist(). */
+  bioHeadline: string | null;
 };
 
 function mapRow(r: Row): PublicSpecialist {
@@ -90,6 +93,7 @@ function mapRow(r: Row): PublicSpecialist {
     designation: null,
     accreditation: "salesperson",
     layout: DEFAULT_LAYOUT,
+    bioHeadline: null,
   };
 }
 
@@ -126,6 +130,7 @@ export async function getPublicSpecialist(slug: string): Promise<PublicSpecialis
     specialist.hideCallLink = await getHideCallLink(slug);
     Object.assign(specialist, (await getTitles(slug)).get(slug) ?? {});
     specialist.layout = await getLayout(slug);
+    specialist.bioHeadline = await getBioHeadline(slug);
     return specialist;
   } catch {
     return null;
@@ -182,6 +187,22 @@ async function getLayout(slug: string): Promise<MicrositeLayout> {
     return parseLayout((data as { layout?: unknown }).layout);
   } catch {
     return DEFAULT_LAYOUT;
+  }
+}
+
+/** The custom About headline for one slug. Tolerant: any failure (e.g. column missing) = null, the default heading. */
+async function getBioHeadline(slug: string): Promise<string | null> {
+  if (!db) return null;
+  try {
+    const { data, error } = await db
+      .from("public_specialists")
+      .select("bio_headline")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error || !data) return null;
+    return storedBioHeadline((data as { bio_headline?: unknown }).bio_headline);
+  } catch {
+    return null;
   }
 }
 

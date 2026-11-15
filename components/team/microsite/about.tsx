@@ -23,7 +23,7 @@ export function MicrositeAbout({ specialist }: { specialist: PublicSpecialist })
               id="about-heading"
               className="max-w-[20ch] font-display text-3xl font-bold leading-tight tracking-[-0.01em] text-navy sm:text-4xl"
             >
-              {ABOUT_COPY.heading}
+              {specialist.bioHeadline ?? ABOUT_COPY.heading}
             </h2>
             <div className="mt-6 flex flex-col gap-4">
               {paragraphs.map((p, i) => (

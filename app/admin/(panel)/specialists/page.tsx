@@ -9,9 +9,11 @@ import {
   isSpecialistVisible,
   sortSpecialists,
   specialistAccountState,
+  visibilityAvailable,
   type SpecialistAccountState,
 } from "@/lib/team/admin-status";
 import { getNeverSignedIn } from "@/lib/team/provision";
+import { VisibilityToggle } from "@/app/admin/(panel)/specialists/visibility-toggle";
 
 type Row = {
   id: string;
@@ -46,6 +48,12 @@ const columns: Column<ViewRow>[] = [
           <span className="rounded-full bg-surface-gray px-2.5 py-1 text-xs font-medium text-slate">Hidden</span>
         )}
       </span>
+    ),
+  },
+  {
+    header: "On website",
+    cell: (r) => (
+      <VisibilityToggle id={r.id} name={r.display_name} visible={isSpecialistVisible(r)} available={visibilityAvailable(r)} />
     ),
   },
   { header: "Web address", cell: (r) => <span className="text-slate">{r.subdomain ?? "—"}</span> },

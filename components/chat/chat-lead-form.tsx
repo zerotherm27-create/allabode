@@ -70,7 +70,7 @@ export function ChatLeadForm({
   ctx: ContactRequest;
   /** Already submitted earlier (the panel unmounts when closed, so the widget remembers). */
   sent?: boolean;
-  onDone: () => void;
+  onDone: (info: { name: string; method: string }) => void;
 }) {
   const [state, setState] = useState<"idle" | "submitting" | "success">(sent ? "success" : "idle");
   const [error, setError] = useState("");
@@ -131,7 +131,7 @@ export function ChatLeadForm({
         throw new Error(j.error || "Something went wrong.");
       }
       setState("success");
-      onDone();
+      onDone({ name, method: String(data.get("preferredContactMethod") ?? "Email") });
     } catch (err) {
       setState("idle");
       setError(err instanceof Error ? err.message : "Submission failed. Please try again.");
@@ -142,7 +142,7 @@ export function ChatLeadForm({
     return (
       <div role="status" className="flex items-start gap-2 rounded-md border border-line bg-surface p-3 text-sm text-ink">
         <Icon name="check_circle" size={20} className="mt-0.5 shrink-0 text-navy-700" />
-        <p>Thank you! A property specialist will reach out to you within one business day.</p>
+        <p>Thank you! A property specialist will be in touch with you soon.</p>
       </div>
     );
   }

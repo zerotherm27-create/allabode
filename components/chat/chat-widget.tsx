@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/icon";
-import { isSafeSlug, parseCards, type ListingCard } from "@/lib/chat/listing-cards";
+import { encodeContact, isSafeSlug, parseCards, type ListingCard } from "@/lib/chat/listing-cards";
 import { MAX_MESSAGE_CHARS } from "@/lib/chat/guardrails";
 import { ChatLeadForm } from "@/components/chat/chat-lead-form";
 
@@ -69,6 +69,31 @@ export function ChatWidget() {
   }, [hintShown]);
 
   const showHint = hintShown && !hintDismissed && !open;
+
+  function openContactForm() {
+    // Attach the listing from the most recent cards, if there are any.
+    let ctx: { listing?: string; listingId?: string } = {};
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const c = messages[i].role === "assistant" ? parseCards(messages[i].content).cards[0] : undefined;
+      if (c) {
+        ctx = { listing: c.title, listingId: c.dbId };
+        break;
+      }
+    }
+    setMessages((prev) => [...prev, { role: "assistant", content: encodeContact(ctx) }]);
+  }
+
+  function onLeadSent(index: number, info: { name: string; method: string }) {
+    setSentForms((prev) => new Set(prev).add(index));
+    const first = info.name.split(/\s+/)[0];
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: `Thanks, ${first}! I've passed your details to our team, and a property specialist will be in touch with you soon (${info.method.toLowerCase()}). Is there anything else I can help you with?`,
+      },
+    ]);
+  }
 
   async function send() {
     const text = input.trim();
@@ -156,7 +181,7 @@ export function ChatWidget() {
                       <ChatLeadForm
                         ctx={contact}
                         sent={sentForms.has(i)}
-                        onDone={() => setSentForms((prev) => new Set(prev).add(i))}
+                        onDone={(info) => onLeadSent(i, info)}
                       />
                     )}
                   </div>
@@ -170,6 +195,18 @@ export function ChatWidget() {
             )}
           </div>
 
+          {!pending && messages.length > 0 && (
+            <div className="border-t border-line px-3 pt-2">
+              <button
+                type="button"
+                onClick={openContactForm}
+                className="flex min-h-11 items-center gap-1.5 text-xs font-semibold text-navy-700 underline-offset-2 hover:underline"
+              >
+                <Icon name="support_agent" size={16} />
+                Talk to a specialist
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-2 border-t border-line p-3">
             <input
               value={input}

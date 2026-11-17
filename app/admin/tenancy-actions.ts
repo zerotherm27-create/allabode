@@ -397,8 +397,8 @@ export async function getTenancyIdUrls(id: string): Promise<{ tenant: string | n
     .eq("id", id)
     .maybeSingle();
   const [tenant, landlord] = await Promise.all([
-    a?.tenant_id_document_path ? signedUrl(supabase, AGREEMENTS_BUCKET, a.tenant_id_document_path, 300) : null,
-    a?.landlord_id_document_path ? signedUrl(supabase, AGREEMENTS_BUCKET, a.landlord_id_document_path, 300) : null,
+    a?.tenant_id_document_path ? signedUrl(supabase, AGREEMENTS_BUCKET, a.tenant_id_document_path, 3600) : null,
+    a?.landlord_id_document_path ? signedUrl(supabase, AGREEMENTS_BUCKET, a.landlord_id_document_path, 3600) : null,
   ]);
   return { tenant, landlord };
 }

@@ -105,7 +105,7 @@ export default async function OwnerDashboard({
   const slipUrls: Record<string, string> = {};
   for (const s of statements) {
     if (s.payout_slip_url && s.status === "published") {
-      const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 300);
+      const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 3600);
       if (u) slipUrls[s.id] = u;
     }
   }

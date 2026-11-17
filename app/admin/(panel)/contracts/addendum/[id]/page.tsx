@@ -125,7 +125,7 @@ export default async function AdminAddendumDetailPage({ params }: { params: Prom
     user ? supabase.from("users").select("is_signatory,name").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     a.status === "completed" ? getAddendumPdfSignedUrl(id) : Promise.resolve(null),
     uploadedParent && a.parent_document_path
-      ? signedUrl(supabase, AGREEMENTS_BUCKET, a.parent_document_path, 600)
+      ? signedUrl(supabase, AGREEMENTS_BUCKET, a.parent_document_path, 3600)
       : Promise.resolve(null),
   ]);
 

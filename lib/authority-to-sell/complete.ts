@@ -169,13 +169,17 @@ export async function completeAuthorityToSell(
     }
   }
 
-  if (existingOwner?.auth_user_id) {
-    await sendEmail({
-      to: a.owner_email,
-      subject: "Your Authority to Sell is fully signed",
-      html: `<p>Hi ${od.name ?? "there"},</p><p>Your Authority to Sell has been fully executed. You can view it in your owner dashboard.</p>`,
-    });
-  }
+  // Always email the executed copy so the owner never needs to log in to get it.
+  await sendEmail({
+    to: a.owner_email,
+    subject: "Your Authority to Sell is fully signed",
+    html: `<p>Hi ${od.name ?? "there"},</p><p>Your Authority to Sell (${authorityToSellReferenceCode(a.id)}) has been fully executed. Your signed copy is attached to this email for your records.</p><p>You can also view it any time in your owner portal.</p>`,
+    attachments: [{
+      filename: `${authorityToSellReferenceCode(a.id)}-Authority-to-Sell.pdf`,
+      content: Buffer.from(pdfBuffer),
+      contentType: "application/pdf",
+    }],
+  });
 
   await supabase.from("documents").insert({
     entity_type: "owner",

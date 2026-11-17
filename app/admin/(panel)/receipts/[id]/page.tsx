@@ -38,7 +38,7 @@ export default async function ReceiptReviewPage({ params }: { params: Promise<{ 
   const extraction = (extRows ?? [])[0] as { normalized_json: Norm | null; extraction_confidence: number | null } | undefined;
   const norm = (extraction?.normalized_json ?? {}) as Norm;
   const validations = (valRows ?? []) as Validation[];
-  const imageUrl = isImageMime(receipt.file_mime_type) ? await signedUrl(supabase, RECEIPTS_BUCKET, receipt.file_path, 300) : null;
+  const imageUrl = isImageMime(receipt.file_mime_type) ? await signedUrl(supabase, RECEIPTS_BUCKET, receipt.file_path, 3600) : null;
 
   const opt = (rows: unknown) =>
     ((rows ?? []) as { id: string; name?: string; unit_label?: string }[]).map((r) => (

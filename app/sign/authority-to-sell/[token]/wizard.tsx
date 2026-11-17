@@ -54,6 +54,23 @@ function initTerms(r: AuthorityToSellRecord): TermsForm {
   };
 }
 
+/** Last day of an authority period: `start` + length, minus one day (Jan 1 + 6 months ends Jun 30). */
+function periodEndDate(start: string, length: string, unit: "days" | "months"): string | null {
+  const n = Number(length);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !Number.isInteger(n) || n <= 0) return null;
+  const [y, m, d] = start.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (unit === "days") {
+    dt.setUTCDate(dt.getUTCDate() + n);
+  } else {
+    dt.setUTCMonth(dt.getUTCMonth() + n);
+    // Jan 31 + 1 month must land on Feb 28/29, not spill into March.
+    if (dt.getUTCDate() !== d) dt.setUTCDate(0);
+  }
+  dt.setUTCDate(dt.getUTCDate() - 1);
+  return dt.toISOString().slice(0, 10);
+}
+
 function StepShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
@@ -212,6 +229,15 @@ export function AuthorityToSellWizard({ token, initial }: { token: string; initi
     }
   }
 
+  /** Changing length, unit or start recomputes the end date (still editable by hand). */
+  function setPeriod(patch: Partial<Pick<typeof terms, "periodLength" | "periodUnit" | "periodStart">>) {
+    setTerms((t) => {
+      const next = { ...t, ...patch };
+      const end = periodEndDate(next.periodStart, next.periodLength, next.periodUnit);
+      return end ? { ...next, periodEnd: end } : next;
+    });
+  }
+
   function togglePayment(v: AtsPaymentTerm, on: boolean) {
     const set = new Set(terms.paymentTerms);
     if (on) set.add(v); else set.delete(v);
@@ -360,16 +386,16 @@ export function AuthorityToSellWizard({ token, initial }: { token: string; initi
             <h3 className="mb-3 text-sm font-semibold text-navy">Authority period</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Valid for" required>
-                <Input className={inputCls} inputMode="numeric" value={terms.periodLength} onChange={(e) => setTerms({ ...terms, periodLength: e.target.value })} />
+                <Input className={inputCls} inputMode="numeric" value={terms.periodLength} onChange={(e) => setPeriod({ periodLength: e.target.value })} />
               </Field>
               <Field label="Unit" required>
-                <Select value={terms.periodUnit} onChange={(e) => setTerms({ ...terms, periodUnit: e.target.value as "days" | "months" })}>
+                <Select value={terms.periodUnit} onChange={(e) => setPeriod({ periodUnit: e.target.value as "days" | "months" })}>
                   <option value="months">Months</option>
                   <option value="days">Days</option>
                 </Select>
               </Field>
               <Field label="Commencing on" required>
-                <Input className={inputCls} type="date" value={terms.periodStart} onChange={(e) => setTerms({ ...terms, periodStart: e.target.value })} />
+                <Input className={inputCls} type="date" value={terms.periodStart} onChange={(e) => setPeriod({ periodStart: e.target.value })} />
               </Field>
               <Field label="Ending on" required>
                 <Input className={inputCls} type="date" value={terms.periodEnd} onChange={(e) => setTerms({ ...terms, periodEnd: e.target.value })} />

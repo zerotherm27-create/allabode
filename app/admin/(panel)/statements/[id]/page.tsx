@@ -94,8 +94,8 @@ export default async function StatementDetailPage({ params }: { params: Promise<
   const pdfFilename = type === "owner"
     ? buildOwnerSoaFilename({ ownerName: partyName, unitLabel, propertyName, periodStart: s.period_start })
     : undefined;
-  const pdfUrl  = s.pdf_path        ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.pdf_path,        300, pdfFilename) : null;
-  const slipUrl = s.payout_slip_url ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 300) : null;
+  const pdfUrl  = s.pdf_path        ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.pdf_path,        3600, pdfFilename) : null;
+  const slipUrl = s.payout_slip_url ? await signedUrl(supabase, FINANCE_DOCS_BUCKET, s.payout_slip_url, 3600) : null;
 
   const { data: autoSendRule } = await supabase
     .from("automation_rules")
@@ -107,7 +107,7 @@ export default async function StatementDetailPage({ params }: { params: Promise<
   const lineReceiptUrls: Record<string, string> = {};
   for (const l of lines) {
     if (l.receipt_path) {
-      const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, l.receipt_path, 300);
+      const u = await signedUrl(supabase, FINANCE_DOCS_BUCKET, l.receipt_path, 3600);
       if (u) lineReceiptUrls[l.id] = u;
     }
   }

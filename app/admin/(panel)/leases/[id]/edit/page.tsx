@@ -85,7 +85,7 @@ export default async function EditLeasePage({
   const invoices = (invoiceData ?? []) as InvoiceRow[];
   const payments = (paymentData ?? []) as PaymentRow[];
   const receiptPaths = payments.map((p) => p.receipt_pdf_path).filter((p): p is string => !!p);
-  const receiptUrls = await signedUrlsForPaths(supabase, FINANCE_DOCS_BUCKET, receiptPaths, 300);
+  const receiptUrls = await signedUrlsForPaths(supabase, FINANCE_DOCS_BUCKET, receiptPaths, 3600);
 
   const today = new Date().toISOString().slice(0, 10);
 

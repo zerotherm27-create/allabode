@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { logIdUploadFailure } from "@/lib/signing/upload-log";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeStrAgreement } from "@/lib/short-term-rental/complete";
@@ -58,7 +58,7 @@ const MAX_ID_SIZE = 10 * 1024 * 1024;
 // ============================================================
 
 export async function loadStrAgreement(token: string): Promise<StrAgreementRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_str_agreement_by_token", { p_token: token });
   if (error || !data) return null;
   return data as StrAgreementRecord;
@@ -73,7 +73,7 @@ export type SaveStrDraftInput = {
 };
 
 export async function saveStrDraft(token: string, input: SaveStrDraftInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_str_draft", {
     p_token: token,
     p_tenant_details: input.tenantDetails,
@@ -102,7 +102,7 @@ export async function createStrIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_str_agreement_by_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as StrAgreementRecord;
@@ -122,7 +122,7 @@ export async function createStrIdUploadTicket(
 }
 
 export async function confirmStrIdUpload(token: string, path: string): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_str_id_upload", { p_token: token, p_path: path });
   if (error) return { error: error.message };
   return {};
@@ -134,7 +134,7 @@ export type SubmitSignatureInput = {
 };
 
 export async function submitStrTenantSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_str_tenant_signature", {
     p_token: token,
@@ -151,7 +151,7 @@ export async function submitStrTenantSignature(token: string, input: SubmitSigna
 // ============================================================
 
 export async function loadStrAgreementForLandlord(token: string): Promise<StrAgreementRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_str_agreement_by_landlord_token", { p_token: token });
   if (error || !data) return null;
   return data as StrAgreementRecord;
@@ -167,7 +167,7 @@ async function createStrLandlordIdUploadTicketImpl(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_str_agreement_by_landlord_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as StrAgreementRecord;
@@ -196,7 +196,7 @@ export type ConfirmLandlordIdInput = {
 };
 
 async function confirmStrLandlordIdUploadImpl(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_str_landlord_id_upload", {
     p_token: token,
     p_id_type: input.idType,
@@ -209,7 +209,7 @@ async function confirmStrLandlordIdUploadImpl(token: string, input: ConfirmLandl
 }
 
 export async function submitStrLandlordSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_str_landlord_signature", {
     p_token: token,

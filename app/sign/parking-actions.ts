@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { logIdUploadFailure } from "@/lib/signing/upload-log";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeParkingAgreement } from "@/lib/parking/complete";
@@ -60,7 +60,7 @@ const MAX_ID_SIZE = 10 * 1024 * 1024;
 // ============================================================
 
 export async function loadParkingAgreement(token: string): Promise<ParkingAgreementRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_parking_agreement_by_token", { p_token: token });
   if (error || !data) return null;
   return data as ParkingAgreementRecord;
@@ -75,7 +75,7 @@ export type SaveParkingDraftInput = {
 };
 
 export async function saveParkingDraft(token: string, input: SaveParkingDraftInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_parking_draft", {
     p_token: token,
     p_tenant_details: input.tenantDetails,
@@ -104,7 +104,7 @@ export async function createParkingIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_parking_agreement_by_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as ParkingAgreementRecord;
@@ -133,7 +133,7 @@ export async function createParkingOccupantIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_parking_agreement_by_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as ParkingAgreementRecord;
@@ -153,7 +153,7 @@ export async function createParkingOccupantIdUploadTicket(
 }
 
 export async function confirmParkingIdUpload(token: string, path: string): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_parking_id_upload", { p_token: token, p_path: path });
   if (error) return { error: error.message };
   return {};
@@ -165,7 +165,7 @@ export type SubmitSignatureInput = {
 };
 
 export async function submitParkingTenantSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_parking_tenant_signature", {
     p_token: token,
@@ -182,7 +182,7 @@ export async function submitParkingTenantSignature(token: string, input: SubmitS
 // ============================================================
 
 export async function loadParkingAgreementForLandlord(token: string): Promise<ParkingAgreementRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_parking_agreement_by_landlord_token", { p_token: token });
   if (error || !data) return null;
   return data as ParkingAgreementRecord;
@@ -198,7 +198,7 @@ async function createParkingLandlordIdUploadTicketImpl(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_parking_agreement_by_landlord_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as ParkingAgreementRecord;
@@ -227,7 +227,7 @@ export type ConfirmLandlordIdInput = {
 };
 
 async function confirmParkingLandlordIdUploadImpl(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_parking_landlord_id_upload", {
     p_token: token,
     p_id_type: input.idType,
@@ -240,7 +240,7 @@ async function confirmParkingLandlordIdUploadImpl(token: string, input: ConfirmL
 }
 
 export async function submitParkingLandlordSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_parking_landlord_signature", {
     p_token: token,

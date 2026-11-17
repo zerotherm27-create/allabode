@@ -50,3 +50,17 @@ export function createServiceClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
+
+/**
+ * Cookieless anon client for public, token-gated flows (e-signature pages).
+ * It never sends a user session, so a stale or rotated-key admin cookie in the
+ * same browser can't make a valid signing link look expired. The token RPCs it
+ * calls are SECURITY DEFINER and validate the token themselves.
+ */
+export function createAnonClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  );
+}

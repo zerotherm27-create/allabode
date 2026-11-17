@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 
@@ -29,7 +29,7 @@ async function clientIp() {
 }
 
 export async function loadAgreement(token: string): Promise<AgreementRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_agreement_by_token", { p_token: token });
   if (error || !data) return null;
   return data as AgreementRecord;
@@ -48,7 +48,7 @@ export type SaveDraftInput = {
 };
 
 export async function saveAgreementDraft(token: string, input: SaveDraftInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_agreement_draft", {
     p_token: token,
     p_owner_details: input.ownerDetails,
@@ -86,7 +86,7 @@ export async function createAgreementIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_agreement_by_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as AgreementRecord;
@@ -107,7 +107,7 @@ export async function createAgreementIdUploadTicket(
 
 /** Called after the browser has uploaded the file directly to storage. */
 export async function confirmAgreementIdUpload(token: string, path: string): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_agreement_id_upload", { p_token: token, p_path: path });
   if (error) return { error: error.message };
   return {};
@@ -119,7 +119,7 @@ export type SubmitSignatureInput = {
 };
 
 export async function submitOwnerSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_owner_signature", {
     p_token: token,

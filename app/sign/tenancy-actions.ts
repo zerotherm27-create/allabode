@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { logIdUploadFailure } from "@/lib/signing/upload-log";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeTenancyAgreement } from "@/lib/tenancy/complete";
@@ -63,7 +63,7 @@ const MAX_ID_SIZE = 10 * 1024 * 1024;
 // ============================================================
 
 export async function loadTenancyAgreement(token: string): Promise<TenancyAgreementRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_tenancy_agreement_by_token", { p_token: token });
   if (error || !data) return null;
   return data as TenancyAgreementRecord;
@@ -78,7 +78,7 @@ export type SaveTenancyDraftInput = {
 };
 
 export async function saveTenancyDraft(token: string, input: SaveTenancyDraftInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_tenancy_draft", {
     p_token: token,
     p_tenant_details: input.tenantDetails,
@@ -107,7 +107,7 @@ export async function createTenancyIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_tenancy_agreement_by_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as TenancyAgreementRecord;
@@ -136,7 +136,7 @@ export async function createTenancyOccupantIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_tenancy_agreement_by_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as TenancyAgreementRecord;
@@ -156,7 +156,7 @@ export async function createTenancyOccupantIdUploadTicket(
 }
 
 export async function confirmTenancyIdUpload(token: string, path: string): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_tenancy_id_upload", { p_token: token, p_path: path });
   if (error) return { error: error.message };
   return {};
@@ -168,7 +168,7 @@ export type SubmitSignatureInput = {
 };
 
 export async function submitTenantSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_tenancy_agreement_by_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as TenancyAgreementRecord;
@@ -193,7 +193,7 @@ export async function submitTenantSignature(token: string, input: SubmitSignatur
 // ============================================================
 
 export async function loadTenancyAgreementForLandlord(token: string): Promise<TenancyAgreementRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_tenancy_agreement_by_landlord_token", { p_token: token });
   if (error || !data) return null;
   return data as TenancyAgreementRecord;
@@ -209,7 +209,7 @@ async function createLandlordIdUploadTicketImpl(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: agreement, error: lookupError } = await supabase.rpc("get_tenancy_agreement_by_landlord_token", { p_token: token });
   if (lookupError || !agreement) return { error: "This link is no longer valid." };
   const record = agreement as TenancyAgreementRecord;
@@ -238,7 +238,7 @@ export type ConfirmLandlordIdInput = {
 };
 
 async function confirmLandlordIdUploadImpl(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_tenancy_landlord_id_upload", {
     p_token: token,
     p_id_type: input.idType,
@@ -251,7 +251,7 @@ async function confirmLandlordIdUploadImpl(token: string, input: ConfirmLandlord
 }
 
 export async function submitLandlordSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_landlord_signature", {
     p_token: token,

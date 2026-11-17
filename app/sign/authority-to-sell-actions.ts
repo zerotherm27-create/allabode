@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { isSafeSignatureDataUrl } from "@/lib/pm/authority-to-sell-clauses";
@@ -27,7 +27,7 @@ async function clientIp() {
 }
 
 export async function loadAuthorityToSell(token: string): Promise<AuthorityToSellRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_ats_by_token", { p_token: token });
   if (error || !data) return null;
   return data as AuthorityToSellRecord;
@@ -44,7 +44,7 @@ export type SaveAtsDraftInput = {
 };
 
 export async function saveAuthorityToSellDraft(token: string, input: SaveAtsDraftInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_ats_draft", {
     p_token: token,
     p_owner_details: input.ownerDetails,
@@ -77,7 +77,7 @@ export async function createAuthorityToSellIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error: lookupError } = await supabase.rpc("get_ats_by_token", { p_token: token });
   if (lookupError || !data) return { error: "This link is no longer valid." };
   const record = data as AuthorityToSellRecord;
@@ -99,7 +99,7 @@ export async function createAuthorityToSellIdUploadTicket(
 
 /** Called after the browser has uploaded the file directly to storage. */
 export async function confirmAuthorityToSellIdUpload(token: string, path: string): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_ats_id_upload", { p_token: token, p_path: path });
   if (error) return { error: error.message };
   return {};
@@ -110,7 +110,7 @@ export async function submitAuthorityToSellOwnerSignature(
   input: { typedName: string; signatureDataUrl: string },
 ): Promise<{ error?: string }> {
   if (!isSafeSignatureDataUrl(input.signatureDataUrl)) return { error: "Invalid signature — please draw or upload it again." };
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_ats_owner_signature", {
     p_token: token,

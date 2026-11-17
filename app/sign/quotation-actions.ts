@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { completeQuotation } from "@/lib/quotation/complete";
 import type { QuotationLineItem, ProgressMilestone, QuotationBankDetails } from "@/lib/quotation/totals";
@@ -54,14 +54,14 @@ export type SubmitSignatureInput = {
 // ============================================================
 
 export async function loadQuotationForCompany(token: string): Promise<QuotationRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_quotation_by_company_token", { p_token: token });
   if (error || !data) return null;
   return data as QuotationRecord;
 }
 
 export async function submitQuotationCompanySignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_quotation_company_signature", {
     p_token: token,
@@ -79,7 +79,7 @@ export async function submitQuotationCompanySignature(token: string, input: Subm
 // ============================================================
 
 export async function loadQuotation(token: string): Promise<QuotationRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_quotation_by_token", { p_token: token });
   if (error || !data) return null;
   return data as QuotationRecord;
@@ -89,7 +89,7 @@ export async function saveQuotationRecipientDetails(
   token: string,
   recipientDetails: Record<string, unknown>
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_quotation_recipient_details", {
     p_token: token,
     p_recipient_details: recipientDetails,
@@ -99,7 +99,7 @@ export async function saveQuotationRecipientDetails(
 }
 
 export async function submitQuotationRecipientSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_quotation_recipient_signature", {
     p_token: token,

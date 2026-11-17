@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { logIdUploadFailure } from "@/lib/signing/upload-log";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AGREEMENTS_BUCKET } from "@/lib/storage";
 import { completeAddendum } from "@/lib/addendum/complete";
@@ -63,7 +63,7 @@ const MAX_ID_SIZE = 10 * 1024 * 1024;
 // ============================================================
 
 export async function loadAddendum(token: string): Promise<AddendumRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_addendum_by_token", { p_token: token });
   if (error || !data) return null;
   return data as AddendumRecord;
@@ -77,7 +77,7 @@ export type SaveAddendumDraftInput = {
 };
 
 export async function saveAddendumDraft(token: string, input: SaveAddendumDraftInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_addendum_draft", {
     p_token: token,
     p_tenant_details: input.tenantDetails,
@@ -105,7 +105,7 @@ export async function createAddendumIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: addendum, error: lookupError } = await supabase.rpc("get_addendum_by_token", { p_token: token });
   if (lookupError || !addendum) return { error: "This link is no longer valid." };
   const record = addendum as AddendumRecord;
@@ -135,7 +135,7 @@ export async function createAddendumPartyIdUploadTicket(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: addendum, error: lookupError } = await supabase.rpc("get_addendum_by_token", { p_token: token });
   if (lookupError || !addendum) return { error: "This link is no longer valid." };
   const record = addendum as AddendumRecord;
@@ -155,7 +155,7 @@ export async function createAddendumPartyIdUploadTicket(
 }
 
 export async function confirmAddendumIdUpload(token: string, path: string): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_addendum_id_upload", { p_token: token, p_path: path });
   if (error) return { error: error.message };
   return {};
@@ -167,7 +167,7 @@ export type SubmitSignatureInput = {
 };
 
 export async function submitAddendumTenantSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_addendum_tenant_signature", {
     p_token: token,
@@ -184,7 +184,7 @@ export async function submitAddendumTenantSignature(token: string, input: Submit
 // ============================================================
 
 export async function loadAddendumForLandlord(token: string): Promise<AddendumRecord | null> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc("get_addendum_by_landlord_token", { p_token: token });
   if (error || !data) return null;
   return data as AddendumRecord;
@@ -200,7 +200,7 @@ async function createAddendumLandlordIdUploadTicketImpl(
   if (fileSize > MAX_ID_SIZE) return { error: "File must be under 10 MB." };
   if (!ALLOWED_ID_TYPES.includes(fileType)) return { error: "Please upload a JPG or PNG image — PDF files are not accepted for IDs." };
 
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data: addendum, error: lookupError } = await supabase.rpc("get_addendum_by_landlord_token", { p_token: token });
   if (lookupError || !addendum) return { error: "This link is no longer valid." };
   const record = addendum as AddendumRecord;
@@ -229,7 +229,7 @@ export type ConfirmLandlordIdInput = {
 };
 
 async function confirmAddendumLandlordIdUploadImpl(token: string, input: ConfirmLandlordIdInput): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { error } = await supabase.rpc("save_addendum_landlord_id_upload", {
     p_token: token,
     p_id_type: input.idType,
@@ -242,7 +242,7 @@ async function confirmAddendumLandlordIdUploadImpl(token: string, input: Confirm
 }
 
 export async function submitAddendumLandlordSignature(token: string, input: SubmitSignatureInput): Promise<{ error?: string; completed?: boolean }> {
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const ip = await clientIp();
   const { error } = await supabase.rpc("submit_addendum_landlord_signature", {
     p_token: token,
